@@ -1,22 +1,171 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>My Website</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sammie’s Mods</title>
   <style>
-    body {
-      background:#0f172a;
-      color:white;
-      font-family:Arial;
-      text-align:center;
-      padding:50px;
+    :root{
+      --bg1:#0b1220;
+      --bg2:#111b33;
+      --card:#0f172a;
+      --border:rgba(255,255,255,.12);
+      --text:#e5e7eb;
+      --muted:#9ca3af;
+      --accent:#38bdf8;
+      --accent2:#a78bfa;
     }
-    h1 { color:#38bdf8; }
-    a { color:#fbbf24; }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background: radial-gradient(1200px 600px at 20% 10%, rgba(56,189,248,.22), transparent 60%),
+                  radial-gradient(900px 500px at 80% 30%, rgba(167,139,250,.18), transparent 55%),
+                  linear-gradient(180deg, var(--bg1), var(--bg2));
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:28px;
+    }
+    .wrap{
+      width:min(980px, 100%);
+    }
+    header{
+      text-align:center;
+      margin-bottom:22px;
+    }
+    h1{
+      margin:0 0 8px;
+      font-size:clamp(28px, 4vw, 42px);
+      letter-spacing:.2px;
+    }
+    p{
+      margin:0;
+      color:var(--muted);
+      font-size:clamp(14px, 1.8vw, 16px);
+      line-height:1.5;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:16px;
+      margin-top:18px;
+    }
+    @media (max-width: 760px){
+      .grid{grid-template-columns: 1fr;}
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:18px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 18px 60px rgba(0,0,0,.35);
+    }
+    .card h2{
+      margin:0 0 6px;
+      font-size:22px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .badge{
+      font-size:12px;
+      color:rgba(255,255,255,.85);
+      border:1px solid var(--border);
+      padding:3px 8px;
+      border-radius:999px;
+      background:rgba(0,0,0,.18);
+    }
+    .desc{
+      margin:0 0 14px;
+      color:var(--muted);
+    }
+    .btnrow{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:10px;
+    }
+    a.button{
+      text-decoration:none;
+      color:#06121f;
+      font-weight:700;
+      padding:12px 14px;
+      border-radius:12px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      border:1px solid rgba(255,255,255,.18);
+      transition: transform .12s ease, filter .12s ease;
+      min-width: 180px;
+    }
+    a.button:hover{ transform: translateY(-1px); filter: brightness(1.03); }
+    a.primary{
+      background: linear-gradient(90deg, var(--accent), #22c55e);
+    }
+    a.secondary{
+      background: linear-gradient(90deg, var(--accent2), #fb7185);
+    }
+    a.ghost{
+      color:var(--text);
+      background: rgba(255,255,255,.06);
+      border:1px solid var(--border);
+      font-weight:600;
+      min-width: 180px;
+    }
+    footer{
+      text-align:center;
+      margin-top:18px;
+      color:rgba(255,255,255,.55);
+      font-size:12px;
+    }
+    .tiny{
+      opacity:.9;
+    }
   </style>
 </head>
 <body>
-  <h1>✨ My Website ✨</h1>
-  <p>This is my free website.</p>
-  <p>Made with GitHub Pages.</p>
+  <div class="wrap">
+    <header>
+      <h1>🧰 Sammie’s Mods</h1>
+      <p class="tiny">Quick links to my Minecraft projects — downloads, pages, and info.</p>
+    </header>
+
+    <section class="grid">
+      <!-- MOD 1 -->
+      <div class="card">
+        <h2>🔐 Steelhold <span class="badge">Security</span></h2>
+        <p class="desc">Fancy safes & secure storage for your world. Built for survival servers and collectors.</p>
+        <div class="btnrow">
+          <!-- Replace # with your real links -->
+          <a class="button primary" href="#" target="_blank" rel="noopener">📦 Steelhold Page</a>
+          <a class="button ghost" href="#" target="_blank" rel="noopener">📜 Changelog</a>
+        </div>
+      </div>
+
+      <!-- MOD 2 -->
+      <div class="card">
+        <h2>🧠 LogiChest <span class="badge">Storage</span></h2>
+        <p class="desc">Smart hub + sorters to move items cleanly and automatically. Modular upgrades, tidy base life.</p>
+        <div class="btnrow">
+          <!-- Replace # with your real links -->
+          <a class="button secondary" href="#" target="_blank" rel="noopener">📦 LogiChest Page</a>
+          <a class="button ghost" href="#" target="_blank" rel="noopener">📘 How To Use</a>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p>© <span id="year"></span> Sammie • Built with GitHub Pages</p>
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
