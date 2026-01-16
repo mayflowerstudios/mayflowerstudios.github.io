@@ -6,20 +6,10 @@
   <title>EchoBloom • Mayflower Studios</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body data-nav="bots">
   <div class="wrap">
 
-    <div class="topbar" id="top">
-      <div class="brand">
-        <strong><a href="index.html" style="text-decoration:none;">Mayflower Studios</a></strong>
-        <span>Discord bots • Minecraft mods • games • software</span>
-      </div>
-      <nav class="nav">
-        <a class="pill" href="index.html#projects">🚀 Projects</a>
-        <a class="pill" href="index.html#bots">🤖 Bots</a>
-        <a class="pill" href="foxbot.html">🦊 FoxBot</a>
-      </nav>
-    </div>
+    <div id="shared-nav"></div>
 
     <section class="hero">
       <div>
@@ -27,7 +17,7 @@
         <h1>🌙 EchoBloom</h1>
         <p class="muted">
           A realm-based RPG progression bot built for long-term communities: XP, raids, ranks, lore events,
-          and systems designed to evolve over seasons — without becoming a spreadsheet nightmare.
+          and seasonal systems designed to evolve — without becoming a spreadsheet nightmare.
         </p>
         <div class="ctaRow">
           <a class="btn bots" href="https://discord.gg/MutqYAdrwz">💬 Support Discord</a>
@@ -36,22 +26,10 @@
       </div>
 
       <div class="tileGrid">
-        <div class="tile">
-          <strong>🌿 Realms</strong>
-          <p>Choose a realm, earn progression, and shape your server’s story over time.</p>
-        </div>
-        <div class="tile">
-          <strong>⚔️ Raids</strong>
-          <p>Interactive challenges that encourage teamwork and friendly competition.</p>
-        </div>
-        <div class="tile">
-          <strong>📜 Lore + Events</strong>
-          <p>Seasonal systems and narrative hooks to keep communities engaged.</p>
-        </div>
-        <div class="tile">
-          <strong>🏆 Progression</strong>
-          <p>XP, ranks, milestones, and rewards — tuned for long-term play.</p>
-        </div>
+        <div class="tile"><strong>🌿 Realms</strong><p>Pick a realm and shape your server’s story over time.</p></div>
+        <div class="tile"><strong>⚔️ Raids</strong><p>Interactive challenges for teamwork and friendly competition.</p></div>
+        <div class="tile"><strong>📜 Lore + Events</strong><p>Seasonal arcs and narrative hooks to keep it fresh.</p></div>
+        <div class="tile"><strong>🏆 Progression</strong><p>XP, ranks, milestones, and rewards tuned for long play.</p></div>
       </div>
     </section>
 
@@ -66,18 +44,18 @@
         <p class="desc">Lore-driven progression designed for communities, not just numbers.</p>
         <ul>
           <li>Realm identity + themed progression</li>
-          <li>XP that supports events and milestones</li>
-          <li>Role/rank alignment potential</li>
+          <li>XP that supports milestones</li>
+          <li>Role/rank automation potential</li>
         </ul>
       </div>
 
       <div class="card">
         <h3>⚔️ Raids & Interaction <span class="badge">Social</span></h3>
-        <p class="desc">Server-friendly interaction loops that feel like “events,” not spam.</p>
+        <p class="desc">Event-like loops that encourage teamwork without spam.</p>
         <ul>
           <li>Interactive raids built for groups</li>
-          <li>Repeatable activities (without burnout)</li>
-          <li>Designed to encourage cross-realm play</li>
+          <li>Repeatable activities without burnout</li>
+          <li>Encourages cross-realm play</li>
         </ul>
       </div>
 
@@ -93,25 +71,55 @@
 
       <div class="card">
         <h3>⚙️ Config & Reliability <span class="badge">Server</span></h3>
-        <p class="desc">Built for real servers — stability, control, and maintainability first.</p>
+        <p class="desc">Stable, maintainable design for real communities.</p>
         <ul>
-          <li>Configurable systems and sensible defaults</li>
+          <li>Sensible defaults + configuration options</li>
           <li>Designed for long-term uptime</li>
-          <li>Moderation-aware design</li>
+          <li>Moderation-aware behavior</li>
         </ul>
       </div>
     </section>
 
     <div class="sectionTitle">
+      <h2>🖼️ Media</h2>
+      <span>Icon & screenshots</span>
+    </div>
+
+    <section class="card">
+      <div class="mediaHeader">
+        <img class="projectIcon" src="assets/icons/echobloom.png" alt="EchoBloom icon" />
+        <div class="mediaMeta">
+          <strong>EchoBloom</strong>
+          <span>Realm previews, raid examples, and progression screenshots</span>
+        </div>
+      </div>
+
+      <div class="gallery">
+        <div class="shot">
+          <img src="assets/shots/echobloom-1.png" alt="EchoBloom screenshot 1" />
+          <div class="cap">Realm selection / identity preview.</div>
+        </div>
+        <div class="shot">
+          <img src="assets/shots/echobloom-2.png" alt="EchoBloom screenshot 2" />
+          <div class="cap">Raid event example — teamwork-focused loop.</div>
+        </div>
+        <div class="shot">
+          <img src="assets/shots/echobloom-3.png" alt="EchoBloom screenshot 3" />
+          <div class="cap">Progression/rank milestone preview.</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="sectionTitle">
       <h2>🔧 Setup Notes</h2>
-      <span>Keep it fun, keep it stable</span>
+      <span>Start simple, then expand</span>
     </div>
 
     <section class="card">
       <div class="callout">
         <strong>Recommended flow</strong>
         <p class="muted small">
-          Start simple: enable one or two core loops (XP + raids), then add lore/events once the server rhythm settles.
+          Enable one or two core loops (XP + raids) first, then add lore/events once your server rhythm settles.
         </p>
       </div>
       <div class="codebox">
@@ -127,18 +135,9 @@
       </div>
     </section>
 
-    <footer>
-      <div>© <span id="year"></span> Mayflower Studios</div>
-      <div class="links">
-        <a href="index.html">🏠 Home</a>
-        <a href="foxbot.html">🦊 FoxBot</a>
-        <a href="#top">⬆ Top</a>
-      </div>
-    </footer>
+    <div id="shared-footer"></div>
   </div>
 
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
+  <script src="shared.js"></script>
 </body>
 </html>
