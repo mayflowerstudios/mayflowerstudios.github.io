@@ -420,9 +420,27 @@ a.ghost{
 
 .gallery{
   margin-top:14px;
-  display:grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(260px, 1fr);
   gap:12px;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 6px;
+
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.gallery::-webkit-scrollbar{
+  height: 8px;
+}
+.gallery::-webkit-scrollbar-track{
+  background: transparent;
+}
+.gallery::-webkit-scrollbar-thumb{
+  background: rgba(255,255,255,.18);
+  border-radius: 999px;
 }
 @media (max-width: 900px){
   .gallery{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -435,6 +453,8 @@ a.ghost{
   border-radius:16px;
   overflow:hidden;
   background: rgba(0,0,0,.16);
+  scroll-snap-align: start;
+  flex-shrink: 0;
 }
 .shot img{
   width:100%;
