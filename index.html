@@ -4,251 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mayflower Studios</title>
-  <style>
-    :root{
-      --bg1:#0b1220;
-      --bg2:#111b33;
-      --border:rgba(255,255,255,.12);
-      --text:#e5e7eb;
-      --muted:#9ca3af;
-      --accent:#38bdf8;
-      --accent2:#a78bfa;
-      --good:#22c55e;
-      --pink:#fb7185;
-      --amber:#fbbf24;
-      --shadow: 0 18px 60px rgba(0,0,0,.35);
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color:var(--text);
-      background:
-        radial-gradient(1200px 600px at 20% 10%, rgba(56,189,248,.20), transparent 60%),
-        radial-gradient(900px 500px at 80% 30%, rgba(167,139,250,.16), transparent 55%),
-        linear-gradient(180deg, var(--bg1), var(--bg2));
-      min-height:100vh;
-      padding:26px;
-    }
-    a{color:inherit}
-    .wrap{ width:min(1120px, 100%); margin:0 auto; }
-
-    /* Topbar */
-    .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:14px 16px;
-      border:1px solid var(--border);
-      border-radius:18px;
-      background: rgba(0,0,0,.18);
-      backdrop-filter: blur(10px);
-      box-shadow: var(--shadow);
-    }
-    .brand{ display:flex; flex-direction:column; gap:2px; }
-    .brand strong{
-      font-size:14px;
-      letter-spacing:.5px;
-      text-transform:uppercase;
-    }
-    .brand span{ font-size:12px; color:var(--muted); }
-    .nav{
-      display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end;
-    }
-    .pill{
-      text-decoration:none;
-      padding:10px 12px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.04);
-      color:var(--text);
-      font-weight:650;
-      font-size:13px;
-      transition: transform .12s ease, filter .12s ease;
-    }
-    .pill:hover{ transform: translateY(-1px); filter: brightness(1.03); }
-
-    /* Hero */
-    .hero{
-      margin-top:16px;
-      padding:22px 18px;
-      border:1px solid var(--border);
-      border-radius:22px;
-      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
-      box-shadow: var(--shadow);
-      display:grid;
-      grid-template-columns: 1.2fr .8fr;
-      gap:16px;
-      align-items:stretch;
-    }
-    @media (max-width: 900px){
-      .hero{ grid-template-columns: 1fr; }
-    }
-    .hero h1{
-      margin:0 0 8px;
-      font-size:clamp(30px, 4vw, 48px);
-      letter-spacing:.2px;
-    }
-    .hero p{
-      margin:0;
-      color:var(--muted);
-      line-height:1.65;
-      max-width: 75ch;
-    }
-    .ctaRow{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-top:14px;
-    }
-    .btn{
-      text-decoration:none;
-      font-weight:800;
-      padding:12px 14px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.18);
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      transition: transform .12s ease, filter .12s ease;
-      min-width: 170px;
-    }
-    .btn:hover{ transform: translateY(-1px); filter: brightness(1.03); }
-    .btn.primary{ color:#06121f; background: linear-gradient(90deg, var(--accent), var(--good)); }
-    .btn.ghost{ color:var(--text); background: rgba(255,255,255,.06); border:1px solid var(--border); }
-
-    /* Category tiles */
-    .tileGrid{
-      display:grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap:12px;
-    }
-    @media (max-width: 980px){
-      .tileGrid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-    @media (max-width: 560px){
-      .tileGrid{ grid-template-columns: 1fr; }
-    }
-    .tile{
-      border:1px solid var(--border);
-      border-radius:18px;
-      background: rgba(0,0,0,.16);
-      padding:14px;
-    }
-    .tile strong{ display:block; margin-bottom:6px; }
-    .tile p{ margin:0; color:var(--muted); line-height:1.55; font-size:14px; }
-
-    /* Sections */
-    .sectionTitle{
-      margin:18px 0 10px;
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap:12px;
-    }
-    .sectionTitle h2{
-      margin:0;
-      font-size:18px;
-      letter-spacing:.2px;
-    }
-    .sectionTitle span{
-      color:var(--muted);
-      font-size:13px;
-    }
-
-    /* Cards */
-    .grid2{
-      display:grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap:16px;
-    }
-    @media (max-width: 760px){
-      .grid2{ grid-template-columns: 1fr; }
-    }
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:18px;
-      backdrop-filter: blur(10px);
-      box-shadow: var(--shadow);
-    }
-    .card h3{
-      margin:0 0 6px;
-      font-size:22px;
-      display:flex;
-      gap:10px;
-      align-items:center;
-    }
-    .badge{
-      font-size:12px;
-      color:rgba(255,255,255,.85);
-      border:1px solid var(--border);
-      padding:3px 8px;
-      border-radius:999px;
-      background:rgba(0,0,0,.18);
-    }
-    .desc{ margin:0 0 14px; color:var(--muted); line-height:1.55; }
-
-    .btnrow{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-top:10px;
-    }
-    a.button{
-      text-decoration:none;
-      color:#06121f;
-      font-weight:800;
-      padding:12px 14px;
-      border-radius:12px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      border:1px solid rgba(255,255,255,.18);
-      transition: transform .12s ease, filter .12s ease;
-      min-width: 190px;
-    }
-    a.button:hover{ transform: translateY(-1px); filter: brightness(1.03); }
-
-    a.mods{ background: linear-gradient(90deg, var(--accent), var(--good)); }
-    a.bots{ background: linear-gradient(90deg, var(--accent2), var(--pink)); }
-    a.tools{ background: linear-gradient(90deg, var(--amber), var(--accent)); }
-
-    a.ghost{
-      color:var(--text);
-      background: rgba(255,255,255,.06);
-      border:1px solid var(--border);
-      font-weight:750;
-    }
-
-    /* Footer */
-    footer{
-      text-align:center;
-      margin-top:18px;
-      color:rgba(255,255,255,.55);
-      font-size:12px;
-      padding:14px 0 6px;
-    }
-    .links{
-      display:flex;
-      gap:10px;
-      justify-content:center;
-      flex-wrap:wrap;
-      margin-top:8px;
-    }
-    .links a{
-      text-decoration:none;
-      color:rgba(255,255,255,.75);
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.04);
-      padding:8px 10px;
-      border-radius:999px;
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="wrap">
@@ -271,7 +27,7 @@
     <section class="hero">
       <div>
         <h1>🌿 Mayflower Studios</h1>
-        <p>
+        <p class="muted">
           A small development studio building <strong>Discord bots</strong>, <strong>Minecraft mods</strong>,
           <strong>games</strong>, and <strong>software tools</strong> — focused on clean design, fun systems, and reliable builds.
         </p>
@@ -284,19 +40,19 @@
       <div class="tileGrid">
         <div class="tile">
           <strong>🧱 Minecraft Mods</strong>
-          <p>Survival-friendly systems, storage, automation, and polish.</p>
+          <p class="muted small">Survival-friendly systems, storage, automation, and polish.</p>
         </div>
         <div class="tile">
           <strong>🤖 Discord Bots</strong>
-          <p>Community tools, RPG progression, AI features, and fun commands.</p>
+          <p class="muted small">Community tools, RPG progression, AI features, and fun commands.</p>
         </div>
         <div class="tile">
           <strong>🎮 Game Dev</strong>
-          <p>Cozy prototypes, experiments, and long-term projects.</p>
+          <p class="muted small">Cozy prototypes, experiments, and long-term projects.</p>
         </div>
         <div class="tile">
           <strong>🧰 Software</strong>
-          <p>Utilities, helpers, and tools that make creation easier.</p>
+          <p class="muted small">Utilities, helpers, and tools that make creation easier.</p>
         </div>
       </div>
     </section>
@@ -335,7 +91,6 @@
         <h3>🦊 FoxBot <span class="badge">Discord Bot</span></h3>
         <p class="desc">A whimsical Discord bot with personality, fun commands, and community features.</p>
         <div class="btnrow">
-          <!-- Make foxbot.html later (I can generate it) -->
           <a class="button bots" href="foxbot.html">📄 Project Page</a>
           <a class="button ghost" href="#">💬 Support Discord</a>
         </div>
@@ -346,35 +101,35 @@
         <h3>🌙 EchoBloom <span class="badge">Discord Bot</span></h3>
         <p class="desc">Realm-based RPG bot with XP, raids, progression, lore, and server events.</p>
         <div class="btnrow">
-          <!-- Make echobloom.html later (I can generate it) -->
           <a class="button bots" href="echobloom.html">📄 Project Page</a>
           <a class="button ghost" href="#">💬 Support Discord</a>
         </div>
       </div>
     </section>
 
-    <!-- Category anchors (optional sections) -->
+    <!-- Mods -->
     <div class="sectionTitle" id="mods">
       <h2>🧱 Minecraft Mods</h2>
       <span>Steelhold • LogiChest</span>
     </div>
     <section class="card">
-      <p style="margin:0; color:var(--muted); line-height:1.7;">
-        Mayflower Studios is an independent development studio creating tools and experiences across multiple platforms, including Minecraft, Discord, and custom software projects. We focus on building systems that are reliable, well-designed, and enjoyable to use, whether they’re powering online communities or enhancing in-game experiences.
+      <p class="muted">
+        Our Minecraft mods are built with survival gameplay in mind, focusing on systems that feel natural to use and fit seamlessly into existing worlds. We prioritize clean, intuitive interfaces and mechanics that respect the vanilla experience while still offering meaningful upgrades.
         <br><br>
-        Our work emphasizes polish, long-term stability, and thoughtful design. We care about how things feel to use just as much as how they function, paying attention to the small details that turn a project from “working” into something people actually love interacting with.
+        Every mod is designed to be server-ready and long-term stable, with multiplayer performance, compatibility, and reliability at the forefront. Whether it’s secure storage, automation, or quality-of-life improvements, we build mods that scale well from small private worlds to active community servers.
         <br><br>
-        From community-driven bots to immersive game mods and experimental software ideas, Mayflower Studios is driven by a simple goal: create projects that people enjoy returning to, and that continue to grow and improve over time.
+        If you enjoy tidy bases, organized systems, and mods that “just work” without unnecessary complexity, Mayflower Studios’ Minecraft projects are built with you in mind.
       </p>
     </section>
 
+    <!-- Bots -->
     <div class="sectionTitle" id="bots">
       <h2>🤖 Discord Bots</h2>
       <span>FoxBot • EchoBloom</span>
     </div>
     <section class="card">
-      <p style="margin:0; color:var(--muted); line-height:1.7;">
-        Our Discord bots range from playful community companions to fully featured progression systems built around lore, events, and long-term engagement. Some are designed to add charm and personality to a server, while others form the backbone of complex, evolving communities with ranks, realms, and seasonal systems.
+      <p class="muted">
+        Our Discord bots range from playful community companions to fully featured progression systems built around lore, events, and long-term engagement. Some are designed to add charm and personality to a server, while others form the backbone of evolving communities with ranks, realms, and seasonal systems.
         <br><br>
         Every bot is built for real, active servers — with configurable features, moderation hooks, and thoughtful quality-of-life tools that make day-to-day management easier. We focus on reliability, clarity, and flexibility, ensuring bots can scale from small friend groups to large, lore-driven communities without becoming brittle or overwhelming.
         <br><br>
@@ -385,19 +140,19 @@
     <!-- About -->
     <div class="sectionTitle" id="about">
       <h2>🌿 About Mayflower Studios</h2>
-      <span>Short studio blurb</span>
+      <span>Who we are & how we build</span>
     </div>
 
     <section class="card">
-      <p style="margin:0; color:var(--muted); line-height:1.7;">
-        Mayflower Studios is an independent development studio creating tools and experiences across multiple platforms, including Minecraft, Discord, and custom software projects. We focus on building systems that are reliable, well-designed, and enjoyable to use, whether they’re powering online communities or enhancing in-game experiences.
+      <p class="muted">
+        Mayflower Studios is an independent development studio creating tools and experiences across multiple platforms, including Minecraft, Discord, and custom software projects. We focus on building systems that are reliable, well-designed, and enjoyable to use — whether they’re powering online communities or enhancing in-game experiences.
         <br><br>
-        Our work emphasizes polish, long-term stability, and thoughtful design. We care about how things feel to use just as much as how they function, paying attention to the small details that turn a project from “working” into something people actually love interacting with.
+        Our work emphasizes polish, long-term stability, and thoughtful design. We care about how things feel to use just as much as how they function, paying attention to the details that turn a project from “working” into something people genuinely enjoy.
         <br><br>
-        From community-driven bots to immersive game mods and experimental software ideas, Mayflower Studios is driven by a simple goal: create projects that people enjoy returning to, and that continue to grow and improve over time.
+        From community-driven bots to immersive game mods and experimental software ideas, Mayflower Studios is driven by a simple goal: create projects people want to come back to — and keep improving them over time.
       </p>
+
       <div class="ctaRow" style="margin-top:14px;">
-        <!-- Replace # with your real links -->
         <a class="btn ghost" href="https://discord.gg/MutqYAdrwz">💬 Discord</a>
         <a class="btn ghost" href="#">🧾 GitHub</a>
         <a class="btn ghost" href="#">📨 Contact</a>
