@@ -29,6 +29,9 @@ body{
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   color:var(--text);
 
+  /* IMPORTANT: create a stacking context for pseudo-elements + canvas */
+  position: relative;
+
   background:
     /* moonlight shafts */
     radial-gradient(1100px 700px at 18% 8%, rgba(167,139,250,.16), transparent 60%),
@@ -42,7 +45,20 @@ body{
     radial-gradient(900px 650px at 20% 88%, var(--leafglow), transparent 60%),
 
     /* base night gradient */
-    linear-gradient(180deg, var(--bg1), var(--bg2));
+    linear-gradient(180deg, var(--bg1), var(--bg2)),
+
+    /* the actual background image (bottom-most) */
+    url("assets/cherry-bg.png");
+
+  background-size:
+    auto, auto, auto, auto, auto, auto, cover;
+  background-position:
+    center, center, center, center, center, center, center;
+  background-repeat:
+    no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+
+  /* optional but nice for “mystical wallpaper” feel */
+  background-attachment: scroll, scroll, scroll, scroll, scroll, scroll, fixed;
 
   min-height:100vh;
   padding:26px;
@@ -54,35 +70,29 @@ body::before{
   position:fixed;
   inset:-40px;
   pointer-events:none;
-  z-index:-2;
+  z-index:0;          /* was -2 */
   opacity:.55;
-
   background:
     radial-gradient(900px 360px at 30% 30%, rgba(255,255,255,.07), transparent 70%),
     radial-gradient(900px 360px at 70% 55%, rgba(255,255,255,.06), transparent 72%),
     radial-gradient(700px 320px at 55% 85%, rgba(255,255,255,.05), transparent 72%);
-
   filter: blur(1px);
 }
 
-/* Petal speckles (subtle) */
 body::after{
   content:"";
   position:fixed;
   inset:0;
   pointer-events:none;
-  z-index:-1;
+  z-index:1;          /* was -1 */
   opacity:.25;
   background:
-    /* Petal speckles */
     radial-gradient(10px 10px at 12% 22%, rgba(253,164,175,.38), transparent 60%),
     radial-gradient(12px 12px at 28% 38%, rgba(251,113,133,.28), transparent 60%),
     radial-gradient(9px 9px at 54% 18%, rgba(253,164,175,.30), transparent 60%),
     radial-gradient(11px 11px at 76% 46%, rgba(251,113,133,.22), transparent 60%),
     radial-gradient(8px 8px at 86% 74%, rgba(253,164,175,.24), transparent 60%),
     radial-gradient(10px 10px at 22% 82%, rgba(251,113,133,.18), transparent 60%),
-
-    /* Lantern sparkles */
     radial-gradient(1.5px 1.5px at 18% 30%, rgba(251,191,36,.45), transparent 60%),
     radial-gradient(1.2px 1.2px at 62% 22%, rgba(251,191,36,.35), transparent 60%),
     radial-gradient(1.4px 1.4px at 78% 68%, rgba(251,191,36,.32), transparent 60%),
@@ -90,12 +100,22 @@ body::after{
   filter: blur(0.2px);
 }
 
+#fireflies{
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 2;          /* was -1 */
+  pointer-events: none;
+  opacity: 0.85;
+}
+
 a{color:inherit}
 .wrap{
   width:min(1120px, 100%);
   margin:0 auto;
   position: relative;
-  z-index: 1;
+  z-index: 3;
 }
 
 h1,h2,h3{ margin:0; letter-spacing:.2px; }
@@ -427,13 +447,4 @@ footer{
   background: rgba(255,255,255,.04);
   padding:8px 10px;
   border-radius:999px;
-}
-#fireflies{
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: -1;          /* behind content, above overlays */
-  pointer-events: none;
-  opacity: 0.85;
 }
