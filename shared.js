@@ -46,7 +46,7 @@ function highlightNav() {
 }
 
 (async function initShared() {
-  // ✅ make sure canvas exists before fireflies.js runs
+  injectFavicon("/assets/icons/favicon.png");
   injectFireflies();
 
   await loadPartial("#shared-nav", "partials/nav.html");
