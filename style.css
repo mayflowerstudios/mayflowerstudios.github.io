@@ -36,7 +36,10 @@ body{
     radial-gradient(900px 520px at 75% 22%, rgba(251,113,133,.22), transparent 60%),
     radial-gradient(700px 480px at 30% 35%, rgba(253,164,175,.14), transparent 62%),
     radial-gradient(900px 650px at 20% 88%, var(--leafglow), transparent 60%),
-    linear-gradient(180deg, var(--bg1), var(--bg2)),
+
+    /* IMPORTANT: make the base gradient translucent so the image can show */
+    linear-gradient(180deg, rgba(6,11,20,.70), rgba(11,16,34,.70)),
+
     url("/assets/cherry-bg.png");
 
   background-repeat:
