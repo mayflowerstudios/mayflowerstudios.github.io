@@ -11,6 +11,7 @@
 
     <div id="shared-nav"></div>
 
+    <!-- HERO -->
     <section class="hero">
       <div>
         <p class="kicker">Minecraft Mod</p>
@@ -33,6 +34,28 @@
       </div>
     </section>
 
+    <!-- DESCRIPTION -->
+    <div class="sectionTitle">
+      <h2>📝 Description</h2>
+      <span>What LogiChest is</span>
+    </div>
+
+    <section class="card">
+      <p class="desc">
+        <strong>LogiChest</strong> is a survival-friendly storage routing system built around a central <strong>Hub</strong>
+        and a network of <strong>Sorters</strong>. Instead of endless hoppers and messy spaghetti, you get clean routing,
+        readable setups, and modular upgrades — designed for long-running worlds and multiplayer reliability.
+      </p>
+
+      <div class="callout" style="margin-top:12px;">
+        <strong>Philosophy</strong>
+        <p class="muted small">
+          Automation that stays understandable. Progression that feels earned. Systems that don’t break your base.
+        </p>
+      </div>
+    </section>
+
+    <!-- HIGHLIGHTS -->
     <div class="sectionTitle">
       <h2>⭐ Highlights</h2>
       <span>What LogiChest is about</span>
@@ -60,6 +83,125 @@
       </div>
     </section>
 
+    <!-- HOW TO USE -->
+    <div class="sectionTitle">
+      <h2>📘 How to Use</h2>
+      <span>Quick setup flow</span>
+    </div>
+
+    <section class="grid2">
+      <div class="card">
+        <h3>1) Place the Hub</h3>
+        <p class="desc">Your Hub is the brain of the network.</p>
+        <ul>
+          <li>Place the Hub near your main storage area</li>
+          <li>Open it to view connected sorters and settings</li>
+          <li>Think of it as the “router” for item traffic</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>2) Add Sorters</h3>
+        <p class="desc">Sorters do the actual filtering and delivery.</p>
+        <ul>
+          <li>Place a Sorter near a chest/barrel (or wherever it outputs)</li>
+          <li>Configure what the sorter accepts (filters)</li>
+          <li>Each sorter represents a “lane” for certain item types</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>3) Link Sorters to the Hub</h3>
+        <p class="desc">Connect devices so the Hub can route to them.</p>
+        <ul>
+          <li>Use the mod’s linking flow (item/tool or UI link action)</li>
+          <li>Confirm the Hub shows the sorter as connected</li>
+          <li>Repeat for each storage category (blocks, ores, food, etc.)</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>4) Feed Items In</h3>
+        <p class="desc">Send items to the Hub and let it route them.</p>
+        <ul>
+          <li>Insert items into the Hub input (or attached input)</li>
+          <li>The Hub finds a matching sorter and routes automatically</li>
+          <li>Unmatched items follow your configured fallback behavior</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- CRAFTING RECIPES -->
+    <div class="sectionTitle">
+      <h2>🧱 Crafting Recipes</h2>
+      <span>Core blocks & progression</span>
+    </div>
+
+    <section class="grid2">
+      <div class="card">
+        <h3>🏠 Hub Block</h3>
+        <p class="desc">The central router that manages your whole storage network.</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>
+Recipe (placeholder):
+[Iron Ingot] [Redstone]  [Iron Ingot]
+[Chest]      [Comparator][Chest]
+[Iron Ingot] [Redstone]  [Iron Ingot]
+          </code>
+        </div>
+        <p class="muted small" style="margin-top:10px;">
+          Swap this with your real Hub recipe when you finalize it.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>🧩 Sorter</h3>
+        <p class="desc">Filters items and sends them to the right container.</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>
+Recipe (placeholder):
+[ ]          [Hopper]     [ ]
+[Redstone]   [Chest]      [Redstone]
+[ ]          [Comparator] [ ]
+          </code>
+        </div>
+        <p class="muted small" style="margin-top:10px;">
+          Replace with your sorter recipe + any required components.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>🔗 Linking Tool / Module</h3>
+        <p class="desc">Used to connect sorters/modules to the Hub.</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>
+Recipe (placeholder):
+[ ]        [Redstone]    [ ]
+[Paper]    [Iron Ingot]  [Paper]
+[ ]        [Redstone]    [ ]
+          </code>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>⚙️ Upgrades</h3>
+        <p class="desc">Expand capacity, features, or system limits over time.</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>
+Upgrade ideas (placeholder):
+- Capacity Upgrade (more routing slots)
+- Range Upgrade (wider network reach)
+- Speed Upgrade (faster routing)
+- Filter Upgrade (more advanced matching)
+          </code>
+        </div>
+        <p class="muted small" style="margin-top:10px;">
+          Replace these with your real upgrade names + recipes.
+        </p>
+      </div>
+    </section>
+
+    <!-- MEDIA -->
     <div class="sectionTitle">
       <h2>🖼️ Media</h2>
       <span>Icon & screenshots</span>
@@ -90,6 +232,7 @@
       </div>
     </section>
 
+    <!-- INSTALL -->
     <div class="sectionTitle">
       <h2>📥 Install</h2>
       <span>Quick notes</span>
@@ -100,12 +243,14 @@
         <strong>Recommended setup</strong>
         <p class="muted small">For servers: keep mod versions pinned and consistent across client + server.</p>
       </div>
+
       <div class="codebox">
         <code>1) Install Forge (matching your mod version)
 2) Drop LogiChest into /mods
 3) Launch once to generate config
 4) Restart after config changes</code>
       </div>
+
       <div class="btnrow" style="margin-top:12px;">
         <a class="button mods" href="https://www.curseforge.com/minecraft/mc-mods/logichest">📦 CurseForge</a>
         <a class="button ghost" href="logichestchangelog.html">🧾 Changelog</a>
