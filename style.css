@@ -50,14 +50,9 @@ body{
     /* the actual background image (bottom-most) */
     url("assets/cherry-bg.png");
 
-  background-size:
-    auto, auto, auto, auto, auto, auto, cover;
-  background-position:
-    center, center, center, center, center, center, center;
-  background-repeat:
-    no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
-
-  /* optional but nice for “mystical wallpaper” feel */
+  background-size: auto, auto, auto, auto, auto, auto, cover;
+  background-position: center, center, center, center, center, center, center;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
   background-attachment: scroll, scroll, scroll, scroll, scroll, scroll, fixed;
 
   min-height:100vh;
