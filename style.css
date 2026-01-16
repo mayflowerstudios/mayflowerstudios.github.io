@@ -1,21 +1,25 @@
 :root{
-  /* Night Sakura base */
-  --bg1:#0a0f1e;
-  --bg2:#121a33;
+  /* Forest night base */
+  --bg1:#07141a;         /* deep forest teal */
+  --bg2:#0b1026;         /* midnight indigo */
 
-  /* Core colors */
+  /* Text */
+  --text:#fff3f6;
+  --muted:rgba(255,255,255,.70);
+
+  /* Sakura + magic accents */
+  --accent:#fb7185;      /* blossom pink */
+  --accent2:#fda4af;     /* petal */
+  --good:#a78bfa;        /* moon-lilac glow */
+  --amber:#fbbf24;       /* lantern gold */
+
+  /* UI */
   --border:rgba(255,255,255,.12);
-  --text:#ffeef2;
-  --muted:rgba(255,255,255,.68);
+  --shadow: 0 18px 60px rgba(0,0,0,.40);
 
-  /* Sakura accents */
-  --accent:#fb7185;   /* blossom pink */
-  --accent2:#fda4af;  /* soft petal */
-  --good:#a78bfa;     /* lilac glow */
-  --pink:#fb7185;
-  --amber:#fbbf24;
-
-  --shadow: 0 18px 60px rgba(0,0,0,.35);
+  /* Extra glow tones */
+  --leafglow: rgba(34,197,94,.10);   /* soft green */
+  --mist: rgba(255,255,255,.08);     /* fog */
 }
 
 *{box-sizing:border-box}
@@ -26,33 +30,55 @@ body{
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   color:var(--text);
 
-  /* Night Sakura background */
+  /* Mystical forest background layers */
   background:
-    radial-gradient(1200px 600px at 20% 10%, rgba(251,113,133,.18), transparent 60%),
-    radial-gradient(900px 500px at 80% 30%, rgba(253,164,175,.14), transparent 55%),
-    radial-gradient(700px 420px at 60% 90%, rgba(167,139,250,.10), transparent 55%),
+    /* moonlight through trees */
+    radial-gradient(900px 520px at 20% 10%, rgba(167,139,250,.14), transparent 60%),
+    /* sakura glow */
+    radial-gradient(1100px 620px at 80% 18%, rgba(251,113,133,.18), transparent 62%),
+    radial-gradient(800px 520px at 65% 85%, rgba(253,164,175,.10), transparent 58%),
+    /* leafy green ambience */
+    radial-gradient(900px 650px at 15% 85%, var(--leafglow), transparent 60%),
+    /* base night gradient */
     linear-gradient(180deg, var(--bg1), var(--bg2));
 
   min-height:100vh;
   padding:26px;
 }
 
-/* subtle petal glow overlay */
+/* Mist overlay */
 body::before{
+  content:"";
+  position:fixed;
+  inset:-40px;
+  pointer-events:none;
+  z-index:-1;
+  opacity:.55;
+
+  background:
+    radial-gradient(900px 360px at 30% 30%, rgba(255,255,255,.07), transparent 70%),
+    radial-gradient(900px 360px at 70% 55%, rgba(255,255,255,.06), transparent 72%),
+    radial-gradient(700px 320px at 55% 85%, rgba(255,255,255,.05), transparent 72%);
+
+  filter: blur(1px);
+}
+
+/* Petal speckles (subtle) */
+body::after{
   content:"";
   position:fixed;
   inset:0;
   pointer-events:none;
   z-index:-1;
-  opacity:.32;
+  opacity:.25;
   background:
-    radial-gradient(10px 10px at 10% 20%, rgba(253,164,175,.38), transparent 60%),
-    radial-gradient(12px 12px at 30% 35%, rgba(251,113,133,.28), transparent 60%),
-    radial-gradient(9px 9px at 55% 15%, rgba(253,164,175,.30), transparent 60%),
-    radial-gradient(11px 11px at 75% 45%, rgba(251,113,133,.22), transparent 60%),
-    radial-gradient(8px 8px at 85% 70%, rgba(253,164,175,.24), transparent 60%),
-    radial-gradient(10px 10px at 20% 80%, rgba(251,113,133,.18), transparent 60%);
-  filter: blur(0.3px);
+    radial-gradient(10px 10px at 12% 22%, rgba(253,164,175,.38), transparent 60%),
+    radial-gradient(12px 12px at 28% 38%, rgba(251,113,133,.28), transparent 60%),
+    radial-gradient(9px 9px at 54% 18%, rgba(253,164,175,.30), transparent 60%),
+    radial-gradient(11px 11px at 76% 46%, rgba(251,113,133,.22), transparent 60%),
+    radial-gradient(8px 8px at 86% 74%, rgba(253,164,175,.24), transparent 60%),
+    radial-gradient(10px 10px at 22% 82%, rgba(251,113,133,.18), transparent 60%);
+  filter: blur(0.2px);
 }
 
 a{color:inherit}
@@ -65,7 +91,7 @@ li{ color:var(--muted); line-height:1.7; margin:6px 0; }
 .muted{ margin:0; color:var(--muted); line-height:1.7; }
 .small{ font-size:14px; line-height:1.55; }
 .kicker{
-  color:rgba(255,255,255,.75);
+  color:rgba(255,255,255,.78);
   font-size:12px;
   letter-spacing:.5px;
   text-transform:uppercase;
@@ -88,10 +114,13 @@ hr.sep{
   padding:14px 16px;
   border:1px solid var(--border);
   border-radius:18px;
-  background: rgba(0,0,0,.18);
-  backdrop-filter: blur(10px);
+
+  /* slightly more “enchanted glass” */
+  background: linear-gradient(180deg, rgba(0,0,0,.26), rgba(0,0,0,.14));
+  backdrop-filter: blur(12px);
   box-shadow: var(--shadow);
 }
+
 .brand{ display:flex; flex-direction:column; gap:2px; }
 .brand strong{
   font-size:14px;
@@ -100,14 +129,9 @@ hr.sep{
 }
 .brand span{ font-size:12px; color:var(--muted); }
 
-.brandLink{
-  text-decoration:none;
-  color:inherit;
-}
+.brandLink{ text-decoration:none; color:inherit; }
 
-.nav{
-  display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end;
-}
+.nav{ display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; }
 .pill{
   text-decoration:none;
   padding:10px 12px;
@@ -120,11 +144,10 @@ hr.sep{
   transition: transform .12s ease, filter .12s ease;
 }
 .pill:hover{ transform: translateY(-1px); filter: brightness(1.06); }
-
 .pill.active{
-  border-color: rgba(255,255,255,.22);
-  background: rgba(255,255,255,.08);
-  box-shadow: 0 10px 30px rgba(0,0,0,.18);
+  border-color: rgba(253,164,175,.40);
+  background: rgba(253,164,175,.10);
+  box-shadow: 0 10px 30px rgba(0,0,0,.20);
 }
 
 /* Hero */
@@ -133,8 +156,11 @@ hr.sep{
   padding:22px 18px;
   border:1px solid var(--border);
   border-radius:22px;
-  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+
+  /* enchanted panel */
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
   box-shadow: var(--shadow);
+
   display:grid;
   grid-template-columns: 1.2fr .8fr;
   gap:16px;
@@ -167,7 +193,7 @@ hr.sep{
 }
 .btn:hover{ transform: translateY(-1px); filter: brightness(1.06); }
 
-/* Sakura button gradients */
+/* Sakura + moonlight buttons */
 .btn.primary{ color:#1a1020; background: linear-gradient(90deg, var(--accent), var(--good)); }
 .btn.ghost{ color:var(--text); background: rgba(255,255,255,.06); border:1px solid var(--border); }
 .btn.bots{ color:#1a1020; background: linear-gradient(90deg, var(--accent2), var(--accent)); }
@@ -186,6 +212,9 @@ hr.sep{
   border-radius:18px;
   background: rgba(0,0,0,.16);
   padding:14px;
+
+  /* subtle edge glow */
+  box-shadow: 0 0 0 1px rgba(251,113,133,.06) inset;
 }
 .tile strong{ display:block; margin-bottom:6px; }
 .tile p{ margin:0; color:var(--muted); line-height:1.55; font-size:14px; }
@@ -199,19 +228,16 @@ hr.sep{
   gap:12px;
 }
 .sectionTitle h2{ margin:0; font-size:18px; }
-
-/* little sakura accent line under section titles */
 .sectionTitle h2::after{
   content:"";
   display:block;
   height:2px;
-  width:56px;
+  width:64px;
   margin-top:8px;
   border-radius:999px;
-  background: linear-gradient(90deg, var(--accent), transparent);
-  opacity:.9;
+  background: linear-gradient(90deg, var(--accent), rgba(167,139,250,.25), transparent);
+  opacity:.95;
 }
-
 .sectionTitle span{ color:var(--muted); font-size:13px; }
 
 /* Cards / grids */
@@ -225,13 +251,20 @@ hr.sep{
 }
 
 .card{
-  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
   border:1px solid var(--border);
   border-radius:18px;
   padding:18px;
-  backdrop-filter: blur(10px);
+
+  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+  backdrop-filter: blur(12px);
   box-shadow: var(--shadow);
+
+  /* tiny “enchanted” tint */
+  box-shadow:
+    0 18px 60px rgba(0,0,0,.40),
+    0 0 0 1px rgba(253,164,175,.06) inset;
 }
+
 .card h3{
   margin:0 0 6px;
   font-size:22px;
@@ -239,9 +272,10 @@ hr.sep{
   gap:10px;
   align-items:center;
 }
+
 .badge{
   font-size:12px;
-  color:rgba(255,255,255,.85);
+  color:rgba(255,255,255,.86);
   border:1px solid var(--border);
   padding:3px 8px;
   border-radius:999px;
@@ -272,7 +306,6 @@ a.button{
 }
 a.button:hover{ transform: translateY(-1px); filter: brightness(1.06); }
 
-/* Sakura gradients for project buttons */
 a.mods{ background: linear-gradient(90deg, var(--accent2), var(--good)); }
 a.bots{ background: linear-gradient(90deg, var(--accent), var(--accent2)); }
 a.ghost{
@@ -306,11 +339,8 @@ a.ghost{
 }
 
 /* Media / icon gallery */
-.mediaHeader{
-  display:flex;
-  gap:14px;
-  align-items:center;
-}
+.mediaHeader{ display:flex; gap:14px; align-items:center; }
+
 .projectIcon{
   width:64px;
   height:64px;
@@ -320,16 +350,9 @@ a.ghost{
   object-fit: cover;
   box-shadow: 0 12px 35px rgba(0,0,0,.25);
 }
-.mediaMeta strong{
-  display:block;
-  font-size:16px;
-  margin-bottom:2px;
-}
-.mediaMeta span{
-  display:block;
-  color:var(--muted);
-  font-size:13px;
-}
+
+.mediaMeta strong{ display:block; font-size:16px; margin-bottom:2px; }
+.mediaMeta span{ display:block; color:var(--muted); font-size:13px; }
 
 .gallery{
   margin-top:14px;
