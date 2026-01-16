@@ -4,346 +4,76 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Steelhold Changelog • Mayflower Studios</title>
-  <style>
-    :root{
-      --bg1:#070b14;
-      --bg2:#0c1224;
-      --card:rgba(255,255,255,.06);
-      --border:rgba(255,255,255,.12);
-      --text:#e5e7eb;
-      --muted:#a3a3a3;
-      --accent:#60a5fa;
-      --accent2:#34d399;
-      --warn:#fbbf24;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color:var(--text);
-      background:
-        radial-gradient(900px 520px at 15% 10%, rgba(96,165,250,.18), transparent 60%),
-        radial-gradient(900px 520px at 85% 20%, rgba(52,211,153,.14), transparent 60%),
-        linear-gradient(180deg, var(--bg1), var(--bg2));
-      min-height:100vh;
-    }
-    a{color:inherit}
-    .wrap{
-      width:min(1100px, 92vw);
-      margin:0 auto;
-      padding:26px 0 40px;
-    }
-
-    /* Top bar */
-    .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
-      padding:14px 16px;
-      border:1px solid var(--border);
-      border-radius:16px;
-      background:rgba(0,0,0,.18);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 18px 60px rgba(0,0,0,.35);
-    }
-    .brand{
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-    }
-    .brand strong{
-      font-size:14px;
-      letter-spacing:.4px;
-      text-transform:uppercase;
-      opacity:.95;
-    }
-    .brand span{
-      font-size:12px;
-      color:var(--muted);
-    }
-    .nav{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      justify-content:flex-end;
-    }
-    .pill{
-      text-decoration:none;
-      padding:10px 12px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.04);
-      color:var(--text);
-      font-weight:600;
-      font-size:13px;
-      transition: transform .12s ease, filter .12s ease;
-    }
-    .pill:hover{ transform: translateY(-1px); filter:brightness(1.03); }
-
-    /* Hero */
-    .hero{
-      margin-top:16px;
-      padding:22px 18px;
-      border:1px solid var(--border);
-      border-radius:18px;
-      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
-      box-shadow: 0 18px 60px rgba(0,0,0,.35);
-    }
-    .hero h1{
-      margin:0 0 6px;
-      font-size:clamp(28px, 3.5vw, 42px);
-      letter-spacing:.2px;
-    }
-    .subtitle{
-      margin:0;
-      color:var(--muted);
-      line-height:1.55;
-      max-width: 80ch;
-    }
-
-    .ctaRow{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-top:14px;
-    }
-    .btn{
-      text-decoration:none;
-      padding:12px 14px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.18);
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      font-weight:800;
-      transition: transform .12s ease, filter .12s ease;
-    }
-    .btn:hover{ transform: translateY(-1px); filter:brightness(1.03); }
-    .btn.primary{
-      color:#06121f;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-    }
-    .btn.ghost{
-      color:var(--text);
-      background: rgba(255,255,255,.06);
-      border:1px solid var(--border);
-      font-weight:700;
-    }
-
-    /* Content */
-    .card{
-      margin-top:16px;
-      padding:18px;
-      border:1px solid var(--border);
-      border-radius:18px;
-      background:rgba(255,255,255,.05);
-      box-shadow: 0 14px 40px rgba(0,0,0,.3);
-    }
-    .card h2{
-      margin:0 0 10px;
-      font-size:18px;
-      letter-spacing:.2px;
-    }
-    .muted{ color:var(--muted); }
-
-    .entry{
-      border:1px solid var(--border);
-      background: rgba(0,0,0,.18);
-      border-radius:16px;
-      padding:14px;
-      margin-top:12px;
-    }
-    .entryTop{
-      display:flex;
-      flex-wrap:wrap;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:8px;
-    }
-    .version{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      font-weight:900;
-      letter-spacing:.2px;
-    }
-    .tag{
-      font-size:12px;
-      padding:4px 10px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.05);
-      color: var(--text);
-      font-weight:800;
-    }
-    .date{
-      font-size:12px;
-      color:var(--muted);
-    }
-
-    .grid2{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
-      margin-top:10px;
-    }
-    @media (max-width: 800px){
-      .grid2{ grid-template-columns: 1fr; }
-    }
-    .box{
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.03);
-      border-radius:14px;
-      padding:12px;
-    }
-    .box h3{
-      margin:0 0 8px;
-      font-size:14px;
-    }
-    ul{
-      margin:0;
-      padding-left:18px;
-      color:var(--muted);
-      line-height:1.7;
-    }
-
-    .latest{
-      border:1px solid rgba(52,211,153,.35);
-      background: radial-gradient(600px 180px at 20% 0%, rgba(52,211,153,.16), transparent 60%),
-                  rgba(0,0,0,.18);
-    }
-
-    footer{
-      margin-top:18px;
-      text-align:center;
-      color:rgba(255,255,255,.55);
-      font-size:12px;
-      padding:10px 0 0;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="wrap">
 
-    <!-- Top bar -->
-    <div class="topbar">
+    <div class="topbar" id="top">
       <div class="brand">
-        <strong>Mayflower Studios</strong>
-        <span>Minecraft mods • tools • cozy chaos</span>
+        <strong><a href="index.html" style="text-decoration:none;">Mayflower Studios</a></strong>
+        <span>Discord bots • Minecraft mods • games • software</span>
       </div>
-      <div class="nav">
-        <a class="pill" href="index.html">🏠 Home</a>
+      <nav class="nav">
         <a class="pill" href="steelhold.html">🔐 Steelhold</a>
-        <a class="pill" href="#entries">🧾 Entries</a>
-      </div>
+        <a class="pill" href="logichest.html">🧠 LogiChest</a>
+        <a class="pill" href="index.html#projects">🚀 Projects</a>
+      </nav>
     </div>
 
-    <!-- Hero -->
     <section class="hero">
-      <h1>🧾 Steelhold Changelog</h1>
-      <p class="subtitle">
-        Patch notes, fixes, tweaks, and new features — all in one place.
-        (Tip: keep the newest entry at the top.)
-      </p>
+      <div>
+        <p class="kicker">Minecraft Mod</p>
+        <h1>🧾 Steelhold Changelog</h1>
+        <p class="muted">
+          A clean history of updates. (You can paste your real versions/notes into the entries below.)
+        </p>
+        <div class="ctaRow">
+          <a class="btn primary" href="steelhold.html">🔐 Back to Steelhold</a>
+          <a class="btn ghost" href="https://www.curseforge.com/minecraft/mc-mods/steelhold">📦 Download</a>
+        </div>
+      </div>
 
-      <div class="ctaRow">
-        <!-- Replace # with your actual download/releases page if you want -->
-        <a class="btn primary" href="#">📦 Download / Releases</a>
-        <a class="btn ghost" href="steelhold.html">↩ Back to Steelhold</a>
+      <div class="tileGrid">
+        <div class="tile">
+          <strong>Tip</strong>
+          <p>Keep entries short: Added / Changed / Fixed is perfect.</p>
+        </div>
+        <div class="tile">
+          <strong>Format</strong>
+          <p>Newest at the top so players see the latest fast.</p>
+        </div>
       </div>
     </section>
 
-    <section class="card" id="entries">
-      <h2>Latest</h2>
-      <p class="muted">Replace the placeholder notes below with your real version notes.</p>
+    <div class="sectionTitle">
+      <h2>📌 Latest</h2>
+      <span>Replace with your real notes</span>
+    </div>
 
-      <!-- LATEST ENTRY (keep one marked as latest) -->
-      <div class="entry latest">
-        <div class="entryTop">
-          <div class="version">
-            v0.0.0
-            <span class="tag">Latest</span>
-            <span class="tag">Forge 1.20.1</span>
-          </div>
-          <div class="date">January 15, 2026</div>
-        </div>
-
-        <div class="grid2">
-          <div class="box">
-            <h3>✨ Added</h3>
-            <ul>
-              <li>New safe variant (placeholder)</li>
-              <li>Config toggle for (placeholder)</li>
-            </ul>
-          </div>
-          <div class="box">
-            <h3>🛠 Fixed</h3>
-            <ul>
-              <li>Fixed inventory dropping behavior (placeholder)</li>
-              <li>Fixed ownership persistence edge case (placeholder)</li>
-            </ul>
-          </div>
-          <div class="box">
-            <h3>⚖️ Changed</h3>
-            <ul>
-              <li>Adjusted crafting cost (placeholder)</li>
-              <li>Updated interaction messages (placeholder)</li>
-            </ul>
-          </div>
-          <div class="box">
-            <h3>⚠️ Known Issues</h3>
-            <ul>
-              <li>None currently (or list them)</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- PAST ENTRY TEMPLATE -->
-      <div class="entry">
-        <div class="entryTop">
-          <div class="version">
-            v0.0.0
-            <span class="tag">Forge 1.20.1</span>
-          </div>
-          <div class="date">January 01, 2026</div>
-        </div>
-
-        <div class="grid2">
-          <div class="box">
-            <h3>✨ Added</h3>
-            <ul>
-              <li>(placeholder)</li>
-            </ul>
-          </div>
-          <div class="box">
-            <h3>🛠 Fixed</h3>
-            <ul>
-              <li>(placeholder)</li>
-            </ul>
-          </div>
-          <div class="box">
-            <h3>⚖️ Changed</h3>
-            <ul>
-              <li>(placeholder)</li>
-            </ul>
-          </div>
-          <div class="box">
-            <h3>⚠️ Known Issues</h3>
-            <ul>
-              <li>(placeholder)</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- Add more entries above this line by copy/pasting the template -->
+    <section class="card">
+      <h3>v0.1.0 <span class="badge">Initial</span></h3>
+      <p class="muted">
+        <strong>Added:</strong> Core secure storage system, first safe blocks, key/ownership foundation.<br>
+        <strong>Fixed:</strong> N/A<br>
+        <strong>Notes:</strong> Early version — expect rapid iteration.
+      </p>
+      <hr class="sep">
+      <h3>v0.0.9 <span class="badge">Prototype</span></h3>
+      <p class="muted">
+        <strong>Added:</strong> Internal testing builds.<br>
+        <strong>Changed:</strong> UI/UX polish pass.<br>
+        <strong>Fixed:</strong> Interaction edge cases.
+      </p>
     </section>
 
     <footer>
-      © <span id="year"></span> Mayflower Studios • Built with GitHub Pages
+      <div>© <span id="year"></span> Mayflower Studios</div>
+      <div class="links">
+        <a href="index.html">🏠 Home</a>
+        <a href="steelhold.html">🔐 Steelhold</a>
+        <a href="#top">⬆ Top</a>
+      </div>
     </footer>
   </div>
 
