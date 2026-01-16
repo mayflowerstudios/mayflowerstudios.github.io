@@ -30,38 +30,24 @@ body{
   color:var(--text);
   position: relative;
 
-  background-image:
+  /* keep only the “atmosphere” gradients here (no photo) */
+  background:
     radial-gradient(1100px 700px at 18% 8%, rgba(167,139,250,.16), transparent 60%),
     radial-gradient(900px 600px at 82% 18%, rgba(167,139,250,.10), transparent 62%),
     radial-gradient(900px 520px at 75% 22%, rgba(251,113,133,.22), transparent 60%),
     radial-gradient(700px 480px at 30% 35%, rgba(253,164,175,.14), transparent 62%),
-    radial-gradient(900px 650px at 20% 88%, var(--leafglow), transparent 60%),
+    radial-gradient(900px 650px at 20% 88%, var(--leafglow), transparent 60%);
 
-    /* IMPORTANT: make the base gradient translucent so the image can show */
-    linear-gradient(180deg, rgba(6,11,20,.70), rgba(11,16,34,.70)),
-
-    url("/assets/cherry-bg.png");
-
-  background-repeat:
-    no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
-
-  background-position:
-    center, center, center, center, center, center, center;
-
-  background-size:
-    auto, auto, auto, auto, auto, auto, cover;
-
-  min-height: 100vh;
-  padding: 26px;
+  min-height:100vh;
+  padding:26px;
 }
 
-/* Mist overlay */
 body::before{
   content:"";
   position:fixed;
   inset:-40px;
   pointer-events:none;
-  z-index:0;          /* was -2 */
+  z-index:-2;     /* above the wallpaper (-3) */
   opacity:.55;
   background:
     radial-gradient(900px 360px at 30% 30%, rgba(255,255,255,.07), transparent 70%),
@@ -75,7 +61,7 @@ body::after{
   position:fixed;
   inset:0;
   pointer-events:none;
-  z-index:1;          /* was -1 */
+  z-index:-1;     /* above mist */
   opacity:.25;
   background:
     radial-gradient(10px 10px at 12% 22%, rgba(253,164,175,.38), transparent 60%),
@@ -91,22 +77,36 @@ body::after{
   filter: blur(0.2px);
 }
 
+
+html::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  pointer-events: none;
+
+  /* fixed wallpaper + dark wash */
+  background:
+    linear-gradient(180deg, rgba(6,11,20,.72), rgba(11,16,34,.72)),
+    url("/assets/cherry-bg.png") center / cover no-repeat;
+
+  transform: translateZ(0); /* helps with some GPU compositing */
+}
+
 #fireflies{
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 2;          /* was -1 */
+  z-index: 0;          /* above overlays (-1/-2/-3) */
   pointer-events: none;
   opacity: 0.85;
 }
 
 a{color:inherit}
 .wrap{
-  width:min(1120px, 100%);
-  margin:0 auto;
   position: relative;
-  z-index: 3;
+  z-index: 1;          /* above canvas */
 }
 
 h1,h2,h3{ margin:0; letter-spacing:.2px; }
@@ -140,10 +140,33 @@ hr.sep{
   border:1px solid var(--border);
   border-radius:18px;
 
-  /* slightly more “enchanted glass” */
-  background: linear-gradient(180deg, rgba(0,0,0,.26), rgba(0,0,0,.14));
-  backdrop-filter: blur(12px);
-  box-shadow: var(--shadow);
+  /* darker enchanted glass to match hero/cards */
+  background:
+    linear-gradient(
+      180deg,
+      rgba(8,12,24,.78),
+      rgba(8,12,24,.58)
+    );
+
+  backdrop-filter: blur(14px);
+  box-shadow:
+    0 18px 60px rgba(0,0,0,.45),
+    0 0 0 1px rgba(253,164,175,.06) inset;
+}
+
+.topbar::after{
+  content:"";
+  position:absolute;
+  inset:auto 18px 0 18px;
+  height:1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(251,113,133,.45),
+    rgba(167,139,250,.35),
+    transparent
+  );
+  opacity:.6;
 }
 
 .brand{ display:flex; flex-direction:column; gap:2px; }
