@@ -105,8 +105,11 @@ html::before{
 
 a{color:inherit}
 .wrap{
+  width: min(980px, 100%);   /* was 1120px */
+  margin: 0 auto;
   position: relative;
-  z-index: 1;          /* above canvas */
+  z-index: 1;
+  padding: 0 10px;           /* adds breathing room on small screens */
 }
 
 h1,h2,h3{ margin:0; letter-spacing:.2px; }
