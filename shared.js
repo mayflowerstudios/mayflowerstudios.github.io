@@ -11,7 +11,7 @@ function setYear() {
 }
 
 function highlightNav() {
-  const key = document.body.dataset.nav; // e.g. "mods" or "bots"
+  const key = document.body.dataset.nav;
   if (!key) return;
   const link = document.querySelector(`.pill[data-nav="${key}"]`);
   if (link) link.classList.add("active");
