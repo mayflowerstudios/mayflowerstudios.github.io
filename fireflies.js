@@ -5,23 +5,36 @@ if (!canvas) {
   const ctx = canvas.getContext("2d", { alpha: true });
 
   let fireflies = [];
+  let anchors = [];
   let DPR = window.devicePixelRatio || 1;
   let width = 0, height = 0;
   let rafId = null;
 
-  // Count scales with screen size but capped
-  function getMaxFireflies() {
-    return Math.min(90, Math.floor(window.innerWidth / 14));
-  }
-
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // Warm firefly colors (RGB only; alpha handled separately)
+  // Mouse “magic” (soft attraction)
+  const mouse = { x: 0, y: 0, active: false };
+  window.addEventListener("mousemove", (e) => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+    mouse.active = true;
+  });
+  window.addEventListener("mouseleave", () => (mouse.active = false));
+
+  function getMaxFireflies() {
+    return Math.min(85, Math.floor(window.innerWidth / 16));
+  }
+
+  // Warm firefly colors
   const colors = [
-    [251,191,36],  // gold
-    [253,224,71],  // soft yellow
-    [252,211,77]   // dim amber
+    [251, 191, 36], // gold
+    [253, 224, 71], // soft yellow
+    [252, 211, 77], // dim amber
   ];
+
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const clamp01 = (x) => Math.max(0, Math.min(1, x));
+  const lerp = (a, b, t) => a + (b - a) * t;
 
   function resize() {
     DPR = window.devicePixelRatio || 1;
@@ -36,6 +49,25 @@ if (!canvas) {
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   }
 
+  function makeAnchors() {
+    // A few invisible “glades” they tend to orbit around
+    const count = Math.max(3, Math.min(7, Math.floor(width / 420)));
+    anchors = [];
+    for (let i = 0; i < count; i++) {
+      anchors.push({
+        x: rand(width * 0.15, width * 0.85),
+        y: rand(height * 0.15, height * 0.85),
+        // anchors drift slightly (forest breathing)
+        ax: rand(-0.02, 0.02),
+        ay: rand(-0.015, 0.015),
+      });
+    }
+  }
+
+  function pickAnchor() {
+    return anchors[Math.floor(Math.random() * anchors.length)];
+  }
+
   class Firefly {
     constructor() {
       this.reset(true);
@@ -45,57 +77,166 @@ if (!canvas) {
       this.x = Math.random() * width;
       this.y = Math.random() * height;
 
-      // core size + halo size
-      this.r = Math.random() * 1.2 + 0.8;          // core radius
-      this.halo = this.r * (6 + Math.random() * 6); // halo radius
+      // Softer magical glows
+      this.r = rand(0.9, 2.2);            // core
+      this.halo = this.r * rand(10, 18);  // bigger halo
 
-      // drift speed
-      this.vx = (Math.random() - 0.5) * 0.18;
-      this.vy = (Math.random() - 0.5) * 0.14;
+      // Gentle float movement
+      this.ang = rand(0, Math.PI * 2);
+      this.vx = rand(-0.06, 0.06);
+      this.vy = rand(-0.05, 0.05);
 
-      // twinkle
-      this.phase = Math.random() * Math.PI * 2;
-      this.tw = Math.random() * 0.012 + 0.004;
+      // Wandering personality
+      this.turn = rand(0.002, 0.008);     // curvy
+      this.maxSpeed = rand(0.18, 0.42);   // slow magical float
+      this.drag = rand(0.987, 0.995);
 
-      // brightness
-      this.base = Math.random() * 0.18 + 0.10; // minimum glow
-      this.amp = Math.random() * 0.30 + 0.22;  // twinkle amplitude
+      // Spiral drift (occasional)
+      this.spiralT = rand(0, 10);
+      this.spiralRate = rand(0.25, 0.65);    // how often spiral influence changes
+      this.spiralAmp = rand(0.004, 0.02);    // strength of spiral
 
-      // color
+      // Anchor “glade” attraction
+      this.anchor = pickAnchor();
+      this.anchorPull = rand(0.004, 0.014);
+
+      // Blink envelope (mostly off, little bursts)
+      this.blinkT = rand(0, 1);
+      this.blinkLen = rand(1.8, 3.8);
+      this.onFrac = rand(0.10, 0.18);
+      this.peak = rand(0.55, 0.95);
+      this.base = rand(0.02, 0.07);
+
+      // Rare sparkle bloom
+      this.bloomCooldown = rand(2.0, 8.0);
+      this.bloom = 0;
+
+      // Color
       this.rgb = colors[Math.floor(Math.random() * colors.length)];
 
-      // spawn fade-in so they don't “pop”
+      // Spawn fade in
       this.spawn = initial ? Math.random() : 0;
-      this.spawnRate = Math.random() * 0.012 + 0.006;
+      this.spawnRate = rand(0.006, 0.016);
+
+      // When to re-pick anchor
+      this.reanchor = rand(6, 16);
     }
 
-    update() {
+    blinkAlpha(dt) {
+      this.blinkT += dt;
+      if (this.blinkT >= this.blinkLen) this.blinkT -= this.blinkLen;
+
+      const t = this.blinkT / this.blinkLen; // 0..1
+      const on = this.onFrac;
+
+      // center is random-ish but stable per blink cycle
+      const center = 0.35;
+      let d = Math.abs(t - center);
+      d = Math.min(d, 1 - d);
+
+      const half = on * 0.5;
+      if (d > half) return this.base;
+
+      const u = 1 - d / half; // 0..1
+      const smooth = u * u * (3 - 2 * u); // smoothstep
+      return lerp(this.base, this.peak, smooth);
+    }
+
+    update(dt) {
+      // fade in
+      this.spawn = Math.min(1, this.spawn + this.spawnRate);
+
+      // anchors drift slowly (forest “breathing”)
+      // (done in global update too, but harmless here if omitted)
+
+      // occasionally pick a new anchor (feels like drifting between glades)
+      this.reanchor -= dt;
+      if (this.reanchor <= 0) {
+        this.anchor = pickAnchor();
+        this.reanchor = rand(6, 18);
+        this.anchorPull = rand(0.004, 0.014);
+      }
+
+      // wander heading
+      this.ang += rand(-this.turn, this.turn);
+
+      // spiral influence
+      this.spiralT += dt * this.spiralRate;
+      const spiral = Math.sin(this.spiralT) * this.spiralAmp;
+
+      // direction vector
+      const dx = Math.cos(this.ang);
+      const dy = Math.sin(this.ang);
+
+      // base acceleration (very gentle)
+      let ax = dx * 0.01 + (-dy) * spiral;
+      let ay = dy * 0.01 + ( dx) * spiral;
+
+      // anchor pull (soft)
+      const adx = this.anchor.x - this.x;
+      const ady = this.anchor.y - this.y;
+      const ad = Math.hypot(adx, ady) || 1;
+      ax += (adx / ad) * this.anchorPull;
+      ay += (ady / ad) * this.anchorPull;
+
+      // subtle mouse “curiosity”
+      if (mouse.active) {
+        const mx = mouse.x - this.x;
+        const my = mouse.y - this.y;
+        const md = Math.hypot(mx, my) || 1;
+        const near = clamp01(1 - md / 420); // only within ~420px
+        const mousePull = 0.006 * near;     // soft
+        ax += (mx / md) * mousePull;
+        ay += (my / md) * mousePull;
+      }
+
+      // integrate velocity
+      this.vx += ax;
+      this.vy += ay;
+
+      // clamp speed softly
+      const sp = Math.hypot(this.vx, this.vy);
+      if (sp > this.maxSpeed) {
+        const s = this.maxSpeed / sp;
+        this.vx *= s;
+        this.vy *= s;
+      }
+
+      // drag
+      this.vx *= this.drag;
+      this.vy *= this.drag;
+
       this.x += this.vx;
       this.y += this.vy;
 
-      // gentle “float”
-      this.phase += this.tw;
-      const twinkle = this.base + (Math.sin(this.phase) * 0.5 + 0.5) * this.amp;
+      // edges: wrap softly (big margin so it’s unseen)
+      const margin = 90;
+      if (this.x < -margin) this.x = width + margin;
+      if (this.x > width + margin) this.x = -margin;
+      if (this.y < -margin) this.y = height + margin;
+      if (this.y > height + margin) this.y = -margin;
 
-      // spawn fade in
-      this.spawn = Math.min(1, this.spawn + this.spawnRate);
+      // sparkle bloom (rare tiny magic pulse)
+      this.bloomCooldown -= dt;
+      if (this.bloomCooldown <= 0) {
+        this.bloomCooldown = rand(3.0, 10.0);
+        this.bloom = rand(0.35, 0.9);
+      }
+      this.bloom = Math.max(0, this.bloom - dt * 1.2);
 
-      this.a = twinkle * this.spawn;
-
-      // wrap edges
-      if (this.x < -40) this.x = width + 40;
-      if (this.x > width + 40) this.x = -40;
-      if (this.y < -40) this.y = height + 40;
-      if (this.y > height + 40) this.y = -40;
+      // brightness
+      const blink = this.blinkAlpha(dt);
+      const bloomBoost = this.bloom * 0.35;
+      this.a = (blink + bloomBoost) * this.spawn;
     }
 
     draw() {
       const [r, g, b] = this.rgb;
 
-      // halo (soft glow)
+      // halo
       const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.halo);
       grad.addColorStop(0, `rgba(${r},${g},${b},${this.a})`);
-      grad.addColorStop(0.25, `rgba(${r},${g},${b},${this.a * 0.35})`);
+      grad.addColorStop(0.22, `rgba(${r},${g},${b},${this.a * 0.30})`);
       grad.addColorStop(1, "rgba(0,0,0,0)");
 
       ctx.fillStyle = grad;
@@ -103,8 +244,8 @@ if (!canvas) {
       ctx.arc(this.x, this.y, this.halo, 0, Math.PI * 2);
       ctx.fill();
 
-      // core (sharp dot)
-      ctx.fillStyle = `rgba(${r},${g},${b},${Math.min(1, this.a * 1.4)})`;
+      // core
+      ctx.fillStyle = `rgba(${r},${g},${b},${Math.min(1, this.a * 1.6)})`;
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
       ctx.fill();
@@ -115,30 +256,46 @@ if (!canvas) {
     fireflies = [];
     if (prefersReducedMotion) return;
 
+    makeAnchors();
     const count = getMaxFireflies();
     for (let i = 0; i < count; i++) fireflies.push(new Firefly());
   }
 
-  function animate() {
+  // Drift anchors subtly (forest “breathing”)
+  function updateAnchors(dt) {
+    for (const a of anchors) {
+      a.x += a.ax;
+      a.y += a.ay;
+
+      // bounce softly inside safe bounds
+      if (a.x < width * 0.12 || a.x > width * 0.88) a.ax *= -1;
+      if (a.y < height * 0.12 || a.y > height * 0.88) a.ay *= -1;
+    }
+  }
+
+  let last = performance.now();
+  function animate(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+
     ctx.clearRect(0, 0, width, height);
 
-    // Makes glows feel magical (additive blend)
     ctx.globalCompositeOperation = "lighter";
 
+    updateAnchors(dt);
     for (const f of fireflies) {
-      f.update();
+      f.update(dt);
       f.draw();
     }
 
-    // Reset blend mode
     ctx.globalCompositeOperation = "source-over";
-
     rafId = requestAnimationFrame(animate);
   }
 
   function start() {
     if (rafId) return;
-    animate();
+    last = performance.now();
+    rafId = requestAnimationFrame(animate);
   }
 
   function stop() {
@@ -147,18 +304,15 @@ if (!canvas) {
     rafId = null;
   }
 
-  // Init
   resize();
   init();
   start();
 
-  // Resize
   window.addEventListener("resize", () => {
     resize();
     init();
   });
 
-  // Pause when tab is hidden (saves battery/CPU)
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) stop();
     else start();
