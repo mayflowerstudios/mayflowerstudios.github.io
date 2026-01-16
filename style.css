@@ -39,9 +39,14 @@ body{
     linear-gradient(180deg, var(--bg1), var(--bg2)),
     url("/assets/cherry-bg.png");
 
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: cover;
+  background-repeat:
+    no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+
+  background-position:
+    center, center, center, center, center, center, center;
+
+  background-size:
+    auto, auto, auto, auto, auto, auto, cover;
 
   min-height: 100vh;
   padding: 26px;
