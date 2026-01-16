@@ -1,25 +1,24 @@
 :root{
-  /* Forest night base */
-  --bg1:#07141a;         /* deep forest teal */
-  --bg2:#0b1026;         /* midnight indigo */
+  /* Forest night */
+  --bg1:#060b14;        /* near-black forest */
+  --bg2:#0b1022;        /* deep indigo canopy */
 
   /* Text */
-  --text:#fff3f6;
-  --muted:rgba(255,255,255,.70);
+  --text:#fff2f6;
+  --muted:rgba(255,255,255,.68);
 
   /* Sakura + magic accents */
-  --accent:#fb7185;      /* blossom pink */
-  --accent2:#fda4af;     /* petal */
-  --good:#a78bfa;        /* moon-lilac glow */
-  --amber:#fbbf24;       /* lantern gold */
+  --accent:#fb7185;    /* cherry blossom */
+  --accent2:#fda4af;   /* soft petal */
+  --good:#a78bfa;      /* moon lilac */
+  --amber:#fbbf24;     /* lantern */
 
   /* UI */
   --border:rgba(255,255,255,.12);
-  --shadow: 0 18px 60px rgba(0,0,0,.40);
+  --shadow:0 18px 60px rgba(0,0,0,.45);
 
-  /* Extra glow tones */
-  --leafglow: rgba(34,197,94,.10);   /* soft green */
-  --mist: rgba(255,255,255,.08);     /* fog */
+  /* Atmosphere */
+  --leafglow: rgba(34,197,94,.08);
 }
 
 *{box-sizing:border-box}
@@ -30,15 +29,18 @@ body{
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   color:var(--text);
 
-  /* Mystical forest background layers */
   background:
-    /* moonlight through trees */
-    radial-gradient(900px 520px at 20% 10%, rgba(167,139,250,.14), transparent 60%),
-    /* sakura glow */
-    radial-gradient(1100px 620px at 80% 18%, rgba(251,113,133,.18), transparent 62%),
-    radial-gradient(800px 520px at 65% 85%, rgba(253,164,175,.10), transparent 58%),
-    /* leafy green ambience */
-    radial-gradient(900px 650px at 15% 85%, var(--leafglow), transparent 60%),
+    /* moonlight shafts */
+    radial-gradient(1100px 700px at 18% 8%, rgba(167,139,250,.16), transparent 60%),
+    radial-gradient(900px 600px at 82% 18%, rgba(167,139,250,.10), transparent 62%),
+
+    /* cherry blossom glow */
+    radial-gradient(900px 520px at 75% 22%, rgba(251,113,133,.22), transparent 60%),
+    radial-gradient(700px 480px at 30% 35%, rgba(253,164,175,.14), transparent 62%),
+
+    /* deep forest ambience */
+    radial-gradient(900px 650px at 20% 88%, var(--leafglow), transparent 60%),
+
     /* base night gradient */
     linear-gradient(180deg, var(--bg1), var(--bg2));
 
@@ -277,6 +279,12 @@ hr.sep{
     0 0 0 1px rgba(253,164,175,.06) inset;
 }
 
+.card:hover{
+  box-shadow:
+    0 18px 60px rgba(0,0,0,.45),
+    0 0 0 1px rgba(253,164,175,.14) inset;
+}
+
 .card h3{
   margin:0 0 6px;
   font-size:22px;
@@ -427,5 +435,5 @@ footer{
   height: 100vh;
   z-index: -1;          /* behind content, above overlays */
   pointer-events: none;
-  opacity: 0.9;
+  opacity: 0.85;
 }
