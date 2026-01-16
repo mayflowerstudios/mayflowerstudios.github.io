@@ -11,28 +11,70 @@
 
     <div id="shared-nav"></div>
 
+    <!-- HERO -->
     <section class="hero">
       <div>
-        <p class="kicker">Discord Bot</p>
+        <p class="kicker">Discord Bot (Private • Server-Only)</p>
         <h1>🌙 EchoBloom</h1>
         <p class="muted">
-          A realm-based RPG progression bot built for long-term communities: XP, raids, ranks, lore events,
-          and seasonal systems designed to evolve — without becoming a spreadsheet nightmare.
+          A realm-based progression + event bot built specifically for our server: join a realm, run adventures,
+          build your realm inventory, craft buffs, and compete in raids & reaction battles — with seasonal lore systems
+          designed to grow over time.
         </p>
         <div class="ctaRow">
-          <a class="btn bots" href="https://discord.gg/MutqYAdrwz">💬 Support Discord</a>
+          <a class="btn bots" href="foxbot.html">🦊 FoxBot</a>
           <a class="btn ghost" href="index.html#projects">⬅ Back to Projects</a>
         </div>
       </div>
 
       <div class="tileGrid">
-        <div class="tile"><strong>🌿 Realms</strong><p>Pick a realm and shape your server’s story over time.</p></div>
-        <div class="tile"><strong>⚔️ Raids</strong><p>Interactive challenges for teamwork and friendly competition.</p></div>
-        <div class="tile"><strong>📜 Lore + Events</strong><p>Seasonal arcs and narrative hooks to keep it fresh.</p></div>
-        <div class="tile"><strong>🏆 Progression</strong><p>XP, ranks, milestones, and rewards tuned for long play.</p></div>
+        <div class="tile"><strong>🌿 Realms</strong><p>Join via reactions, earn XP, and grow your identity.</p></div>
+        <div class="tile"><strong>🧭 Adventures</strong><p>/forage, /hunt, /fish, /explore, /mine, /gather</p></div>
+        <div class="tile"><strong>⚔️ Raids</strong><p>Realm-vs-realm events with reaction participation.</p></div>
+        <div class="tile"><strong>🛠️ Crafting + Buffs</strong><p>Craft realm relics to boost XP, drops, and cooldowns.</p></div>
       </div>
     </section>
 
+    <!-- DESCRIPTION -->
+    <div class="sectionTitle">
+      <h2>📝 Description</h2>
+      <span>What EchoBloom is (in our server)</span>
+    </div>
+
+    <section class="card">
+      <p class="desc">
+        <strong>EchoBloom</strong> is our private “living world” bot. Members choose one of four realms and then
+        build progress through lightweight daily play: quick adventure commands, realm inventory drops, skill XP,
+        and server events like Reaction Battles and Realm Raids.
+      </p>
+
+      <p class="desc">
+        It’s designed to feel like an RPG layer on top of chat — not a grindy spreadsheet.
+        Most actions are short, readable, and server-paced (with cooldowns + optional buffs).
+      </p>
+
+      <div class="divider" style="margin:14px 0;"></div>
+
+      <h3 style="margin:0 0 6px;">🌿 The Four Realms</h3>
+      <p class="muted small" style="margin:0 0 10px;">
+        Realm identity is a real system: roles, level/Xp tracking, and realm-only crafting.
+      </p>
+      <ul class="muted small" style="margin:0; padding-left:18px;">
+        <li>🌿 The Grove of Growth</li>
+        <li>🔥 The Ember Circle</li>
+        <li>💧 The Mirror Lake</li>
+        <li>🌙 The Moonroot Tree</li>
+      </ul>
+
+      <div class="callout" style="margin-top:12px;">
+        <strong>Private bot note</strong>
+        <p class="muted small" style="margin:6px 0 0;">
+          EchoBloom is not a public invite bot. This page is our server’s reference guide for how to use it.
+        </p>
+      </div>
+    </section>
+
+    <!-- CORE SYSTEMS -->
     <div class="sectionTitle">
       <h2>⭐ Core Systems</h2>
       <span>What makes EchoBloom EchoBloom</span>
@@ -40,98 +82,171 @@
 
     <section class="grid2">
       <div class="card">
-        <h3>🌿 Realm Progression <span class="badge">RPG</span></h3>
-        <p class="desc">Lore-driven progression designed for communities, not just numbers.</p>
+        <h3>🌿 Realm Progression <span class="badge">Core</span></h3>
+        <p class="desc">
+          Realms track both realm-wide progress and individual member progression.
+        </p>
         <ul>
-          <li>Realm identity + themed progression</li>
-          <li>XP that supports milestones</li>
-          <li>Role/rank automation potential</li>
+          <li>Join realms via a reaction-based realm message</li>
+          <li>Realm roles are assigned automatically</li>
+          <li>Rank roles can be applied for starting level</li>
+          <li>Realm/member leaderboards available</li>
         </ul>
       </div>
 
       <div class="card">
-        <h3>⚔️ Raids & Interaction <span class="badge">Social</span></h3>
-        <p class="desc">Event-like loops that encourage teamwork without spam.</p>
+        <h3>🧭 Adventures + Skills <span class="badge">Daily</span></h3>
+        <p class="desc">
+          Adventure commands generate realm drops and skill XP. These are the “bread and butter” loops.
+        </p>
         <ul>
-          <li>Interactive raids built for groups</li>
-          <li>Repeatable activities without burnout</li>
-          <li>Encourages cross-realm play</li>
+          <li>/forage, /hunt, /fish, /explore, /mine, /gather</li>
+          <li>Cooldown-based pacing (base is short; buffs can reduce it)</li>
+          <li>/skills shows skill levels & progress</li>
         </ul>
       </div>
 
       <div class="card">
-        <h3>📜 Lore & Seasons <span class="badge">World</span></h3>
-        <p class="desc">A living storybook: seasonal systems, yearly arcs, and world events.</p>
+        <h3>⚔️ Realm Raids <span class="badge">Event</span></h3>
+        <p class="desc">
+          Realms can raid other realms in an interactive reaction event (attackers vs defenders).
+        </p>
         <ul>
-          <li>Event hooks and scheduled content</li>
-          <li>Yearly/seasonal progression framework</li>
-          <li>Built for ongoing expansion</li>
+          <li>/raid starts a realm-vs-realm raid</li>
+          <li>Participants react ⚔️ (attack) or 🛡️ (defend)</li>
+          <li>Raid success steals a portion of non-seasonal items</li>
+          <li>Realm cooldown after raids (server-paced)</li>
         </ul>
       </div>
 
       <div class="card">
-        <h3>⚙️ Config & Reliability <span class="badge">Server</span></h3>
-        <p class="desc">Stable, maintainable design for real communities.</p>
+        <h3>🛠️ Crafting + Realm Buffs <span class="badge">Strategy</span></h3>
+        <p class="desc">
+          Craftables are realm-specific and apply timed buffs (XP boosts, drop boosts, cooldown reductions).
+        </p>
         <ul>
-          <li>Sensible defaults + configuration options</li>
-          <li>Designed for long-term uptime</li>
-          <li>Moderation-aware behavior</li>
+          <li>/craft to activate a crafted realm buff</li>
+          <li>/craft_list and /craft_info for recipe browsing</li>
+          <li>/buffs shows active effects & remaining time</li>
+          <li>Examples: Verdant Totem, Blazing Warbrand, Reflected Sigil, Lunar Concord</li>
         </ul>
       </div>
     </section>
 
+    <!-- HOW TO USE -->
     <div class="sectionTitle">
-      <h2>🖼️ Media</h2>
-      <span>Icon & screenshots</span>
+      <h2>📘 How to Use</h2>
+      <span>Quick gameplay flow</span>
     </div>
 
-    <section class="card">
-      <div class="mediaHeader">
-        <img class="projectIcon" src="assets/icons/echobloom.png" alt="EchoBloom icon" />
-        <div class="mediaMeta">
-          <strong>EchoBloom</strong>
-          <span>Realm previews, raid examples, and progression screenshots</span>
-        </div>
+    <section class="grid2">
+      <div class="card">
+        <h3>1) Join a Realm</h3>
+        <p class="desc">Pick a realm by reacting on the realm-selection message.</p>
+        <ul>
+          <li>Mods set the message with <code>/setrealmmessage</code></li>
+          <li>React with the realm emoji to join</li>
+          <li>EchoBloom assigns your realm role automatically</li>
+        </ul>
       </div>
 
-      <div class="gallery">
-        <div class="shot">
-          <img src="assets/shots/echobloom-1.png" alt="EchoBloom screenshot 1" />
-          <div class="cap">Realm selection / identity preview.</div>
-        </div>
-        <div class="shot">
-          <img src="assets/shots/echobloom-2.png" alt="EchoBloom screenshot 2" />
-          <div class="cap">Raid event example — teamwork-focused loop.</div>
-        </div>
-        <div class="shot">
-          <img src="assets/shots/echobloom-3.png" alt="EchoBloom screenshot 3" />
-          <div class="cap">Progression/rank milestone preview.</div>
-        </div>
+      <div class="card">
+        <h3>2) Run Adventures</h3>
+        <p class="desc">Use the short adventure commands to generate drops and progress.</p>
+        <ul>
+          <li>Try: <code>/forage</code>, <code>/hunt</code>, <code>/fish</code></li>
+          <li>Also: <code>/explore</code>, <code>/mine</code>, <code>/gather</code></li>
+          <li>Cooldowns keep it paced (and can be reduced by buffs)</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>3) Track Progress</h3>
+        <p class="desc">Check your realm, your rank, and your skills.</p>
+        <ul>
+          <li><code>/rank</code> shows your personal level/XP</li>
+          <li><code>/realmstats</code> and <code>/realmleaderboard</code> show realm standings</li>
+          <li><code>/skills</code> shows skill levels + XP</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>4) Inventory, Crafting, and Events</h3>
+        <p class="desc">Use your realm inventory for crafting buffs and participating in events.</p>
+        <ul>
+          <li><code>/realminventory</code> to view realm stash (paged UI)</li>
+          <li><code>/craft</code> to consume items and activate a realm buff</li>
+          <li><code>/raid</code> to initiate a realm raid (realm cooldown applies)</li>
+          <li><code>/event</code> + <code>/offerrelics</code> for seasonal systems</li>
+        </ul>
       </div>
     </section>
 
+    <!-- COMMAND QUICK REFERENCE -->
+    <div class="sectionTitle">
+      <h2>⌨️ Command Reference</h2>
+      <span>Most-used commands (player + mod)</span>
+    </div>
+
+    <section class="grid2">
+      <div class="card">
+        <h3>👤 Player Commands <span class="badge">Use</span></h3>
+        <ul>
+          <li><code>/help</code> — in-bot command list (paged)</li>
+          <li><code>/rank</code> — your level/XP</li>
+          <li><code>/realmstats</code>, <code>/realmleaderboard</code>, <code>/realmmembers</code></li>
+          <li><code>/forage</code>, <code>/hunt</code>, <code>/fish</code></li>
+          <li><code>/explore</code>, <code>/mine</code>, <code>/gather</code></li>
+          <li><code>/skills</code> — skill progression</li>
+          <li><code>/realminventory</code> — realm stash</li>
+          <li><code>/craft</code>, <code>/craft_list</code>, <code>/craft_info</code>, <code>/buffs</code></li>
+          <li><code>/raid</code> — realm raid event</li>
+          <li><code>/gift</code>, <code>/trade</code> — realm-to-realm item movement</li>
+          <li><code>/event</code>, <code>/offerrelics</code> — seasonal systems</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🛡️ Mod / Admin Commands <span class="badge">Staff</span></h3>
+        <p class="desc">These are permission-gated (manage guild / admin / manage messages).</p>
+        <ul>
+          <li><code>/setrealmmessage</code> — sets realm selection message + adds reactions</li>
+          <li><code>/trigger_reactionbattle</code> — starts a reaction battle manually</li>
+          <li><code>/mod_add_item</code>, <code>/mod_remove_item</code>, <code>/mod_set_item</code></li>
+          <li><code>/mod_view_inventory</code> — view realm stash</li>
+          <li><code>/postlore</code> — posts realm-year lore to its lore channel</li>
+          <li><code>/restart</code> — restarts EchoBloom</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- SETUP NOTES -->
     <div class="sectionTitle">
       <h2>🔧 Setup Notes</h2>
-      <span>Start simple, then expand</span>
+      <span>Start clean, keep it readable</span>
     </div>
 
     <section class="card">
       <div class="callout">
-        <strong>Recommended flow</strong>
+        <strong>Recommended rollout</strong>
         <p class="muted small">
-          Enable one or two core loops (XP + raids) first, then add lore/events once your server rhythm settles.
+          Enable realms + adventures first. Once the server rhythm feels good, introduce crafting buffs and then raids/events.
         </p>
       </div>
+
       <div class="codebox">
         <code>Suggested setup:
-- Create realm roles + a realm-selection entry point
-- Enable XP + basic raids first
-- Add ranks/role automation once balance feels right
-- Introduce seasonal events after the community stabilizes</code>
+- Create the realm roles (one per realm name)
+- Post a realm selection message and run /setrealmmessage on it
+- Make a channel for event popups if you want events centralized
+- Encourage daily play loops: /forage, /hunt, /fish, etc.
+- Once inventories grow, introduce /craft and realm buffs
+- Finally, bring in /raid and seasonal systems</code>
       </div>
+
       <div class="btnrow" style="margin-top:12px;">
         <a class="button bots" href="foxbot.html">🦊 See FoxBot</a>
-        <a class="button ghost" href="https://discord.gg/MutqYAdrwz">💬 Support Discord</a>
+        <a class="button ghost" href="index.html#projects">⬅ Back to Projects</a>
       </div>
     </section>
 
