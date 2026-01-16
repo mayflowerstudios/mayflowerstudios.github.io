@@ -79,7 +79,7 @@ if (!canvas) {
 
       // Softer magical glows
       this.r = rand(0.9, 2.2);            // core
-      this.halo = this.r * rand(10, 18);  // bigger halo
+      this.halo = this.r * rand(10, 18);  // halo
 
       // Gentle float movement
       this.ang = rand(0, Math.PI * 2);
@@ -93,19 +93,22 @@ if (!canvas) {
 
       // Spiral drift (occasional)
       this.spiralT = rand(0, 10);
-      this.spiralRate = rand(0.25, 0.65);    // how often spiral influence changes
-      this.spiralAmp = rand(0.004, 0.02);    // strength of spiral
+      this.spiralRate = rand(0.25, 0.65);
+      this.spiralAmp = rand(0.004, 0.02);
 
       // Anchor “glade” attraction
       this.anchor = pickAnchor();
       this.anchorPull = rand(0.004, 0.014);
 
-      // Blink envelope (mostly off, little bursts)
+      // ---- "Most firefly" blink settings (slower + rarer + softer) ----
       this.blinkT = rand(0, 1);
-      this.blinkLen = rand(1.8, 3.8);
-      this.onFrac = rand(0.10, 0.18);
-      this.peak = rand(0.55, 0.95);
-      this.base = rand(0.02, 0.07);
+      this.blinkLen = rand(4.5, 9.0);   // slower cycles
+      this.onFrac = rand(0.04, 0.09);   // shorter pulses
+      this.base = rand(0.01, 0.05);     // dim minimum glow
+      this.peak = rand(0.55, 0.90);     // peak brightness
+
+      // Extra “rest” bias: some stay dark longer (more natural)
+      this.restBias = rand(0.0, 0.35);
 
       // Rare sparkle bloom
       this.bloomCooldown = rand(2.0, 8.0);
@@ -127,9 +130,11 @@ if (!canvas) {
       if (this.blinkT >= this.blinkLen) this.blinkT -= this.blinkLen;
 
       const t = this.blinkT / this.blinkLen; // 0..1
-      const on = this.onFrac;
 
-      // center is random-ish but stable per blink cycle
+      // Shorter on-window for some (restBias)
+      const on = this.onFrac * (1 - this.restBias);
+
+      // Centered pulse with wrap-around distance
       const center = 0.35;
       let d = Math.abs(t - center);
       d = Math.min(d, 1 - d);
@@ -137,17 +142,15 @@ if (!canvas) {
       const half = on * 0.5;
       if (d > half) return this.base;
 
-      const u = 1 - d / half; // 0..1
-      const smooth = u * u * (3 - 2 * u); // smoothstep
+      // Inside pulse: softer rise/fall
+      const u = 1 - d / half; // 0..1 (1 at center)
+      const smooth = Math.pow(u, 1.6);   // slower, softer envelope
       return lerp(this.base, this.peak, smooth);
     }
 
     update(dt) {
       // fade in
       this.spawn = Math.min(1, this.spawn + this.spawnRate);
-
-      // anchors drift slowly (forest “breathing”)
-      // (done in global update too, but harmless here if omitted)
 
       // occasionally pick a new anchor (feels like drifting between glades)
       this.reanchor -= dt;
