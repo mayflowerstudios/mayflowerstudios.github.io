@@ -135,6 +135,7 @@ hr.sep{
 
 /* Topbar */
 .topbar{
+  position: relative; /* IMPORTANT for ::after */
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -143,33 +144,34 @@ hr.sep{
   border:1px solid var(--border);
   border-radius:18px;
 
-  /* darker enchanted glass to match hero/cards */
-  background:
-    linear-gradient(
-      180deg,
-      rgba(8,12,24,.78),
-      rgba(8,12,24,.58)
-    );
+  /* match hero/cards: subtle highlight + darker base */
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,.08),
+    rgba(0,0,0,.22)
+  );
 
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(12px);
   box-shadow:
-    0 18px 60px rgba(0,0,0,.45),
-    0 0 0 1px rgba(253,164,175,.06) inset;
+    0 18px 60px rgba(0,0,0,.40),
+    0 0 0 1px rgba(253,164,175,.08) inset;
 }
 
 .topbar::after{
   content:"";
   position:absolute;
-  inset:auto 18px 0 18px;
+  left:18px;
+  right:18px;
+  bottom:0;
   height:1px;
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(251,113,133,.45),
-    rgba(167,139,250,.35),
+    rgba(251,113,133,.40),
+    rgba(167,139,250,.28),
     transparent
   );
-  opacity:.6;
+  opacity:.55;
 }
 
 .brand{ display:flex; flex-direction:column; gap:2px; }
