@@ -6,21 +6,10 @@
   <title>Steelhold • Mayflower Studios</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body data-nav="mods">
   <div class="wrap">
 
-    <div class="topbar" id="top">
-      <div class="brand">
-        <strong><a href="index.html" style="text-decoration:none;">Mayflower Studios</a></strong>
-        <span>Discord bots • Minecraft mods • games • software</span>
-      </div>
-      <nav class="nav">
-        <a class="pill" href="index.html#projects">🚀 Projects</a>
-        <a class="pill" href="index.html#mods">🧱 Mods</a>
-        <a class="pill" href="index.html#bots">🤖 Bots</a>
-        <a class="pill" href="index.html#about">🌿 About</a>
-      </nav>
-    </div>
+    <div id="shared-nav"></div>
 
     <section class="hero">
       <div>
@@ -37,22 +26,10 @@
       </div>
 
       <div class="tileGrid">
-        <div class="tile">
-          <strong>✨ Design Goal</strong>
-          <p>Secure storage that feels “vanilla+” — simple, clean, and satisfying.</p>
-        </div>
-        <div class="tile">
-          <strong>🧩 Server Ready</strong>
-          <p>Built for multiplayer stability, configs, and long-term worlds.</p>
-        </div>
-        <div class="tile">
-          <strong>🔑 Access Control</strong>
-          <p>Ownership + keys, designed to support survival play without grief.</p>
-        </div>
-        <div class="tile">
-          <strong>🧼 Clean UI</strong>
-          <p>Minimal friction: intuitive interactions and tidy interfaces.</p>
-        </div>
+        <div class="tile"><strong>✨ Design</strong><p>Vanilla+ secure storage that feels natural in survival.</p></div>
+        <div class="tile"><strong>🧩 Server Ready</strong><p>Built with multiplayer stability + long-term worlds in mind.</p></div>
+        <div class="tile"><strong>🔑 Access</strong><p>Ownership + key-style design aimed at fair play.</p></div>
+        <div class="tile"><strong>🧼 UI</strong><p>Clean screens, tidy layouts, minimal friction.</p></div>
       </div>
     </section>
 
@@ -68,18 +45,48 @@
         <ul>
           <li>Ownership-aware interactions</li>
           <li>Key-based access design</li>
-          <li>Built to reduce grief + keep play fair</li>
+          <li>Designed to reduce grief while staying survival-friendly</li>
         </ul>
       </div>
 
       <div class="card">
         <h3>⚙️ Server-Friendly <span class="badge">Stability</span></h3>
-        <p class="desc">Reliable behavior in multiplayer, with room to tune features over time.</p>
+        <p class="desc">Reliable behavior in multiplayer with room to tune features over time.</p>
         <ul>
           <li>Config-ready mindset</li>
-          <li>Clean interactions (no weird edge cases)</li>
+          <li>Clean interactions (less weird edge cases)</li>
           <li>Designed for long-running worlds</li>
         </ul>
+      </div>
+    </section>
+
+    <div class="sectionTitle">
+      <h2>🖼️ Media</h2>
+      <span>Icon & screenshots</span>
+    </div>
+
+    <section class="card">
+      <div class="mediaHeader">
+        <img class="projectIcon" src="assets/icons/steelhold.png" alt="Steelhold icon" />
+        <div class="mediaMeta">
+          <strong>Steelhold</strong>
+          <span>Logos, UI shots, and feature previews</span>
+        </div>
+      </div>
+
+      <div class="gallery">
+        <div class="shot">
+          <img src="assets/shots/steelhold-1.png" alt="Steelhold screenshot 1" />
+          <div class="cap">Safe exterior — survival-friendly design.</div>
+        </div>
+        <div class="shot">
+          <img src="assets/shots/steelhold-2.png" alt="Steelhold screenshot 2" />
+          <div class="cap">UI preview — clean layout and readable slots.</div>
+        </div>
+        <div class="shot">
+          <img src="assets/shots/steelhold-3.png" alt="Steelhold screenshot 3" />
+          <div class="cap">Multiplayer-ready behavior — built for long-running worlds.</div>
+        </div>
       </div>
     </section>
 
@@ -91,13 +98,13 @@
     <section class="card">
       <div class="callout">
         <strong>Recommended setup</strong>
-        <p class="muted small">Keep client + server mod versions in sync. If you run a pack, pin versions for stability.</p>
+        <p class="muted small">Keep client + server mod versions in sync. Pin versions for packs and servers.</p>
       </div>
       <div class="codebox">
         <code>1) Install Forge (matching your mod version)
 2) Drop Steelhold into /mods
 3) Launch once to generate configs (if available)
-4) Restart server/client after any config changes</code>
+4) Restart after config changes</code>
       </div>
       <div class="btnrow" style="margin-top:12px;">
         <a class="button mods" href="https://www.curseforge.com/minecraft/mc-mods/steelhold">📦 CurseForge</a>
@@ -105,19 +112,9 @@
       </div>
     </section>
 
-    <footer>
-      <div>© <span id="year"></span> Mayflower Studios</div>
-      <div class="links">
-        <a href="index.html">🏠 Home</a>
-        <a href="logichest.html">🧠 LogiChest</a>
-        <a href="steelholdchangelog.html">🧾 Steelhold Changelog</a>
-        <a href="#top">⬆ Top</a>
-      </div>
-    </footer>
+    <div id="shared-footer"></div>
   </div>
 
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
+  <script src="shared.js"></script>
 </body>
 </html>
