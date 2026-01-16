@@ -1,3 +1,23 @@
+function injectFavicon(href = "/assets/icons/favicon.png") {
+  // If there’s already a favicon link, don’t duplicate it
+  if (document.querySelector('link[rel="icon"]')) return;
+
+  const link = document.createElement("link");
+  link.rel = "icon";
+  link.type = "image/png";
+
+  // Optional cache-buster so updates show up faster
+  link.href = `${href}?v=1`;
+
+  document.head.appendChild(link);
+
+  // Optional: iOS home screen icon
+  const apple = document.createElement("link");
+  apple.rel = "apple-touch-icon";
+  apple.href = `${href}?v=1`;
+  document.head.appendChild(apple);
+}
+
 function injectFireflies(){
   if (document.getElementById("fireflies")) return;
 
