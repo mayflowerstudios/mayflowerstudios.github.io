@@ -37,7 +37,7 @@ body{
     radial-gradient(700px 480px at 30% 35%, rgba(253,164,175,.14), transparent 62%),
     radial-gradient(900px 650px at 20% 88%, var(--leafglow), transparent 60%),
     linear-gradient(180deg, var(--bg1), var(--bg2)),
-    url("assets/cherry-bg.png");
+    url("/assets/cherry-bg.png");
 
   background-repeat: no-repeat;
   background-position: center;
