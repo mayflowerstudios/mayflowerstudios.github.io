@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LogiChest • Mayflower Studios</title>
+  <style>
+    :root{
+      --bg1:#070b14;
+      --bg2:#0c1224;
+      --card:rgba(255,255,255,.06);
+      --border:rgba(255,255,255,.12);
+      --text:#e5e7eb;
+      --muted:#a3a3a3;
+      --accent:#a78bfa;
+      --accent2:#38bdf8;
+      --warn:#fbbf24;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 520px at 18% 12%, rgba(167,139,250,.18), transparent 60%),
+        radial-gradient(900px 520px at 82% 18%, rgba(56,189,248,.14), transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      min-height:100vh;
+    }
+    a{color:inherit}
+    .wrap{
+      width:min(1100px, 92vw);
+      margin:0 auto;
+      padding:26px 0 40px;
+    }
+
+    /* Top bar */
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      padding:14px 16px;
+      border:1px solid var(--border);
+      border-radius:16px;
+      background:rgba(0,0,0,.18);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 18px 60px rgba(0,0,0,.35);
+    }
+    .brand{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .brand strong{
+      font-size:14px;
+      letter-spacing:.4px;
+      text-transform:uppercase;
+      opacity:.95;
+    }
+    .brand span{
+      font-size:12px;
+      color:var(--muted);
+    }
+    .nav{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:flex-end;
+    }
+    .pill{
+      text-decoration:none;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      font-weight:600;
+      font-size:13px;
+      transition: transform .12s ease, filter .12s ease;
+    }
+    .pill:hover{ transform: translateY(-1px); filter:brightness(1.03); }
+
+    /* Hero */
+    .hero{
+      margin-top:16px;
+      padding:22px 18px;
+      border:1px solid var(--border);
+      border-radius:18px;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      box-shadow: 0 18px 60px rgba(0,0,0,.35);
+    }
+    .hero h1{
+      margin:0 0 6px;
+      font-size:clamp(28px, 3.5vw, 42px);
+      letter-spacing:.2px;
+    }
+    .subtitle{
+      margin:0;
+      color:var(--muted);
+      line-height:1.55;
+      max-width: 80ch;
+    }
+    .ctaRow{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:14px;
+    }
+    .btn{
+      text-decoration:none;
+      padding:12px 14px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.18);
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      font-weight:800;
+      color:#06121f;
+      transition: transform .12s ease, filter .12s ease;
+    }
+    .btn:hover{ transform: translateY(-1px); filter:brightness(1.03); }
+    .btn.primary{ background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+    .btn.ghost{
+      color:var(--text);
+      background: rgba(255,255,255,.06);
+      border:1px solid var(--border);
+      font-weight:700;
+    }
+
+    /* Content grid */
+    .grid{
+      margin-top:16px;
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:16px;
+    }
+    @media (max-width: 900px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      padding:18px;
+      border:1px solid var(--border);
+      border-radius:18px;
+      background:rgba(255,255,255,.05);
+      box-shadow: 0 14px 40px rgba(0,0,0,.3);
+    }
+    .card h2{
+      margin:0 0 10px;
+      font-size:18px;
+      letter-spacing:.2px;
+    }
+    .card p{
+      margin:0 0 10px;
+      color:var(--muted);
+      line-height:1.6;
+    }
+    .card p:last-child{ margin-bottom:0; }
+
+    .list{
+      margin:0;
+      padding-left:18px;
+      color:var(--muted);
+      line-height:1.7;
+    }
+    .callout{
+      margin-top:12px;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(56,189,248,.08);
+      color:#c7f9ff;
+    }
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      padding:2px 6px;
+      border-radius:8px;
+      border:1px solid var(--border);
+      background:rgba(0,0,0,.25);
+      color:var(--text);
+    }
+
+    /* Crafting */
+    .recipes{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      margin-top:10px;
+    }
+    @media (max-width: 700px){
+      .recipes{ grid-template-columns: 1fr; }
+    }
+    .recipe{
+      padding:14px;
+      border-radius:16px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.18);
+    }
+    .recipe h3{
+      margin:0 0 8px;
+      font-size:15px;
+    }
+    .meta{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:8px;
+    }
+    .hr{
+      height:1px;
+      background:rgba(255,255,255,.10);
+      border:0;
+      margin:14px 0;
+    }
+
+    /* Simple “diagram” blocks */
+    .diagram{
+      margin-top:10px;
+      display:grid;
+      gap:10px;
+    }
+    .diagramBox{
+      padding:12px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.18);
+      color:var(--muted);
+      line-height:1.6;
+    }
+    .diagramBox strong{ color:var(--text); }
+
+    footer{
+      margin-top:18px;
+      text-align:center;
+      color:rgba(255,255,255,.55);
+      font-size:12px;
+      padding:10px 0 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <!-- Top bar -->
+    <div class="topbar">
+      <div class="brand">
+        <strong>Mayflower Studios</strong>
+        <span>Minecraft mods • tools • cozy chaos</span>
+      </div>
+      <div class="nav">
+        <!-- Adjust these to match your site -->
+        <a class="pill" href="index.html">🏠 Home</a>
+        <a class="pill" href="#crafting">🧱 Crafting</a>
+        <a class="pill" href="#howto">🧭 How to Use</a>
+      </div>
+    </div>
+
+    <!-- Hero -->
+    <section class="hero">
+      <h1>🧠 LogiChest</h1>
+      <p class="subtitle">
+        LogiChest is a modular storage logistics mod: place a Hub, connect Sorters, and let your items move where they belong.
+        It’s designed to keep bases clean, storage organized, and automation simple without turning Minecraft into a spreadsheet.
+      </p>
+
+      <div class="ctaRow">
+        <!-- Replace # with your real links (CurseForge / Modrinth / GitHub Releases) -->
+        <a class="btn primary" href="#" target="_blank" rel="noopener">📦 Download LogiChest</a>
+        <a class="btn ghost" href="#" target="_blank" rel="noopener">🧾 Source / Issues</a>
+      </div>
+    </section>
+
+    <div class="grid">
+      <!-- Left column: Description + How to Use -->
+      <div class="card" id="description">
+        <h2>✨ Description</h2>
+        <p>
+          LogiChest helps you build an item-routing network with a central <strong>Hub</strong> and connectable <strong>Sorters</strong>.
+          Use upgrades to expand capacity, add modules, and tailor how your network behaves.
+        </p>
+        <ul class="list">
+          <li><strong>Hub + Sorters:</strong> build a simple network that routes items automatically.</li>
+          <li><strong>Modular upgrades:</strong> add functionality without rebuilding everything.</li>
+          <li><strong>Clean & predictable:</strong> designed for survival bases and servers.</li>
+          <li><strong>Expandable:</strong> scale from a tiny starter setup to a full storage room.</li>
+        </ul>
+
+        <div class="callout">
+          <strong>Tip:</strong> Start with 1 Hub + 1–2 Sorters, confirm it works, then scale up. It’s way easier to debug small.
+        </div>
+
+        <hr class="hr" />
+
+        <h2 id="howto">🧭 How to Use</h2>
+        <p>Here’s the usual LogiChest flow:</p>
+        <ol class="list">
+          <li><strong>Craft and place a Hub</strong> in your storage room.</li>
+          <li><strong>Craft a Sorter</strong> and place it near the container it will manage.</li>
+          <li><strong>Link the Sorter to the Hub</strong> (see linking steps below).</li>
+          <li><strong>Configure the Sorter</strong> (filters / targets / priorities as your mod supports).</li>
+          <li><strong>Feed items into the system</strong> and watch them route into the correct chests.</li>
+          <li><strong>Add upgrades</strong> to expand sorter slots, hub capacity, or behavior modules.</li>
+        </ol>
+
+        <div class="diagram">
+          <div class="diagramBox">
+            <strong>Basic Setup</strong><br/>
+            Hub → Sorter (linked) → Chest / Barrel / Drawer
+          </div>
+          <div class="diagramBox">
+            <strong>Scaling Up</strong><br/>
+            Hub → Sorter A (ores) → chest wall<br/>
+            Hub → Sorter B (food) → kitchen storage<br/>
+            Hub → Sorter C (mob drops) → bulk storage
+          </div>
+        </div>
+
+        <div class="callout">
+          <strong>Quick troubleshooting:</strong>
+          If a sorter says it’s linked but nothing moves, double-check: range, filters, inventory permissions, and whether the hub is at max connections.
+        </div>
+      </div>
+
+      <!-- Right column: Quick info -->
+      <aside class="card">
+        <h2>📌 Quick Info</h2>
+        <p><strong>Project:</strong> LogiChest</p>
+        <p><strong>Studio:</strong> Mayflower Studios</p>
+        <p><strong>Category:</strong> Storage / Logistics</p>
+
+        <hr class="hr" />
+
+        <h2>✅ Recommended Use</h2>
+        <ul class="list">
+          <li>Base storage rooms</li>
+          <li>Mining dump chests → sorted storage</li>
+          <li>Server communities (shared storage rules)</li>
+          <li>Auto-sorting “trash to treasure” builds</li>
+        </ul>
+
+        <hr class="hr" />
+
+        <h2>⚠️ Notes</h2>
+        <p>
+          Replace this with mod-specific notes like:
+          max sorter links, chunk loading advice, hopper compatibility, or any known limitations.
+        </p>
+      </aside>
+    </div>
+
+    <!-- Crafting section -->
+    <section class="card" id="crafting" style="margin-top:16px;">
+      <h2>🧱 Crafting</h2>
+      <p>
+        These are placeholders you can replace with your exact recipes. If you paste your real crafting ingredients (or screenshots),
+        I’ll rewrite this with clean 3×3 pattern grids and progression tiers.
+      </p>
+
+      <div class="recipes">
+        <div class="recipe">
+          <h3>🧩 Hub</h3>
+          <ul class="list">
+            <li>Chest (center)</li>
+            <li>Redstone</li>
+            <li>Iron / Copper components</li>
+          </ul>
+          <div class="meta">Replace with your real hub recipe.</div>
+        </div>
+
+        <div class="recipe">
+          <h3>🔗 Sorter</h3>
+          <ul class="list">
+            <li>Hopper / Dropper (core)</li>
+            <li>Redstone</li>
+            <li>Iron</li>
+          </ul>
+          <div class="meta">Replace with your real sorter recipe.</div>
+        </div>
+
+        <div class="recipe">
+          <h3>🗝️ Key / Keychain Module (Optional)</h3>
+          <ul class="list">
+            <li>Iron Nugget(s)</li>
+            <li>String / Leather (strap)</li>
+            <li>Module component</li>
+          </ul>
+          <div class="meta">If your mod uses keys for linking/config, note it here.</div>
+        </div>
+
+        <div class="recipe">
+          <h3>⚙️ Upgrades</h3>
+          <ul class="list">
+            <li>Capacity upgrade (more links or slots)</li>
+            <li>Filter upgrade (better routing)</li>
+            <li>Speed upgrade (if supported)</li>
+          </ul>
+          <div class="meta">List your actual upgrade items + effects.</div>
+        </div>
+      </div>
+
+      <div class="callout" style="margin-top:12px;">
+        <strong>Want this page to be exact?</strong>
+        Paste your real recipes + how linking works (right-click? key item? shift-right-click?), and I’ll lock the guide to your mod’s behavior.
+      </div>
+    </section>
+
+    <footer>
+      © <span id="year"></span> Mayflower Studios • Built with GitHub Pages
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
