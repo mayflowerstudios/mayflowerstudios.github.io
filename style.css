@@ -69,12 +69,10 @@ body::after{
   position:fixed;
   inset:0;
   pointer-events:none;
-  z-index:-2;
-  opacity:.30;
-
-  /* petals + tiny warm specks combined */
+  z-index:-1;
+  opacity:.25;
   background:
-    /* petals */
+    /* Petal speckles */
     radial-gradient(10px 10px at 12% 22%, rgba(253,164,175,.38), transparent 60%),
     radial-gradient(12px 12px at 28% 38%, rgba(251,113,133,.28), transparent 60%),
     radial-gradient(9px 9px at 54% 18%, rgba(253,164,175,.30), transparent 60%),
@@ -82,13 +80,12 @@ body::after{
     radial-gradient(8px 8px at 86% 74%, rgba(253,164,175,.24), transparent 60%),
     radial-gradient(10px 10px at 22% 82%, rgba(251,113,133,.18), transparent 60%),
 
-    /* tiny warm “glow dust” */
-    radial-gradient(1.5px 1.5px at 18% 30%, rgba(251,191,36,.40), transparent 60%),
-    radial-gradient(1.2px 1.2px at 62% 22%, rgba(251,191,36,.32), transparent 60%),
-    radial-gradient(1.4px 1.4px at 78% 68%, rgba(251,191,36,.30), transparent 60%),
-    radial-gradient(1.1px 1.1px at 35% 75%, rgba(251,191,36,.26), transparent 60%);
-
-  filter: blur(0.25px);
+    /* Lantern sparkles */
+    radial-gradient(1.5px 1.5px at 18% 30%, rgba(251,191,36,.45), transparent 60%),
+    radial-gradient(1.2px 1.2px at 62% 22%, rgba(251,191,36,.35), transparent 60%),
+    radial-gradient(1.4px 1.4px at 78% 68%, rgba(251,191,36,.32), transparent 60%),
+    radial-gradient(1.1px 1.1px at 35% 75%, rgba(251,191,36,.28), transparent 60%);
+  filter: blur(0.2px);
 }
 
 a{color:inherit}
