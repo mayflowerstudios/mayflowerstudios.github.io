@@ -6,25 +6,14 @@
   <title>Mayflower Studios</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body data-nav="home">
   <div class="wrap">
 
-    <div class="topbar" id="top">
-      <div class="brand">
-        <strong><a href="index.html" style="text-decoration:none;">Mayflower Studios</a></strong>
-        <span>Discord bots • Minecraft mods • games • software</span>
-      </div>
-      <nav class="nav">
-        <a class="pill" href="#projects">🚀 Projects</a>
-        <a class="pill" href="#mods">🧱 Mods</a>
-        <a class="pill" href="#bots">🤖 Bots</a>
-        <a class="pill" href="#about">🌿 About</a>
-      </nav>
-    </div>
+    <div id="shared-nav"></div>
 
     <section class="hero">
       <div>
-        <p class="kicker">Clean builds. Cozy polish. Real-server ready.</p>
+        <p class="kicker">Clean builds • Cozy polish • Real-server ready</p>
         <h1>🌿 Mayflower Studios</h1>
         <p class="muted">
           A small dev studio building <strong>Discord bots</strong>, <strong>Minecraft mods</strong>,
@@ -43,7 +32,7 @@
         </div>
         <div class="tile">
           <strong>🤖 Discord Bots</strong>
-          <p>Community tools, progression systems, lore/events, and AI-powered features.</p>
+          <p>Community tools, progression systems, lore/events, and AI features.</p>
         </div>
         <div class="tile">
           <strong>🎮 Game Dev</strong>
@@ -51,7 +40,7 @@
         </div>
         <div class="tile">
           <strong>🧰 Software</strong>
-          <p>Utilities and tools that make building and managing projects easier.</p>
+          <p>Utilities and tools that make building and managing easier.</p>
         </div>
       </div>
     </section>
@@ -74,7 +63,7 @@
 
       <div class="card">
         <h3>🧠 LogiChest <span class="badge">Minecraft Mod</span></h3>
-        <p class="desc">Smart storage routing: hubs, sorters, upgrades, and clean base organization.</p>
+        <p class="desc">Smart routing: hubs, sorters, upgrades, and clean base organization.</p>
         <div class="btnrow">
           <a class="button mods" href="logichest.html">📄 Project Page</a>
           <a class="button ghost" href="logichestchangelog.html">🧾 Changelog</a>
@@ -84,7 +73,7 @@
 
       <div class="card">
         <h3>🦊 FoxBot <span class="badge">Discord Bot</span></h3>
-        <p class="desc">A whimsical community companion: fun commands, personality, utility, and server-friendly features.</p>
+        <p class="desc">A whimsical community companion: fun commands + helpful utilities.</p>
         <div class="btnrow">
           <a class="button bots" href="foxbot.html">📄 Project Page</a>
           <a class="button ghost" href="https://discord.gg/MutqYAdrwz">💬 Support Discord</a>
@@ -93,7 +82,7 @@
 
       <div class="card">
         <h3>🌙 EchoBloom <span class="badge">Discord Bot</span></h3>
-        <p class="desc">Realm-based progression: XP, raids, lore, ranks, events — built for long-term community play.</p>
+        <p class="desc">Realm-based progression: XP, raids, ranks, lore, and seasonal events.</p>
         <div class="btnrow">
           <a class="button bots" href="echobloom.html">📄 Project Page</a>
           <a class="button ghost" href="https://discord.gg/MutqYAdrwz">💬 Support Discord</a>
@@ -103,8 +92,9 @@
 
     <div class="sectionTitle" id="mods">
       <h2>🧱 Minecraft Mods</h2>
-      <span>Survival-friendly. Server-ready. Built to last.</span>
+      <span>Survival-friendly • Server-ready • Built to last</span>
     </div>
+
     <section class="card">
       <p class="muted">
         Our Minecraft mods are designed to feel natural in survival worlds — clean interfaces, simple interactions, and systems that reward organization without turning your base into a science project.
@@ -123,13 +113,14 @@
       <h2>🤖 Discord Bots</h2>
       <span>FoxBot • EchoBloom</span>
     </div>
+
     <section class="card">
       <p class="muted">
-        Our Discord bots range from playful community companions to full progression systems built around lore, events, and long-term engagement. Some are designed to add charm and personality to your server — others become the backbone of a living world with realms, ranks, and seasonal content.
+        Our Discord bots range from playful community companions to full progression systems built around lore, events, and long-term engagement. Some add charm and utility — others become the backbone of a living world with realms, ranks, and seasonal content.
         <br><br>
-        Everything is built for real servers: configurable settings, moderation hooks, quality-of-life features, and careful handling so bots stay stable even when chat gets busy. The goal is always the same — features that feel fun to use, not annoying to manage.
+        Everything is built for real servers: configurable settings, moderation hooks, quality-of-life features, and careful handling so bots stay stable even when chat gets busy.
         <br><br>
-        Whether you want cozy interaction or a full realm-based progression experience, our bots are made to grow with your community.
+        Whether you want cozy interaction or a realm-based RPG experience, our bots are made to grow with your community.
       </p>
       <div class="ctaRow">
         <a class="btn bots" href="foxbot.html">🦊 FoxBot</a>
@@ -141,9 +132,10 @@
       <h2>🌿 About Mayflower Studios</h2>
       <span>How we build</span>
     </div>
+
     <section class="card">
       <p class="muted">
-        Mayflower Studios is an independent dev studio building tools and experiences across Minecraft, Discord, and beyond. We care about polish, reliability, and making projects that people actually enjoy using — not just things that technically work.
+        Mayflower Studios is an independent dev studio creating tools and experiences across Minecraft, Discord, and beyond. We care about polish, reliability, and making projects that people actually enjoy using — not just things that technically work.
         <br><br>
         We focus on clean design, stable systems, and long-term maintainability. That means sensible defaults, real configuration options, and features that behave well in multiplayer and real community environments.
         <br><br>
@@ -157,20 +149,9 @@
       </div>
     </section>
 
-    <footer>
-      <div>© <span id="year"></span> Mayflower Studios • Built with GitHub Pages</div>
-      <div class="links">
-        <a href="#top">⬆ Back to top</a>
-        <a href="steelhold.html">🔐 Steelhold</a>
-        <a href="logichest.html">🧠 LogiChest</a>
-        <a href="foxbot.html">🦊 FoxBot</a>
-        <a href="echobloom.html">🌙 EchoBloom</a>
-      </div>
-    </footer>
+    <div id="shared-footer"></div>
   </div>
 
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
+  <script src="shared.js"></script>
 </body>
 </html>
