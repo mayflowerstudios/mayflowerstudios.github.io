@@ -4,144 +4,116 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FoxBot • Mayflower Studios</title>
-  <style>
-    :root{
-      --bg1:#070b14;
-      --bg2:#0c1224;
-      --border:rgba(255,255,255,.12);
-      --text:#e5e7eb;
-      --muted:#a3a3a3;
-      --accent:#a78bfa;
-      --accent2:#38bdf8;
-      --shadow: 0 18px 60px rgba(0,0,0,.35);
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color:var(--text);
-      background:
-        radial-gradient(900px 520px at 18% 12%, rgba(167,139,250,.18), transparent 60%),
-        radial-gradient(900px 520px at 82% 18%, rgba(56,189,248,.14), transparent 60%),
-        linear-gradient(180deg, var(--bg1), var(--bg2));
-      min-height:100vh;
-    }
-    .wrap{ width:min(1100px, 92vw); margin:0 auto; padding:26px 0 40px; }
-    a{color:inherit}
-
-    .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
-      padding:14px 16px;
-      border:1px solid var(--border);
-      border-radius:16px;
-      background:rgba(0,0,0,.18);
-      backdrop-filter: blur(10px);
-      box-shadow: var(--shadow);
-    }
-    .brand{ display:flex; flex-direction:column; gap:2px; }
-    .brand strong{ font-size:14px; letter-spacing:.4px; text-transform:uppercase;}
-    .brand span{ font-size:12px; color:var(--muted); }
-    .nav{ display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; }
-    .pill{
-      text-decoration:none;
-      padding:10px 12px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.04);
-      color:var(--text);
-      font-weight:600;
-      font-size:13px;
-      transition: transform .12s ease, filter .12s ease;
-    }
-    .pill:hover{ transform: translateY(-1px); filter:brightness(1.03); }
-
-    .hero{
-      margin-top:16px;
-      padding:22px 18px;
-      border:1px solid var(--border);
-      border-radius:18px;
-      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
-      box-shadow: var(--shadow);
-    }
-    .hero h1{ margin:0 0 8px; font-size:clamp(28px,3.5vw,42px); }
-    .hero p{ margin:0; color:var(--muted); line-height:1.55; max-width:70ch; }
-    .ctaRow{ display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; }
-    .btn{
-      text-decoration:none;
-      padding:12px 14px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.18);
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      font-weight:800;
-      transition: transform .12s ease, filter .12s ease;
-    }
-    .btn:hover{ transform: translateY(-1px); filter:brightness(1.03); }
-    .btn.primary{ color:#06121f; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
-    .btn.ghost{ color:var(--text); background: rgba(255,255,255,.06); border:1px solid var(--border); }
-    
-    .section{ margin-top:22px; }
-    .section h2{ margin:0 0 10px; font-size:18px; }
-    .list{ margin:0; padding-left:18px; color:var(--muted); line-height:1.7; }
-
-    footer{ text-align:center; margin-top:28px; color:rgba(255,255,255,.55); font-size:12px; }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="wrap">
 
-    <div class="topbar">
+    <div class="topbar" id="top">
       <div class="brand">
-        <strong>Mayflower Studios</strong>
-        <span>Discord bots • Minecraft mods • Dev tools</span>
+        <strong><a href="index.html" style="text-decoration:none;">Mayflower Studios</a></strong>
+        <span>Discord bots • Minecraft mods • games • software</span>
       </div>
-      <div class="nav">
-        <a class="pill" href="index.html">🏠 Home</a>
-        <a class="pill" href="#features">⭐ Features</a>
-        <a class="pill" href="#commands">📜 Commands</a>
-      </div>
+      <nav class="nav">
+        <a class="pill" href="index.html#projects">🚀 Projects</a>
+        <a class="pill" href="index.html#bots">🤖 Bots</a>
+        <a class="pill" href="echobloom.html">🌙 EchoBloom</a>
+      </nav>
     </div>
 
     <section class="hero">
-      <h1>🦊 FoxBot</h1>
-      <p>
-        A whimsical Discord bot with personality, fun commands, community features,
-        and quality-of-life helpers built to make your server more engaging.
-      </p>
-      <div class="ctaRow">
-        <a class="btn ghost" href="https://discord.gg/MutqYAdrwz">💬 Join Discord</a>
+      <div>
+        <p class="kicker">Discord Bot</p>
+        <h1>🦊 FoxBot</h1>
+        <p class="muted">
+          A whimsical community companion built for real servers: fun commands, helpful utilities, configurable behavior,
+          and a personality that doesn’t get in the way.
+        </p>
+        <div class="ctaRow">
+          <a class="btn bots" href="https://discord.gg/MutqYAdrwz">💬 Support Discord</a>
+          <a class="btn ghost" href="index.html#projects">⬅ Back to Projects</a>
+        </div>
+      </div>
+
+      <div class="tileGrid">
+        <div class="tile">
+          <strong>✨ Personality</strong>
+          <p>Whimsical vibes with tone options — fun without being spammy.</p>
+        </div>
+        <div class="tile">
+          <strong>🛠️ Utility</strong>
+          <p>Quality-of-life tools that help mods and communities stay organized.</p>
+        </div>
+        <div class="tile">
+          <strong>🧠 Moderation Hooks</strong>
+          <p>Built to integrate with server rules, thresholds, and automations.</p>
+        </div>
+        <div class="tile">
+          <strong>⚙️ Configurable</strong>
+          <p>Designed for real servers with settings that adapt to your vibe.</p>
+        </div>
       </div>
     </section>
 
-    <section class="section" id="features">
-      <h2>⭐ Key Features</h2>
-      <ul class="list">
-        <li>Fun interactions, mini-games, and playful replies</li>
-        <li>Customizable prefix / slash commands</li>
-        <li>Moderation tools & logs</li>
-        <li>Profile system & XP/levels</li>
-        <li>Configurable welcome messages & roles</li>
-      </ul>
+    <div class="sectionTitle">
+      <h2>⭐ What FoxBot Does</h2>
+      <span>High-level features</span>
+    </div>
+
+    <section class="grid2">
+      <div class="card">
+        <h3>🎉 Community Fun <span class="badge">Play</span></h3>
+        <p class="desc">Lightweight fun that keeps chat feeling alive.</p>
+        <ul>
+          <li>Fun command set + playful responses</li>
+          <li>Optional personality/tone profiles</li>
+          <li>Designed to avoid clutter and spam</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🧰 Server Utility <span class="badge">QoL</span></h3>
+        <p class="desc">Helpful tools for moderation and server flow.</p>
+        <ul>
+          <li>Moderation hooks + thresholds-ready design</li>
+          <li>Config-based behavior per server</li>
+          <li>Reliable, stable interactions</li>
+        </ul>
+      </div>
     </section>
 
-    <section class="section" id="commands">
-      <h2>📜 Example Commands</h2>
-      <ul class="list">
-        <li><strong>/foxfact</strong> — Get a random fox fact 🦊</li>
-        <li><strong>/boop</strong> — Boop someone!</li>
-        <li><strong>/setprefix</strong> — Change the bot prefix</li>
-        <li><strong>/profile</strong> — View your user profile</li>
-        <li><strong>/help</strong> — List commands</li>
-      </ul>
+    <div class="sectionTitle">
+      <h2>🔧 Setup Notes</h2>
+      <span>For real servers</span>
+    </div>
+
+    <section class="card">
+      <div class="callout">
+        <strong>Default philosophy</strong>
+        <p class="muted small">
+          FoxBot aims to be helpful first, fun second — and configurable so the server stays in control.
+        </p>
+      </div>
+      <div class="codebox">
+        <code>Suggested setup:
+- Configure allowed channels for “fun” commands
+- Enable moderation hooks only where needed
+- Keep logging on for auditability
+- Use tone profiles to match the server vibe</code>
+      </div>
+      <div class="btnrow" style="margin-top:12px;">
+        <a class="button bots" href="echobloom.html">🌙 See EchoBloom</a>
+        <a class="button ghost" href="https://discord.gg/MutqYAdrwz">💬 Support Discord</a>
+      </div>
     </section>
 
     <footer>
-      © <span id="year"></span> Mayflower Studios
+      <div>© <span id="year"></span> Mayflower Studios</div>
+      <div class="links">
+        <a href="index.html">🏠 Home</a>
+        <a href="echobloom.html">🌙 EchoBloom</a>
+        <a href="#top">⬆ Top</a>
+      </div>
     </footer>
   </div>
 
