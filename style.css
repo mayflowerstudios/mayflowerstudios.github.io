@@ -25,7 +25,31 @@
 html{ scroll-behavior:smooth; }
 
 body{
-  background: url("/assets/cherry-bg.png") center / cover no-repeat fixed !important;
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color:var(--text);
+  position: relative;
+
+  background-image:
+    radial-gradient(1100px 700px at 18% 8%, rgba(167,139,250,.16), transparent 60%),
+    radial-gradient(900px 600px at 82% 18%, rgba(167,139,250,.10), transparent 62%),
+    radial-gradient(900px 520px at 75% 22%, rgba(251,113,133,.22), transparent 60%),
+    radial-gradient(700px 480px at 30% 35%, rgba(253,164,175,.14), transparent 62%),
+    radial-gradient(900px 650px at 20% 88%, var(--leafglow), transparent 60%),
+    linear-gradient(180deg, var(--bg1), var(--bg2)),
+    url("/assets/cherry-bg.png");
+
+  background-repeat:
+    no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+
+  background-position:
+    center, center, center, center, center, center, center;
+
+  background-size:
+    auto, auto, auto, auto, auto, auto, cover;
+
+  min-height: 100vh;
+  padding: 26px;
 }
 
 /* Mist overlay */
