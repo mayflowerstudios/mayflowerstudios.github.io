@@ -11,6 +11,7 @@
 
     <div id="shared-nav"></div>
 
+    <!-- HERO -->
     <section class="hero">
       <div>
         <p class="kicker">Minecraft Mod</p>
@@ -33,6 +34,28 @@
       </div>
     </section>
 
+    <!-- DESCRIPTION -->
+    <div class="sectionTitle">
+      <h2>📝 Description</h2>
+      <span>What Steelhold is</span>
+    </div>
+
+    <section class="card">
+      <p class="desc">
+        <strong>Steelhold</strong> adds secure, survival-balanced storage built for real multiplayer worlds.
+        Place safes, claim ownership, and control access through a key-style system that’s designed to reduce grief
+        without turning storage into an overpowered “magic lock.”
+      </p>
+
+      <div class="callout" style="margin-top:12px;">
+        <strong>Designed for servers</strong>
+        <p class="muted small">
+          Clean interactions, predictable behavior, and a “don’t break long-running worlds” mindset.
+        </p>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
     <div class="sectionTitle">
       <h2>⭐ Features</h2>
       <span>What Steelhold focuses on</span>
@@ -60,6 +83,124 @@
       </div>
     </section>
 
+    <!-- HOW TO USE -->
+    <div class="sectionTitle">
+      <h2>📘 How to Use</h2>
+      <span>Quick gameplay guide</span>
+    </div>
+
+    <section class="grid2">
+      <div class="card">
+        <h3>1) Place & Claim</h3>
+        <p class="desc">Set down a Steelhold safe and it becomes yours.</p>
+        <ul>
+          <li>Place the safe like any block</li>
+          <li>First owner interaction claims the safe</li>
+          <li>Owner can configure access (depending on the safe type)</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>2) Access & Keys</h3>
+        <p class="desc">Share access without sharing your base.</p>
+        <ul>
+          <li>Owner can create/give keys (or authorize players)</li>
+          <li>Keys allow trusted friends to open the safe</li>
+          <li>Use this for teams, shops, or shared vaults</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>3) Moving Safes</h3>
+        <p class="desc">Keep your world safe from “oops it deleted.”</p>
+        <ul>
+          <li>Recommended: empty safes before moving/breaking</li>
+          <li>On servers: keep claims/keys consistent with your rules</li>
+          <li>Back up before major upgrades (always good practice)</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>4) Config & Tuning</h3>
+        <p class="desc">Adjust balance to match your server.</p>
+        <ul>
+          <li>Launch once to generate config</li>
+          <li>Tune values for difficulty / access rules</li>
+          <li>Restart after changing config settings</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- CRAFTING RECIPES -->
+    <div class="sectionTitle">
+      <h2>🧱 Crafting Recipes</h2>
+      <span>Recipes & progression</span>
+    </div>
+
+    <section class="grid2">
+      <div class="card">
+        <h3>🧰 Basic Safe</h3>
+        <p class="desc">Early-game secure storage with survival-friendly costs.</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>
+Recipe (placeholder):
+[Iron Ingot] [Iron Ingot] [Iron Ingot]
+[Iron Ingot] [Chest]      [Iron Ingot]
+[Iron Ingot] [Iron Ingot] [Iron Ingot]
+          </code>
+        </div>
+        <p class="muted small" style="margin-top:10px;">
+          Replace the placeholder grid with your real recipe once finalized.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>🗝️ Key / Key Item</h3>
+        <p class="desc">Used to grant access without giving away ownership.</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>
+Recipe (placeholder):
+[ ]          [Iron Nugget] [ ]
+[Iron Nugget][Paper]       [Iron Nugget]
+[ ]          [Iron Nugget] [ ]
+          </code>
+        </div>
+        <p class="muted small" style="margin-top:10px;">
+          If your mod uses a different key system, swap this section to match.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>🏦 Bank Safe (Tier 2)</h3>
+        <p class="desc">More capacity + premium protection for late-game bases.</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>
+Recipe (placeholder):
+[Steel/Netherite] [Iron Block]    [Steel/Netherite]
+[Iron Block]      [Basic Safe]    [Iron Block]
+[Steel/Netherite] [Iron Block]    [Steel/Netherite]
+          </code>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🧩 Upgrades</h3>
+        <p class="desc">Optional upgrades for capacity, features, or access behavior.</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>
+Upgrade ideas (placeholder):
+- Capacity Upgrade
+- Reinforced Upgrade
+- Keychain / Access Upgrade
+          </code>
+        </div>
+        <p class="muted small" style="margin-top:10px;">
+          You can add real upgrade names/recipes here as your mod locks them in.
+        </p>
+      </div>
+    </section>
+
+    <!-- MEDIA -->
     <div class="sectionTitle">
       <h2>🖼️ Media</h2>
       <span>Icon & screenshots</span>
@@ -90,6 +231,7 @@
       </div>
     </section>
 
+    <!-- INSTALL -->
     <div class="sectionTitle">
       <h2>📥 Install</h2>
       <span>Quick notes</span>
@@ -100,12 +242,14 @@
         <strong>Recommended setup</strong>
         <p class="muted small">Keep client + server mod versions in sync. Pin versions for packs and servers.</p>
       </div>
-      <div class="codebox">
+
+      <div class="codebox" style="margin-top:12px;">
         <code>1) Install Forge (matching your mod version)
 2) Drop Steelhold into /mods
 3) Launch once to generate config
 4) Restart after config changes</code>
       </div>
+
       <div class="btnrow" style="margin-top:12px;">
         <a class="button mods" href="https://www.curseforge.com/minecraft/mc-mods/steelhold">📦 CurseForge</a>
         <a class="button ghost" href="steelholdchangelog.html">🧾 Changelog</a>
