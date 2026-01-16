@@ -6,20 +6,10 @@
   <title>LogiChest • Mayflower Studios</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body data-nav="mods">
   <div class="wrap">
 
-    <div class="topbar" id="top">
-      <div class="brand">
-        <strong><a href="index.html" style="text-decoration:none;">Mayflower Studios</a></strong>
-        <span>Discord bots • Minecraft mods • games • software</span>
-      </div>
-      <nav class="nav">
-        <a class="pill" href="index.html#projects">🚀 Projects</a>
-        <a class="pill" href="index.html#mods">🧱 Mods</a>
-        <a class="pill" href="steelhold.html">🔐 Steelhold</a>
-      </nav>
-    </div>
+    <div id="shared-nav"></div>
 
     <section class="hero">
       <div>
@@ -36,22 +26,10 @@
       </div>
 
       <div class="tileGrid">
-        <div class="tile">
-          <strong>🏠 Hub System</strong>
-          <p>One place to control routing and connected storage behavior.</p>
-        </div>
-        <div class="tile">
-          <strong>🧩 Modular Upgrades</strong>
-          <p>Grow your system without rebuilding your entire base.</p>
-        </div>
-        <div class="tile">
-          <strong>🧼 Clean UI</strong>
-          <p>Readable menus and sane defaults that don’t fight the player.</p>
-        </div>
-        <div class="tile">
-          <strong>🧠 Automation</strong>
-          <p>Move items cleanly while keeping the survival vibe intact.</p>
-        </div>
+        <div class="tile"><strong>🏠 Hub System</strong><p>Centralized routing so your storage stays organized.</p></div>
+        <div class="tile"><strong>🧩 Modular Upgrades</strong><p>Expand capacity/features without rebuilding everything.</p></div>
+        <div class="tile"><strong>🧼 Clean UI</strong><p>Readable menus and sane defaults.</p></div>
+        <div class="tile"><strong>🧠 Automation</strong><p>Moves items cleanly while staying survival-friendly.</p></div>
       </div>
     </section>
 
@@ -66,19 +44,49 @@
         <p class="desc">Route items automatically using hubs + sorters without turning your base into spaghetti.</p>
         <ul>
           <li>Hub-centered organization</li>
-          <li>Sorter linking designed for real gameplay</li>
-          <li>Focus on clarity + stability</li>
+          <li>Designed for clarity + stability</li>
+          <li>Built for survival pacing</li>
         </ul>
       </div>
 
       <div class="card">
         <h3>⚙️ Upgrades & QoL <span class="badge">Polish</span></h3>
-        <p class="desc">Modular upgrades that expand capacity/features while keeping things manageable.</p>
+        <p class="desc">Modular upgrades that expand your system while keeping it manageable.</p>
         <ul>
           <li>Upgrade-based progression</li>
-          <li>Server-minded constraints + sane behavior</li>
-          <li>Designed to be maintainable long-term</li>
+          <li>Server-minded constraints</li>
+          <li>Long-term maintainability</li>
         </ul>
+      </div>
+    </section>
+
+    <div class="sectionTitle">
+      <h2>🖼️ Media</h2>
+      <span>Icon & screenshots</span>
+    </div>
+
+    <section class="card">
+      <div class="mediaHeader">
+        <img class="projectIcon" src="assets/icons/logichest.png" alt="LogiChest icon" />
+        <div class="mediaMeta">
+          <strong>LogiChest</strong>
+          <span>System previews, UI shots, and base organization examples</span>
+        </div>
+      </div>
+
+      <div class="gallery">
+        <div class="shot">
+          <img src="assets/shots/logichest-1.png" alt="LogiChest screenshot 1" />
+          <div class="cap">Hub block + routing overview.</div>
+        </div>
+        <div class="shot">
+          <img src="assets/shots/logichest-2.png" alt="LogiChest screenshot 2" />
+          <div class="cap">Linking sorters — clean setup flow.</div>
+        </div>
+        <div class="shot">
+          <img src="assets/shots/logichest-3.png" alt="LogiChest screenshot 3" />
+          <div class="cap">UI preview — tidy and readable.</div>
+        </div>
       </div>
     </section>
 
@@ -104,19 +112,9 @@
       </div>
     </section>
 
-    <footer>
-      <div>© <span id="year"></span> Mayflower Studios</div>
-      <div class="links">
-        <a href="index.html">🏠 Home</a>
-        <a href="steelhold.html">🔐 Steelhold</a>
-        <a href="logichestchangelog.html">🧾 LogiChest Changelog</a>
-        <a href="#top">⬆ Top</a>
-      </div>
-    </footer>
+    <div id="shared-footer"></div>
   </div>
 
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
+  <script src="shared.js"></script>
 </body>
 </html>
