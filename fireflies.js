@@ -1,4 +1,5 @@
 const canvas = document.getElementById("fireflies");
+if (!canvas) console.warn("Fireflies canvas not found!");
 const ctx = canvas.getContext("2d");
 
 let fireflies = [];
