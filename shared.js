@@ -23,3 +23,11 @@ function highlightNav() {
   setYear();
   highlightNav();
 })();
+
+(function injectFireflies(){
+  if (document.getElementById("fireflies")) return;
+
+  const canvas = document.createElement("canvas");
+  canvas.id = "fireflies";
+  document.body.prepend(canvas);
+})();
