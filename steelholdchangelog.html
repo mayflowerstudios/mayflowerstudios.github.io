@@ -6,28 +6,16 @@
   <title>Steelhold Changelog • Mayflower Studios</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body data-nav="mods">
   <div class="wrap">
 
-    <div class="topbar" id="top">
-      <div class="brand">
-        <strong><a href="index.html" style="text-decoration:none;">Mayflower Studios</a></strong>
-        <span>Discord bots • Minecraft mods • games • software</span>
-      </div>
-      <nav class="nav">
-        <a class="pill" href="steelhold.html">🔐 Steelhold</a>
-        <a class="pill" href="logichest.html">🧠 LogiChest</a>
-        <a class="pill" href="index.html#projects">🚀 Projects</a>
-      </nav>
-    </div>
+    <div id="shared-nav"></div>
 
     <section class="hero">
       <div>
         <p class="kicker">Minecraft Mod</p>
         <h1>🧾 Steelhold Changelog</h1>
-        <p class="muted">
-          A clean history of updates. (You can paste your real versions/notes into the entries below.)
-        </p>
+        <p class="muted">A clean history of updates. Paste your real version notes into the entries below.</p>
         <div class="ctaRow">
           <a class="btn primary" href="steelhold.html">🔐 Back to Steelhold</a>
           <a class="btn ghost" href="https://www.curseforge.com/minecraft/mc-mods/steelhold">📦 Download</a>
@@ -35,50 +23,36 @@
       </div>
 
       <div class="tileGrid">
-        <div class="tile">
-          <strong>Tip</strong>
-          <p>Keep entries short: Added / Changed / Fixed is perfect.</p>
-        </div>
-        <div class="tile">
-          <strong>Format</strong>
-          <p>Newest at the top so players see the latest fast.</p>
-        </div>
+        <div class="tile"><strong>Tip</strong><p>Keep it simple: Added / Changed / Fixed.</p></div>
+        <div class="tile"><strong>Order</strong><p>Newest at the top so players see updates fast.</p></div>
+        <div class="tile"><strong>Clarity</strong><p>Short lines beat big paragraphs here.</p></div>
+        <div class="tile"><strong>Trust</strong><p>Fix notes build confidence for servers.</p></div>
       </div>
     </section>
 
     <div class="sectionTitle">
       <h2>📌 Latest</h2>
-      <span>Replace with your real notes</span>
+      <span>Template entries</span>
     </div>
 
     <section class="card">
       <h3>v0.1.0 <span class="badge">Initial</span></h3>
       <p class="muted">
         <strong>Added:</strong> Core secure storage system, first safe blocks, key/ownership foundation.<br>
-        <strong>Fixed:</strong> N/A<br>
-        <strong>Notes:</strong> Early version — expect rapid iteration.
+        <strong>Changed:</strong> UI polish pass.<br>
+        <strong>Fixed:</strong> Interaction edge cases.
       </p>
       <hr class="sep">
       <h3>v0.0.9 <span class="badge">Prototype</span></h3>
       <p class="muted">
         <strong>Added:</strong> Internal testing builds.<br>
-        <strong>Changed:</strong> UI/UX polish pass.<br>
-        <strong>Fixed:</strong> Interaction edge cases.
+        <strong>Fixed:</strong> Sync issues and early quirks.
       </p>
     </section>
 
-    <footer>
-      <div>© <span id="year"></span> Mayflower Studios</div>
-      <div class="links">
-        <a href="index.html">🏠 Home</a>
-        <a href="steelhold.html">🔐 Steelhold</a>
-        <a href="#top">⬆ Top</a>
-      </div>
-    </footer>
+    <div id="shared-footer"></div>
   </div>
 
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
+  <script src="shared.js"></script>
 </body>
 </html>
