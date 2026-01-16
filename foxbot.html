@@ -6,20 +6,10 @@
   <title>FoxBot • Mayflower Studios</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body data-nav="bots">
   <div class="wrap">
 
-    <div class="topbar" id="top">
-      <div class="brand">
-        <strong><a href="index.html" style="text-decoration:none;">Mayflower Studios</a></strong>
-        <span>Discord bots • Minecraft mods • games • software</span>
-      </div>
-      <nav class="nav">
-        <a class="pill" href="index.html#projects">🚀 Projects</a>
-        <a class="pill" href="index.html#bots">🤖 Bots</a>
-        <a class="pill" href="echobloom.html">🌙 EchoBloom</a>
-      </nav>
-    </div>
+    <div id="shared-nav"></div>
 
     <section class="hero">
       <div>
@@ -36,22 +26,10 @@
       </div>
 
       <div class="tileGrid">
-        <div class="tile">
-          <strong>✨ Personality</strong>
-          <p>Whimsical vibes with tone options — fun without being spammy.</p>
-        </div>
-        <div class="tile">
-          <strong>🛠️ Utility</strong>
-          <p>Quality-of-life tools that help mods and communities stay organized.</p>
-        </div>
-        <div class="tile">
-          <strong>🧠 Moderation Hooks</strong>
-          <p>Built to integrate with server rules, thresholds, and automations.</p>
-        </div>
-        <div class="tile">
-          <strong>⚙️ Configurable</strong>
-          <p>Designed for real servers with settings that adapt to your vibe.</p>
-        </div>
+        <div class="tile"><strong>✨ Personality</strong><p>Whimsical tone options that stay tasteful.</p></div>
+        <div class="tile"><strong>🛠️ Utility</strong><p>Quality-of-life tools for communities.</p></div>
+        <div class="tile"><strong>🧠 Moderation Hooks</strong><p>Thresholds and safety-minded systems.</p></div>
+        <div class="tile"><strong>⚙️ Configurable</strong><p>Built to adapt to your server’s vibe.</p></div>
       </div>
     </section>
 
@@ -65,9 +43,9 @@
         <h3>🎉 Community Fun <span class="badge">Play</span></h3>
         <p class="desc">Lightweight fun that keeps chat feeling alive.</p>
         <ul>
-          <li>Fun command set + playful responses</li>
-          <li>Optional personality/tone profiles</li>
-          <li>Designed to avoid clutter and spam</li>
+          <li>Fun commands and playful responses</li>
+          <li>Optional tone/personality profiles</li>
+          <li>Designed to avoid spam</li>
         </ul>
       </div>
 
@@ -75,31 +53,59 @@
         <h3>🧰 Server Utility <span class="badge">QoL</span></h3>
         <p class="desc">Helpful tools for moderation and server flow.</p>
         <ul>
-          <li>Moderation hooks + thresholds-ready design</li>
-          <li>Config-based behavior per server</li>
-          <li>Reliable, stable interactions</li>
+          <li>Moderation hooks and filters</li>
+          <li>Config-friendly behavior</li>
+          <li>Stable interaction design</li>
         </ul>
       </div>
     </section>
 
     <div class="sectionTitle">
+      <h2>🖼️ Media</h2>
+      <span>Icon & screenshots</span>
+    </div>
+
+    <section class="card">
+      <div class="mediaHeader">
+        <img class="projectIcon" src="assets/icons/foxbot.png" alt="FoxBot icon" />
+        <div class="mediaMeta">
+          <strong>FoxBot</strong>
+          <span>Branding, command previews, and UI examples</span>
+        </div>
+      </div>
+
+      <div class="gallery">
+        <div class="shot">
+          <img src="assets/shots/foxbot-1.png" alt="FoxBot screenshot 1" />
+          <div class="cap">Command response preview (embed style).</div>
+        </div>
+        <div class="shot">
+          <img src="assets/shots/foxbot-2.png" alt="FoxBot screenshot 2" />
+          <div class="cap">Utility features — server-friendly tools.</div>
+        </div>
+        <div class="shot">
+          <img src="assets/shots/foxbot-3.png" alt="FoxBot screenshot 3" />
+          <div class="cap">Personality/tone system example.</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="sectionTitle">
       <h2>🔧 Setup Notes</h2>
-      <span>For real servers</span>
+      <span>Keep it fun, keep it controlled</span>
     </div>
 
     <section class="card">
       <div class="callout">
         <strong>Default philosophy</strong>
-        <p class="muted small">
-          FoxBot aims to be helpful first, fun second — and configurable so the server stays in control.
-        </p>
+        <p class="muted small">FoxBot aims to be helpful first, fun second — configurable so the server stays in control.</p>
       </div>
       <div class="codebox">
         <code>Suggested setup:
-- Configure allowed channels for “fun” commands
+- Set allowed channels for fun commands
 - Enable moderation hooks only where needed
 - Keep logging on for auditability
-- Use tone profiles to match the server vibe</code>
+- Use tone profiles to match your community</code>
       </div>
       <div class="btnrow" style="margin-top:12px;">
         <a class="button bots" href="echobloom.html">🌙 See EchoBloom</a>
@@ -107,18 +113,9 @@
       </div>
     </section>
 
-    <footer>
-      <div>© <span id="year"></span> Mayflower Studios</div>
-      <div class="links">
-        <a href="index.html">🏠 Home</a>
-        <a href="echobloom.html">🌙 EchoBloom</a>
-        <a href="#top">⬆ Top</a>
-      </div>
-    </footer>
+    <div id="shared-footer"></div>
   </div>
 
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
+  <script src="shared.js"></script>
 </body>
 </html>
