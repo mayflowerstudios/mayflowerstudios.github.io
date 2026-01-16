@@ -6,18 +6,20 @@
   <title>Mayflower Studios</title>
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body data-nav="home">
   <div class="wrap">
 
     <div id="shared-nav"></div>
 
+    <!-- HERO -->
     <section class="hero">
       <div>
         <p class="kicker">Clean builds • Cozy polish • Real-server ready</p>
         <h1>🌿 Mayflower Studios</h1>
         <p class="muted">
-          A small dev studio building <strong>Discord bots</strong>, <strong>Minecraft mods</strong>,
-          <strong>games</strong>, and <strong>software tools</strong> — focused on clean design, fun systems, and reliable builds.
+          A small dev studio building <strong>Minecraft mods</strong> and <strong>Discord bots</strong> for real worlds and real communities —
+          focused on clean design, survival-friendly pacing, and systems that stay reliable long after launch.
         </p>
         <div class="ctaRow">
           <a class="btn primary" href="#projects">🚀 Explore Projects</a>
@@ -28,32 +30,37 @@
       <div class="tileGrid">
         <div class="tile">
           <strong>🧱 Minecraft Mods</strong>
-          <p>Survival-friendly systems, clean UIs, and server-ready mechanics.</p>
+          <p>Server-ready mechanics with clean UI and configurable balance.</p>
         </div>
         <div class="tile">
           <strong>🤖 Discord Bots</strong>
-          <p>Community tools, progression systems, lore/events, and AI features.</p>
+          <p>Private server companions + long-term progression systems.</p>
         </div>
         <div class="tile">
-          <strong>🎮 Game Dev</strong>
-          <p>Cozy prototypes, experiments, and long-term passion projects.</p>
+          <strong>⚙️ Real-World Reliability</strong>
+          <p>Predictable behavior, tidy edge cases, and maintainable code.</p>
         </div>
         <div class="tile">
-          <strong>🧰 Software</strong>
-          <p>Utilities and tools that make building and managing easier.</p>
+          <strong>🌸 Cozy Polish</strong>
+          <p>Whimsical flavor, minimal clutter, and interfaces that make sense.</p>
         </div>
       </div>
     </section>
 
+    <!-- FEATURED PROJECTS -->
     <div class="sectionTitle" id="projects">
       <h2>🚀 Featured Projects</h2>
       <span>Hand-picked creations from the workshop</span>
     </div>
 
     <section class="grid2">
+      <!-- Steelhold -->
       <div class="card">
         <h3>🔐 Steelhold <span class="badge">Minecraft Mod</span></h3>
-        <p class="desc">Steelhold is a Forge mod for Minecraft that adds heavy-duty, lockable safes designed for survival, multiplayer, and roleplay servers.</p>
+        <p class="desc">
+          Heavy-duty safes with real ownership and a lock/key workflow. Tiered progression (Basic → Reinforced → Steelhold → Vault → Bank),
+          optional “falling safe” behavior, and server-tunable balance via config.
+        </p>
         <div class="btnrow">
           <a class="button mods" href="steelhold.html">📄 Project Page</a>
           <a class="button ghost" href="steelholdchangelog.html">🧾 Changelog</a>
@@ -61,9 +68,13 @@
         </div>
       </div>
 
+      <!-- LogiChest -->
       <div class="card">
         <h3>🧠 LogiChest <span class="badge">Minecraft Mod</span></h3>
-        <p class="desc">LogiChest adds intelligent item logistics to Minecraft — auto-crafted Link Keys, configurable Hubs, and Sorter blocks that funnel items into chests based on custom whitelists.</p>
+        <p class="desc">
+          Hub-and-sorter item routing designed to stay readable in survival. Route items from a Hub-facing source inventory into
+          sorter destinations using 10-slot whitelist filters, with upgrade support for batching, speed, multi-hub keychains, and autocrafting.
+        </p>
         <div class="btnrow">
           <a class="button mods" href="logichest.html">📄 Project Page</a>
           <a class="button ghost" href="logichestchangelog.html">🧾 Changelog</a>
@@ -71,25 +82,34 @@
         </div>
       </div>
 
+      <!-- FoxBot -->
       <div class="card">
         <h3>🦊 FoxBot <span class="badge">Discord Bot</span></h3>
-        <p class="desc">A whimsical community companion: fun commands + helpful utilities.</p>
+        <p class="desc">
+          A private, whimsical community helper built for our server: tone-based AI replies (when mentioned), birthdays,
+          reaction roles, private chat rooms, and safety-minded moderation hooks — all designed to keep chat cozy, not noisy.
+        </p>
         <div class="btnrow">
-          <a class="button bots" href="foxbot.html">📄 Project Page</a>
-          <a class="button ghost" href="https://discord.gg/MutqYAdrwz">💬 Join Discord</a>
+          <a class="button bots" href="foxbot.html">📄 Info Page</a>
+          <a class="button ghost" href="#bots">🤖 About the Bots</a>
         </div>
       </div>
 
+      <!-- EchoBloom -->
       <div class="card">
         <h3>🌙 EchoBloom <span class="badge">Discord Bot</span></h3>
-        <p class="desc">Realm-based progression: XP, raids, ranks, lore, and seasonal events.</p>
+        <p class="desc">
+          A private realm-based progression bot for long-term communities: join one of four realms, run adventure commands,
+          build realm inventory, craft buffs, and compete in raids and reaction battles — with seasonal lore systems that evolve over time.
+        </p>
         <div class="btnrow">
-          <a class="button bots" href="echobloom.html">📄 Project Page</a>
-          <a class="button ghost" href="https://discord.gg/MutqYAdrwz">💬 Join Discord</a>
+          <a class="button bots" href="echobloom.html">📄 Info Page</a>
+          <a class="button ghost" href="#bots">🌿 Realm Systems</a>
         </div>
       </div>
     </section>
 
+    <!-- MODS SECTION -->
     <div class="sectionTitle" id="mods">
       <h2>🧱 Minecraft Mods</h2>
       <span>Survival-friendly • Server-ready • Built to last</span>
@@ -97,37 +117,46 @@
 
     <section class="card">
       <p class="muted">
-        Our Minecraft mods are designed to feel natural in survival worlds — clean interfaces, simple interactions, and systems that reward organization without turning your base into a science project.
+        Our Minecraft mods aim for the “vanilla+ sweet spot” — systems that feel natural in survival while still solving real problems.
+        That means <strong>clean interfaces</strong>, <strong>predictable behavior</strong>, and <strong>server-tunable balance</strong>.
         <br><br>
-        We prioritize multiplayer stability, performance, and configurability so servers can run the same worlds for months without chaos. Whether it’s secure storage, smart routing, or quality-of-life systems, we aim for mods that scale from singleplayer builds to busy community servers.
+        <strong>Steelhold</strong> focuses on security: player-owned safes, lock/key access, tier progression, and physical “heavy vault” behavior.
+        <strong>LogiChest</strong> focuses on organization: hub routing, sorter whitelists, and upgrade-driven automation that stays readable even as your base grows.
         <br><br>
-        If you like tidy bases and reliable automation, you’re in the right place.
+        If you like tidy bases and reliable mechanics, you’re in the right place.
       </p>
+
       <div class="ctaRow">
         <a class="btn primary" href="steelhold.html">🔐 Steelhold</a>
         <a class="btn primary" href="logichest.html">🧠 LogiChest</a>
       </div>
     </section>
 
+    <!-- BOTS SECTION -->
     <div class="sectionTitle" id="bots">
       <h2>🤖 Discord Bots</h2>
-      <span>FoxBot • EchoBloom</span>
+      <span>Private bots built specifically for our community</span>
     </div>
 
     <section class="card">
       <p class="muted">
-        Our Discord bots range from playful community companions to full progression systems built around lore, events, and long-term engagement. Some add charm and utility — others become the backbone of a living world with realms, ranks, and seasonal content.
+        Our bots are built for a single home: <strong>our server</strong>. They aren’t public invite bots — they’re the “infrastructure”
+        of our community.
         <br><br>
-        Everything is built for real servers: configurable settings, moderation hooks, quality-of-life features, and careful handling so bots stay stable even when chat gets busy.
+        <strong>FoxBot</strong> is the cozy companion: birthdays, reaction roles, private chat rooms, tone-based replies, and moderation guardrails.
+        <strong>EchoBloom</strong> is the living-world layer: realms, adventure commands, realm inventory, craftable buffs, raids, reaction battles,
+        and seasonal story systems.
         <br><br>
-        Whether you want cozy interaction or a realm-based RPG experience, our bots are made to grow with your community.
+        They’re designed to be <strong>fun without being spammy</strong>, and powerful without being hard to maintain.
       </p>
+
       <div class="ctaRow">
         <a class="btn bots" href="foxbot.html">🦊 FoxBot</a>
         <a class="btn bots" href="echobloom.html">🌙 EchoBloom</a>
       </div>
     </section>
 
+    <!-- ABOUT -->
     <div class="sectionTitle" id="about">
       <h2>🌿 About Mayflower Studios</h2>
       <span>How we build</span>
@@ -135,11 +164,17 @@
 
     <section class="card">
       <p class="muted">
-        Mayflower Studios is an independent dev studio creating tools and experiences across Minecraft, Discord, and beyond. We care about polish, reliability, and making projects that people actually enjoy using — not just things that technically work.
+        Mayflower Studios is an independent dev studio creating tools and experiences across Minecraft and Discord.
+        We care about polish, reliability, and making projects that people actually enjoy using — not just things that technically work.
         <br><br>
-        We focus on clean design, stable systems, and long-term maintainability. That means sensible defaults, real configuration options, and features that behave well in multiplayer and real community environments.
-        <br><br>
-        Our projects are built to evolve over time — improved, expanded, and refined as they grow with the people using them.
+        Our design philosophy:
+        <br>
+        • <strong>Readable systems</strong> (no spaghetti logic) <br>
+        • <strong>Survival-friendly pacing</strong> (fun loops, not grind walls) <br>
+        • <strong>Server-minded stability</strong> (long-running worlds, real communities) <br>
+        • <strong>Config where it matters</strong> (tune balance, don’t rewrite mods) <br>
+        <br>
+        Projects evolve over time — refined, expanded, and improved as we learn what works in real servers and real worlds.
       </p>
 
       <div class="ctaRow">
