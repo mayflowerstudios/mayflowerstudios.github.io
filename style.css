@@ -413,3 +413,10 @@ footer{
   padding:8px 10px;
   border-radius:999px;
 }
+#fireflies{
+  position: fixed;
+  inset: 0;
+  z-index: -2; /* behind content, above background */
+  pointer-events: none;
+  opacity: 0.9;
+}
