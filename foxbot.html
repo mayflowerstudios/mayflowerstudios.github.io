@@ -11,55 +11,291 @@
 
     <div id="shared-nav"></div>
 
+    <!-- HERO -->
     <section class="hero">
       <div>
-        <p class="kicker">Discord Bot</p>
+        <p class="kicker">Discord Bot (Private)</p>
         <h1>🦊 FoxBot</h1>
         <p class="muted">
-          A whimsical community companion built for real servers: fun commands, helpful utilities, configurable behavior,
-          and a personality that doesn’t get in the way.
+          FoxBot is our cozy, lore-friendly helper for <strong>Luna’s Magical Forest</strong> — built for day-to-day server life:
+          fun commands, birthdays, reaction roles, private AI chats, and safety-minded moderation.
         </p>
+
         <div class="ctaRow">
-          <a class="btn bots" href="https://discord.gg/MutqYAdrwz">💬 Support Discord</a>
           <a class="btn ghost" href="index.html#projects">⬅ Back to Projects</a>
+          <a class="btn bots" href="#commands">📚 Commands</a>
+          <a class="btn ghost" href="#howto">📘 How to Use</a>
+        </div>
+
+        <div class="callout" style="margin-top:14px;">
+          <strong>Private bot notice</strong>
+          <p class="muted small" style="margin:6px 0 0;">
+            FoxBot is <strong>not</strong> a public bot and isn’t meant to be invited to other servers. This page is just an
+            internal guide for our community.
+          </p>
         </div>
       </div>
 
       <div class="tileGrid">
-        <div class="tile"><strong>✨ Personality</strong><p>Whimsical tone options that stay tasteful.</p></div>
-        <div class="tile"><strong>🛠️ Utility</strong><p>Quality-of-life tools for communities.</p></div>
-        <div class="tile"><strong>🧠 Moderation Hooks</strong><p>Thresholds and safety-minded systems.</p></div>
-        <div class="tile"><strong>⚙️ Configurable</strong><p>Built to adapt to your server’s vibe.</p></div>
+        <div class="tile">
+          <strong>🌸 Cozy AI Replies</strong>
+          <p>FoxBot replies when mentioned — plus private “fox-chat” rooms and DMs.</p>
+        </div>
+        <div class="tile">
+          <strong>🎂 Birthdays</strong>
+          <p>Self-service birthday saving + daily announcements.</p>
+        </div>
+        <div class="tile">
+          <strong>🛡️ Moderation</strong>
+          <p>Safety-minded filtering with probation + escalation logic.</p>
+        </div>
+        <div class="tile">
+          <strong>🎭 Roles & Reactions</strong>
+          <p>Simple reaction-role binding tools for server setup.</p>
+        </div>
       </div>
     </section>
 
+    <!-- DESCRIPTION -->
     <div class="sectionTitle">
-      <h2>⭐ What FoxBot Does</h2>
-      <span>High-level features</span>
+      <h2>📝 About FoxBot</h2>
+      <span>What it is (and what it isn’t)</span>
+    </div>
+
+    <section class="card">
+      <p class="desc">
+        <strong>FoxBot</strong> is a custom Discord bot built specifically for <strong>Luna’s Magical Forest</strong>.
+        It mixes practical server utilities (reaction roles, announcements, cleanup tools) with fun, cozy interactions
+        (tone-based replies, fox facts/jokes/quotes, and cute “news recaps”).
+      </p>
+
+      <p class="desc">
+        Under the hood, FoxBot also includes:
+        <strong>DM token limiting</strong> (to keep AI usage controlled), <strong>memory tools</strong> (opt-in style storage + cleanup),
+        and <strong>automated moderation checks</strong> for new/untrusted members.
+      </p>
+
+      <div class="divider" style="margin:14px 0;"></div>
+
+      <h3 style="margin:0 0 6px;">🦊 When does FoxBot respond?</h3>
+      <p class="desc" style="margin-top:0;">
+        In normal server channels, FoxBot responds <strong>only when mentioned</strong>. In DMs and FoxBot private chatrooms,
+        it responds like a direct conversation.
+      </p>
+
+      <div class="callout" style="margin-top:12px;">
+        <strong>Why it works this way</strong>
+        <p class="muted small" style="margin:6px 0 0;">
+          Keeps the server readable, prevents accidental spam, and makes “talking to FoxBot” intentional.
+        </p>
+      </div>
+    </section>
+
+    <!-- HIGHLIGHTS -->
+    <div class="sectionTitle">
+      <h2>⭐ Highlights</h2>
+      <span>Main systems FoxBot provides</span>
     </div>
 
     <section class="grid2">
       <div class="card">
-        <h3>🎉 Community Fun <span class="badge">Play</span></h3>
-        <p class="desc">Lightweight fun that keeps chat feeling alive.</p>
+        <h3>🌸 AI Chat + Tone Profiles <span class="badge">Core</span></h3>
+        <p class="desc">
+          FoxBot can rewrite/answer in different styles, per-user. Set your preferred vibe once and it sticks.
+        </p>
         <ul>
-          <li>Fun commands and playful responses</li>
-          <li>Optional tone/personality profiles</li>
-          <li>Designed to avoid spam</li>
+          <li>Per-user tone preference (saved)</li>
+          <li>Whimsical-by-default, with many optional tones</li>
+          <li>Private chat options (DMs + private rooms)</li>
         </ul>
       </div>
 
       <div class="card">
-        <h3>🧰 Server Utility <span class="badge">QoL</span></h3>
-        <p class="desc">Helpful tools for moderation and server flow.</p>
+        <h3>🛡️ Safety & Moderation <span class="badge">Guardrails</span></h3>
+        <p class="desc">
+          New users and probation periods get stricter checks; trusted long-time members get fewer interruptions.
+        </p>
         <ul>
-          <li>Moderation hooks and filters</li>
-          <li>Config-friendly behavior</li>
-          <li>Stable interaction design</li>
+          <li>Probation-based thresholds</li>
+          <li>Escalation for repeat issues (strike window)</li>
+          <li>Bypass for mods + trusted/long-tenure members</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🎂 Birthdays <span class="badge">Community</span></h3>
+        <p class="desc">
+          Members can save birthdays themselves, and FoxBot announces them automatically each day.
+        </p>
+        <ul>
+          <li>Save/update/remove birthday (MM/DD)</li>
+          <li>Daily birthday announcement loop</li>
+          <li>“Next birthday” helper</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🎭 Reaction Roles <span class="badge">Setup</span></h3>
+        <p class="desc">
+          Mods can bind reactions to roles on a specific message link.
+        </p>
+        <ul>
+          <li>Set reaction → role bindings</li>
+          <li>Remove bindings + clear bot reactions</li>
+          <li>Stored config so it persists across restarts</li>
         </ul>
       </div>
     </section>
 
+    <!-- HOW TO USE -->
+    <div class="sectionTitle" id="howto">
+      <h2>📘 How to Use</h2>
+      <span>Practical “what do I do?” guide</span>
+    </div>
+
+    <section class="grid2">
+      <div class="card">
+        <h3>1) Talk to FoxBot in chat</h3>
+        <p class="desc">In server channels, FoxBot replies when you mention it.</p>
+        <ul>
+          <li>Mention FoxBot in your message</li>
+          <li>Ask a question or request a rewrite (“foxify this”)</li>
+          <li>FoxBot replies as a direct message reply in-thread</li>
+        </ul>
+        <div class="codebox" style="margin-top:10px;">
+          <code>Example:
+@FoxBot can you foxify this message?</code>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>2) Use private chatrooms (mods)</h3>
+        <p class="desc">Create a private text channel for 1-on-1 conversations with FoxBot.</p>
+        <ul>
+          <li>Mods can create a private “fox-chat-…” room</li>
+          <li>Only you + FoxBot can read it</li>
+          <li>Delete it when done</li>
+        </ul>
+        <div class="codebox" style="margin-top:10px;">
+          <code>/privatechat
+/endprivatechat</code>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>3) DMs (token-limited)</h3>
+        <p class="desc">DM chats are allowed, but have a monthly token cap to prevent runaway usage.</p>
+        <ul>
+          <li>If you hit the monthly cap, FoxBot will tell you</li>
+          <li>You can check remaining DM tokens anytime</li>
+          <li>Server chat remains available even if DM tokens run out</li>
+        </ul>
+        <div class="codebox" style="margin-top:10px;">
+          <code>/tokens</code>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>4) Set your tone</h3>
+        <p class="desc">Make FoxBot respond in your preferred vibe.</p>
+        <ul>
+          <li>Choose a tone once (saved)</li>
+          <li>Check your current tone</li>
+          <li>Reset back to default (whimsical)</li>
+        </ul>
+        <div class="codebox" style="margin-top:10px;">
+          <code>/settone
+/mytone
+/resettone</code>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMMANDS -->
+    <div class="sectionTitle" id="commands">
+      <h2>📚 Command Reference</h2>
+      <span>What’s available in this bot build</span>
+    </div>
+
+    <section class="grid2">
+      <div class="card">
+        <h3>🎉 Fun</h3>
+        <p class="desc">Lightweight community interactions.</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>/hello
+/foxify
+/boop (public|private)
+/foxfact
+/foxjoke
+/foxquote
+/fox (generates a cute fox image)
+/coinflip
+/roll</code>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🎂 Birthdays</h3>
+        <p class="desc">Self-managed birthdays + automated announcements.</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>/setbd
+/updatebd
+/getbd
+/removebd
+/nextbd</code>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🧠 Memory</h3>
+        <p class="desc">See/forget what FoxBot has saved. Mods can view/forget others.</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>/memory
+/forget
+/foxthoughts
+/cleanup (mod-only)</code>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🎭 Reaction Roles</h3>
+        <p class="desc">Bind a role to a reaction on a message via message link.</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>/setreaction
+/removereaction
+/clearbotreactions</code>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🧰 System</h3>
+        <p class="desc">Utility tools and server helpers.</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>/joined
+/tokens
+/newsrecap
+/privatechat (manage channels)
+/endprivatechat
+/shutdown (owner-only)</code>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🛠️ Admin / Mod Tools</h3>
+        <p class="desc">Server management helpers (permission-gated).</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>/cleartoday
+/announce
+/announcefromlink
+/say
+/repeat
+/stealemoji
+/restart (admin-only)</code>
+        </div>
+      </div>
+    </section>
+
+    <!-- MEDIA -->
     <div class="sectionTitle">
       <h2>🖼️ Media</h2>
       <span>Icon & screenshots</span>
@@ -70,46 +306,61 @@
         <img class="projectIcon" src="assets/icons/foxbot.png" alt="FoxBot icon" />
         <div class="mediaMeta">
           <strong>FoxBot</strong>
-          <span>Branding, command previews, and UI examples</span>
+          <span>Internal bot guide visuals, embeds, and examples</span>
         </div>
       </div>
 
       <div class="gallery">
         <div class="shot">
           <img src="assets/shots/foxbot-1.png" alt="FoxBot screenshot 1" />
-          <div class="cap">Command response preview (embed style).</div>
+          <div class="cap">Example embed response (fun + cozy formatting).</div>
         </div>
         <div class="shot">
           <img src="assets/shots/foxbot-2.png" alt="FoxBot screenshot 2" />
-          <div class="cap">Utility features — server-friendly tools.</div>
+          <div class="cap">Reaction roles + utility tools for server setup.</div>
         </div>
         <div class="shot">
           <img src="assets/shots/foxbot-3.png" alt="FoxBot screenshot 3" />
-          <div class="cap">Personality/tone system example.</div>
+          <div class="cap">Tone system + private chat flow examples.</div>
         </div>
+      </div>
+
+      <div class="callout" style="margin-top:12px;">
+        <strong>Tip</strong>
+        <p class="muted small" style="margin:6px 0 0;">
+          If you want this page to be “always accurate”, swap the screenshots for real captures of your server,
+          and update the captions to match your current channels.
+        </p>
       </div>
     </section>
 
+    <!-- NOTES -->
     <div class="sectionTitle">
-      <h2>🔧 Setup Notes</h2>
-      <span>Keep it fun, keep it controlled</span>
+      <h2>🔧 Notes for Our Server</h2>
+      <span>How we keep FoxBot fun + controlled</span>
     </div>
 
     <section class="card">
       <div class="callout">
-        <strong>Default philosophy</strong>
-        <p class="muted small">FoxBot aims to be helpful first, fun second — configurable so the server stays in control.</p>
+        <strong>Behavior rules (by design)</strong>
+        <p class="muted small" style="margin:6px 0 0;">
+          FoxBot responds in server channels only when mentioned, but allows deeper chatting in DMs / private fox-chat rooms.
+          Moderation checks are stricter for newer members and relax over time.
+        </p>
       </div>
-      <div class="codebox">
-        <code>Suggested setup:
-- Set allowed channels for fun commands
-- Enable moderation hooks only where needed
-- Keep logging on for auditability
-- Use tone profiles to match your community</code>
+
+      <div class="codebox" style="margin-top:12px;">
+        <code>Suggested best practices:
+- Encourage members to use /settone for personal vibe control
+- Use /privatechat for focused help without cluttering channels
+- Keep DM usage limited (token cap) to avoid runaway AI spend
+- Use reaction roles for clean onboarding + self-serve access
+- Use /newsrecap for fun “what did I miss?” moments</code>
       </div>
+
       <div class="btnrow" style="margin-top:12px;">
+        <a class="button ghost" href="index.html#projects">⬅ Back to Projects</a>
         <a class="button bots" href="echobloom.html">🌙 See EchoBloom</a>
-        <a class="button ghost" href="https://discord.gg/MutqYAdrwz">💬 Support Discord</a>
       </div>
     </section>
 
