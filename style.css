@@ -52,7 +52,7 @@ body::before{
   position:fixed;
   inset:-40px;
   pointer-events:none;
-  z-index:-1;
+  z-index:-2;
   opacity:.55;
 
   background:
@@ -69,25 +69,35 @@ body::after{
   position:fixed;
   inset:0;
   pointer-events:none;
-  z-index:-1;
-  opacity:.25;
+  z-index:-2;
+  opacity:.30;
+
+  /* petals + tiny warm specks combined */
   background:
+    /* petals */
     radial-gradient(10px 10px at 12% 22%, rgba(253,164,175,.38), transparent 60%),
     radial-gradient(12px 12px at 28% 38%, rgba(251,113,133,.28), transparent 60%),
     radial-gradient(9px 9px at 54% 18%, rgba(253,164,175,.30), transparent 60%),
     radial-gradient(11px 11px at 76% 46%, rgba(251,113,133,.22), transparent 60%),
     radial-gradient(8px 8px at 86% 74%, rgba(253,164,175,.24), transparent 60%),
-    radial-gradient(10px 10px at 22% 82%, rgba(251,113,133,.18), transparent 60%);
-  filter: blur(0.2px);
-  background:
-    radial-gradient(1.5px 1.5px at 18% 30%, rgba(251,191,36,.45), transparent 60%),
-    radial-gradient(1.2px 1.2px at 62% 22%, rgba(251,191,36,.35), transparent 60%),
-    radial-gradient(1.4px 1.4px at 78% 68%, rgba(251,191,36,.32), transparent 60%),
-    radial-gradient(1.1px 1.1px at 35% 75%, rgba(251,191,36,.28), transparent 60%);
+    radial-gradient(10px 10px at 22% 82%, rgba(251,113,133,.18), transparent 60%),
+
+    /* tiny warm “glow dust” */
+    radial-gradient(1.5px 1.5px at 18% 30%, rgba(251,191,36,.40), transparent 60%),
+    radial-gradient(1.2px 1.2px at 62% 22%, rgba(251,191,36,.32), transparent 60%),
+    radial-gradient(1.4px 1.4px at 78% 68%, rgba(251,191,36,.30), transparent 60%),
+    radial-gradient(1.1px 1.1px at 35% 75%, rgba(251,191,36,.26), transparent 60%);
+
+  filter: blur(0.25px);
 }
 
 a{color:inherit}
-.wrap{ width:min(1120px, 100%); margin:0 auto; }
+.wrap{
+  width:min(1120px, 100%);
+  margin:0 auto;
+  position: relative;
+  z-index: 1;
+}
 
 h1,h2,h3{ margin:0; letter-spacing:.2px; }
 ul{ margin:0; padding-left:18px; }
@@ -416,7 +426,9 @@ footer{
 #fireflies{
   position: fixed;
   inset: 0;
-  z-index: -2; /* behind content, above background */
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;          /* behind content, above overlays */
   pointer-events: none;
   opacity: 0.9;
 }
