@@ -143,15 +143,12 @@
         <p class="desc">The central router that manages your whole storage network.</p>
         <div class="codebox" style="margin-top:10px;">
           <code>
-Recipe (placeholder):
-[Iron Ingot] [Redstone]  [Iron Ingot]
-[Chest]      [Comparator][Chest]
-[Iron Ingot] [Redstone]  [Iron Ingot]
+Recipe:
+[ ]          [Hopper]    [ ]
+[Hopper]     [Chest]     [Hopper]
+[ ]          [Hopper]    [ ]
           </code>
         </div>
-        <p class="muted small" style="margin-top:10px;">
-          Swap this with your real Hub recipe when you finalize it.
-        </p>
       </div>
 
       <div class="card">
@@ -159,10 +156,10 @@ Recipe (placeholder):
         <p class="desc">Filters items and sends them to the right container.</p>
         <div class="codebox" style="margin-top:10px;">
           <code>
-Recipe (placeholder):
+Recipe:
 [ ]          [Hopper]     [ ]
-[Redstone]   [Chest]      [Redstone]
-[ ]          [Comparator] [ ]
+[Redstone]   [Comparator] [Redstone]
+[ ]          [Hopper]     [ ]
           </code>
         </div>
         <p class="muted small" style="margin-top:10px;">
@@ -171,14 +168,53 @@ Recipe (placeholder):
       </div>
 
       <div class="card">
-        <h3>🔗 Linking Tool / Module</h3>
-        <p class="desc">Used to connect sorters/modules to the Hub.</p>
+        <h3>🛠️ Autocrafter Core</h3>
+        <p class="desc">Auto craft items in the whitelist if the matierials are in the hub.</p>
         <div class="codebox" style="margin-top:10px;">
           <code>
-Recipe (placeholder):
-[ ]        [Redstone]    [ ]
-[Paper]    [Iron Ingot]  [Paper]
-[ ]        [Redstone]    [ ]
+Recipe:
+[IronIngot][Redstone]    [IronIngot]
+[Redstone] [Craft Table] [Redstone]
+[IronIngot][Redstone]    [IronIngot]
+          </code>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🔑 Keychain Module</h3>
+        <p class="desc">Lets you connect multiple hubs to one sorter.</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>
+Recipe:
+[IronIngot][String]      [IronIngot]
+[String]   [Hopper]      [String]
+[IronIngot][String]      [IronIngot]
+          </code>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>⏩ Speed Coil</h3>
+        <p class="desc">Speeds up the rate items get transfered.</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>
+Recipe:
+[GoldIngot][Redstone]    [GoldIngot]
+[Redstone] [Piston]      [Redstone]
+[GoldIngot][Redstone]    [GoldIngot]
+          </code>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>➕ Stack Booster</h3>
+        <p class="desc">increases the amount of items that get transfered.</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>
+Recipe:
+[IronIngot][Hopper]      [IronIngot]
+[Hopper]   [Chest]       [Hopper]
+[IronIngot][Hopper]      [IronIngot]
           </code>
         </div>
       </div>
@@ -188,16 +224,10 @@ Recipe (placeholder):
         <p class="desc">Expand capacity, features, or system limits over time.</p>
         <div class="codebox" style="margin-top:10px;">
           <code>
-Upgrade ideas (placeholder):
-- Capacity Upgrade (more routing slots)
-- Range Upgrade (wider network reach)
-- Speed Upgrade (faster routing)
-- Filter Upgrade (more advanced matching)
+Upgrade ideas:
+- Filter Upgrade (more advanced filtering)
           </code>
         </div>
-        <p class="muted small" style="margin-top:10px;">
-          Replace these with your real upgrade names + recipes.
-        </p>
       </div>
     </section>
 
