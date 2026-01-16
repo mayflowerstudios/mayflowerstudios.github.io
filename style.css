@@ -1,14 +1,20 @@
 :root{
-  --bg1:#0b1220;
-  --bg2:#111b33;
+  /* Night Sakura base */
+  --bg1:#0a0f1e;
+  --bg2:#121a33;
+
+  /* Core colors */
   --border:rgba(255,255,255,.12);
-  --text:#e5e7eb;
-  --muted:#9ca3af;
-  --accent:#38bdf8;
-  --accent2:#a78bfa;
-  --good:#22c55e;
+  --text:#ffeef2;
+  --muted:rgba(255,255,255,.68);
+
+  /* Sakura accents */
+  --accent:#fb7185;   /* blossom pink */
+  --accent2:#fda4af;  /* soft petal */
+  --good:#a78bfa;     /* lilac glow */
   --pink:#fb7185;
   --amber:#fbbf24;
+
   --shadow: 0 18px 60px rgba(0,0,0,.35);
 }
 
@@ -19,12 +25,34 @@ body{
   margin:0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   color:var(--text);
+
+  /* Night Sakura background */
   background:
-    radial-gradient(1200px 600px at 20% 10%, rgba(56,189,248,.20), transparent 60%),
-    radial-gradient(900px 500px at 80% 30%, rgba(167,139,250,.16), transparent 55%),
+    radial-gradient(1200px 600px at 20% 10%, rgba(251,113,133,.18), transparent 60%),
+    radial-gradient(900px 500px at 80% 30%, rgba(253,164,175,.14), transparent 55%),
+    radial-gradient(700px 420px at 60% 90%, rgba(167,139,250,.10), transparent 55%),
     linear-gradient(180deg, var(--bg1), var(--bg2));
+
   min-height:100vh;
   padding:26px;
+}
+
+/* subtle petal glow overlay */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:-1;
+  opacity:.32;
+  background:
+    radial-gradient(10px 10px at 10% 20%, rgba(253,164,175,.38), transparent 60%),
+    radial-gradient(12px 12px at 30% 35%, rgba(251,113,133,.28), transparent 60%),
+    radial-gradient(9px 9px at 55% 15%, rgba(253,164,175,.30), transparent 60%),
+    radial-gradient(11px 11px at 75% 45%, rgba(251,113,133,.22), transparent 60%),
+    radial-gradient(8px 8px at 85% 70%, rgba(253,164,175,.24), transparent 60%),
+    radial-gradient(10px 10px at 20% 80%, rgba(251,113,133,.18), transparent 60%);
+  filter: blur(0.3px);
 }
 
 a{color:inherit}
@@ -37,7 +65,7 @@ li{ color:var(--muted); line-height:1.7; margin:6px 0; }
 .muted{ margin:0; color:var(--muted); line-height:1.7; }
 .small{ font-size:14px; line-height:1.55; }
 .kicker{
-  color:rgba(255,255,255,.72);
+  color:rgba(255,255,255,.75);
   font-size:12px;
   letter-spacing:.5px;
   text-transform:uppercase;
@@ -91,7 +119,7 @@ hr.sep{
   font-size:13px;
   transition: transform .12s ease, filter .12s ease;
 }
-.pill:hover{ transform: translateY(-1px); filter: brightness(1.03); }
+.pill:hover{ transform: translateY(-1px); filter: brightness(1.06); }
 
 .pill.active{
   border-color: rgba(255,255,255,.22);
@@ -137,10 +165,12 @@ hr.sep{
   transition: transform .12s ease, filter .12s ease;
   min-width: 170px;
 }
-.btn:hover{ transform: translateY(-1px); filter: brightness(1.03); }
-.btn.primary{ color:#06121f; background: linear-gradient(90deg, var(--accent), var(--good)); }
+.btn:hover{ transform: translateY(-1px); filter: brightness(1.06); }
+
+/* Sakura button gradients */
+.btn.primary{ color:#1a1020; background: linear-gradient(90deg, var(--accent), var(--good)); }
 .btn.ghost{ color:var(--text); background: rgba(255,255,255,.06); border:1px solid var(--border); }
-.btn.bots{ color:#06121f; background: linear-gradient(90deg, var(--accent2), var(--pink)); }
+.btn.bots{ color:#1a1020; background: linear-gradient(90deg, var(--accent2), var(--accent)); }
 
 /* Tiles */
 .tileGrid{
@@ -169,6 +199,19 @@ hr.sep{
   gap:12px;
 }
 .sectionTitle h2{ margin:0; font-size:18px; }
+
+/* little sakura accent line under section titles */
+.sectionTitle h2::after{
+  content:"";
+  display:block;
+  height:2px;
+  width:56px;
+  margin-top:8px;
+  border-radius:999px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  opacity:.9;
+}
+
 .sectionTitle span{ color:var(--muted); font-size:13px; }
 
 /* Cards / grids */
@@ -215,7 +258,7 @@ hr.sep{
 }
 a.button{
   text-decoration:none;
-  color:#06121f;
+  color:#1a1020;
   font-weight:800;
   padding:12px 14px;
   border-radius:12px;
@@ -227,9 +270,11 @@ a.button{
   transition: transform .12s ease, filter .12s ease;
   min-width: 190px;
 }
-a.button:hover{ transform: translateY(-1px); filter: brightness(1.03); }
-a.mods{ background: linear-gradient(90deg, var(--accent), var(--good)); }
-a.bots{ background: linear-gradient(90deg, var(--accent2), var(--pink)); }
+a.button:hover{ transform: translateY(-1px); filter: brightness(1.06); }
+
+/* Sakura gradients for project buttons */
+a.mods{ background: linear-gradient(90deg, var(--accent2), var(--good)); }
+a.bots{ background: linear-gradient(90deg, var(--accent), var(--accent2)); }
 a.ghost{
   color:var(--text);
   background: rgba(255,255,255,.06);
