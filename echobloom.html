@@ -4,143 +4,136 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EchoBloom • Mayflower Studios</title>
-  <style>
-    :root{
-      --bg1:#070b14;
-      --bg2:#0c1224;
-      --border:rgba(255,255,255,.12);
-      --text:#e5e7eb;
-      --muted:#a3a3a3;
-      --accent:#38bdf8;
-      --accent2:#a78bfa;
-      --shadow: 0 18px 60px rgba(0,0,0,.35);
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color:var(--text);
-      background:
-        radial-gradient(900px 520px at 18% 12%, rgba(56,189,248,.18), transparent 60%),
-        radial-gradient(900px 520px at 82% 18%, rgba(167,139,250,.14), transparent 60%),
-        linear-gradient(180deg, var(--bg1), var(--bg2));
-      min-height:100vh;
-    }
-    .wrap{ width:min(1100px, 92vw); margin:0 auto; padding:26px 0 40px; }
-    a{color:inherit}
-
-    .topbar{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
-      padding:14px 16px;
-      border:1px solid var(--border);
-      border-radius:16px;
-      background:rgba(0,0,0,.18);
-      backdrop-filter: blur(10px);
-      box-shadow: var(--shadow);
-    }
-    .brand{ display:flex; flex-direction:column; gap:2px; }
-    .brand strong{ font-size:14px; letter-spacing:.4px; text-transform:uppercase;}
-    .brand span{ font-size:12px; color:var(--muted); }
-    .nav{ display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; }
-    .pill{
-      text-decoration:none;
-      padding:10px 12px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.04);
-      color:var(--text);
-      font-weight:600;
-      font-size:13px;
-      transition: transform .12s ease, filter .12s ease;
-    }
-    .pill:hover{ transform: translateY(-1px); filter:brightness(1.03); }
-
-    .hero{
-      margin-top:16px;
-      padding:22px 18px;
-      border:1px solid var(--border);
-      border-radius:18px;
-      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
-      box-shadow: var(--shadow);
-    }
-    .hero h1{ margin:0 0 8px; font-size:clamp(28px,3.5vw,42px); }
-    .hero p{ margin:0; color:var(--muted); line-height:1.55; max-width:70ch; }
-    .ctaRow{ display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; }
-    .btn{
-      text-decoration:none;
-      padding:12px 14px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.18);
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      font-weight:800;
-      transition: transform .12s ease, filter .12s ease;
-    }
-    .btn:hover{ transform: translateY(-1px); filter:brightness(1.03); }
-    .btn.primary{ color:#06121f; background: linear-gradient(90deg, var(--accent2), var(--accent)); }
-    .btn.ghost{ color:var(--text); background: rgba(255,255,255,.06); border:1px solid var(--border); }
-
-    .section{ margin-top:22px; }
-    .section h2{ margin:0 0 10px; font-size:18px; }
-    .list{ margin:0; padding-left:18px; color:var(--muted); line-height:1.7; }
-
-    footer{ text-align:center; margin-top:28px; color:rgba(255,255,255,.55); font-size:12px; }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="wrap">
 
-    <div class="topbar">
+    <div class="topbar" id="top">
       <div class="brand">
-        <strong>Mayflower Studios</strong>
-        <span>Discord bots • Minecraft mods • Dev tools</span>
+        <strong><a href="index.html" style="text-decoration:none;">Mayflower Studios</a></strong>
+        <span>Discord bots • Minecraft mods • games • software</span>
       </div>
-      <div class="nav">
-        <a class="pill" href="index.html">🏠 Home</a>
-        <a class="pill" href="#features">⭐ Features</a>
-        <a class="pill" href="#commands">📜 Commands</a>
-      </div>
+      <nav class="nav">
+        <a class="pill" href="index.html#projects">🚀 Projects</a>
+        <a class="pill" href="index.html#bots">🤖 Bots</a>
+        <a class="pill" href="foxbot.html">🦊 FoxBot</a>
+      </nav>
     </div>
 
     <section class="hero">
-      <h1>🌙 EchoBloom</h1>
-      <p>
-        A realm-based RPG Discord bot with XP, classes, lore, progression milestones, events, and community quests.
-      </p>
-      <div class="ctaRow">
-        <a class="btn ghost" href="https://discord.gg/MutqYAdrwz">💬 Join Discord</a>
+      <div>
+        <p class="kicker">Discord Bot</p>
+        <h1>🌙 EchoBloom</h1>
+        <p class="muted">
+          A realm-based RPG progression bot built for long-term communities: XP, raids, ranks, lore events,
+          and systems designed to evolve over seasons — without becoming a spreadsheet nightmare.
+        </p>
+        <div class="ctaRow">
+          <a class="btn bots" href="https://discord.gg/MutqYAdrwz">💬 Support Discord</a>
+          <a class="btn ghost" href="index.html#projects">⬅ Back to Projects</a>
+        </div>
+      </div>
+
+      <div class="tileGrid">
+        <div class="tile">
+          <strong>🌿 Realms</strong>
+          <p>Choose a realm, earn progression, and shape your server’s story over time.</p>
+        </div>
+        <div class="tile">
+          <strong>⚔️ Raids</strong>
+          <p>Interactive challenges that encourage teamwork and friendly competition.</p>
+        </div>
+        <div class="tile">
+          <strong>📜 Lore + Events</strong>
+          <p>Seasonal systems and narrative hooks to keep communities engaged.</p>
+        </div>
+        <div class="tile">
+          <strong>🏆 Progression</strong>
+          <p>XP, ranks, milestones, and rewards — tuned for long-term play.</p>
+        </div>
       </div>
     </section>
 
-    <section class="section" id="features">
-      <h2>⭐ Core Features</h2>
-      <ul class="list">
-        <li>Realm system with lore chapters</li>
-        <li>Command-based RPG actions</li>
-        <li>XP, levels, and ranks</li>
-        <li>Quests, events, boss encounters</li>
-        <li>Configurable channels & roles</li>
-      </ul>
+    <div class="sectionTitle">
+      <h2>⭐ Core Systems</h2>
+      <span>What makes EchoBloom EchoBloom</span>
+    </div>
+
+    <section class="grid2">
+      <div class="card">
+        <h3>🌿 Realm Progression <span class="badge">RPG</span></h3>
+        <p class="desc">Lore-driven progression designed for communities, not just numbers.</p>
+        <ul>
+          <li>Realm identity + themed progression</li>
+          <li>XP that supports events and milestones</li>
+          <li>Role/rank alignment potential</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>⚔️ Raids & Interaction <span class="badge">Social</span></h3>
+        <p class="desc">Server-friendly interaction loops that feel like “events,” not spam.</p>
+        <ul>
+          <li>Interactive raids built for groups</li>
+          <li>Repeatable activities (without burnout)</li>
+          <li>Designed to encourage cross-realm play</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>📜 Lore & Seasons <span class="badge">World</span></h3>
+        <p class="desc">A living storybook: seasonal systems, yearly arcs, and world events.</p>
+        <ul>
+          <li>Event hooks and scheduled content</li>
+          <li>Yearly/seasonal progression framework</li>
+          <li>Built for ongoing expansion</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>⚙️ Config & Reliability <span class="badge">Server</span></h3>
+        <p class="desc">Built for real servers — stability, control, and maintainability first.</p>
+        <ul>
+          <li>Configurable systems and sensible defaults</li>
+          <li>Designed for long-term uptime</li>
+          <li>Moderation-aware design</li>
+        </ul>
+      </div>
     </section>
 
-    <section class="section" id="commands">
-      <h2>📜 Example Commands</h2>
-      <ul class="list">
-        <li><strong>/quest</strong> — See current quests</li>
-        <li><strong>/realm</strong> — Info about your realm status</li>
-        <li><strong>/profile</strong> — View your character</li>
-        <li><strong>/event</strong> — List scheduled events</li>
-        <li><strong>/help</strong> — List bot commands</li>
-      </ul>
+    <div class="sectionTitle">
+      <h2>🔧 Setup Notes</h2>
+      <span>Keep it fun, keep it stable</span>
+    </div>
+
+    <section class="card">
+      <div class="callout">
+        <strong>Recommended flow</strong>
+        <p class="muted small">
+          Start simple: enable one or two core loops (XP + raids), then add lore/events once the server rhythm settles.
+        </p>
+      </div>
+      <div class="codebox">
+        <code>Suggested setup:
+- Create realm roles + a realm-selection entry point
+- Enable XP + basic raids first
+- Add ranks/role automation once balance feels right
+- Introduce seasonal events after the community stabilizes</code>
+      </div>
+      <div class="btnrow" style="margin-top:12px;">
+        <a class="button bots" href="foxbot.html">🦊 See FoxBot</a>
+        <a class="button ghost" href="https://discord.gg/MutqYAdrwz">💬 Support Discord</a>
+      </div>
     </section>
 
     <footer>
-      © <span id="year"></span> Mayflower Studios
+      <div>© <span id="year"></span> Mayflower Studios</div>
+      <div class="links">
+        <a href="index.html">🏠 Home</a>
+        <a href="foxbot.html">🦊 FoxBot</a>
+        <a href="#top">⬆ Top</a>
+      </div>
     </footer>
   </div>
 
