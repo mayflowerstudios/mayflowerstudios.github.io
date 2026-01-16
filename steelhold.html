@@ -17,7 +17,8 @@
         <p class="kicker">Minecraft Mod</p>
         <h1>🔐 Steelhold</h1>
         <p class="muted">
-          Secure, survival-friendly storage with a premium feel — built for multiplayer reliability and clean base design.
+          Heavy-duty safes for Forge survival — owned storage, key access, and “anvil-style” falling behavior for
+          secure builds and long-running worlds.
         </p>
         <div class="ctaRow">
           <a class="btn primary" href="https://www.curseforge.com/minecraft/mc-mods/steelhold">📦 Download</a>
@@ -27,10 +28,10 @@
       </div>
 
       <div class="tileGrid">
-        <div class="tile"><strong>✨ Design</strong><p>Vanilla+ secure storage that feels natural in survival.</p></div>
-        <div class="tile"><strong>🧩 Server Ready</strong><p>Built with multiplayer stability + long-term worlds in mind.</p></div>
-        <div class="tile"><strong>🔑 Access</strong><p>Ownership + key-style design aimed at fair play.</p></div>
-        <div class="tile"><strong>🧼 UI</strong><p>Clean screens, tidy layouts, minimal friction.</p></div>
+        <div class="tile"><strong>🔑 Keys</strong><p>Owner + key system tied to a unique lock ID per safe.</p></div>
+        <div class="tile"><strong>🧱 Tiers</strong><p>Progress from Basic → Reinforced → Steelhold → Vault → Bank.</p></div>
+        <div class="tile"><strong>⬇️ Falling</strong><p>Safes fall like anvils and keep their data when they land.</p></div>
+        <div class="tile"><strong>⚙️ Config</strong><p>Tune slots, hardness, blast resistance, and tool requirements.</p></div>
       </div>
     </section>
 
@@ -42,64 +43,72 @@
 
     <section class="card">
       <p class="desc">
-        <strong>Steelhold</strong> is a Forge mod that adds heavy-duty, lockable safes to Minecraft — built for
-        survival, multiplayer, PvP, and roleplay servers where security actually matters.
+        <strong>Steelhold</strong> is a Forge mod that adds player-owned safes with a practical lock-and-key workflow.
+        Each safe is assigned a unique <strong>Lock ID</strong> and an <strong>Owner</strong> when placed. The owner can open it freely;
+        everyone else needs a matching key item.
       </p>
 
       <p class="desc">
-        These aren’t decorative chests.<br />
-        Steelhold safes are physical vaults with real ownership, real locks, and real consequences.
+        Steelhold is built for survival pacing and server longevity: safes can be tuned via config, support different tiers,
+        and behave like real heavy objects — if you remove the block underneath, they <strong>fall like anvils</strong>.
       </p>
 
       <div class="divider" style="margin:14px 0;"></div>
 
-      <h3 style="margin:0 0 6px;">🗄️ Secure Storage, Not Just More Slots</h3>
+      <h3 style="margin:0 0 6px;">🔒 Ownership + Key Access</h3>
       <p class="muted small" style="margin:0 0 10px;">
-        Every Steelhold safe is player-owned, key-locked, explosion-resistant, tool-restricted, and physics-enabled.
+        Non-owners get a locked message (with the owner name) and need a key that matches the safe’s Lock ID.
+      </p>
+      <p class="desc" style="margin-top:0;">
+        Keys are regular items that store the safe’s unique ID in NBT. Their tooltip shows a short lock ID,
+        the safe type name, and the coordinates they were created for — handy when you’re managing multiple vaults.
       </p>
 
+      <h3 style="margin:14px 0 6px;">🧰 Built-In Commands (Key Management)</h3>
       <p class="desc" style="margin-top:0;">
-        Safes behave like anvils — if the block underneath breaks, they fall. When they land, they keep their inventory,
-        owner, and lock intact, making them perfect for traps, vaults, and high-security bases.
+        Steelhold includes a small set of server commands for safe management (you must be looking at the safe within 5 blocks):
       </p>
 
-      <h3 style="margin:14px 0 6px;">🔑 Lock &amp; Key System</h3>
-      <p class="desc" style="margin-top:0;">
-        When a safe is placed, it automatically binds to its owner. Only the owner can open it, generate keys, or share access.
-        Keys are physical items bound to a specific safe — tradable, and impossible to fake or duplicate.
-      </p>
+      <div class="codebox" style="margin-top:10px;">
+        <code>/steelhold makekey   → owner-only: creates a matching Safe Key item
+/steelhold resetlock → owner-only: resets the safe’s Lock ID (old keys stop working)
+/steelhold whoowns   → shows the current owner of the safe</code>
+      </div>
 
       <div class="callout" style="margin-top:12px;">
-        <strong>No key? No access.</strong>
+        <strong>Resetting the lock invalidates old keys</strong>
         <p class="muted small" style="margin:6px 0 0;">
-          Even operators must break a safe to get inside — there are no bypasses.
+          Use <code>/steelhold resetlock</code> if a key gets stolen or you’re transferring ownership rules on a server.
         </p>
       </div>
 
-      <h3 style="margin:14px 0 6px;">🧱 Multiple Tiers</h3>
+      <h3 style="margin:14px 0 6px;">⬇️ Falling Safes (Anvil-Style Physics)</h3>
+      <p class="desc" style="margin-top:0;">
+        Safes are heavy: if the block under them disappears, they convert into a falling block entity (like anvils)
+        and keep their stored data while falling/landing — including inventory, owner, and lock ID.
+      </p>
+
+      <h3 style="margin:14px 0 6px;">🏗️ Sizes & Structure</h3>
       <ul class="muted small" style="margin:0; padding-left:18px;">
-        <li>Basic Safe – Starter protection</li>
-        <li>Reinforced Safe – Stronger and blast-resistant</li>
-        <li>Steelhold Safe – High-security vault</li>
-        <li>Vault Safe – Massive storage</li>
-        <li>Bank Safe – Maximum security &amp; capacity</li>
+        <li><strong>Basic / Reinforced / Steelhold</strong>: single-block safes.</li>
+        <li><strong>Vault Safe</strong>: a <strong>2-block-tall</strong> safe placed as a lower + upper half.</li>
+        <li><strong>Bank Safe</strong>: a <strong>2×2×2 “mega safe”</strong> (8 blocks). Only the origin block stores the inventory and renders the model.</li>
       </ul>
 
-      <h3 style="margin:14px 0 6px;">💥 Explosions, Tools &amp; Config</h3>
+      <h3 style="margin:14px 0 6px;">⚙️ Configurable Balance</h3>
       <p class="desc" style="margin-top:0;">
-        Safes require the correct pickaxe tier to break and resist TNT/creepers based on tier. Everything is configurable:
-        storage size, hardness, blast resistance, and required tool tier. Existing safes are never shrunk, preventing item loss.
+        Steelhold ships with a Forge <strong>common config</strong> that lets pack makers and servers tune:
+        <strong>slot counts</strong>, <strong>hardness</strong>, <strong>blast resistance</strong>, and <strong>required pickaxe tier</strong> per safe tier.
+        There are also global toggles for whether safes <strong>drop contents on break</strong> and whether <strong>explosions can destroy safes</strong>.
       </p>
 
       <div class="callout" style="margin-top:12px;">
-        <strong>Built for servers</strong>
+        <strong>Important: slot counts won’t shrink existing safes</strong>
         <p class="muted small" style="margin:6px 0 0;">
-          No hopper theft. No chest breaking. No free loot from TNT.<br />
-          If someone wants what’s inside, they have to earn it.
+          Slot settings apply to newly placed safes only. Existing safes keep their original size to prevent item loss.
         </p>
       </div>
     </section>
-
 
     <!-- FEATURES -->
     <div class="sectionTitle">
@@ -109,22 +118,42 @@
 
     <section class="grid2">
       <div class="card">
-        <h3>🔒 Secure Storage <span class="badge">Core</span></h3>
-        <p class="desc">Safes and secure containers designed for survival worlds and real servers.</p>
+        <h3>🔐 Lock System <span class="badge">Core</span></h3>
+        <p class="desc">A simple, explicit ownership + key approach that works well in survival and multiplayer.</p>
         <ul>
-          <li>Ownership-aware interactions</li>
-          <li>Key-based access design</li>
-          <li>Designed to reduce grief while staying survival-friendly</li>
+          <li>Owner can always open</li>
+          <li>Non-owners require a matching key</li>
+          <li>Owner name is shown on locked attempts</li>
         </ul>
       </div>
 
       <div class="card">
-        <h3>⚙️ Server-Friendly <span class="badge">Stability</span></h3>
-        <p class="desc">Reliable behavior in multiplayer with room to tune features over time.</p>
+        <h3>⚙️ Server Tuning <span class="badge">Config</span></h3>
+        <p class="desc">Balance the grind, security, and progression to match your pack or server rules.</p>
         <ul>
-          <li>Config-ready mindset</li>
-          <li>Clean interactions (less weird edge cases)</li>
-          <li>Designed for long-running worlds</li>
+          <li>Slots / hardness / blast resistance per tier</li>
+          <li>Required tool level per tier</li>
+          <li>Explosion + drop-contents toggles</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>⬇️ Physical Behavior <span class="badge">World</span></h3>
+        <p class="desc">Safes fall like anvils and keep their data when they land.</p>
+        <ul>
+          <li>Inventory, owner, and lock ID persist through falling</li>
+          <li>Vault Safe handles both halves cleanly</li>
+          <li>Bank Safe keeps the structure consistent (single drop source)</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🏗️ Tiered Progression <span class="badge">Pacing</span></h3>
+        <p class="desc">Start small and scale up to vault-level storage as your world advances.</p>
+        <ul>
+          <li>Basic → Reinforced → Steelhold</li>
+          <li>Vault (2-tall) for high-capacity builds</li>
+          <li>Bank (2×2×2) for endgame secure rooms</li>
         </ul>
       </div>
     </section>
@@ -137,42 +166,42 @@
 
     <section class="grid2">
       <div class="card">
-        <h3>1) Place & Claim</h3>
-        <p class="desc">Set down a Steelhold safe and it becomes yours.</p>
+        <h3>1) Craft & Place</h3>
+        <p class="desc">Place a safe like any block — it binds to the player who placed it.</p>
         <ul>
-          <li>Place the safe like any block</li>
-          <li>First owner interaction claims the safe</li>
-          <li>Owner can configure access (depending on the safe type)</li>
+          <li>Owner is stored on the safe</li>
+          <li>Each safe gets a unique Lock ID</li>
+          <li>Vault places as a 2-block structure; Bank places as a 2×2×2 structure</li>
         </ul>
       </div>
 
       <div class="card">
-        <h3>2) Access & Keys</h3>
-        <p class="desc">Share access without sharing your base.</p>
+        <h3>2) Create Keys (Owner)</h3>
+        <p class="desc">Look at your safe (within 5 blocks) and generate a key via command.</p>
         <ul>
-          <li>Owner can create/give keys (or authorize players)</li>
-          <li>Keys allow trusted friends to open the safe</li>
-          <li>Use this for teams, shops, or shared vaults</li>
+          <li><code>/steelhold makekey</code> creates a Safe Key item</li>
+          <li>Give keys to friends / teammates you trust</li>
+          <li>Keys show a short Lock ID + coordinates in the tooltip</li>
         </ul>
       </div>
 
       <div class="card">
-        <h3>3) Moving Safes</h3>
-        <p class="desc">Keep your world safe from “oops it deleted.”</p>
+        <h3>3) Reset a Lock (If Needed)</h3>
+        <p class="desc">If a key leaks, reset the lock so old keys stop working.</p>
         <ul>
-          <li>Recommended: empty safes before moving/breaking</li>
-          <li>On servers: keep claims/keys consistent with your rules</li>
-          <li>Back up before major upgrades (always good practice)</li>
+          <li><code>/steelhold resetlock</code> generates a new Lock ID</li>
+          <li>Old keys no longer match</li>
+          <li>Create fresh keys for trusted players</li>
         </ul>
       </div>
 
       <div class="card">
-        <h3>4) Config & Tuning</h3>
-        <p class="desc">Adjust balance to match your server.</p>
+        <h3>4) Tune Your Server</h3>
+        <p class="desc">Use the common config to match your server’s progression and difficulty.</p>
         <ul>
-          <li>Launch once to generate config</li>
-          <li>Tune values for difficulty / access rules</li>
-          <li>Restart after changing config settings</li>
+          <li>Set slots, hardness, blast resistance, and tool level per tier</li>
+          <li>Decide whether contents drop on break</li>
+          <li>Decide whether explosions can destroy safes</li>
         </ul>
       </div>
     </section>
@@ -186,7 +215,7 @@
     <section class="grid2">
       <div class="card">
         <h3>🔓 Basic Safe</h3>
-        <p class="desc">A simple but reliable personal safe. Protects valuables from casual theft and accidents, making it perfect for early survival bases and starter homes.</p>
+        <p class="desc">Starter-tier safe crafted from iron and a chest.</p>
         <div class="codebox" style="margin-top:10px;">
           <code>
 Recipe:
@@ -199,7 +228,7 @@ Recipe:
 
       <div class="card">
         <h3>🛠️ Reinforced Safe</h3>
-        <p class="desc">Built with tougher materials for players who need more than basic protection. Resistant to explosions and prying hands, ideal for mid-game storage upgrades.</p>
+        <p class="desc">Upgrade the Basic Safe with iron blocks + obsidian.</p>
         <div class="codebox" style="margin-top:10px;">
           <code>
 Recipe:
@@ -212,39 +241,51 @@ Recipe:
 
       <div class="card">
         <h3>⚙️ Steelhold Safe</h3>
-        <p class="desc">Industrial-grade security forged for serious hoarders. Designed to withstand heavy damage and keep your most valuable items locked down tight.</p>
+        <p class="desc">High-security tier using netherite ingots and obsidian.</p>
         <div class="codebox" style="margin-top:10px;">
           <code>
 Recipe:
-[Obsidian]  [Netherite]       [Obsidian]
-[Netherite] [Reinforced Safe] [Netherite]
-[Obsidian]  [Netherite]       [Obsidian]
+[Obsidian]        [Netherite Ingot]     [Obsidian]
+[Netherite Ingot] [Reinforced Safe]     [Netherite Ingot]
+[Obsidian]        [Netherite Ingot]     [Obsidian]
           </code>
         </div>
       </div>
 
       <div class="card">
-        <h3>🧱 Vault Safe</h3>
-        <p class="desc">High-security containment for elite storage needs. Combines dense materials and advanced construction to defend against extreme force and determined intruders.</p>
+        <h3>🧱 Vault Safe (2-block tall)</h3>
+        <p class="desc">Large safe tier crafted with netherite blocks + ingots.</p>
         <div class="codebox" style="margin-top:10px;">
           <code>
 Recipe:
-[Netherite Block] [Netherite]      [Netherite Block]
-[Netherite]       [Steelhold Safe] [Netherite]
-[Netherite Block] [Netherite]      [Netherite Block]
+[Netherite Block] [Netherite Ingot]  [Netherite Block]
+[Netherite Ingot] [Steelhold Safe]    [Netherite Ingot]
+[Netherite Block] [Netherite Ingot]  [Netherite Block]
           </code>
         </div>
       </div>
 
       <div class="card">
-        <h3>🏦 Bank Safe</h3>
-        <p class="desc">Maximum-security storage worthy of a vault deep beneath a fortress. Built to safeguard irreplaceable treasures, rare items, and end-game wealth.</p>
+        <h3>🏦 Bank Safe (2×2×2 mega safe)</h3>
+        <p class="desc">Endgame safe built from netherite blocks, ender chests, and a nether star.</p>
         <div class="codebox" style="margin-top:10px;">
           <code>
 Recipe:
 [Netherite Block] [Nether Star] [Netherite Block]
 [Ender Chest]     [Vault Safe]  [Ender Chest]
 [Netherite Block] [Nether Star] [Netherite Block]
+          </code>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🔑 Safe Key</h3>
+        <p class="desc">Keys are created by the owner via command while looking at a safe.</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>
+Create keys:
+1) Look at the safe (within 5 blocks)
+2) Run: /steelhold makekey
           </code>
         </div>
       </div>
@@ -261,22 +302,22 @@ Recipe:
         <img class="projectIcon" src="assets/icons/steelhold.png" alt="Steelhold icon" />
         <div class="mediaMeta">
           <strong>Steelhold</strong>
-          <span>Logos, UI shots, and feature previews</span>
+          <span>Safes, UI previews, and tier progression shots</span>
         </div>
       </div>
 
       <div class="gallery">
         <div class="shot">
           <img src="assets/shots/steelhold-1.png" alt="Steelhold screenshot 1" />
-          <div class="cap">Safe exterior — survival-friendly design.</div>
+          <div class="cap">Single-block safe tier — compact and survival-friendly.</div>
         </div>
         <div class="shot">
           <img src="assets/shots/steelhold-2.png" alt="Steelhold screenshot 2" />
-          <div class="cap">UI preview — clean layout and readable slots.</div>
+          <div class="cap">Chest-style UI that scales with configured rows (slots are tier-based).</div>
         </div>
         <div class="shot">
           <img src="assets/shots/steelhold-3.png" alt="Steelhold screenshot 3" />
-          <div class="cap">Multiplayer-ready behavior — built for long-running worlds.</div>
+          <div class="cap">Vault/Bank tiers — larger structures for dedicated secure rooms.</div>
         </div>
       </div>
     </section>
