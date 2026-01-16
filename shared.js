@@ -1,3 +1,11 @@
+function injectFireflies(){
+  if (document.getElementById("fireflies")) return;
+
+  const canvas = document.createElement("canvas");
+  canvas.id = "fireflies";
+  document.body.prepend(canvas);
+}
+
 async function loadPartial(selector, url) {
   const el = document.querySelector(selector);
   if (!el) return;
@@ -18,16 +26,11 @@ function highlightNav() {
 }
 
 (async function initShared() {
+  // ✅ make sure canvas exists before fireflies.js runs
+  injectFireflies();
+
   await loadPartial("#shared-nav", "partials/nav.html");
   await loadPartial("#shared-footer", "partials/footer.html");
   setYear();
   highlightNav();
-})();
-
-(function injectFireflies(){
-  if (document.getElementById("fireflies")) return;
-
-  const canvas = document.createElement("canvas");
-  canvas.id = "fireflies";
-  document.body.prepend(canvas);
 })();
