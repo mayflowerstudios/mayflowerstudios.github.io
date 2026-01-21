@@ -532,3 +532,79 @@ body[data-nav="server"] .categoryBar::-webkit-scrollbar-thumb{
   background: rgba(255,255,255,.14);
   border-radius: 999px;
 }
+
+/* =========================================================
+   BlueMap Theme (Mayflower Studios)
+   Usage:
+   - Add class "mf-bluemap" on <body> inside BlueMap's index.html
+   ========================================================= */
+
+/* If you already have site-wide variables, keep them.
+   These are safe defaults + fallbacks. */
+:root {
+  --mf-bg: #0b0f14;
+  --mf-card: rgba(20, 26, 34, 0.88);
+  --mf-border: rgba(255,255,255,0.10);
+  --mf-text: rgba(255,255,255,0.92);
+  --mf-muted: rgba(255,255,255,0.65);
+
+  --mf-accent: #ff5aa5;   /* cherry blossom */
+  --mf-accent2: #7c5cff;  /* moonroot */
+  --mf-radius: 16px;
+  --mf-shadow: 0 12px 34px rgba(0,0,0,0.55);
+
+  --mf-font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+}
+
+body.mf-bluemap {
+  font-family: var(--mf-font);
+  background: var(--mf-bg);
+  color: var(--mf-text);
+}
+
+/* Generic “app UI” styling — we’ll rely on BlueMap’s structure */
+body.mf-bluemap .panel,
+body.mf-bluemap .sidebar,
+body.mf-bluemap .drawer,
+body.mf-bluemap .menu,
+body.mf-bluemap .popup,
+body.mf-bluemap .tooltip {
+  background: var(--mf-card) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--mf-border) !important;
+  border-radius: var(--mf-radius) !important;
+  box-shadow: var(--mf-shadow) !important;
+  color: var(--mf-text) !important;
+}
+
+/* Buttons / toggles */
+body.mf-bluemap button,
+body.mf-bluemap .button,
+body.mf-bluemap .btn {
+  border-radius: 999px !important;
+  border: 1px solid var(--mf-border) !important;
+  background: rgba(255,255,255,0.06) !important;
+  color: var(--mf-text) !important;
+}
+
+body.mf-bluemap button:hover,
+body.mf-bluemap .button:hover,
+body.mf-bluemap .btn:hover {
+  background: rgba(255,255,255,0.10) !important;
+  border-color: rgba(255,255,255,0.18) !important;
+}
+
+/* Active / selected UI bits */
+body.mf-bluemap .active,
+body.mf-bluemap .selected,
+body.mf-bluemap .is-active {
+  background: linear-gradient(90deg, var(--mf-accent), var(--mf-accent2)) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+}
+
+/* Popup/tooltip text */
+body.mf-bluemap .popup,
+body.mf-bluemap .tooltip {
+  color: var(--mf-text) !important;
+}
