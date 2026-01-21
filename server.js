@@ -261,8 +261,8 @@
     categoryRow.innerHTML = "";
     for (const cat of categories) {
       const btn = document.createElement("button");
-      btn.className = "btn2";
-      if (cat === activeCategory) btn.classList.add("primary");
+      btn.className = "btn";
+        if (cat === activeCategory) btn.classList.add("primary");
       btn.textContent = cat;
       btn.addEventListener("click", () => {
         activeCategory = cat;

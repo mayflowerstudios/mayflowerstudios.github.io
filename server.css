@@ -1,0 +1,64 @@
+/* =========================
+   Server page enhancements
+   ========================= */
+
+/* Category filter bar: scroll horizontally if lots of categories */
+.categoryBar {
+  overflow-x: auto;
+  padding-bottom: 6px;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+.categoryBar::-webkit-scrollbar {
+  height: 10px;
+}
+.categoryBar::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.14);
+  border-radius: 999px;
+}
+.categoryBar > * {
+  flex: 0 0 auto; /* keep buttons from shrinking */
+}
+
+/* Mod table: fixed-height scroll area */
+.tableScroll {
+  max-height: 520px;         /* adjust to taste */
+  overflow: auto;
+  border-radius: 16px;       /* match your table rounding */
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.10);
+}
+
+/* Make the table fill the scroll container nicely */
+.tableScroll .table {
+  border: 0;                 /* container has the border */
+  border-radius: 0;
+}
+
+/* Sticky header so columns stay visible while scrolling */
+.tableScroll .table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: rgba(10,10,10,.85); /* keeps it readable over rows */
+  backdrop-filter: blur(8px);
+}
+
+/* (Optional) slightly nicer scrollbar in the mod list area */
+.tableScroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.tableScroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.14);
+  border-radius: 999px;
+}
+.tableScroll::-webkit-scrollbar-track {
+  background: rgba(255,255,255,.04);
+}
+
+/* Keep the table from feeling cramped on small screens */
+@media (max-width: 680px) {
+  .tableScroll { max-height: 560px; }
+  .table th, .table td { padding: 10px 10px; }
+}
