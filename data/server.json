@@ -11,8 +11,7 @@
   },
   "links": {
     "sparkUrl": "https://spark.lucko.me/nUhzB5o0Zj",
-    "rulesUrl": "rules.html",
-    "changelogUrl": "modpack-changelog.html"
+    "rulesUrl": "rules.html"
   },
   "refreshSeconds": 30
 }
