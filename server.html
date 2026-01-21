@@ -5,12 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Server • Mayflower Studios</title>
 
-  <!-- Your site styling -->
   <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="server.css" />
 
+  <!-- Page-specific styles (you can move these into style.css later) -->
   <style>
-    /* Page-specific polish (kept minimal so it fits your existing theme) */
     .grid2 { display:grid; gap:16px; grid-template-columns: 1.1fr .9fr; }
     .grid3 { display:grid; gap:16px; grid-template-columns: repeat(3, 1fr); }
     @media (max-width: 980px){ .grid2, .grid3 { grid-template-columns: 1fr; } }
@@ -59,20 +57,46 @@
     .iframeWrap iframe { width:100%; height: 420px; border:0; display:block; }
 
     .muted2 { opacity:.78; }
+
+    .tableScroll{
+      max-height: 520px;
+      overflow: auto;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.08);
+    }
+    .tableScroll .table{ border:0; border-radius:0; }
+    .tableScroll .table thead th{
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: rgba(15,23,42,.92);
+      backdrop-filter: blur(6px);
+    }
+    .categoryBar{
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .categoryBar > *{ flex: 0 0 auto; }
+    .categoryBar::-webkit-scrollbar{ height: 10px; }
+    .categoryBar::-webkit-scrollbar-thumb{
+      background: rgba(255,255,255,.14);
+      border-radius: 999px;
+    }
   </style>
 </head>
 
 <body data-nav="server">
   <div class="wrap">
-
-    <!-- Your shared nav loader -->
     <div id="shared-nav"></div>
 
     <section class="hero">
       <div>
         <p class="kicker">Minecraft Server</p>
         <h1>🛰️ Server Dashboard</h1>
-        <p class="muted">Live status, players, modpack download, modlist, and the world map — all in one spot.</p>
+        <p class="muted">Server status, players online, the world map, and the modpack.</p>
 
         <div class="row" style="margin-top:12px;">
           <span class="pill">
@@ -119,10 +143,9 @@
       </div>
 
       <div class="tileGrid">
-        <!-- If your site already uses tiles in other pages, this will visually fit in -->
         <div class="tile">
           <strong>⬇️ Modpack</strong>
-          <p class="muted2">One-click installs + direct download.</p>
+          <p class="muted2">Install the pack to join the server.</p>
           <div class="row" style="margin-top:10px;">
             <a class="btn2 primary" id="modpackCurseforge" href="#" target="_blank" rel="noreferrer">CurseForge</a>
           </div>
@@ -131,17 +154,22 @@
 
         <div class="tile">
           <strong>🧪 Server Tools</strong>
-          <p class="muted2">Links you’ll actually use.</p>
+          <p class="muted2">Links and info.</p>
           <div class="row" style="margin-top:10px;">
-            <a class="btn2" id="sparkLink" href="#" target="_blank" rel="noreferrer">📈 Spark Report</a>
+            <a class="btn2" id="sparkLink" href="#" target="_blank" rel="noreferrer">📈 Spark</a>
             <a class="btn2" id="rulesLink" href="#">📜 Rules</a>
           </div>
         </div>
 
         <div class="tile">
           <strong>🗺️ World Map</strong>
-          <p class="muted2">Dynmap / BlueMap embed.</p>
-          <div class="small">If you don’t have a map yet, this box will show a setup hint.</div>
+          <p class="muted2">Live map view.</p>
+          <div class="row" style="margin-top:10px;">
+            <a class="btn2 primary" id="openMapBtn" href="#" target="_blank" rel="noreferrer">Open Map</a>
+          </div>
+          <div class="small muted2" id="mapHint" style="margin-top:10px;">
+            If the embed is blank, open the map in a new tab.
+          </div>
         </div>
       </div>
     </section>
@@ -149,15 +177,14 @@
     <section class="card">
       <div class="sectionTitle">
         <h2>🗺️ Live World Map</h2>
-        <span>Dynmap / BlueMap embed</span>
+        <span>BlueMap</span>
       </div>
 
       <div class="iframeWrap" id="mapWrap">
         <div style="padding:16px;">
-          <strong>No map URL set yet.</strong>
-          <p class="muted2" style="margin-top:6px;">
-            Drop your Dynmap/BlueMap public URL into <code>data/server.json</code> and this will become the live map embed.
-          </p>
+          <strong>Map unavailable.</strong>
+          <p class="muted2" style="margin-top:6px;">Use the button below to open it.</p>
+          <a class="btn2 primary" id="openMapBtn2" href="#" target="_blank" rel="noreferrer">Open Map</a>
         </div>
       </div>
     </section>
@@ -165,7 +192,7 @@
     <section class="card">
       <div class="sectionTitle">
         <h2>👥 Players Online</h2>
-        <span>Live list (via Query)</span>
+        <span>Live list</span>
       </div>
 
       <div class="kvs">
@@ -186,11 +213,11 @@
     <section class="card">
       <div class="sectionTitle">
         <h2>🧩 Modlist</h2>
-        <span>Searchable + tag filtered</span>
+        <span>Browse the pack</span>
       </div>
 
       <div class="row" style="margin-bottom:12px;">
-        <input id="modSearch" class="input" placeholder="Search mods… (name, category, notes)" />
+        <input id="modSearch" class="input" placeholder="Search mods…" />
       </div>
 
       <div class="row categoryBar" id="categoryRow"></div>
@@ -208,24 +235,6 @@
           <tbody id="modTbody"></tbody>
         </table>
       </div>
-
-      <div class="small" style="margin-top:10px;">
-        Tip: keep this list in <code>data/modlist.json</code> so you can update it without touching HTML.
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="sectionTitle">
-        <h2>✨ Extra</h2>
-        <span>Optional “cool stuff” ideas</span>
-      </div>
-
-      <ul class="muted2" style="line-height:1.7; margin:0; padding-left: 18px;">
-        <li>Auto-show “server restarting soon” banner (based on a flag in <code>data/server.json</code>)</li>
-        <li>Show “Pack version” + “Server pack version” (and warn if mismatched)</li>
-        <li>Show featured mods of the week</li>
-        <li>Embed live server chat (Dynmap webchat) if you enable it</li>
-      </ul>
     </section>
 
     <script src="shared.js"></script>

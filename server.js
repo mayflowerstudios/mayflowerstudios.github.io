@@ -1,6 +1,9 @@
 (async function () {
   const el = (id) => document.getElementById(id);
 
+  // -----------------------------
+  // Core UI elements
+  // -----------------------------
   const statusDot = el("statusDot");
   const statusText = el("statusText");
   const refreshIn = el("refreshIn");
@@ -26,17 +29,23 @@
   const changelogLink = el("changelogLink");
 
   const mapWrap = el("mapWrap");
+  const openMapBtn = el("openMapBtn");
+  const openMapBtn2 = el("openMapBtn2");
+  const mapHint = el("mapHint");
 
   const modSearch = el("modSearch");
   const categoryRow = el("categoryRow");
   const modTbody = el("modTbody");
 
-  // --- Players Online widget (Query via mcsrvstat.us) ---
+  // Players Online widget (Query via mcsrvstat.us)
   const playersOnlineCount = el("playersOnlineCount");
   const playersMaxCount = el("playersMaxCount");
   const playersOnlineList = el("playersOnlineList");
   const playersOnlineNote = el("playersOnlineNote");
 
+  // -----------------------------
+  // Helpers
+  // -----------------------------
   function safeSetText(node, text) {
     if (!node) return;
     node.textContent = text;
@@ -45,14 +54,31 @@
     if (!node) return;
     node.innerHTML = html;
   }
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
 
   // -----------------------------
   // Load config
   // -----------------------------
-  const cfg = await fetch("data/server.json", { cache: "no-store" }).then((r) => r.json());
+  let cfg;
+  try {
+    cfg = await fetch("data/server.json", { cache: "no-store" }).then((r) => r.json());
+  } catch (e) {
+    console.error("Could not load data/server.json", e);
+    safeSetText(statusText, "Config missing");
+    return;
+  }
 
-  const address = cfg.address || "";
-  safeSetText(serverAddress, address);
+  const address = (cfg.address || "").trim();
+  const refreshSeconds = Math.max(10, Number(cfg.refreshSeconds || 30));
+
+  safeSetText(serverAddress, address || "—");
 
   if (joinLink) joinLink.href = cfg.howToJoinUrl || "#";
   if (discordLink) discordLink.href = cfg.discordUrl || "#";
@@ -65,8 +91,13 @@
   if (rulesLink) rulesLink.href = cfg.links?.rulesUrl || "#";
   if (changelogLink) changelogLink.href = cfg.links?.changelogUrl || "#";
 
+  // Copy IP
   if (copyIpBtn) {
     copyIpBtn.addEventListener("click", async () => {
+      if (!address) {
+        alert("Server address isn't set yet (data/server.json).");
+        return;
+      }
       try {
         await navigator.clipboard.writeText(address);
         copyIpBtn.textContent = "✅ Copied!";
@@ -77,13 +108,43 @@
     });
   }
 
-  // Map embed
+  // -----------------------------
+  // Map embed + open button fallback
+  // -----------------------------
   const mapUrl = (cfg.mapEmbedUrl || "").trim();
-  if (mapUrl && mapWrap) {
-    mapWrap.innerHTML = `<iframe src="${mapUrl}" loading="lazy" referrerpolicy="no-referrer"></iframe>`;
+
+  function wireMapButtons(url) {
+    if (openMapBtn) openMapBtn.href = url || "#";
+    if (openMapBtn2) openMapBtn2.href = url || "#";
   }
 
-  const refreshSeconds = Math.max(10, Number(cfg.refreshSeconds || 30));
+  if (mapUrl) {
+    wireMapButtons(mapUrl);
+
+    if (mapWrap) {
+      mapWrap.innerHTML = `
+        <iframe id="mapFrame" src="${mapUrl}" loading="lazy" referrerpolicy="no-referrer"></iframe>
+      `;
+    }
+
+    // Note: iframe "error" rarely fires for CSP/X-Frame blocks, so we rely on the Open Map buttons.
+    if (mapHint) {
+      mapHint.textContent = "If the embed is blank, click “Open Map” (some browsers block iframes).";
+    }
+  } else {
+    wireMapButtons("#");
+    if (mapHint) mapHint.textContent = "Set mapEmbedUrl in data/server.json to enable the map.";
+  }
+
+  // If address isn't set, stop here (prevents bad API calls)
+  if (!address) {
+    safeSetText(statusText, "Set server address");
+    safeSetText(playersLine, "—");
+    safeSetText(versionLine, "—");
+    safeSetText(pingLine, "—");
+    safeSetText(refreshIn, "—");
+    return;
+  }
 
   // -----------------------------
   // Server Status (mcstatus.io)
@@ -129,9 +190,9 @@
 
       setOnline(!!data.online);
 
-      const playersOnline = data?.players?.online ?? 0;
-      const playersMax = data?.players?.max ?? 0;
-      safeSetText(playersLine, `${playersOnline} / ${playersMax}`);
+      const online = data?.players?.online ?? 0;
+      const max = data?.players?.max ?? 0;
+      safeSetText(playersLine, `${online} / ${max}`);
 
       const version =
         data?.version?.name_clean ||
@@ -145,7 +206,6 @@
       safeSetText(pingLine, `${latency} ms`);
 
       renderPlayers(data?.players?.list);
-
       safeSetText(lastUpdate, new Date().toLocaleTimeString());
     } catch (err) {
       setOnline(false);
@@ -162,18 +222,15 @@
   // Players Online (Query via mcsrvstat.us)
   // -----------------------------
   async function fetchPlayersViaQuery(addr) {
-    // mcsrvstat.us endpoint: /2/<address>
     const url = `https://api.mcsrvstat.us/2/${encodeURIComponent(addr)}`;
+
+    // Widget might not be on the page; keep it silent
+    if (!playersOnlineCount || !playersMaxCount || !playersOnlineList || !playersOnlineNote) return;
 
     try {
       const res = await fetch(url, { cache: "no-store" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-
-      if (!playersOnlineCount || !playersMaxCount || !playersOnlineList || !playersOnlineNote) {
-        // Widget not present on this page; don't error.
-        return;
-      }
 
       if (!data.online) {
         playersOnlineCount.textContent = "0";
@@ -209,11 +266,10 @@
       } else {
         playersOnlineNote.textContent =
           online > 0
-            ? "Players are online, but names aren’t available. Make sure enable-query=true and UDP is forwarded."
+            ? "Players are online, but names aren’t available. Enable Query in server.properties and forward UDP."
             : "Nobody online right now.";
       }
     } catch (e) {
-      if (!playersOnlineCount || !playersMaxCount || !playersOnlineList || !playersOnlineNote) return;
       playersOnlineCount.textContent = "—";
       playersMaxCount.textContent = "—";
       playersOnlineList.innerHTML = "";
@@ -227,48 +283,54 @@
   // -----------------------------
   let remaining = refreshSeconds;
 
-  async function refreshAll() {
-    await fetchStatus();
-    await fetchPlayersViaQuery(address);
-  }
-
   async function tick() {
     remaining -= 1;
     if (remaining <= 0) {
       remaining = refreshSeconds;
-      await refreshAll();
+      await fetchStatus();
+      await fetchPlayersViaQuery(address);
     }
     safeSetText(refreshIn, `${remaining}s`);
   }
 
-  await refreshAll();
+  await fetchStatus();
+  await fetchPlayersViaQuery(address);
   safeSetText(refreshIn, `${remaining}s`);
   setInterval(tick, 1000);
 
   // -----------------------------
   // Modlist
   // -----------------------------
-  const modData = await fetch("data/modlist.json", { cache: "no-store" }).then((r) => r.json());
-  const mods = Array.isArray(modData?.mods) ? modData.mods : [];
+  let mods = [];
+  try {
+    const modData = await fetch("data/modlist.json", { cache: "no-store" }).then((r) => r.json());
+    mods = Array.isArray(modData?.mods) ? modData.mods : [];
+  } catch (e) {
+    console.warn("Could not load data/modlist.json", e);
+  }
 
   const categories = ["All", ...Array.from(new Set(mods.map((m) => m.category).filter(Boolean)))].sort((a, b) =>
     a.localeCompare(b)
   );
+
   let activeCategory = "All";
 
   function renderCategoryButtons() {
     if (!categoryRow) return;
     categoryRow.innerHTML = "";
+
     for (const cat of categories) {
       const btn = document.createElement("button");
       btn.className = "btn";
-        if (cat === activeCategory) btn.classList.add("primary");
+      if (cat === activeCategory) btn.classList.add("primary");
       btn.textContent = cat;
+
       btn.addEventListener("click", () => {
         activeCategory = cat;
         renderCategoryButtons();
         renderMods();
       });
+
       categoryRow.appendChild(btn);
     }
   }
@@ -289,6 +351,7 @@
     });
 
     modTbody.innerHTML = "";
+
     for (const m of filtered) {
       const tr = document.createElement("tr");
 
@@ -319,15 +382,6 @@
       tr.appendChild(td);
       modTbody.appendChild(tr);
     }
-  }
-
-  function escapeHtml(str) {
-    return String(str)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
   }
 
   if (modSearch) modSearch.addEventListener("input", renderMods);
