@@ -181,7 +181,18 @@
       </div>
 
       <div class="iframeWrap" id="mapWrap">
-        <div style="padding:16px;">
+        <!-- BlueMap embed -->
+        <iframe
+          id="bluemapFrame"
+          title="BlueMap Live Map"
+          src=""
+          loading="lazy"
+          referrerpolicy="no-referrer"
+          allowfullscreen
+        ></iframe>
+
+        <!-- Fallback (shown if src is missing / blocked) -->
+        <div id="mapFallback" style="padding:16px; display:none;">
           <strong>Map unavailable.</strong>
           <p class="muted2" style="margin-top:6px;">Use the button below to open it.</p>
           <a class="btn2 primary" id="openMapBtn2" href="#" target="_blank" rel="noreferrer">Open Map</a>
