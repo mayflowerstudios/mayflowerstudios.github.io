@@ -111,7 +111,11 @@
   // -----------------------------
   // Map embed + open button fallback
   // -----------------------------
-  const mapUrl = (cfg.mapEmbedUrl || "").trim();
+  const mapUrl =
+    (window.MAYFLOWER_BLUEMAP_URL || cfg.mapEmbedUrl || "").trim();
+
+  const bluemapFrame = el("bluemapFrame");
+  const mapFallback = el("mapFallback");
 
   function wireMapButtons(url) {
     if (openMapBtn) openMapBtn.href = url || "#";
@@ -121,19 +125,26 @@
   if (mapUrl) {
     wireMapButtons(mapUrl);
 
-    if (mapWrap) {
-      mapWrap.innerHTML = `
-        <iframe id="mapFrame" src="${mapUrl}" loading="lazy" referrerpolicy="no-referrer"></iframe>
-      `;
-    }
+    // If server.html contains an iframe, set it
+    if (bluemapFrame) bluemapFrame.src = mapUrl;
 
-    // Note: iframe "error" rarely fires for CSP/X-Frame blocks, so we rely on the Open Map buttons.
+    // Hide fallback if present
+    if (mapFallback) mapFallback.style.display = "none";
+
     if (mapHint) {
-      mapHint.textContent = "If the embed is blank, click “Open Map” (some browsers block iframes).";
+      mapHint.textContent =
+        "If the embed is blank, click “Open Map” (some browsers block iframes).";
     }
   } else {
     wireMapButtons("#");
-    if (mapHint) mapHint.textContent = "Set mapEmbedUrl in data/server.json to enable the map.";
+
+    // Show fallback if present
+    if (mapFallback) mapFallback.style.display = "block";
+
+    if (mapHint) {
+      mapHint.textContent =
+        "Set mapEmbedUrl in data/server.json (or window.MAYFLOWER_BLUEMAP_URL) to enable the map.";
+    }
   }
 
   // If address isn't set, stop here (prevents bad API calls)
