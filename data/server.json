@@ -1,0 +1,18 @@
+{
+  "serverName": "Luna’s Guns & Stuff",
+  "address": "24.115.182.134:25565",
+  "howToJoinUrl": "server-info.html",
+  "discordUrl": "https://discord.gg/YOUR_INVITE",
+  "mapEmbedUrl": "http://http://24.115.182.134:8100",
+  "modpack": {
+  "curseforgeUrl": "https://www.curseforge.com/minecraft/modpacks/lunas-guns-and-stuff",
+  "directZipUrl": "",
+  "note": "Install via CurseForge for the easiest setup. Direct ZIP will appear here once we host one."
+  },
+  "links": {
+    "sparkUrl": "https://spark.lucko.me/nUhzB5o0Zj",
+    "rulesUrl": "rules.html",
+    "changelogUrl": "modpack-changelog.html"
+  },
+  "refreshSeconds": 30
+}

@@ -1,0 +1,28 @@
+{
+  "mods": [
+    {
+      "name": "Embeddium",
+      "category": "Performance",
+      "side": "Client",
+      "notes": "Big FPS + chunk rendering improvements."
+    },
+    {
+      "name": "FerriteCore",
+      "category": "Performance",
+      "side": "Both",
+      "notes": "Memory usage reductions."
+    },
+    {
+      "name": "Spark",
+      "category": "Admin",
+      "side": "Server",
+      "notes": "Performance profiling + reports."
+    },
+    {
+      "name": "Create",
+      "category": "Tech",
+      "side": "Both",
+      "notes": "Mechanical automation & factories."
+    }
+  ]
+}
