@@ -1,3 +1,12 @@
+/* =========================================================
+   Mayflower Studios • Unified Theme CSS
+   - Website styling
+   - BlueMap styling (inherits site variables)
+   ========================================================= */
+
+/* -------------------------
+   Theme Variables (ONE source of truth)
+   ------------------------- */
 :root{
   /* Forest night */
   --bg1:#060b14;        /* near-black forest */
@@ -8,10 +17,10 @@
   --muted:rgba(255,255,255,.68);
 
   /* Sakura + magic accents */
-  --accent:#fb7185;    /* cherry blossom */
-  --accent2:#fda4af;   /* soft petal */
-  --good:#a78bfa;      /* moon lilac */
-  --amber:#fbbf24;     /* lantern */
+  --accent:#fb7185;     /* cherry blossom */
+  --accent2:#fda4af;    /* soft petal */
+  --good:#a78bfa;       /* moon lilac */
+  --amber:#fbbf24;      /* lantern */
 
   /* UI */
   --border:rgba(255,255,255,.12);
@@ -19,18 +28,43 @@
 
   /* Atmosphere */
   --leafglow: rgba(34,197,94,.08);
+
+  /* Shape + motion */
+  --radius-1: 12px;
+  --radius-2: 16px;
+  --radius-3: 18px;
+  --radius-4: 22px;
+  --lift: translateY(-1px);
+  --t: .12s ease;
+
+  /* Glass presets */
+  --glass-a: linear-gradient(180deg, rgba(255,255,255,.08), rgba(0,0,0,.22));
+  --glass-b: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.20));
+  --glass-c: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+  --glass-d: rgba(0,0,0,.16);
+
+  /* Inner tint */
+  --tint-soft: rgba(253,164,175,.08);
+  --tint-strong: rgba(253,164,175,.14);
+
+  /* Fonts */
+  --font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 }
 
-*{box-sizing:border-box}
+*{ box-sizing:border-box; }
 html{ scroll-behavior:smooth; }
+a{ color:inherit; }
 
+/* -------------------------
+   Background Atmosphere
+   ------------------------- */
 body{
   margin:0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  color:var(--text);
+  font-family: var(--font);
+  color: var(--text);
   position: relative;
 
-  /* keep only the “atmosphere” gradients here (no photo) */
   background:
     radial-gradient(1100px 700px at 18% 8%, rgba(167,139,250,.16), transparent 60%),
     radial-gradient(900px 600px at 82% 18%, rgba(167,139,250,.10), transparent 62%),
@@ -42,12 +76,13 @@ body{
   padding:26px;
 }
 
+/* mist */
 body::before{
   content:"";
   position:fixed;
   inset:-40px;
   pointer-events:none;
-  z-index:-2;     /* above the wallpaper (-3) */
+  z-index:-2;
   opacity:.55;
   background:
     radial-gradient(900px 360px at 30% 30%, rgba(255,255,255,.07), transparent 70%),
@@ -56,12 +91,13 @@ body::before{
   filter: blur(1px);
 }
 
+/* petals + lantern sparks */
 body::after{
   content:"";
   position:fixed;
   inset:0;
   pointer-events:none;
-  z-index:-1;     /* above mist */
+  z-index:-1;
   opacity:.25;
   background:
     radial-gradient(10px 10px at 12% 22%, rgba(253,164,175,.38), transparent 60%),
@@ -77,20 +113,17 @@ body::after{
   filter: blur(0.2px);
 }
 
-
+/* wallpaper */
 html::before{
   content:"";
   position: fixed;
   inset: 0;
   z-index: -3;
   pointer-events: none;
-
-  /* fixed wallpaper + dark wash */
   background:
     linear-gradient(180deg, rgba(6,11,20,.72), rgba(11,16,34,.72)),
     url("/assets/cherry-bg.png") center / cover no-repeat;
-
-  transform: translateZ(0); /* helps with some GPU compositing */
+  transform: translateZ(0);
 }
 
 #fireflies{
@@ -98,18 +131,20 @@ html::before{
   inset: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 0;          /* above overlays (-1/-2/-3) */
+  z-index: 0;
   pointer-events: none;
   opacity: 0.85;
 }
 
-a{color:inherit}
+/* -------------------------
+   Layout + type helpers
+   ------------------------- */
 .wrap{
-  width: min(980px, 100%);   /* was 1120px */
+  width: min(980px, 100%);
   margin: 0 auto;
   position: relative;
   z-index: 1;
-  padding: 0 10px;           /* adds breathing room on small screens */
+  padding: 0 10px;
 }
 
 h1,h2,h3{ margin:0; letter-spacing:.2px; }
@@ -118,6 +153,7 @@ li{ color:var(--muted); line-height:1.7; margin:6px 0; }
 
 .muted{ margin:0; color:var(--muted); line-height:1.7; }
 .small{ font-size:14px; line-height:1.55; }
+
 .kicker{
   color:rgba(255,255,255,.78);
   font-size:12px;
@@ -125,6 +161,7 @@ li{ color:var(--muted); line-height:1.7; margin:6px 0; }
   text-transform:uppercase;
   margin:0 0 8px;
 }
+
 hr.sep{
   border:0;
   height:1px;
@@ -133,28 +170,23 @@ hr.sep{
   opacity:.9;
 }
 
-/* Topbar */
+/* -------------------------
+   Topbar
+   ------------------------- */
 .topbar{
-  position: relative; /* IMPORTANT for ::after */
+  position: relative;
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:12px;
   padding:14px 16px;
   border:1px solid var(--border);
-  border-radius:18px;
-
-  /* match hero/cards: subtle highlight + darker base */
-  background: linear-gradient(
-    180deg,
-    rgba(255,255,255,.08),
-    rgba(0,0,0,.22)
-  );
-
+  border-radius: var(--radius-3);
+  background: var(--glass-a);
   backdrop-filter: blur(12px);
   box-shadow:
     0 18px 60px rgba(0,0,0,.40),
-    0 0 0 1px rgba(253,164,175,.08) inset;
+    0 0 0 1px var(--tint-soft) inset;
 }
 
 .topbar::after{
@@ -181,7 +213,6 @@ hr.sep{
   text-transform:uppercase;
 }
 .brand span{ font-size:12px; color:var(--muted); }
-
 .brandLink{ text-decoration:none; color:inherit; }
 
 .nav{ display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; }
@@ -194,29 +225,28 @@ hr.sep{
   color:var(--text);
   font-weight:650;
   font-size:13px;
-  transition: transform .12s ease, filter .12s ease;
+  transition: transform var(--t), filter var(--t);
 }
-.pill:hover{ transform: translateY(-1px); filter: brightness(1.06); }
+.pill:hover{ transform: var(--lift); filter: brightness(1.06); }
 .pill.active{
   border-color: rgba(253,164,175,.40);
   background: rgba(253,164,175,.10);
   box-shadow: 0 10px 30px rgba(0,0,0,.20);
 }
 
-/* Hero */
+/* -------------------------
+   Hero
+   ------------------------- */
 .hero{
   margin-top:16px;
   padding:18px 16px;
   border:1px solid var(--border);
-  border-radius:22px;
-
-  /* MATCH cards: darker glass + blur + subtle inner tint */
-  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.20));
+  border-radius: var(--radius-4);
+  background: var(--glass-b);
   backdrop-filter: blur(12px);
-
   box-shadow:
     0 18px 60px rgba(0,0,0,.40),
-    0 0 0 1px rgba(253,164,175,.08) inset;
+    0 0 0 1px var(--tint-soft) inset;
 
   display:grid;
   grid-template-columns: 1.2fr .8fr;
@@ -226,7 +256,6 @@ hr.sep{
 @media (max-width: 900px){
   .hero{ grid-template-columns: 1fr; }
 }
-
 .hero h1{ font-size: clamp(28px, 3.6vw, 44px); }
 .hero .muted{ max-width: 75ch; }
 
@@ -236,20 +265,21 @@ hr.sep{
   gap:10px;
   margin-top:14px;
 }
+
 .btn{
   text-decoration:none;
   font-weight:800;
   padding:12px 14px;
-  border-radius:12px;
+  border-radius: var(--radius-1);
   border:1px solid rgba(255,255,255,.18);
   display:inline-flex;
   align-items:center;
   justify-content:center;
   gap:10px;
-  transition: transform .12s ease, filter .12s ease;
+  transition: transform var(--t), filter var(--t);
   min-width: 170px;
 }
-.btn:hover{ transform: translateY(-1px); filter: brightness(1.06); }
+.btn:hover{ transform: var(--lift); filter: brightness(1.06); }
 
 /* Sakura + moonlight buttons */
 .btn.primary{ color:#1a1020; background: linear-gradient(90deg, var(--accent), var(--good)); }
@@ -267,17 +297,17 @@ hr.sep{
 }
 .tile{
   border:1px solid var(--border);
-  border-radius:18px;
+  border-radius: var(--radius-3);
   background: rgba(0,0,0,.16);
   padding:14px;
-
-  /* subtle edge glow */
   box-shadow: 0 0 0 1px rgba(251,113,133,.06) inset;
 }
 .tile strong{ display:block; margin-bottom:6px; }
 .tile p{ margin:0; color:var(--muted); line-height:1.55; font-size:14px; }
 
-/* Sections */
+/* -------------------------
+   Sections
+   ------------------------- */
 .sectionTitle{
   margin:18px 0 10px;
   display:flex;
@@ -298,7 +328,9 @@ hr.sep{
 }
 .sectionTitle span{ color:var(--muted); font-size:13px; }
 
-/* Cards / grids */
+/* -------------------------
+   Cards / grids
+   ------------------------- */
 .grid2{
   display:grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -310,23 +342,18 @@ hr.sep{
 
 .card{
   border:1px solid var(--border);
-  border-radius:18px;
+  border-radius: var(--radius-3);
   padding:18px;
-
-  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+  background: var(--glass-c);
   backdrop-filter: blur(12px);
-  box-shadow: var(--shadow);
-
-  /* tiny “enchanted” tint */
   box-shadow:
     0 18px 60px rgba(0,0,0,.40),
     0 0 0 1px rgba(253,164,175,.06) inset;
 }
-
 .card:hover{
   box-shadow:
     0 18px 60px rgba(0,0,0,.45),
-    0 0 0 1px rgba(253,164,175,.14) inset;
+    0 0 0 1px var(--tint-strong) inset;
 }
 
 .card h3{
@@ -354,21 +381,22 @@ hr.sep{
   gap:10px;
   margin-top:10px;
 }
+
 a.button{
   text-decoration:none;
   color:#1a1020;
   font-weight:800;
   padding:12px 14px;
-  border-radius:12px;
+  border-radius: var(--radius-1);
   display:inline-flex;
   align-items:center;
   justify-content:center;
   gap:10px;
   border:1px solid rgba(255,255,255,.18);
-  transition: transform .12s ease, filter .12s ease;
+  transition: transform var(--t), filter var(--t);
   min-width: 190px;
 }
-a.button:hover{ transform: translateY(-1px); filter: brightness(1.06); }
+a.button:hover{ transform: var(--lift); filter: brightness(1.06); }
 
 a.mods{ background: linear-gradient(90deg, var(--accent2), var(--good)); }
 a.bots{ background: linear-gradient(90deg, var(--accent), var(--accent2)); }
@@ -382,7 +410,7 @@ a.ghost{
 .callout{
   border:1px solid var(--border);
   background: rgba(0,0,0,.14);
-  border-radius:16px;
+  border-radius: var(--radius-2);
   padding:14px;
 }
 .callout strong{ display:block; margin-bottom:6px; }
@@ -391,24 +419,26 @@ a.ghost{
   margin-top:10px;
   border:1px solid var(--border);
   background: rgba(0,0,0,.20);
-  border-radius:14px;
+  border-radius: 14px;
   padding:12px;
   overflow:auto;
 }
 .codebox code{
   color: rgba(255,255,255,.9);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-family: var(--mono);
   font-size: 12.5px;
   white-space: pre;
 }
 
-/* Media / icon gallery */
+/* -------------------------
+   Media / icon gallery
+   ------------------------- */
 .mediaHeader{ display:flex; gap:14px; align-items:center; }
 
 .projectIcon{
   width:64px;
   height:64px;
-  border-radius:16px;
+  border-radius: var(--radius-2);
   border:1px solid var(--border);
   background: rgba(255,255,255,.04);
   object-fit: cover;
@@ -432,12 +462,8 @@ a.ghost{
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
 }
-.gallery::-webkit-scrollbar{
-  height: 8px;
-}
-.gallery::-webkit-scrollbar-track{
-  background: transparent;
-}
+.gallery::-webkit-scrollbar{ height: 8px; }
+.gallery::-webkit-scrollbar-track{ background: transparent; }
 .gallery::-webkit-scrollbar-thumb{
   background: rgba(255,255,255,.18);
   border-radius: 999px;
@@ -448,9 +474,10 @@ a.ghost{
 @media (max-width: 560px){
   .gallery{ grid-template-columns: 1fr; }
 }
+
 .shot{
   border:1px solid var(--border);
-  border-radius:16px;
+  border-radius: var(--radius-2);
   overflow:hidden;
   background: rgba(0,0,0,.16);
   scroll-snap-align: start;
@@ -469,7 +496,9 @@ a.ghost{
   line-height:1.5;
 }
 
-/* Footer */
+/* -------------------------
+   Footer
+   ------------------------- */
 footer{
   text-align:center;
   margin-top:18px;
@@ -503,10 +532,7 @@ body[data-nav="server"] .tableScroll{
   border: 1px solid rgba(255,255,255,.10);
   background: rgba(0,0,0,.08);
 }
-
-body[data-nav="server"] .tableScroll .table{
-  border: 0;
-}
+body[data-nav="server"] .tableScroll .table{ border: 0; }
 
 /* sticky table header */
 body[data-nav="server"] .tableScroll .table thead th{
@@ -524,9 +550,7 @@ body[data-nav="server"] .categoryBar{
   padding-bottom: 6px;
   -webkit-overflow-scrolling: touch;
 }
-body[data-nav="server"] .categoryBar > *{
-  flex: 0 0 auto;
-}
+body[data-nav="server"] .categoryBar > *{ flex: 0 0 auto; }
 body[data-nav="server"] .categoryBar::-webkit-scrollbar{ height: 10px; }
 body[data-nav="server"] .categoryBar::-webkit-scrollbar-thumb{
   background: rgba(255,255,255,.14);
@@ -535,61 +559,57 @@ body[data-nav="server"] .categoryBar::-webkit-scrollbar-thumb{
 
 /* =========================================================
    BlueMap Theme (Mayflower Studios)
-   Usage:
-   - Add class "mf-bluemap" on <body> inside BlueMap's index.html
+   How to enable:
+   - In BlueMap's index.html add:
+       <link rel="stylesheet" href="https://mayflowerstudios.github.io/style.css">
+     and set:
+       <body class="mf-bluemap">
    ========================================================= */
 
-/* If you already have site-wide variables, keep them.
-   These are safe defaults + fallbacks. */
-:root {
-  --mf-bg: #0b0f14;
-  --mf-card: rgba(20, 26, 34, 0.88);
-  --mf-border: rgba(255,255,255,0.10);
-  --mf-text: rgba(255,255,255,0.92);
-  --mf-muted: rgba(255,255,255,0.65);
-
-  --mf-accent: #ff5aa5;   /* cherry blossom */
-  --mf-accent2: #7c5cff;  /* moonroot */
+/* Map site variables -> BlueMap variables (no duplicate palette to maintain) */
+body.mf-bluemap{
+  --mf-bg: var(--bg1);
+  --mf-card: var(--glass-b);
+  --mf-border: var(--border);
+  --mf-text: var(--text);
+  --mf-muted: var(--muted);
+  --mf-accent: var(--accent);
+  --mf-accent2: var(--good);
+  --mf-shadow: var(--shadow);
   --mf-radius: 16px;
-  --mf-shadow: 0 12px 34px rgba(0,0,0,0.55);
 
-  --mf-font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-}
-
-body.mf-bluemap {
-  font-family: var(--mf-font);
-  background: var(--mf-bg);
+  font-family: var(--font);
   color: var(--mf-text);
+  background: var(--mf-bg);
 }
 
-/* Generic “app UI” styling — we’ll rely on BlueMap’s structure */
+/* Generic app UI (BlueMap version differences handled by broad targeting) */
 body.mf-bluemap .panel,
 body.mf-bluemap .sidebar,
 body.mf-bluemap .drawer,
-body.mf-bluemap .menu,
-body.mf-bluemap .popup,
-body.mf-bluemap .tooltip {
+body.mf-bluemap .menu{
   background: var(--mf-card) !important;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
   border: 1px solid var(--mf-border) !important;
   border-radius: var(--mf-radius) !important;
-  box-shadow: var(--mf-shadow) !important;
+  box-shadow:
+    0 18px 60px rgba(0,0,0,.40),
+    0 0 0 1px rgba(253,164,175,.06) inset !important;
   color: var(--mf-text) !important;
 }
 
 /* Buttons / toggles */
 body.mf-bluemap button,
 body.mf-bluemap .button,
-body.mf-bluemap .btn {
+body.mf-bluemap .btn{
   border-radius: 999px !important;
   border: 1px solid var(--mf-border) !important;
   background: rgba(255,255,255,0.06) !important;
   color: var(--mf-text) !important;
 }
-
 body.mf-bluemap button:hover,
 body.mf-bluemap .button:hover,
-body.mf-bluemap .btn:hover {
+body.mf-bluemap .btn:hover{
   background: rgba(255,255,255,0.10) !important;
   border-color: rgba(255,255,255,0.18) !important;
 }
@@ -597,14 +617,28 @@ body.mf-bluemap .btn:hover {
 /* Active / selected UI bits */
 body.mf-bluemap .active,
 body.mf-bluemap .selected,
-body.mf-bluemap .is-active {
+body.mf-bluemap .is-active{
   background: linear-gradient(90deg, var(--mf-accent), var(--mf-accent2)) !important;
   border-color: transparent !important;
   color: #fff !important;
 }
 
-/* Popup/tooltip text */
-body.mf-bluemap .popup,
-body.mf-bluemap .tooltip {
+/* Leaflet popups (BlueMap uses Leaflet internally) */
+body.mf-bluemap .leaflet-popup-content-wrapper,
+body.mf-bluemap .leaflet-popup-tip{
+  background: var(--mf-card) !important;
+  border: 1px solid var(--mf-border) !important;
+  box-shadow: var(--mf-shadow) !important;
   color: var(--mf-text) !important;
+  backdrop-filter: blur(12px);
+}
+body.mf-bluemap .leaflet-popup-content{
+  color: var(--mf-text) !important;
+}
+body.mf-bluemap .leaflet-popup-content a{
+  color: var(--accent2) !important;
+  text-decoration: none;
+}
+body.mf-bluemap .leaflet-popup-content a:hover{
+  text-decoration: underline;
 }
