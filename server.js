@@ -354,8 +354,25 @@
     if (!worldStateUrl) return null;
 
     const res = await fetch(worldStateUrl, { cache: "no-store" });
-    if (!res.ok) throw new Error(`worldStateUrl HTTP ${res.status}`);
-    return await res.json();
+
+    // Helpful debugging:
+    const ct = res.headers.get("content-type") || "";
+    const text = await res.text();
+
+    if (!res.ok) {
+      throw new Error(`worldStateUrl HTTP ${res.status}: ${text.slice(0, 120)}`);
+    }
+
+    // If it isn't JSON, you'll see it here in the error message.
+    if (!ct.includes("application/json")) {
+      console.warn("worldStateUrl content-type:", ct);
+    }
+
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      throw new Error(`worldStateUrl returned non-JSON: ${text.slice(0, 120)}`);
+    }
   }
 
   async function updateWorldHud() {
