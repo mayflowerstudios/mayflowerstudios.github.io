@@ -506,7 +506,6 @@
       return matches(m, q);
     });
 
-    // ✅ Update count AFTER filtered is computed
     if (modCountEl) {
       modCountEl.textContent =
         activeCategory === "All" && !q
