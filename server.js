@@ -548,16 +548,6 @@
     }
   }
 
-    if (filtered.length === 0) {
-      const tr = document.createElement("tr");
-      const td = document.createElement("td");
-      td.colSpan = 4;
-      td.innerHTML = `<span class="muted2">No mods matched that search.</span>`;
-      tr.appendChild(td);
-      modTbody.appendChild(tr);
-    }
-  }
-
   if (modSearch) modSearch.addEventListener("input", renderMods);
   renderCategoryButtons();
   renderMods();
