@@ -35,6 +35,7 @@
   const modSearch = el("modSearch");
   const categoryRow = el("categoryRow");
   const modTbody = el("modTbody");
+  const modCountEl = el("modCount");
 
   // Players Online widget (Query via mcsrvstat.us)
   const playersOnlineCount = el("playersOnlineCount");
@@ -505,6 +506,14 @@
       return matches(m, q);
     });
 
+    // ✅ Update count AFTER filtered is computed
+    if (modCountEl) {
+      modCountEl.textContent =
+        activeCategory === "All" && !q
+          ? `${filtered.length}`
+          : `${filtered.length} of ${mods.length}`;
+    }
+
     modTbody.innerHTML = "";
 
     for (const m of filtered) {
@@ -528,6 +537,16 @@
 
       modTbody.appendChild(tr);
     }
+
+    if (filtered.length === 0) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 4;
+      td.innerHTML = `<span class="muted2">No mods matched that search.</span>`;
+      tr.appendChild(td);
+      modTbody.appendChild(tr);
+    }
+  }
 
     if (filtered.length === 0) {
       const tr = document.createElement("tr");
