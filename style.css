@@ -1,7 +1,6 @@
 /* =========================================================
-   Mayflower Studios • Unified Theme CSS
-   - Website styling
-   - BlueMap styling (inherits site variables)
+   Mayflower Studios • Unified Theme CSS (WEBSITE)
+   - Website styling only
    ========================================================= */
 
 /* -------------------------
@@ -555,90 +554,4 @@ body[data-nav="server"] .categoryBar::-webkit-scrollbar{ height: 10px; }
 body[data-nav="server"] .categoryBar::-webkit-scrollbar-thumb{
   background: rgba(255,255,255,.14);
   border-radius: 999px;
-}
-
-/* =========================================================
-   BlueMap Theme (Mayflower Studios)
-   How to enable:
-   - In BlueMap's index.html add:
-       <link rel="stylesheet" href="https://mayflowerstudios.github.io/style.css">
-     and set:
-       <body class="mf-bluemap">
-   ========================================================= */
-
-/* Map site variables -> BlueMap variables (no duplicate palette to maintain) */
-body.mf-bluemap{
-  --mf-bg: var(--bg1);
-  --mf-card: var(--glass-b);
-  --mf-border: var(--border);
-  --mf-text: var(--text);
-  --mf-muted: var(--muted);
-  --mf-accent: var(--accent);
-  --mf-accent2: var(--good);
-  --mf-shadow: var(--shadow);
-  --mf-radius: 16px;
-
-  font-family: var(--font);
-  color: var(--mf-text);
-  background: var(--mf-bg);
-}
-
-/* Generic app UI (BlueMap version differences handled by broad targeting) */
-body.mf-bluemap .panel,
-body.mf-bluemap .sidebar,
-body.mf-bluemap .drawer,
-body.mf-bluemap .menu{
-  background: var(--mf-card) !important;
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--mf-border) !important;
-  border-radius: var(--mf-radius) !important;
-  box-shadow:
-    0 18px 60px rgba(0,0,0,.40),
-    0 0 0 1px rgba(253,164,175,.06) inset !important;
-  color: var(--mf-text) !important;
-}
-
-/* Buttons / toggles */
-body.mf-bluemap button,
-body.mf-bluemap .button,
-body.mf-bluemap .btn{
-  border-radius: 999px !important;
-  border: 1px solid var(--mf-border) !important;
-  background: rgba(255,255,255,0.06) !important;
-  color: var(--mf-text) !important;
-}
-body.mf-bluemap button:hover,
-body.mf-bluemap .button:hover,
-body.mf-bluemap .btn:hover{
-  background: rgba(255,255,255,0.10) !important;
-  border-color: rgba(255,255,255,0.18) !important;
-}
-
-/* Active / selected UI bits */
-body.mf-bluemap .active,
-body.mf-bluemap .selected,
-body.mf-bluemap .is-active{
-  background: linear-gradient(90deg, var(--mf-accent), var(--mf-accent2)) !important;
-  border-color: transparent !important;
-  color: #fff !important;
-}
-
-/* Leaflet popups (BlueMap uses Leaflet internally) */
-body.mf-bluemap .leaflet-popup-content-wrapper,
-body.mf-bluemap .leaflet-popup-tip{
-  background: var(--mf-card) !important;
-  border: 1px solid var(--mf-border) !important;
-  box-shadow: var(--mf-shadow) !important;
-  color: var(--mf-text) !important;
-  backdrop-filter: blur(12px);
-}
-body.mf-bluemap .leaflet-popup-content{
-  color: var(--mf-text) !important;
-}
-body.mf-bluemap .leaflet-popup-content a{
-  color: var(--accent2) !important;
-  text-decoration: none;
-}
-body.mf-bluemap .leaflet-popup-content a:hover{
-  text-decoration: underline;
 }
