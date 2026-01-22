@@ -147,6 +147,7 @@
   // Map embed + open button fallback
   // -----------------------------
   const mapUrl = (window.MAYFLOWER_BLUEMAP_URL || cfg.mapEmbedUrl || "").trim();
+  const mapRawUrl = (window.MAYFLOWER_BLUEMAP_URL || cfg.mapDirectHttpUrl || "").trim();
   const bluemapFrame = el("bluemapFrame");
   const mapFallback = el("mapFallback");
 
@@ -329,7 +330,7 @@
   const bluemapWorldId = (cfg.bluemapWorldId || "world").trim();
 
   // Build URL from your embed map URL so protocol/port match
-  const bluemapWorldJsonUrl = buildBlueMapWorldJsonUrl(mapUrl, bluemapWorldId);
+  const bluemapWorldJsonUrl = buildBlueMapWorldJsonUrl(mapRawUrl, bluemapWorldId);
 
   async function fetchMinecraftWorldTime() {
     if (!mcDayEl || !mcTimeEl) return;          // pills not on page
