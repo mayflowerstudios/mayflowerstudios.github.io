@@ -189,7 +189,7 @@
   // (This is still BlueMap UI, but NOT used for time)
   // -----------------------------
   const mapUrl = (window.MAYFLOWER_BLUEMAP_URL || cfg.mapEmbedUrl || "").trim();
-  const mapButtonUrl = (cfg.mapDirectHttpUrl || mapUrl || "").trim();
+  const mapButtonUrl = (cfg.mapEmbedUrl || mapUrl || "").trim();
 
   if (mapUrl) {
     wireMapButtons(mapButtonUrl);
