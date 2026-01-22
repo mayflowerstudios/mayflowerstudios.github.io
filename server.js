@@ -43,6 +43,10 @@
   const playersOnlineList = el("playersOnlineList");
   const playersOnlineNote = el("playersOnlineNote");
 
+  // Minecraft time pills (you add these in HTML)
+  const mcDayEl = el("mcDay");
+  const mcTimeEl = el("mcTime");
+
   // -----------------------------
   // Helpers
   // -----------------------------
@@ -61,6 +65,37 @@
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
+  }
+
+  function formatClockFromTicks(ticks) {
+    // Minecraft: 0 ticks = 6:00 AM (IRL-equivalent clock)
+    const total = (Number(ticks) + 6000) % 24000;
+    const hours24 = Math.floor(total / 1000);
+    const minutes = Math.floor(((total % 1000) / 1000) * 60);
+
+    const h12 = hours24 % 12 === 0 ? 12 : hours24 % 12;
+    const ampm = hours24 < 12 ? "AM" : "PM";
+    return `${h12}:${String(minutes).padStart(2, "0")} ${ampm}`;
+  }
+
+  function buildBlueMapWorldJsonUrl(mapUrl, worldId) {
+    // mapUrl example: https://example.com:8100/ or https://example.com:8100/bluemap/
+    // We want:        https://example.com:8100/bluemap/data/worlds/<worldId>.json
+    try {
+      if (!mapUrl) return null;
+
+      const u = new URL(mapUrl);
+      const origin = u.origin; // keeps https/http and port consistent
+      const path = u.pathname || "/";
+
+      // If the embed url already points inside /bluemap/ keep it.
+      // Otherwise assume BlueMap is served at /bluemap/
+      const basePath = path.includes("/bluemap") ? "/bluemap" : "/bluemap";
+
+      return `${origin}${basePath}/data/worlds/${encodeURIComponent(worldId)}.json`;
+    } catch {
+      return null;
+    }
   }
 
   // -----------------------------
@@ -111,9 +146,7 @@
   // -----------------------------
   // Map embed + open button fallback
   // -----------------------------
-  const mapUrl =
-    (window.MAYFLOWER_BLUEMAP_URL || cfg.mapEmbedUrl || "").trim();
-
+  const mapUrl = (window.MAYFLOWER_BLUEMAP_URL || cfg.mapEmbedUrl || "").trim();
   const bluemapFrame = el("bluemapFrame");
   const mapFallback = el("mapFallback");
 
@@ -125,10 +158,7 @@
   if (mapUrl) {
     wireMapButtons(mapUrl);
 
-    // If server.html contains an iframe, set it
     if (bluemapFrame) bluemapFrame.src = mapUrl;
-
-    // Hide fallback if present
     if (mapFallback) mapFallback.style.display = "none";
 
     if (mapHint) {
@@ -138,7 +168,6 @@
   } else {
     wireMapButtons("#");
 
-    // Show fallback if present
     if (mapFallback) mapFallback.style.display = "block";
 
     if (mapHint) {
@@ -154,6 +183,9 @@
     safeSetText(versionLine, "—");
     safeSetText(pingLine, "—");
     safeSetText(refreshIn, "—");
+    // Minecraft time also can't load without mapUrl; show placeholders
+    safeSetText(mcDayEl, "—");
+    safeSetText(mcTimeEl, "—");
     return;
   }
 
@@ -290,22 +322,67 @@
   }
 
   // -----------------------------
+  // Minecraft World Day/Time (via BlueMap JSON)
+  // -----------------------------
+  // You can override this in data/server.json later if you want:
+  //   "bluemapWorldId": "world"
+  const bluemapWorldId = (cfg.bluemapWorldId || "world").trim();
+
+  // Build URL from your embed map URL so protocol/port match
+  const bluemapWorldJsonUrl = buildBlueMapWorldJsonUrl(mapUrl, bluemapWorldId);
+
+  async function fetchMinecraftWorldTime() {
+    if (!mcDayEl || !mcTimeEl) return;          // pills not on page
+    if (!bluemapWorldJsonUrl) {                // no map url configured
+      safeSetText(mcDayEl, "—");
+      safeSetText(mcTimeEl, "Set map URL");
+      return;
+    }
+
+    try {
+      const res = await fetch(bluemapWorldJsonUrl, { cache: "no-store" });
+      if (!res.ok) throw new Error(`BlueMap HTTP ${res.status}`);
+
+      const data = await res.json();
+      const ticks = Number(data?.time);
+
+      if (!Number.isFinite(ticks)) throw new Error("BlueMap JSON missing time");
+
+      const day = Math.floor(ticks / 24000);
+      const clock = formatClockFromTicks(ticks);
+
+      safeSetText(mcDayEl, `Day ${day}`);
+      safeSetText(mcTimeEl, clock);
+    } catch (e) {
+      safeSetText(mcDayEl, "—");
+      safeSetText(mcTimeEl, "Unavailable");
+      console.warn("World time fetch failed:", e);
+    }
+  }
+
+  // -----------------------------
   // Refresh countdown + polling
   // -----------------------------
   let remaining = refreshSeconds;
 
   async function tick() {
     remaining -= 1;
+
     if (remaining <= 0) {
       remaining = refreshSeconds;
       await fetchStatus();
       await fetchPlayersViaQuery(address);
+      await fetchMinecraftWorldTime(); // tie to refresh cadence
     }
+
     safeSetText(refreshIn, `${remaining}s`);
   }
 
+  // Initial fetches
   await fetchStatus();
   await fetchPlayersViaQuery(address);
+  await fetchMinecraftWorldTime();
+
   safeSetText(refreshIn, `${remaining}s`);
   setInterval(tick, 1000);
 
