@@ -4,6 +4,7 @@
   "howToJoinUrl": "server-info.html",
   "discordUrl": "https://discord.com/invite/MutqYAdrwz",
   "mapEmbedUrl": "https://view-way-agent-increasingly.trycloudflare.com",
+  "mapDirectHttpUrl": "http://24.115.182.134:8100/bluemap/",
   "modpack": {
   "curseforgeUrl": "https://www.curseforge.com/minecraft/modpacks/lunas-guns-and-stuff",
   "directZipUrl": "",
