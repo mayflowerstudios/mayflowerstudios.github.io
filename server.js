@@ -498,7 +498,6 @@
   }
 
   function renderMods() {
-    if (!modTbody) return;
     const q = (modSearch?.value || "").trim().toLowerCase();
 
     const filtered = mods.filter((m) => {
@@ -506,12 +505,16 @@
       return matches(m, q);
     });
 
+    // ✅ ALWAYS update mod count first
     if (modCountEl) {
       modCountEl.textContent =
         activeCategory === "All" && !q
-          ? `${filtered.length}`
+          ? String(filtered.length)
           : `${filtered.length} of ${mods.length}`;
     }
+
+    // ❗ Only bail AFTER updating the count
+    if (!modTbody) return;
 
     modTbody.innerHTML = "";
 
