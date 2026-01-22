@@ -28,7 +28,6 @@
   const rulesLink = el("rulesLink");
   const changelogLink = el("changelogLink");
 
-  const mapWrap = el("mapWrap");
   const openMapBtn = el("openMapBtn");
   const openMapBtn2 = el("openMapBtn2");
   const mapHint = el("mapHint");
@@ -43,9 +42,14 @@
   const playersOnlineList = el("playersOnlineList");
   const playersOnlineNote = el("playersOnlineNote");
 
-  // Minecraft time pills (you add these in HTML)
+  // Minecraft pills
   const mcDayEl = el("mcDay");
   const mcTimeEl = el("mcTime");
+  const mcSeasonEl = el("mcSeason");
+
+  // Map embed elements
+  const bluemapFrame = el("bluemapFrame");
+  const mapFallback = el("mapFallback");
 
   // -----------------------------
   // Helpers
@@ -67,8 +71,16 @@
       .replaceAll("'", "&#039;");
   }
 
-  function formatClockFromTicks(ticks) {
-    // Minecraft: 0 ticks = 6:00 AM (IRL-equivalent clock)
+  function originFromUrl(url) {
+    try {
+      return new URL(url).origin;
+    } catch {
+      return null;
+    }
+  }
+
+  function ticksToIRLClock(ticks) {
+    // Minecraft: 0 ticks = 6:00 AM
     const total = (Number(ticks) + 6000) % 24000;
     const hours24 = Math.floor(total / 1000);
     const minutes = Math.floor(((total % 1000) / 1000) * 60);
@@ -78,24 +90,19 @@
     return `${h12}:${String(minutes).padStart(2, "0")} ${ampm}`;
   }
 
-  function buildBlueMapWorldJsonUrl(mapUrl, worldId) {
-    // mapUrl example: https://example.com:8100/ or https://example.com:8100/bluemap/
-    // We want:        https://example.com:8100/bluemap/data/worlds/<worldId>.json
-    try {
-      if (!mapUrl) return null;
-
-      const u = new URL(mapUrl);
-      const origin = u.origin; // keeps https/http and port consistent
-      const path = u.pathname || "/";
-
-      // If the embed url already points inside /bluemap/ keep it.
-      // Otherwise assume BlueMap is served at /bluemap/
-      const basePath = path.includes("/bluemap") ? "/bluemap" : "/bluemap";
-
-      return `${origin}${basePath}/maps/${encodeURIComponent(worldId)}.json`;
-    } catch {
-      return null;
+  async function tryFetchJson(urls) {
+    let lastErr;
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status} @ ${url}`);
+        const data = await res.json();
+        return { url, data };
+      } catch (e) {
+        lastErr = e;
+      }
     }
+    throw lastErr || new Error("All endpoints failed");
   }
 
   // -----------------------------
@@ -126,30 +133,11 @@
   if (rulesLink) rulesLink.href = cfg.links?.rulesUrl || "#";
   if (changelogLink) changelogLink.href = cfg.links?.changelogUrl || "#";
 
-  // Copy IP
-  if (copyIpBtn) {
-    copyIpBtn.addEventListener("click", async () => {
-      if (!address) {
-        alert("Server address isn't set yet (data/server.json).");
-        return;
-      }
-      try {
-        await navigator.clipboard.writeText(address);
-        copyIpBtn.textContent = "✅ Copied!";
-        setTimeout(() => (copyIpBtn.textContent = "📋 Copy Server IP"), 1200);
-      } catch {
-        alert("Couldn’t copy automatically — manually copy:\n" + address);
-      }
-    });
-  }
-
   // -----------------------------
   // Map embed + open button fallback
   // -----------------------------
   const mapUrl = (window.MAYFLOWER_BLUEMAP_URL || cfg.mapEmbedUrl || "").trim();
-  const mapRawUrl = (window.MAYFLOWER_BLUEMAP_URL || cfg.mapDirectHttpUrl || "").trim();
-  const bluemapFrame = el("bluemapFrame");
-  const mapFallback = el("mapFallback");
+  const mapButtonUrl = (cfg.mapDirectHttpUrl || mapUrl || "").trim();
 
   function wireMapButtons(url) {
     if (openMapBtn) openMapBtn.href = url || "#";
@@ -157,7 +145,7 @@
   }
 
   if (mapUrl) {
-    wireMapButtons(mapUrl);
+    wireMapButtons(mapButtonUrl);
 
     if (bluemapFrame) bluemapFrame.src = mapUrl;
     if (mapFallback) mapFallback.style.display = "none";
@@ -177,6 +165,25 @@
     }
   }
 
+  // -----------------------------
+  // Copy IP
+  // -----------------------------
+  if (copyIpBtn) {
+    copyIpBtn.addEventListener("click", async () => {
+      if (!address) {
+        alert("Server address isn't set yet (data/server.json).");
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(address);
+        copyIpBtn.textContent = "✅ Copied!";
+        setTimeout(() => (copyIpBtn.textContent = "📋 Copy Server IP"), 1200);
+      } catch {
+        alert("Couldn’t copy automatically — manually copy:\n" + address);
+      }
+    });
+  }
+
   // If address isn't set, stop here (prevents bad API calls)
   if (!address) {
     safeSetText(statusText, "Set server address");
@@ -184,9 +191,10 @@
     safeSetText(versionLine, "—");
     safeSetText(pingLine, "—");
     safeSetText(refreshIn, "—");
-    // Minecraft time also can't load without mapUrl; show placeholders
+
     safeSetText(mcDayEl, "—");
     safeSetText(mcTimeEl, "—");
+    safeSetText(mcSeasonEl, "—");
     return;
   }
 
@@ -268,7 +276,6 @@
   async function fetchPlayersViaQuery(addr) {
     const url = `https://api.mcsrvstat.us/2/${encodeURIComponent(addr)}`;
 
-    // Widget might not be on the page; keep it silent
     if (!playersOnlineCount || !playersMaxCount || !playersOnlineList || !playersOnlineNote) return;
 
     try {
@@ -323,41 +330,139 @@
   }
 
   // -----------------------------
-  // Minecraft World Day/Time (via BlueMap JSON)
+  // World HUD: Day / Time / Season
+  //
+  // NOW:
+  //  - Time comes from old BlueMap: /maps/<mapId>/live/world.json
+  //  - Day + Season are placeholders
+  //
+  // LATER (after you make the mod):
+  //  - We’ll fetch a JSON endpoint that includes true day + Serene Seasons
   // -----------------------------
-  // You can override this in data/server.json later if you want:
-  //   "bluemapWorldId": "world"
-  const bluemapWorldId = (cfg.bluemapWorldId || "world").trim();
 
-  // Build URL from your embed map URL so protocol/port match
-  const bluemapWorldJsonUrl = buildBlueMapWorldJsonUrl(mapRawUrl, bluemapWorldId);
+  // Config knobs you can add later:
+  // "bluemapMapId": "world"
+  // "worldStateUrl": "https://yourdomain/worldstate.json"
+  // worldstate.json format (suggested):
+  // { day: 128, ticks: 13542, season: "Autumn", subSeason: "Early", seasonDay: 6 }
+  const bluemapMapId = (cfg.bluemapMapId || "").trim();
+  const worldStateUrl = (cfg.worldStateUrl || "").trim();
 
-  async function fetchMinecraftWorldTime() {
-    if (!mcDayEl || !mcTimeEl) return;          // pills not on page
-    if (!bluemapWorldJsonUrl) {                // no map url configured
-      safeSetText(mcDayEl, "—");
+  // Build BlueMap OLD endpoints (auto-try base + id)
+  async function fetchTimeFromBlueMap() {
+    if (!mcTimeEl) return;
+
+    if (!mapUrl) {
       safeSetText(mcTimeEl, "Set map URL");
       return;
     }
 
+    const origin = originFromUrl(mapUrl);
+    if (!origin) {
+      safeSetText(mcTimeEl, "Set map URL");
+      return;
+    }
+
+    const bases = [`${origin}/bluemap`, `${origin}`];
+    const ids = [
+      ...(bluemapMapId ? [bluemapMapId] : []),
+      "world",
+      "overworld",
+      "survival",
+      "minecraft_overworld",
+    ];
+
+    const candidates = [];
+    for (const base of bases) {
+      for (const id of ids) {
+        candidates.push(`${base}/maps/${encodeURIComponent(id)}/live/world.json`);
+      }
+    }
+
+    const { data } = await tryFetchJson(candidates);
+
+    const ticks =
+      data?.dayTime ??
+      data?.time ??
+      data?.worldTime ??
+      data?.data?.time;
+
+    if (!Number.isFinite(Number(ticks))) {
+      throw new Error("BlueMap JSON missing time/dayTime");
+    }
+
+    safeSetText(mcTimeEl, ticksToIRLClock(Number(ticks)));
+    return Number(ticks);
+  }
+
+  // Future mod endpoint: true day + seasons, plus ticks (optional)
+  async function fetchWorldStateFromMod() {
+    if (!worldStateUrl) return null;
+
+    const res = await fetch(worldStateUrl, { cache: "no-store" });
+    if (!res.ok) throw new Error(`worldStateUrl HTTP ${res.status}`);
+    return await res.json();
+  }
+
+  async function updateWorldHud() {
+    // Defaults / placeholders
+    if (mcDayEl) safeSetText(mcDayEl, "—");
+    if (mcSeasonEl) safeSetText(mcSeasonEl, "—");
+    if (mcTimeEl) safeSetText(mcTimeEl, "Loading…");
+
+    // 1) Try mod endpoint first (later you turn it on, instantly works)
+    if (worldStateUrl) {
+      try {
+        const ws = await fetchWorldStateFromMod();
+        if (ws) {
+          // Day
+          if (mcDayEl && Number.isFinite(Number(ws.day))) {
+            safeSetText(mcDayEl, `Day ${Number(ws.day)}`);
+          } else if (mcDayEl) {
+            safeSetText(mcDayEl, "Day ?");
+          }
+
+          // Time (prefer ticks from mod if provided; otherwise fallback)
+          if (mcTimeEl && Number.isFinite(Number(ws.ticks))) {
+            safeSetText(mcTimeEl, ticksToIRLClock(Number(ws.ticks)));
+          } else {
+            await fetchTimeFromBlueMap();
+          }
+
+          // Season (Serene Seasons)
+          if (mcSeasonEl) {
+            const season = ws.season || ws.seasonName;
+            const sub = ws.subSeason || ws.subseason || ws.subSeasonName;
+            const sDay = ws.seasonDay;
+
+            if (season && sub && Number.isFinite(Number(sDay))) {
+              safeSetText(mcSeasonEl, `${sub} ${season} (Day ${Number(sDay)})`);
+            } else if (season && sub) {
+              safeSetText(mcSeasonEl, `${sub} ${season}`);
+            } else if (season) {
+              safeSetText(mcSeasonEl, String(season));
+            } else {
+              safeSetText(mcSeasonEl, "—");
+            }
+          }
+
+          return; // done
+        }
+      } catch (e) {
+        console.warn("World state (mod) fetch failed; falling back to BlueMap time:", e);
+      }
+    }
+
+    // 2) Fallback: BlueMap time only (works now)
     try {
-      const res = await fetch(bluemapWorldJsonUrl, { cache: "no-store" });
-      if (!res.ok) throw new Error(`BlueMap HTTP ${res.status}`);
-
-      const data = await res.json();
-      const ticks = Number(data?.time);
-
-      if (!Number.isFinite(ticks)) throw new Error("BlueMap JSON missing time");
-
-      const day = Math.floor(ticks / 24000);
-      const clock = formatClockFromTicks(ticks);
-
-      safeSetText(mcDayEl, `Day ${day}`);
-      safeSetText(mcTimeEl, clock);
+      await fetchTimeFromBlueMap();
+      if (mcDayEl) safeSetText(mcDayEl, "—");      // true day not available yet
+      if (mcSeasonEl) safeSetText(mcSeasonEl, "—"); // seasons need the mod
     } catch (e) {
-      safeSetText(mcDayEl, "—");
-      safeSetText(mcTimeEl, "Unavailable");
-      console.warn("World time fetch failed:", e);
+      if (mcTimeEl) safeSetText(mcTimeEl, "Unavailable");
+      if (mcDayEl) safeSetText(mcDayEl, "—");
+      if (mcSeasonEl) safeSetText(mcSeasonEl, "—");
+      console.warn("World HUD update failed:", e);
     }
   }
 
@@ -373,7 +478,7 @@
       remaining = refreshSeconds;
       await fetchStatus();
       await fetchPlayersViaQuery(address);
-      await fetchMinecraftWorldTime(); // tie to refresh cadence
+      await updateWorldHud();
     }
 
     safeSetText(refreshIn, `${remaining}s`);
@@ -382,7 +487,7 @@
   // Initial fetches
   await fetchStatus();
   await fetchPlayersViaQuery(address);
-  await fetchMinecraftWorldTime();
+  await updateWorldHud();
 
   safeSetText(refreshIn, `${remaining}s`);
   setInterval(tick, 1000);
