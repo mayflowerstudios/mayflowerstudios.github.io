@@ -92,7 +92,7 @@
       // Otherwise assume BlueMap is served at /bluemap/
       const basePath = path.includes("/bluemap") ? "/bluemap" : "/bluemap";
 
-      return `${origin}${basePath}/maps/worlds/${encodeURIComponent(worldId)}.json`;
+      return `${origin}${basePath}/maps/${encodeURIComponent(worldId)}.json`;
     } catch {
       return null;
     }
