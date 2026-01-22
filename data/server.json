@@ -3,9 +3,8 @@
   "address": "24.115.182.134:25565",
   "howToJoinUrl": "server-info.html",
   "discordUrl": "https://discord.com/invite/MutqYAdrwz",
-  "mapEmbedUrl": "https://view-way-agent-increasingly.trycloudflare.com",
-  "mapDirectHttpUrl": "http://24.115.182.134:8100/bluemap/",
-  "worldStateUrl": "http://24.115.182.134:8765/worldstate.json",
+  "mapEmbedUrl": "https://map.mayflowerstudios.net",
+  "worldStateUrl": "https://worldstate.mayflowerstudios.net/worldstate.json",
   "bluemapWorldId": "world",
   "modpack": {
   "curseforgeUrl": "https://www.curseforge.com/minecraft/modpacks/lunas-guns-and-stuff",
