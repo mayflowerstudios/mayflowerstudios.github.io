@@ -432,7 +432,7 @@
           Autumn: "🍂",
           Fall: "🍂",
           Winter: "❄️",
-        };
+        }; 
 
         const pSeason = prettySeasonToken(season);
         const pSub = prettySeasonToken(sub);
