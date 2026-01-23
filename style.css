@@ -314,6 +314,12 @@ hr.sep{
   justify-content:space-between;
   gap:12px;
 }
+
+/* Any section title that follows another element gets extra top spacing */
+* + .sectionTitle{
+  margin-top:42px;
+}
+
 .sectionTitle h2{ margin:0; font-size:18px; }
 .sectionTitle h2::after{
   content:"";
