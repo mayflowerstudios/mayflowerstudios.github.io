@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projects • Mayflower Studios</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body data-nav="projects">
+  <div class="wrap">
+
+    <div id="shared-nav"></div>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div>
+        <p class="kicker">Everything we’re building • All in one place</p>
+        <h1>🚀 Projects</h1>
+        <p class="muted">
+          A growing workshop of <strong>Minecraft mods</strong>, <strong>Discord bots</strong>, and server systems —
+          built with the same goals every time: clean UX, survival-friendly pacing, and long-term stability.
+        </p>
+
+        <div class="ctaRow">
+          <a class="btn primary" href="#mods">🧱 Minecraft Mods</a>
+          <a class="btn bots" href="#bots">🤖 Discord Bots</a>
+          <a class="btn ghost" href="#world">🌎 Server & World</a>
+        </div>
+      </div>
+
+      <div class="tileGrid">
+        <div class="tile">
+          <strong>🧭 Built for Real Servers</strong>
+          <p>Features that don’t break at hour 300.</p>
+        </div>
+        <div class="tile">
+          <strong>⚙️ Config Where It Matters</strong>
+          <p>Tune balance without rewriting code.</p>
+        </div>
+        <div class="tile">
+          <strong>🌸 Cozy Polish</strong>
+          <p>Whimsy + clarity, not clutter.</p>
+        </div>
+        <div class="tile">
+          <strong>🧠 Readable Systems</strong>
+          <p>Automation and progression you can understand.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODS -->
+    <div class="sectionTitle" id="mods">
+      <h2>🧱 Minecraft Mods</h2>
+      <span>Vanilla+ mechanics • Server-ready • Clean UI</span>
+    </div>
+
+    <section class="grid2">
+      <div class="card">
+        <h3>🔐 Steelhold <span class="badge">Minecraft Mod</span></h3>
+        <p class="desc">
+          Heavy-duty safes with real ownership and a lock/key workflow. Tiered progression (Basic → Reinforced → Steelhold → Vault → Bank),
+          optional “falling safe” behavior, and server-tunable balance via config.
+        </p>
+        <div class="btnrow">
+          <a class="button mods" href="steelhold.html">📄 Project Page</a>
+          <a class="button ghost" href="steelholdchangelog.html">🧾 Changelog</a>
+          <a class="button ghost" href="https://www.curseforge.com/minecraft/mc-mods/steelhold">📦 Download</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🧠 LogiChest <span class="badge">Minecraft Mod</span></h3>
+        <p class="desc">
+          Hub-and-sorter item routing designed to stay readable in survival. Route items from a Hub-facing source inventory into
+          sorter destinations using 10-slot whitelist filters, with upgrade support for batching, speed, multi-hub keychains, and autocrafting.
+        </p>
+        <div class="btnrow">
+          <a class="button mods" href="logichest.html">📄 Project Page</a>
+          <a class="button ghost" href="logichestchangelog.html">🧾 Changelog</a>
+          <a class="button ghost" href="https://www.curseforge.com/minecraft/mc-mods/logichest">📦 Download</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- BOTS -->
+    <div class="sectionTitle" id="bots">
+      <h2>🤖 Discord Bots</h2>
+      <span>Private bots built specifically for our community</span>
+    </div>
+
+    <section class="grid2">
+      <div class="card">
+        <h3>🦊 FoxBot <span class="badge">Discord Bot</span></h3>
+        <p class="desc">
+          A cozy community helper: tone-based replies (when mentioned), birthdays, reaction roles, private chat rooms,
+          and safety-minded moderation hooks — built to be helpful without being noisy.
+        </p>
+        <div class="btnrow">
+          <a class="button bots" href="foxbot.html">📄 Info Page</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🌙 EchoBloom <span class="badge">Discord Bot</span></h3>
+        <p class="desc">
+          A realm-based progression world: pick a realm, gain XP, collect realm items, craft buffs, and compete in raids and reaction battles —
+          with seasonal lore systems that evolve over time.
+        </p>
+        <div class="btnrow">
+          <a class="button bots" href="echobloom.html">📄 Info Page</a>
+          <a class="button bots disabled" href="#">📜 Lore Page (Soon)</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- WORLD / SERVER -->
+    <div class="sectionTitle" id="world">
+      <h2>🌎 Server & World</h2>
+      <span>Live world tools, maps, and community hubs</span>
+    </div>
+
+    <section class="grid2">
+      <div class="card">
+        <h3>🛰 Luna’s Guns & Stuff <span class="badge">Minecraft Server</span></h3>
+        <p class="desc">
+          A vanilla-survival core with modern firearms, smarter mobs, improved structures, and immersive atmosphere —
+          tuned for long-running worlds and real community play.
+        </p>
+        <div class="btnrow">
+          <a class="button mods" href="server.html">🌿 Server Page</a>
+          <a class="button ghost" href="rules.html">📜 Rules</a>
+        </div>
+      </div>
+
+      <div class="card" id="discord">
+        <h3>💬 Join the Mayflower Discord <span class="badge">Community</span></h3>
+        <p class="desc">
+            Mayflower Studios projects are built alongside a real community — Minecraft worlds,
+            shared builds, bot progression, and cozy long-term servers. Come hang out, follow development,
+            or jump into the realm with us.
+        </p>
+        <div class="btnrow">
+            <a class="button bots" href="https://discord.gg/MutqYAdrwz">🌸 Join Discord</a>
+        </div>
+    </section>
+
+    <div id="shared-footer"></div>
+  </div>
+
+  <script src="shared.js"></script>
+  <script src="fireflies.js"></script>
+</body>
+</html>

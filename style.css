@@ -405,6 +405,11 @@ a.ghost{
   border:1px solid var(--border);
   font-weight:750;
 }
+a.disabled {
+  pointer-events: none;
+  opacity: 0.45;
+  cursor: not-allowed;
+}
 
 .callout{
   border:1px solid var(--border);
