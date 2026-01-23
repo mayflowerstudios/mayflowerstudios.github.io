@@ -156,6 +156,43 @@
     return { day, ticks, season, subSeason, seasonDay };
   }
 
+  function prettySeasonToken(v) {
+    if (v == null) return "";
+    const raw = String(v).trim();
+    if (!raw) return "";
+
+    // Convert enum-like: EARLY_SUMMER -> "Early Summer"
+    let pretty = raw;
+    if (/^[A-Z0-9_]+$/.test(raw)) {
+      pretty = raw
+        .toLowerCase()
+        .split("_")
+        .filter(Boolean)
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ");
+    } else {
+      // camelCase / PascalCase -> "Camel Case"
+      pretty = raw.replace(/([a-z])([A-Z])/g, "$1 $2");
+    }
+
+    // Add emoji for the main season token (only when the token itself IS a season)
+    // (We don't emoji "Early Summer" because that's the sub-season.)
+    const seasonEmoji = {
+      Spring: "🌸",
+      Summer: "☀️",
+      Autumn: "🍂",
+      Fall: "🍂",
+      Winter: "❄️",
+    };
+
+    // If it's exactly "Summer"/"Winter"/etc, prefix emoji. Otherwise leave it alone.
+    if (seasonEmoji[pretty]) {
+      return `${seasonEmoji[pretty]} ${pretty}`;
+    }
+
+    return pretty;
+  }
+
   // -----------------------------
   // Load config
   // -----------------------------
@@ -410,15 +447,20 @@
         const sub = ws.subSeason;
         const sDay = ws.seasonDay;
 
-        if (season && sub && Number.isFinite(Number(sDay))) {
-          safeSetText(mcSeasonEl, `${sub} ${season} (Day ${Number(sDay)})`);
-        } else if (season && sub) {
-          safeSetText(mcSeasonEl, `${sub} ${season}`);
-        } else if (season) {
-          safeSetText(mcSeasonEl, String(season));
-        } else {
-          safeSetText(mcSeasonEl, "—");
-        }
+        const pSeason = prettySeasonToken(season);
+        const pSub = prettySeasonToken(sub);
+
+        const label =
+          (pSub && pSeason && pSub.toLowerCase().includes(pSeason.toLowerCase()))
+            ? pSub
+            : [pSub, pSeason].filter(Boolean).join(" ");
+
+        safeSetText(
+          mcSeasonEl,
+          Number.isFinite(Number(sDay))
+            ? `${label} (Day ${Number(sDay)})`
+            : (label || "—")
+        );
       }
     } catch (e) {
       console.warn("World state fetch failed:", e);
