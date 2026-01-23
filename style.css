@@ -146,6 +146,10 @@ html::before{
   padding: 0 10px;
 }
 
+/* spacing between major sections */
+.wrap > .grid2{ margin-bottom: 18px; }
+.wrap > .card{ margin-bottom: 18px; }
+
 h1,h2,h3{ margin:0; letter-spacing:.2px; }
 ul{ margin:0; padding-left:18px; }
 li{ color:var(--muted); line-height:1.7; margin:6px 0; }
