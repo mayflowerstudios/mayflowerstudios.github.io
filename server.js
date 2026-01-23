@@ -184,7 +184,8 @@
     return;
   }
 
-  const address = (cfg.address || "").trim();
+  const address = (cfg.address || "").trim(); // what you SHOW
+  const addressToRead = (cfg.addressToRead || "").trim(); // what you QUERY
   const refreshSeconds = Math.max(10, Number(cfg.refreshSeconds || 30));
   const worldStateUrl = (cfg.worldStateUrl || "").trim();
 
@@ -265,7 +266,7 @@
   // -----------------------------
   // Server Status (mcstatus.io)
   // -----------------------------
-  const statusUrl = `https://api.mcstatus.io/v2/status/java/${encodeURIComponent(address)}`;
+  const statusUrl = `https://api.mcstatus.io/v2/status/java/${encodeURIComponent(queryAddress)}`;
 
   async function fetchStatus() {
     const t0 = performance.now();
@@ -479,7 +480,7 @@
 
   // Initial fetches
   await fetchStatus();
-  await fetchPlayersViaQuery(address);
+  await fetchPlayersViaQuery(queryAddress);
   await updateWorldHud();
 
   safeSetText(refreshIn, `${remaining}s`);
