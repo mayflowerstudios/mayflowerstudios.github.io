@@ -49,5 +49,14 @@
     "end":   { "month": 12, "day": 31 },
     "location": "Everywhere",
     "description": "Realm offerings and random events for all the realms."
+  },
+  {
+    "id": "lunas-birthday",
+    "realm": "server",
+    "title": "Luna's Birthday!",
+    "repeat": "yearly",
+    "date": { "month": 12, "day": 19 },
+    "location": "Everywhere",
+    "description": "It's Luna's Birthday!"
   }
 ]
