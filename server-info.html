@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How to Join • Mayflower Studios</title>
+
+  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    /* Page-only helpers (optional to move into style.css later) */
+    .steps{ display:grid; gap:14px; }
+    .step{
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.14);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: 0 0 0 1px rgba(253,164,175,.06) inset;
+    }
+    .step h3{ margin:0 0 6px; font-size:18px; }
+    .step p{ margin:0; color: var(--muted); line-height:1.6; }
+    .callRow{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:10px; }
+
+    .ipBox{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.20);
+      border-radius: 16px;
+      padding: 12px;
+      margin-top: 10px;
+    }
+    .ipBox code{
+      font-family: var(--mono);
+      font-weight: 800;
+      font-size: 14px;
+      color: rgba(255,255,255,.92);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .btn2{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      color: inherit;
+      text-decoration:none;
+      cursor:pointer;
+      font-weight: 750;
+    }
+    .btn2:hover{ background: rgba(255,255,255,.07); }
+    .btn2.primary{
+      border-color: rgba(253,164,175,.40);
+      box-shadow: 0 0 0 1px rgba(253,164,175,.15) inset;
+    }
+
+    .note{
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.12);
+      border-radius: 16px;
+      padding: 12px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .grid2-tight{
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap:16px;
+      align-items:start;
+    }
+    @media (max-width: 980px){
+      .grid2-tight{ grid-template-columns: 1fr; }
+    }
+
+    .checklist li{ margin: 8px 0; }
+  </style>
+</head>
+
+<body data-nav="server">
+  <div class="wrap">
+
+    <!-- ✅ Shared Nav -->
+    <div id="shared-nav"></div>
+
+    <section class="hero">
+      <div>
+        <p class="kicker">Minecraft Server</p>
+        <h1>🧭 How to Join</h1>
+        <p class="muted">
+          You’ll need our modpack installed to connect. Once you’re set up, join using the IP below.
+        </p>
+
+        <div class="ipBox" aria-label="Server IP">
+          <code id="serverIp">play.mayflowerstudios.net</code>
+          <button class="btn2 primary" id="copyIpBtn">📋 Copy IP</button>
+        </div>
+
+        <div class="callRow">
+          <a class="btn2 primary" id="curseforgeBtn"
+             href="https://www.curseforge.com/minecraft/modpacks/lunas-guns-and-stuff"
+             target="_blank" rel="noreferrer">
+            ⬇️ Get the Modpack (CurseForge)
+          </a>
+
+          <a class="btn2" id="discordBtn"
+             href="https://discord.com/invite/MutqYAdrwz"
+             target="_blank" rel="noreferrer">
+            💬 Join Discord
+          </a>
+
+          <a class="btn2" href="server.html">🛰️ Back to Dashboard</a>
+        </div>
+      </div>
+
+      <div class="tileGrid">
+        <div class="tile">
+          <strong>✅ Quick Requirements</strong>
+          <p class="muted2">You’ll need Java Minecraft + the modpack.</p>
+          <ul class="checklist">
+            <li>Java Edition</li>
+            <li>CurseForge app (recommended)</li>
+            <li>Modpack: <strong>Luna’s Guns &amp; Stuff</strong></li>
+          </ul>
+        </div>
+
+        <div class="tile">
+          <strong>🛠️ Troubleshooting</strong>
+          <p class="muted2">Most issues are quick fixes.</p>
+          <ul class="checklist">
+            <li>Update GPU drivers</li>
+            <li>Allocate 6–8GB RAM in launcher</li>
+            <li>Use the exact modpack version</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="sectionTitle">
+        <h2>🧩 Step-by-step</h2>
+        <span>Fast setup</span>
+      </div>
+
+      <div class="grid2-tight">
+        <div class="steps">
+          <div class="step">
+            <h3>1) Install the Modpack</h3>
+            <p>
+              Install <strong>Luna’s Guns &amp; Stuff</strong> through CurseForge.
+              This is the easiest method and keeps versions synced.
+            </p>
+            <div class="callRow">
+              <a class="btn2 primary"
+                 href="https://www.curseforge.com/minecraft/modpacks/lunas-guns-and-stuff"
+                 target="_blank" rel="noreferrer">
+                Open Modpack Page
+              </a>
+            </div>
+          </div>
+
+          <div class="step">
+            <h3>2) Launch Minecraft from CurseForge</h3>
+            <p>
+              Once installed, click <strong>Play</strong> in CurseForge. It will open the correct launcher profile automatically.
+            </p>
+          </div>
+
+          <div class="step">
+            <h3>3) Add the Server</h3>
+            <p>
+              In Minecraft: <strong>Multiplayer → Add Server</strong><br/>
+              Address: <strong>play.mayflowerstudios.net</strong>
+            </p>
+            <div class="callRow">
+              <button class="btn2 primary" id="copyIpBtn2">📋 Copy IP</button>
+            </div>
+          </div>
+
+          <div class="step">
+            <h3>4) Join &amp; Say Hi 👋</h3>
+            <p>
+              If you get kicked for a missing mod, you’re likely on the wrong modpack version.
+              Re-install the pack or update it in CurseForge.
+            </p>
+          </div>
+        </div>
+
+        <div class="note">
+          <strong style="display:block; margin-bottom:6px; color: rgba(255,255,255,.9);">
+            Common fixes
+          </strong>
+          <ul>
+            <li><strong>Stuck on “Connecting”:</strong> verify you typed the IP exactly: <code>play.mayflowerstudios.net</code></li>
+            <li><strong>Missing mods:</strong> update the modpack in CurseForge (right click → change version / update)</li>
+            <li><strong>Low FPS:</strong> lower shaders, set render distance ~8–12, allocate 6–8GB RAM</li>
+            <li><strong>Crashes:</strong> join the Discord and drop your latest log (we’ll help)</li>
+          </ul>
+
+          <hr class="sep" />
+
+          <div class="callRow">
+            <a class="btn2" href="rules.html">📜 Read Server Rules</a>
+            <a class="btn2"
+               href="https://discord.com/invite/MutqYAdrwz"
+               target="_blank" rel="noreferrer">
+              💬 Get Help on Discord
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ✅ Shared Footer -->
+    <div id="shared-footer"></div>
+  </div>
+
+  <script src="shared.js"></script>
+
+  <script>
+    // Simple copy IP
+    (function(){
+      const ip = "play.mayflowerstudios.net";
+      const btn1 = document.getElementById("copyIpBtn");
+      const btn2 = document.getElementById("copyIpBtn2");
+
+      async function copy(btn){
+        try{
+          await navigator.clipboard.writeText(ip);
+          if (btn){
+            const old = btn.textContent;
+            btn.textContent = "✅ Copied!";
+            setTimeout(()=> btn.textContent = old, 1200);
+          }
+        }catch{
+          alert("Couldn’t copy automatically — manually copy:\n" + ip);
+        }
+      }
+
+      if (btn1) btn1.addEventListener("click", () => copy(btn1));
+      if (btn2) btn2.addEventListener("click", () => copy(btn2));
+    })();
+  </script>
+</body>
+</html>
