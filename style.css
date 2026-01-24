@@ -144,11 +144,9 @@ html::before{
   position: relative;
   z-index: 1;
   padding: 0 10px;
-}
-
-/* ✅ Consistent spacing between sections (fixes hero gap too) */
-.wrap > * + *{
-  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px; /* spacing between hero + cards */
 }
 
 /* (Old spacing rules removed; the rule above replaces them) */
