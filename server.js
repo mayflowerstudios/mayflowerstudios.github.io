@@ -136,10 +136,7 @@
       ws.worldTime ??
       ws.world_time;
 
-    const season =
-      ws.season ??
-      ws.seasonName ??
-      ws.season_name;
+    const season = ws.season ?? ws.seasonName ?? ws.season_name;
 
     const subSeason =
       ws.subSeason ??
@@ -166,7 +163,7 @@
         .toLowerCase()
         .split("_")
         .filter(Boolean)
-        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
         .join(" ");
     }
     return raw.replace(/([a-z])([A-Z])/g, "$1 $2");
@@ -177,15 +174,17 @@
   // -----------------------------
   let cfg;
   try {
-    cfg = await fetch("data/server.json", { cache: "no-store" }).then((r) => r.json());
+    cfg = await fetch("data/server.json", { cache: "no-store" }).then((r) =>
+      r.json()
+    );
   } catch (e) {
     console.error("Could not load data/server.json", e);
     safeSetText(statusText, "Config missing");
     return;
   }
 
-  const address = (cfg.address || "").trim(); // what you SHOW
-  const addressToRead = (cfg.addressToRead || "").trim(); // what you QUERY
+  // ✅ Only ONE address now (show + query)
+  const address = (cfg.address || "").trim();
   const refreshSeconds = Math.max(10, Number(cfg.refreshSeconds || 30));
   const worldStateUrl = (cfg.worldStateUrl || "").trim();
 
@@ -194,7 +193,8 @@
   if (joinLink) joinLink.href = cfg.howToJoinUrl || "#";
   if (discordLink) discordLink.href = cfg.discordUrl || "#";
 
-  if (modpackCurseforge) modpackCurseforge.href = cfg.modpack?.curseforgeUrl || "#";
+  if (modpackCurseforge)
+    modpackCurseforge.href = cfg.modpack?.curseforgeUrl || "#";
   if (modpackDirect) modpackDirect.href = cfg.modpack?.directZipUrl || "#";
   safeSetText(modpackNote, cfg.modpack?.note || "");
 
@@ -204,7 +204,7 @@
 
   // -----------------------------
   // Map embed + open button fallback
-  // (This is still BlueMap UI, but NOT used for time)
+  // (BlueMap UI, NOT used for time)
   // -----------------------------
   const mapUrl = (window.MAYFLOWER_BLUEMAP_URL || cfg.mapEmbedUrl || "").trim();
   const mapButtonUrl = (cfg.mapEmbedUrl || mapUrl || "").trim();
@@ -266,7 +266,9 @@
   // -----------------------------
   // Server Status (mcstatus.io)
   // -----------------------------
-  const statusUrl = `https://api.mcstatus.io/v2/status/java/${encodeURIComponent(queryAddress)}`;
+  const statusUrl = `https://api.mcstatus.io/v2/status/java/${encodeURIComponent(
+    address
+  )}`;
 
   async function fetchStatus() {
     const t0 = performance.now();
@@ -309,10 +311,16 @@
   // -----------------------------
   // Players Online (Query via mcsrvstat.us)
   // -----------------------------
-  async function fetchPlayersViaQuery(addr) {
-    const url = `https://api.mcsrvstat.us/2/${encodeURIComponent(addr)}`;
+  async function fetchPlayersViaQuery() {
+    const url = `https://api.mcsrvstat.us/2/${encodeURIComponent(address)}`;
 
-    if (!playersOnlineCount || !playersMaxCount || !playersOnlineList || !playersOnlineNote) return;
+    if (
+      !playersOnlineCount ||
+      !playersMaxCount ||
+      !playersOnlineList ||
+      !playersOnlineNote
+    )
+      return;
 
     try {
       const res = await fetch(url, { cache: "no-store" });
@@ -323,7 +331,8 @@
         playersOnlineCount.textContent = "0";
         playersMaxCount.textContent = "—";
         playersOnlineList.innerHTML = "";
-        playersOnlineNote.textContent = "Server appears offline (or blocked from status/query).";
+        playersOnlineNote.textContent =
+          "Server appears offline (or blocked from status/query).";
         return;
       }
 
@@ -360,7 +369,8 @@
       playersOnlineCount.textContent = "—";
       playersMaxCount.textContent = "—";
       playersOnlineList.innerHTML = "";
-      playersOnlineNote.textContent = "Couldn’t fetch player list (API/network issue).";
+      playersOnlineNote.textContent =
+        "Couldn’t fetch player list (API/network issue).";
       console.warn("Query player fetch failed:", e);
     }
   }
@@ -433,13 +443,13 @@
           Autumn: "🍂",
           Fall: "🍂",
           Winter: "❄️",
-        }; 
+        };
 
         const pSeason = prettySeasonToken(season);
         const pSub = prettySeasonToken(sub);
 
         const label =
-          (pSub && pSeason && pSub.toLowerCase().includes(pSeason.toLowerCase()))
+          pSub && pSeason && pSub.toLowerCase().includes(pSeason.toLowerCase())
             ? pSub
             : [pSub, pSeason].filter(Boolean).join(" ");
 
@@ -449,7 +459,9 @@
           mcSeasonEl,
           Number.isFinite(Number(sDay))
             ? `${emoji}${label} (Day ${Number(sDay)})`
-            : (label ? `${emoji}${label}` : "—")
+            : label
+            ? `${emoji}${label}`
+            : "—"
         );
       }
     } catch (e) {
@@ -471,7 +483,7 @@
     if (remaining <= 0) {
       remaining = refreshSeconds;
       await fetchStatus();
-      await fetchPlayersViaQuery(address);
+      await fetchPlayersViaQuery();
       await updateWorldHud();
     }
 
@@ -480,7 +492,7 @@
 
   // Initial fetches
   await fetchStatus();
-  await fetchPlayersViaQuery(queryAddress);
+  await fetchPlayersViaQuery();
   await updateWorldHud();
 
   safeSetText(refreshIn, `${remaining}s`);
@@ -491,15 +503,18 @@
   // -----------------------------
   let mods = [];
   try {
-    const modData = await fetch("data/modlist.json", { cache: "no-store" }).then((r) => r.json());
+    const modData = await fetch("data/modlist.json", {
+      cache: "no-store",
+    }).then((r) => r.json());
     mods = Array.isArray(modData?.mods) ? modData.mods : [];
   } catch (e) {
     console.warn("Could not load data/modlist.json", e);
   }
 
-  const categories = ["All", ...Array.from(new Set(mods.map((m) => m.category).filter(Boolean)))].sort((a, b) =>
-    a.localeCompare(b)
-  );
+  const categories = [
+    "All",
+    ...Array.from(new Set(mods.map((m) => m.category).filter(Boolean))),
+  ].sort((a, b) => a.localeCompare(b));
 
   let activeCategory = "All";
 
@@ -525,7 +540,9 @@
 
   function matches(mod, q) {
     if (!q) return true;
-    const blob = `${mod.name || ""} ${mod.category || ""} ${mod.side || ""} ${mod.notes || ""}`.toLowerCase();
+    const blob = `${mod.name || ""} ${mod.category || ""} ${mod.side || ""} ${
+      mod.notes || ""
+    }`.toLowerCase();
     return blob.includes(q);
   }
 
@@ -533,7 +550,8 @@
     const q = (modSearch?.value || "").trim().toLowerCase();
 
     const filtered = mods.filter((m) => {
-      if (activeCategory !== "All" && (m.category || "") !== activeCategory) return false;
+      if (activeCategory !== "All" && (m.category || "") !== activeCategory)
+        return false;
       return matches(m, q);
     });
 
