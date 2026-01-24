@@ -179,6 +179,32 @@
       .calControls{ justify-content:flex-start; }
       .calControls input{ min-width: 180px; width: 100%; }
     }
+
+    /* ✅ Make dropdowns match Mayflower theme */
+    .calControls select{
+    border-radius: 999px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: transform var(--t), filter var(--t);
+    }
+
+    .calControls select:hover{
+    transform: var(--lift);
+    filter: brightness(1.06);
+    }
+
+    /* ✅ Fix the opened dropdown list */
+    .calControls select option{
+    background: #0b1022;   /* your --bg2 */
+    color: var(--text);
+    }
+
+    /* ✅ Hover/focus styling */
+    .calControls select:focus{
+    outline: none;
+    border-color: rgba(253,164,175,.45);
+    box-shadow: 0 0 0 3px rgba(253,164,175,.12);
+    }
   </style>
 </head>
 
