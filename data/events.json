@@ -55,7 +55,8 @@
     "realm": "server",
     "title": "Luna's Birthday!",
     "repeat": "yearly",
-    "date": { "month": 12, "day": 19 },
+    "month": 12,
+    "day": 19,
     "location": "Everywhere",
     "description": "It's Luna's Birthday!"
   }
