@@ -225,28 +225,43 @@
         </p>
         <div class="ctaRow">
           <a class="btn ghost" href="lore.html">📜 Back to Lore</a>
-          <a class="btn primary" href="data/events.json" target="_blank" rel="noopener">🗂️ View events.json</a>
         </div>
       </div>
 
       <div class="tileGrid">
         <div class="tile">
-          <strong>✨ Tip</strong>
-          <p>Edit <code>data/events.json</code> and this calendar updates automatically.</p>
+            <strong>📅 Yearly Events</strong>
+            <p>Seasonal festivals return each year, so you’ll always know what chapter is approaching.</p>
         </div>
+
         <div class="tile">
-          <strong>🔁 Recurring</strong>
-          <p>You can mark events as yearly so they appear every year automatically.</p>
+            <strong>🌿 Realm Stories</strong>
+            <p>Every event reflects the realm it belongs to — growth, flame, reflection, or moonlit roots.</p>
         </div>
+
         <div class="tile">
-          <strong>🧭 Navigation</strong>
-          <p>This page uses the shared navbar + footer like the rest of your site.</p>
+            <strong>🎁 Limited Rewards</strong>
+            <p>Some events bring rare item drops, bonuses, and special activities during their window.</p>
         </div>
+
         <div class="tile">
-          <strong>🌿 Realms</strong>
-          <p>Grove • Ember • Mirror • Moonroot • Server-wide</p>
+            <strong>✨ Server-wide Celebrations</strong>
+            <p>Major moments like the Convergence affect everyone, across every realm.</p>
         </div>
       </div>
+    </section>
+
+    <!-- THE FIRST BLOOM -->
+    <div class="sectionTitle" id="upcoming">
+      <h2>🔔 Upcoming Events</h2>
+      <span>What to expect</span>
+    </div>
+
+    <!-- ✅ Upcoming full width -->
+    <section class="card">
+      <h3 style="margin:0 0 6px;">🔔 Upcoming</h3>
+      <p class="muted small" style="margin:0;">Next 30 days</p>
+      <div id="upcoming" class="upcomingGrid"></div>
     </section>
 
     <!-- Controls + filters -->
@@ -269,13 +284,6 @@
       </div>
 
       <div class="calChips" id="realmChips" aria-label="Realm filters"></div>
-    </section>
-
-    <!-- ✅ Upcoming full width -->
-    <section class="card">
-      <h3 style="margin:0 0 6px;">🔔 Upcoming</h3>
-      <p class="muted small" style="margin:0;">Next 30 days</p>
-      <div id="upcoming" class="upcomingGrid"></div>
     </section>
 
     <!-- ✅ Calendar full width -->
