@@ -1,0 +1,53 @@
+[
+  {
+    "id": "blooming-grove",
+    "realm": "grove",
+    "title": "The Blooming Grove",
+    "tagline": "Spring growth quests + rare drops",
+    "repeat": "yearly",
+    "start": { "month": 3, "day": 1 },
+    "end":   { "month": 3, "day": 21 },
+    "location": "Grove",
+    "description": "Event item drops with random events for the Grove of Growth."
+  },
+  {
+    "id": "cinder-festival",
+    "realm": "ember",
+    "title": "The Cinder Festival",
+    "repeat": "yearly",
+    "start": { "month": 6, "day": 1 },
+    "end":   { "month": 6, "day": 21 },
+    "location": "Ember Circle",
+    "description": "Event item drops with random events for the Ember Circle."
+  },
+  {
+    "id": "reflections-deep",
+    "realm": "mirror",
+    "title": "Reflections of the Deep",
+    "repeat": "yearly",
+    "start": { "month": 9, "day": 1 },
+    "end":   { "month": 9, "day": 21 },
+    "location": "Mirror Lake",
+    "description": "Event item drops with random events for the Mirror Lake."
+  },
+  {
+    "id": "night-root-star",
+    "realm": "moon",
+    "title": "Night of Root & Star",
+    "repeat": "yearly",
+    "start": { "month": 12, "day": 1 },
+    "end":   { "month": 12, "day": 21 },
+    "location": "Moonroot Tree",
+    "description": "Event item drops with random events for the Moonroot Tree."
+  },
+  {
+    "id": "convergence",
+    "realm": "server",
+    "title": "The Convergence",
+    "repeat": "yearly",
+    "start": { "month": 12, "day": 22 },
+    "end":   { "month": 12, "day": 31 },
+    "location": "Everywhere",
+    "description": "Realm offerings and random events for all the realms."
+  }
+]
