@@ -17,6 +17,12 @@
       display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; align-items:center;
     }
 
+    /* ✅ Consistent 18px spacing between major sections */
+    .sectionTitle,
+    .card{
+      margin-bottom: 18px !important;
+    }
+
     /* Make selects/inputs match your site pills */
     .calControls select,
     .calControls input{
@@ -88,7 +94,12 @@
     }
     .upWhen{ margin:8px 0 0; color: var(--muted); line-height:1.6; }
     .upDesc{ margin:8px 0 0; color: var(--muted); line-height:1.6; }
-    .empty{ margin-top:12px; color: var(--muted); text-align:center; }
+    .empty{
+      margin-top:12px;
+      color: var(--muted);
+      text-align:center;
+      grid-column: 1 / -1; /* ✅ make empty message span full row inside grid */
+    }
 
     /* Calendar layout */
     .dow{
@@ -182,28 +193,28 @@
 
     /* ✅ Make dropdowns match Mayflower theme */
     .calControls select{
-    border-radius: 999px;
-    padding: 10px 14px;
-    cursor: pointer;
-    transition: transform var(--t), filter var(--t);
+      border-radius: 999px;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: transform var(--t), filter var(--t);
     }
 
     .calControls select:hover{
-    transform: var(--lift);
-    filter: brightness(1.06);
+      transform: var(--lift);
+      filter: brightness(1.06);
     }
 
     /* ✅ Fix the opened dropdown list */
     .calControls select option{
-    background: #0b1022;   /* your --bg2 */
-    color: var(--text);
+      background: #0b1022;   /* your --bg2 */
+      color: var(--text);
     }
 
     /* ✅ Hover/focus styling */
     .calControls select:focus{
-    outline: none;
-    border-color: rgba(253,164,175,.45);
-    box-shadow: 0 0 0 3px rgba(253,164,175,.12);
+      outline: none;
+      border-color: rgba(253,164,175,.45);
+      box-shadow: 0 0 0 3px rgba(253,164,175,.12);
     }
   </style>
 </head>
@@ -230,32 +241,28 @@
 
       <div class="tileGrid">
         <div class="tile">
-            <strong>📅 Yearly Events</strong>
-            <p>Seasonal festivals return each year, so you’ll always know what chapter is approaching.</p>
+          <strong>📅 Yearly Events</strong>
+          <p>Seasonal festivals return each year, so you’ll always know what chapter is approaching.</p>
         </div>
 
         <div class="tile">
-            <strong>🌿 Realm Stories</strong>
-            <p>Every event reflects the realm it belongs to — growth, flame, reflection, or moonlit roots.</p>
+          <strong>🌿 Realm Stories</strong>
+          <p>Every event reflects the realm it belongs to — growth, flame, reflection, or moonlit roots.</p>
         </div>
 
         <div class="tile">
-            <strong>🎁 Limited Rewards</strong>
-            <p>Some events bring rare item drops, bonuses, and special activities during their window.</p>
+          <strong>🎁 Limited Rewards</strong>
+          <p>Some events bring rare item drops, bonuses, and special activities during their window.</p>
         </div>
 
         <div class="tile">
-            <strong>✨ Server-wide Celebrations</strong>
-            <p>Major moments like the Convergence affect everyone, across every realm.</p>
+          <strong>✨ Server-wide Celebrations</strong>
+          <p>Major moments like the Convergence affect everyone, across every realm.</p>
         </div>
       </div>
     </section>
 
-    <!-- THE FIRST BLOOM -->
-    <div class="sectionTitle" id="upcoming">
-      <h2>🔔 Upcoming Events</h2>
-      <span>What to expect</span>
-    </div>
+    <div style="height:18px;"></div>
 
     <!-- ✅ Upcoming full width -->
     <section class="card">
@@ -551,7 +558,6 @@
         const cell = document.createElement("div");
         cell.className = "day" + (isOther ? " other" : "");
 
-        // ✅ Month badge removed
         cell.innerHTML = `
           <div class="dayTop">
             <div class="dayNum">${d.getDate()}</div>
