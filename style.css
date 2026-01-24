@@ -146,9 +146,14 @@ html::before{
   padding: 0 10px;
 }
 
-/* spacing between major sections */
-.wrap > .grid2{ margin-bottom: 18px; }
-.wrap > .card{ margin-bottom: 18px; }
+/* ✅ Consistent spacing between sections (fixes hero gap too) */
+.wrap > * + *{
+  margin-top: 18px;
+}
+
+/* (Old spacing rules removed; the rule above replaces them) */
+/* .wrap > .grid2{ margin-bottom: 18px; } */
+/* .wrap > .card{ margin-bottom: 18px; } */
 
 h1,h2,h3{ margin:0; letter-spacing:.2px; }
 ul{ margin:0; padding-left:18px; }
@@ -242,6 +247,8 @@ hr.sep{
    ------------------------- */
 .hero{
   margin-top:16px;
+  /* ✅ extra bottom air; safe even with wrap stacking rule */
+  margin-bottom: 0;
   padding:18px 16px;
   border:1px solid var(--border);
   border-radius: var(--radius-4);
