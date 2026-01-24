@@ -1,742 +1,139 @@
 {
   "mods": [
-    {
-      "name": "AmbientSounds",
-      "category": "Audio & Music",
-      "side": "Both",
-      "notes": "AmbientSounds_FORGE_v6.3.3_mc1.20.1.jar"
-    },
-    {
-      "name": "Immersive Melodies",
-      "category": "Audio & Music",
-      "side": "Both",
-      "notes": "immersive_melodies-0.6.0+1.20.1-forge.jar"
-    },
-    {
-      "name": "Carry On",
-      "category": "Building & Decor",
-      "side": "Both",
-      "notes": "carryon-forge-1.20.1-2.1.2.7.jar"
-    },
-    {
-      "name": "Handcrafted",
-      "category": "Building & Decor",
-      "side": "Both",
-      "notes": "handcrafted-forge-1.20.1-3.0.6.jar"
-    },
-    {
-      "name": "Immersive Paintings",
-      "category": "Building & Decor",
-      "side": "Both",
-      "notes": "immersive_paintings-0.6.8+1.20.1-forge.jar"
-    },
-    {
-      "name": "LogiChest",
-      "category": "Building & Decor",
-      "side": "Both",
-      "notes": "logichest-1.1.1.jar"
-    },
-    {
-      "name": "Multi Mine",
-      "category": "Building & Decor",
-      "side": "Both",
-      "notes": "multimine-1.20.1.4.jar"
-    },
-    {
-      "name": "3d-Skin-Layers",
-      "category": "Client Visuals",
-      "side": "Client",
-      "notes": "skinlayers3d-forge-1.10.1-mc1.20.1.jar"
-    },
-    {
-      "name": "CameraOverhaul",
-      "category": "Client Visuals",
-      "side": "Both",
-      "notes": "CameraOverhaul-v2.0.6-forge+mc[1.20.0-1.20.5].jar"
-    },
-    {
-      "name": "NotEnoughAnimations",
-      "category": "Client Visuals",
-      "side": "Client",
-      "notes": "notenoughanimations-forge-1.11.1-mc1.20.1.jar"
-    },
-    {
-      "name": "Shoulder Surfing Reloaded",
-      "category": "Client Visuals",
-      "side": "Both",
-      "notes": "ShoulderSurfing-Forge-1.20.1-4.18.1.jar"
-    },
-    {
-      "name": "Visual Workbench",
-      "category": "Client Visuals",
-      "side": "Both",
-      "notes": "VisualWorkbench-v8.0.1-1.20.1-Forge.jar"
-    },
-    {
-      "name": "Almanac",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "almanac-1.20.x-forge-1.0.2.jar"
-    },
-    {
-      "name": "Architectury",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "architectury-9.2.14-forge.jar"
-    },
-    {
-      "name": "Balm",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "balm-forge-1.20.1-7.3.37-all.jar"
-    },
-    {
-      "name": "Cloth Config v10 API",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "cloth-config-11.1.136-forge.jar"
-    },
-    {
-      "name": "Collective",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "collective-1.20.1-8.13.jar"
-    },
-    {
-      "name": "EdivadLib",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "EdivadLib-1.20.1-2.0.1.jar"
-    },
-    {
-      "name": "Emotecraft",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "emotecraft-for-MC1.20.1-2.2.7-b.build.50-forge.jar"
-    },
-    {
-      "name": "GlitchCore",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "GlitchCore-forge-1.20.1-0.0.1.1.jar"
-    },
-    {
-      "name": "Kiwi Library",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "Kiwi-1.20.1-Forge-11.9.2.jar"
-    },
-    {
-      "name": "Kotlinfor 4.12.0 All",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "kotlinforforge-4.12.0-all.jar"
-    },
-    {
-      "name": "Libnonymous",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "libnonymous-1.20.1-2.3.1.jar"
-    },
-    {
-      "name": "MCPitanLib",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "mcpitanlib-3.4.3-1.20.1-forge.jar"
-    },
-    {
-      "name": "Moonlight Library",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "moonlight-1.20-2.16.22-forge.jar"
-    },
-    {
-      "name": "OreLibrary",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "OreLibrary-1.20.1-1.2.1.jar"
-    },
-    {
-      "name": "ParCool!",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "ParCool-1.20.1-3.4.3.0.jar"
-    },
-    {
-      "name": "Placebo",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "Placebo-1.20.1-8.6.3.jar"
-    },
-    {
-      "name": "Player Animator",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "player-animation-lib-forge-1.0.2-rc1+1.20.jar"
-    },
-    {
-      "name": "Puzzles Lib",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "PuzzlesLib-v8.1.33-1.20.1-Forge.jar"
-    },
-    {
-      "name": "Resourceful Lib",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "resourcefullib-forge-1.20.1-2.1.29.jar"
-    },
-    {
-      "name": "Sodium Options API",
-      "category": "Library / API",
-      "side": "Client",
-      "notes": "sodiumoptionsapi-forge-1.0.10-1.20.1.jar"
-    },
-    {
-      "name": "SuperMartijn642's Config Library",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "supermartijn642configlib-1.1.8-forge-mc1.20.jar"
-    },
-    {
-      "name": "SuperMartijn642's Core Lib",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "supermartijn642corelib-1.1.18-forge-mc1.20.1.jar"
-    },
-    {
-      "name": "YetAnotherConfigLib",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "yet_another_config_lib_v3-3.6.6+1.20.1-forge.jar"
-    },
-    {
-      "name": "Blood Bits",
-      "category": "Magic & RPG",
-      "side": "Both",
-      "notes": "bloodbits-2.0-forge-1.20.1.jar"
-    },
-    {
-      "name": "gunpoweder_craft",
-      "category": "Mobs & Combat",
-      "side": "Both",
-      "notes": "gunpoweder_craft-1.1.0.jar"
-    },
-    {
-      "name": "TaCZ Fire Control Extension",
-      "category": "Mobs & Combat",
-      "side": "Both",
-      "notes": "tacz_fire_control_extension-1.1.3+mc1.20.1+tacz1.1.4.jar"
-    },
-    {
-      "name": "TaCZ x Guns Lights Addon",
-      "category": "Mobs & Combat",
-      "side": "Both",
-      "notes": "taczxgunlightsaddon-1.20.1-1.0.7.jar"
-    },
-    {
-      "name": "Timeless & Classics Guns: Zero",
-      "category": "Mobs & Combat",
-      "side": "Both",
-      "notes": "tacz-1.20.1-1.1.7-hotfix.jar"
-    },
-    {
-      "name": "Tiny Mob Farm",
-      "category": "Mobs & Combat",
-      "side": "Both",
-      "notes": "tinymobfarm-1.4.1-1.20.1-forge.jar"
-    },
-    {
-      "name": "All The Leaks",
-      "category": "Performance",
-      "side": "Both",
-      "notes": "alltheleaks-1.1.1+1.20.1-forge.jar"
-    },
-    {
-      "name": "Clumps",
-      "category": "Performance",
-      "side": "Both",
-      "notes": "Clumps-forge-1.20.1-12.0.0.4.jar"
-    },
-    {
-      "name": "Fast Leaf Decay",
-      "category": "Performance",
-      "side": "Both",
-      "notes": "FastLeafDecay-32.jar"
-    },
-    {
-      "name": "Fast Suite",
-      "category": "Performance",
-      "side": "Both",
-      "notes": "FastSuite-1.20.1-5.1.1.jar"
-    },
-    {
-      "name": "Ferrite Core",
-      "category": "Performance",
-      "side": "Both",
-      "notes": "ferritecore-6.0.1-forge.jar"
-    },
-    {
-      "name": "ModernFix",
-      "category": "Performance",
-      "side": "Both",
-      "notes": "modernfix-forge-5.25.2+mc1.20.1.jar"
-    },
-    {
-      "name": "Applied Energistics 2",
-      "category": "Storage & Logistics",
-      "side": "Both",
-      "notes": "appliedenergistics2-forge-15.4.10.jar"
-    },
-    {
-      "name": "Sophisticated Backpacks",
-      "category": "Storage & Logistics",
-      "side": "Both",
-      "notes": "sophisticatedbackpacks-1.20.1-3.24.20.1500.jar"
-    },
-    {
-      "name": "Sophisticated Core",
-      "category": "Storage & Logistics",
-      "side": "Both",
-      "notes": "sophisticatedcore-1.20.1-1.2.121.1408.jar"
-    },
-    {
-      "name": "Sophisticated Storage",
-      "category": "Storage & Logistics",
-      "side": "Both",
-      "notes": "sophisticatedstorage-1.20.1-1.4.21.1446.jar"
-    },
-    {
-      "name": "Trash Cans",
-      "category": "Storage & Logistics",
-      "side": "Both",
-      "notes": "trashcans-1.0.18b-forge-mc1.20.jar"
-    },
-    {
-      "name": "Upcycle",
-      "category": "Storage & Logistics",
-      "side": "Both",
-      "notes": "Upcycle-1.20.x-(v.1.1.0).jar"
-    },
-    {
-      "name": "AI-Improvements",
-      "category": "Tech & Automation",
-      "side": "Both",
-      "notes": "AI-Improvements-1.20-0.5.2.jar"
-    },
-    {
-      "name": "Arda's Cobblestone Generator",
-      "category": "Tech & Automation",
-      "side": "Both",
-      "notes": "Arda's Cobblestone Generator 1.0 [FORGE] [1.20.1].jar"
-    },
-    {
-      "name": "Chunk Loaders",
-      "category": "Tech & Automation",
-      "side": "Both",
-      "notes": "chunkloaders-1.2.9-forge-mc1.20.1.jar"
-    },
-    {
-      "name": "Chunky",
-      "category": "Tech & Automation",
-      "side": "Server",
-      "notes": "Chunky-1.3.146.jar"
-    },
-    {
-      "name": "Configured",
-      "category": "Tech & Automation",
-      "side": "Client",
-      "notes": "configured-forge-1.20.1-2.2.3.jar"
-    },
-    {
-      "name": "GuideME",
-      "category": "Tech & Automation",
-      "side": "Both",
-      "notes": "guideme-20.1.14.jar"
-    },
-    {
-      "name": "Iron Furnaces",
-      "category": "Tech & Automation",
-      "side": "Both",
-      "notes": "ironfurnaces-1.20.1-4.1.6.jar"
-    },
-    {
-      "name": "Leather From Rotten Flesh",
-      "category": "Tech & Automation",
-      "side": "Both",
-      "notes": "zaynens_leather_from_rotten_flesh_mod_1.20.1.jar"
-    },
-    {
-      "name": "Let Me Despawn",
-      "category": "Tech & Automation",
-      "side": "Both",
-      "notes": "letmedespawn-1.20.x-forge-1.5.0.jar"
-    },
-    {
-      "name": "SolarGeneration",
-      "category": "Tech & Automation",
-      "side": "Both",
-      "notes": "SolarGeneration-1.20.1-6.0.2.jar"
-    },
-    {
-      "name": "spark",
-      "category": "Tech & Automation",
-      "side": "Server",
-      "notes": "spark-1.10.53-forge.jar"
-    },
-    {
-      "name": "Corpse",
-      "category": "UI & QoL",
-      "side": "Both",
-      "notes": "corpse-forge-1.20.1-1.0.23.jar"
-    },
-    {
-      "name": "Just Enough Items",
-      "category": "UI & QoL",
-      "side": "Both",
-      "notes": "jei-1.20.1-forge-15.20.0.112.jar"
-    },
-    {
-      "name": "Searchlight",
-      "category": "UI & QoL",
-      "side": "Both",
-      "notes": "searchlight-1.20-forge-1.1.11.jar"
-    },
-    {
-      "name": "Steelhold",
-      "category": "UI & QoL",
-      "side": "Both",
-      "notes": "steelhold-1.1.0.jar"
-    },
-    {
-      "name": "Tool Belt",
-      "category": "UI & QoL",
-      "side": "Both",
-      "notes": "ToolBelt-1.20.1-1.20.02.jar"
-    },
-    {
-      "name": "Veinst",
-      "category": "UI & QoL",
-      "side": "Both",
-      "notes": "Veinst1.20.1.jar"
-    },
-    {
-      "name": "Xaero's Minimap",
-      "category": "UI & QoL",
-      "side": "Client",
-      "notes": "xaerominimap-forge-1.20.1-25.3.5.jar"
-    },
-    {
-      "name": "Xaero's World Map",
-      "category": "UI & QoL",
-      "side": "Client",
-      "notes": "xaeroworldmap-forge-1.20.1-1.40.6.jar"
-    },
-    {
-      "name": "Aileron",
-      "category": "Magic & RPG",
-      "side": "Both",
-      "notes": "aileron-1.20.1-forge-1.1.1.jar"
-    },
-    {
-      "name": "Applied Ammo Box",
-      "category": "Tech & Automation",
-      "side": "Both",
-      "notes": "applied_ammo_box-1.0.2.jar"
-    },
-    {
-      "name": "BlueMap",
-      "category": "Utilities",
-      "side": "Both",
-      "notes": "bluemap-5.12-mc1.20-6-forge.jar"
-    },
-    {
-      "name": "Craftable Nametags",
-      "category": "Crafting",
-      "side": "Both",
-      "notes": "crafttag1.20.2.jar"
-    },
-    {
-      "name": "Crash Utilities",
-      "category": "Utilities",
-      "side": "Both",
-      "notes": "crashutilities-8.1.4.jar"
-    },
-    {
-      "name": "Cupboard utilities",
-      "category": "Utilities",
-      "side": "Both",
-      "notes": "cupboard-1.20.1-2.7.jar"
-    },
-    {
-      "name": "Daily Rewards",
-      "category": "Magic & RPG",
-      "side": "Both",
-      "notes": "daily_rewards_1.20.1-5.3.0.jar"
-    },
-    {
-      "name": "Default Options",
-      "category": "Utilities",
-      "side": "Both",
-      "notes": "defaultoptions-forge-1.20.1-18.0.4.jar"
-    },
-    {
-      "name": "Dynamic view distance",
-      "category": "Utilities",
-      "side": "Both",
-      "notes": "dynview-1.20.1-4.0.jar"
-    },
-    {
-      "name": "Easy Villagers",
-      "category": "Tech & Automation",
-      "side": "Both",
-      "notes": "easy-villagers-forge-1.20.1-1.1.23.jar"
-    },
-    {
-      "name": "Farmer's Delight",
-      "category": "Magic & RPG",
-      "side": "Both",
-      "notes": "FarmersDelight-1.20.1-1.2.9.jar"
-    },
-    {
-      "name": "Glass",
-      "category": "Crafting",
-      "side": "Both",
-      "notes": "glass_1.20.1-1.3.0.jar"
-    },
-    {
-      "name": "Guard Villagers",
-      "category": "Magic & RPG",
-      "side": "Both",
-      "notes": "guardvillagers-1.20.1-1.6.15.jar"
-    },
-    {
-      "name": "Immersive Armors",
-      "category": "Magic & RPG",
-      "side": "Both",
-      "notes": "immersive_armors-1.7.1+1.20.1-forge.jar"
-    },
-    {
-      "name": "Immersive Engineering",
-      "category": "Tech & Automation",
-      "side": "Both",
-      "notes": "ImmersiveEngineering-1.20.1-10.2.0-183.jar"
-    },
-    {
-      "name": "MmmMmmMmmmmm",
-      "category": "Crafting",
-      "side": "Both",
-      "notes": "dummmmmmy-1.20-2.0.9.jar"
-    },
-    {
-      "name": "Multiworld",
-      "category": "Utilities",
-      "side": "Both",
-      "notes": "Multiworld-Forge-1.20.1.jar"
-    },
-    {
-      "name": "ParCool+ / Compatibility Addon",
-      "category": "Magic & RPG",
-      "side": "Both",
-      "notes": "ParCool-CompatibilityAddon-1.20.1-3.4.1.5-1.1.jar"
-    },
-    {
-      "name": "Passable Foliage",
-      "category": "UI & QoL",
-      "side": "Both",
-      "notes": "PassableFoliage-1.20.1-forge-8.2.1.jar"
-    },
-    {
-      "name": "Realistic Explosion Physics",
-      "category": "Magic & RPG",
-      "side": "Both",
-      "notes": "RealisticExplosionPhysics-1.20.1-1.0.0.jar"
-    },
-    {
-      "name": "Remove Mouseover Highlight",
-      "category": "Utilities",
-      "side": "Both",
-      "notes": "rmh-forge-1.20.1-1.1.2.jar"
-    },
-    {
-      "name": "Simple Shops",
-      "category": "Magic & RPG",
-      "side": "Both",
-      "notes": "simpleshops-1.2.2.jar"
-    },
-    {
-      "name": "Simple Voice Chat",
-      "category": "Audio & Music",
-      "side": "Both",
-      "notes": "voicechat-forge-1.20.1-2.6.11.jar"
-    },
-    {
-      "name": "Starter Kit",
-      "category": "Magic & RPG",
-      "side": "Both",
-      "notes": "starterkit-1.20.1-7.4.jar"
-    },
-    {
-      "name": "Survival Firesticks",
-      "category": "Magic & RPG",
-      "side": "Both",
-      "notes": "FireSticks+V.1.5+[1.20.1][FORGE].jar"
-    },
-    {
-      "name": "Talona's Craftable Spawn Eggs And Spawner",
-      "category": "Crafting",
-      "side": "Both",
-      "notes": "talonas_craftable_spawn_eggs-1.0.0-forge-1.20.1.jar"
-    },
-    {
-      "name": "Uncrafting Table",
-      "category": "Crafting",
-      "side": "Both",
-      "notes": "UncraftingTable-forge-1.5.4.jar"
-    },
-    {
-      "name": "Universal Sawmill",
-      "category": "Crafting",
-      "side": "Both",
-      "notes": "sawmill-1.20-1.4.10.jar"
-    },
-    {
-      "name": "Waystones",
-      "category": "Magic & RPG",
-      "side": "Both",
-      "notes": "waystones-forge-1.20.1-14.1.18.jar"
-    },
-    {
-      "name": "Wireless Redstone",
-      "category": "Tech & Automation",
-      "side": "Both",
-      "notes": "wirelessredstone-forge-1.2.2+1.20.1.jar"
-    },
-    {
-      "name": "Worldstate",
-      "category": "Library / API",
-      "side": "Both",
-      "notes": "worldstate-1.0.0.jar"
-    },
-    {
-      "name": "Scarecrows' Territory",
-      "category": "Utilities",
-      "side": "Both",
-      "notes": "scarecrowsterritory-1.1.11d-forge-mc1.20.4.jar"
-    },
-    {
-      "name": "Additional Structures",
-      "category": "Worldgen & Structures",
-      "side": "Both",
-      "notes": "AdditionalStructures-1.20.x-(v.4.2.2).jar"
-    },
-    {
-      "name": "Better Combat",
-      "category": "Mobs & Combat",
-      "side": "Both",
-      "notes": "bettercombat-forge-1.9.0+1.20.1.jar"
-    },
-    {
-      "name": "Bonsai Trees 3",
-      "category": "Tech & Automation",
-      "side": "Both",
-      "notes": "BonsaiTrees3-1.20.1-3.3.2.jar"
-    },
-    {
-      "name": "CreativeCore",
-      "category": "Worldgen & Structures",
-      "side": "Both",
-      "notes": "CreativeCore_FORGE_v2.12.32_mc1.20.1.jar"
-    },
-    {
-      "name": "FallingTree",
-      "category": "UI & QoL",
-      "side": "Both",
-      "notes": "FallingTree-1.20.1-4.3.4.jar"
-    },
-    {
-      "name": "FarmersStructures",
-      "category": "Worldgen & Structures",
-      "side": "Both",
-      "notes": "FarmersStructures-1.0.4-1.20.jar"
-    },
-    {
-      "name": "Immersive Aircraft",
-      "category": "Tech & Automation",
-      "side": "Both",
-      "notes": "immersive_aircraft-1.4.0+1.20.1-forge.jar"
-    },
-    {
-      "name": "Immersive Weathering",
-      "category": "Worldgen & Structures",
-      "side": "Both",
-      "notes": "immersive_weathering-1.20.1-2.0.5-forge.jar"
-    },
-    {
-      "name": "ItemPhysic",
-      "category": "Worldgen & Structures",
-      "side": "Both",
-      "notes": "ItemPhysic_FORGE_v1.8.9_mc1.20.1.jar"
-    },
-    {
-      "name": "Serene Seasons",
-      "category": "Worldgen & Structures",
-      "side": "Both",
-      "notes": "SereneSeasons-forge-1.20.1-9.1.0.2.jar"
-    },
-    {
-      "name": "ServerCore",
-      "category": "Worldgen & Structures",
-      "side": "Server",
-      "notes": "servercore-forge-1.5.2+1.20.1.jar"
-    },
-    {
-      "name": "Structory",
-      "category": "Worldgen & Structures",
-      "side": "Both",
-      "notes": "Structory_1.20.x_v1.3.5.jar"
-    },
-    {
-      "name": "This Rocks! (Forge)",
-      "category": "Worldgen & Structures",
-      "side": "Both",
-      "notes": "ThisRocks-1.20.1-1.5.1.jar"
-    },
-    {
-      "name": "YDM's Weapon Master",
-      "category": "Mobs & Combat",
-      "side": "Both",
-      "notes": "weaponmaster_ydm-forge-1.20.1-4.2.3.jar"
-    },
-    {
-      "name": "YUNG's API",
-      "category": "Worldgen & Structures",
-      "side": "Both",
-      "notes": "YungsApi-1.20-Forge-4.0.6.jar"
-    },
-    {
-      "name": "YUNG's Better Caves",
-      "category": "Worldgen & Structures",
-      "side": "Both",
-      "notes": "YungsBetterCaves-1.20.1-Forge-2.0.5.jar"
-    },
-    {
-      "name": "YUNG's Better Nether Fortresses",
-      "category": "Worldgen & Structures",
-      "side": "Both",
-      "notes": "YungsBetterNetherFortresses-1.20-Forge-2.0.6.jar"
-    },
-    {
-      "name": "YUNG's Better Strongholds",
-      "category": "Worldgen & Structures",
-      "side": "Both",
-      "notes": "YungsBetterStrongholds-1.20-Forge-4.0.3.jar"
-    },
-    {
-      "name": "YUNG's Bridges",
-      "category": "Worldgen & Structures",
-      "side": "Both",
-      "notes": "YungsBridges-1.20-Forge-4.0.3.jar"
-    }
+    {"name":"AmbientSounds","category":"Audio & Music","side":"Both","notes":"AmbientSounds_FORGE_v6.3.3_mc1.20.1.jar"},
+    {"name":"Immersive Melodies","category":"Audio & Music","side":"Both","notes":"immersive_melodies-0.6.0+1.20.1-forge.jar"},
+    {"name":"Simple Voice Chat","category":"Audio & Music","side":"Both","notes":"voicechat-forge-1.20.1-2.6.11.jar"},
+
+    {"name":"3d-Skin-Layers","category":"Client Visuals & Animations","side":"Client","notes":"skinlayers3d-forge-1.10.1-mc1.20.1.jar"},
+    {"name":"CameraOverhaul","category":"Client Visuals & Animations","side":"Both","notes":"CameraOverhaul-v2.0.6-forge+mc[1.20.0-1.20.5].jar"},
+    {"name":"NotEnoughAnimations","category":"Client Visuals & Animations","side":"Client","notes":"notenoughanimations-forge-1.11.1-mc1.20.1.jar"},
+    {"name":"Shoulder Surfing Reloaded","category":"Client Visuals & Animations","side":"Both","notes":"ShoulderSurfing-Forge-1.20.1-4.18.1.jar"},
+    {"name":"Visual Workbench","category":"Client Visuals & Animations","side":"Both","notes":"VisualWorkbench-v8.0.1-1.20.1-Forge.jar"},
+    {"name":"ItemPhysic","category":"Client Visuals & Animations","side":"Both","notes":"ItemPhysic_FORGE_v1.8.9_mc1.20.1.jar"},
+    {"name":"Passable Foliage","category":"Client Visuals & Animations","side":"Both","notes":"PassableFoliage-1.20.1-forge-8.2.1.jar"},
+    {"name":"Remove Mouseover Highlight","category":"Client Visuals & Animations","side":"Both","notes":"rmh-forge-1.20.1-1.1.2.jar"},
+    {"name":"Xaero's Minimap","category":"Client Visuals & Animations","side":"Client","notes":"xaerominimap-forge-1.20.1-25.3.5.jar"},
+    {"name":"Xaero's World Map","category":"Client Visuals & Animations","side":"Client","notes":"xaeroworldmap-forge-1.20.1-1.40.6.jar"},
+
+    {"name":"Carry On","category":"Gameplay & QoL","side":"Both","notes":"carryon-forge-1.20.1-2.1.2.7.jar"},
+    {"name":"Multi Mine","category":"Gameplay & QoL","side":"Both","notes":"multimine-1.20.1.4.jar"},
+    {"name":"Corpse","category":"Gameplay & QoL","side":"Both","notes":"corpse-forge-1.20.1-1.0.23.jar"},
+    {"name":"Just Enough Items","category":"Gameplay & QoL","side":"Both","notes":"jei-1.20.1-forge-15.20.0.112.jar"},
+    {"name":"Searchlight","category":"Gameplay & QoL","side":"Both","notes":"searchlight-1.20-forge-1.1.11.jar"},
+    {"name":"Tool Belt","category":"Gameplay & QoL","side":"Both","notes":"ToolBelt-1.20.1-1.20.02.jar"},
+    {"name":"Veinst","category":"Gameplay & QoL","side":"Both","notes":"Veinst1.20.1.jar"},
+    {"name":"FallingTree","category":"Gameplay & QoL","side":"Both","notes":"FallingTree-1.20.1-4.3.4.jar"},
+    {"name":"Craftable Nametags","category":"Gameplay & QoL","side":"Both","notes":"crafttag1.20.2.jar"},
+    {"name":"Default Options","category":"Gameplay & QoL","side":"Both","notes":"defaultoptions-forge-1.20.1-18.0.4.jar"},
+    {"name":"Starter Kit","category":"Gameplay & QoL","side":"Both","notes":"starterkit-1.20.1-7.4.jar"},
+    {"name":"Let Me Despawn","category":"Performance & Optimization","side":"Both","notes":"letmedespawn-1.20.x-forge-1.5.0.jar"},
+
+    {"name":"Handcrafted","category":"Building & Decor","side":"Both","notes":"handcrafted-forge-1.20.1-3.0.6.jar"},
+    {"name":"Immersive Paintings","category":"Building & Decor","side":"Both","notes":"immersive_paintings-0.6.8+1.20.1-forge.jar"},
+    {"name":"This Rocks! (Forge)","category":"Worldgen & Structures","side":"Both","notes":"ThisRocks-1.20.1-1.5.1.jar"},
+    {"name":"Scarecrows' Territory","category":"Worldgen & Structures","side":"Both","notes":"scarecrowsterritory-1.1.11d-forge-mc1.20.4.jar"},
+
+    {"name":"LogiChest","category":"Storage & Logistics","side":"Both","notes":"logichest-1.1.1.jar"},
+    {"name":"Applied Energistics 2","category":"Storage & Logistics","side":"Both","notes":"appliedenergistics2-forge-15.4.10.jar"},
+    {"name":"Applied Ammo Box","category":"Storage & Logistics","side":"Both","notes":"applied_ammo_box-1.0.2.jar"},
+    {"name":"Sophisticated Backpacks","category":"Storage & Logistics","side":"Both","notes":"sophisticatedbackpacks-1.20.1-3.24.20.1500.jar"},
+    {"name":"Sophisticated Core","category":"Libraries / API","side":"Both","notes":"sophisticatedcore-1.20.1-1.2.121.1408.jar"},
+    {"name":"Sophisticated Storage","category":"Storage & Logistics","side":"Both","notes":"sophisticatedstorage-1.20.1-1.4.21.1446.jar"},
+    {"name":"Trash Cans","category":"Storage & Logistics","side":"Both","notes":"trashcans-1.0.18b-forge-mc1.20.jar"},
+    {"name":"Steelhold","category":"Utilities & Admin","side":"Both","notes":"steelhold-1.1.0.jar"},
+
+    {"name":"AI-Improvements","category":"Tech & Automation","side":"Both","notes":"AI-Improvements-1.20-0.5.2.jar"},
+    {"name":"Arda's Cobblestone Generator","category":"Tech & Automation","side":"Both","notes":"Arda's Cobblestone Generator 1.0 [FORGE] [1.20.1].jar"},
+    {"name":"Chunk Loaders","category":"Tech & Automation","side":"Both","notes":"chunkloaders-1.2.9-forge-mc1.20.1.jar"},
+    {"name":"Easy Villagers","category":"Tech & Automation","side":"Both","notes":"easy-villagers-forge-1.20.1-1.1.23.jar"},
+    {"name":"Iron Furnaces","category":"Tech & Automation","side":"Both","notes":"ironfurnaces-1.20.1-4.1.6.jar"},
+    {"name":"Immersive Engineering","category":"Tech & Automation","side":"Both","notes":"ImmersiveEngineering-1.20.1-10.2.0-183.jar"},
+    {"name":"SolarGeneration","category":"Tech & Automation","side":"Both","notes":"SolarGeneration-1.20.1-6.0.2.jar"},
+    {"name":"Wireless Redstone","category":"Tech & Automation","side":"Both","notes":"wirelessredstone-forge-1.2.2+1.20.1.jar"},
+    {"name":"Bonsai Trees 3","category":"Tech & Automation","side":"Both","notes":"BonsaiTrees3-1.20.1-3.3.2.jar"},
+    {"name":"Upcycle","category":"Tech & Automation","side":"Both","notes":"Upcycle-1.20.x-(v.1.1.0).jar"},
+    {"name":"Immersive Aircraft","category":"Tech & Automation","side":"Both","notes":"immersive_aircraft-1.4.0+1.20.1-forge.jar"},
+
+    {"name":"Timeless & Classics Guns: Zero","category":"Combat & Weapons","side":"Both","notes":"tacz-1.20.1-1.1.7-hotfix.jar"},
+    {"name":"TaCZ Fire Control Extension","category":"Combat & Weapons","side":"Both","notes":"tacz_fire_control_extension-1.1.3+mc1.20.1+tacz1.1.4.jar"},
+    {"name":"TaCZ x Guns Lights Addon","category":"Combat & Weapons","side":"Both","notes":"taczxgunlightsaddon-1.20.1-1.0.7.jar"},
+    {"name":"gunpoweder_craft","category":"Combat & Weapons","side":"Both","notes":"gunpoweder_craft-1.1.0.jar"},
+    {"name":"Better Combat","category":"Combat & Weapons","side":"Both","notes":"bettercombat-forge-1.9.0+1.20.1.jar"},
+    {"name":"YDM's Weapon Master","category":"Combat & Weapons","side":"Both","notes":"weaponmaster_ydm-forge-1.20.1-4.2.3.jar"},
+    {"name":"Tiny Mob Farm","category":"Combat & Weapons","side":"Both","notes":"tinymobfarm-1.4.1-1.20.1-forge.jar"},
+    {"name":"Realistic Explosion Physics","category":"Combat & Weapons","side":"Both","notes":"RealisticExplosionPhysics-1.20.1-1.0.0.jar"},
+    {"name":"Guard Villagers","category":"Gameplay & QoL","side":"Both","notes":"guardvillagers-1.20.1-1.6.15.jar"},
+
+    {"name":"Blood Bits","category":"Gameplay & QoL","side":"Both","notes":"bloodbits-2.0-forge-1.20.1.jar"},
+    {"name":"Aileron","category":"Gameplay & QoL","side":"Both","notes":"aileron-1.20.1-forge-1.1.1.jar"},
+    {"name":"Daily Rewards","category":"Gameplay & QoL","side":"Both","notes":"daily_rewards_1.20.1-5.3.0.jar"},
+    {"name":"Farmer's Delight","category":"Gameplay & QoL","side":"Both","notes":"FarmersDelight-1.20.1-1.2.9.jar"},
+    {"name":"Immersive Armors","category":"Gameplay & QoL","side":"Both","notes":"immersive_armors-1.7.1+1.20.1-forge.jar"},
+    {"name":"ParCool+ / Compatibility Addon","category":"Gameplay & QoL","side":"Both","notes":"ParCool-CompatibilityAddon-1.20.1-3.4.1.5-1.1.jar"},
+    {"name":"ParCool!","category":"Gameplay & QoL","side":"Both","notes":"ParCool-1.20.1-3.4.3.0.jar"},
+    {"name":"Waystones","category":"Gameplay & QoL","side":"Both","notes":"waystones-forge-1.20.1-14.1.18.jar"},
+    {"name":"Survival Firesticks","category":"Gameplay & QoL","side":"Both","notes":"FireSticks+V.1.5+[1.20.1][FORGE].jar"},
+    {"name":"Simple Shops","category":"Utilities & Admin","side":"Both","notes":"simpleshops-1.2.2.jar"},
+
+    {"name":"Additional Structures","category":"Worldgen & Structures","side":"Both","notes":"AdditionalStructures-1.20.x-(v.4.2.2).jar"},
+    {"name":"FarmersStructures","category":"Worldgen & Structures","side":"Both","notes":"FarmersStructures-1.0.4-1.20.jar"},
+    {"name":"Immersive Weathering","category":"Worldgen & Structures","side":"Both","notes":"immersive_weathering-1.20.1-2.0.5-forge.jar"},
+    {"name":"Serene Seasons","category":"Worldgen & Structures","side":"Both","notes":"SereneSeasons-forge-1.20.1-9.1.0.2.jar"},
+    {"name":"Structory","category":"Worldgen & Structures","side":"Both","notes":"Structory_1.20.x_v1.3.5.jar"},
+    {"name":"YUNG's Better Caves","category":"Worldgen & Structures","side":"Both","notes":"YungsBetterCaves-1.20.1-Forge-2.0.5.jar"},
+    {"name":"YUNG's Better Nether Fortresses","category":"Worldgen & Structures","side":"Both","notes":"YungsBetterNetherFortresses-1.20-Forge-2.0.6.jar"},
+    {"name":"YUNG's Better Strongholds","category":"Worldgen & Structures","side":"Both","notes":"YungsBetterStrongholds-1.20-Forge-4.0.3.jar"},
+    {"name":"YUNG's Bridges","category":"Worldgen & Structures","side":"Both","notes":"YungsBridges-1.20-Forge-4.0.3.jar"},
+
+    {"name":"All The Leaks","category":"Performance & Optimization","side":"Both","notes":"alltheleaks-1.1.1+1.20.1-forge.jar"},
+    {"name":"Clumps","category":"Performance & Optimization","side":"Both","notes":"Clumps-forge-1.20.1-12.0.0.4.jar"},
+    {"name":"Fast Leaf Decay","category":"Performance & Optimization","side":"Both","notes":"FastLeafDecay-32.jar"},
+    {"name":"Fast Suite","category":"Performance & Optimization","side":"Both","notes":"FastSuite-1.20.1-5.1.1.jar"},
+    {"name":"Ferrite Core","category":"Performance & Optimization","side":"Both","notes":"ferritecore-6.0.1-forge.jar"},
+    {"name":"ModernFix","category":"Performance & Optimization","side":"Both","notes":"modernfix-forge-5.25.2+mc1.20.1.jar"},
+    {"name":"Dynamic view distance","category":"Performance & Optimization","side":"Both","notes":"dynview-1.20.1-4.0.jar"},
+    {"name":"ServerCore","category":"Performance & Optimization","side":"Server","notes":"servercore-forge-1.5.2+1.20.1.jar"},
+    {"name":"Chunky","category":"Utilities & Admin","side":"Server","notes":"Chunky-1.3.146.jar"},
+    {"name":"spark","category":"Utilities & Admin","side":"Server","notes":"spark-1.10.53-forge.jar"},
+
+    {"name":"BlueMap","category":"Utilities & Admin","side":"Both","notes":"bluemap-5.12-mc1.20-6-forge.jar"},
+    {"name":"Crash Utilities","category":"Utilities & Admin","side":"Both","notes":"crashutilities-8.1.4.jar"},
+    {"name":"Cupboard utilities","category":"Utilities & Admin","side":"Both","notes":"cupboard-1.20.1-2.7.jar"},
+    {"name":"Multiworld","category":"Utilities & Admin","side":"Both","notes":"Multiworld-Forge-1.20.1.jar"},
+    {"name":"MmmMmmMmmmmm","category":"Utilities & Admin","side":"Both","notes":"dummmmmmy-1.20-2.0.9.jar"},
+    {"name":"Configured","category":"Utilities & Admin","side":"Client","notes":"configured-forge-1.20.1-2.2.3.jar"},
+    {"name":"GuideME","category":"Utilities & Admin","side":"Both","notes":"guideme-20.1.14.jar"},
+    {"name":"Worldstate","category":"Utilities & Admin","side":"Both","notes":"worldstate-1.0.0.jar"},
+
+    {"name":"Glass","category":"Crafting & Materials","side":"Both","notes":"glass_1.20.1-1.3.0.jar"},
+    {"name":"Uncrafting Table","category":"Crafting & Materials","side":"Both","notes":"UncraftingTable-forge-1.5.4.jar"},
+    {"name":"Universal Sawmill","category":"Crafting & Materials","side":"Both","notes":"sawmill-1.20-1.4.10.jar"},
+    {"name":"Talona's Craftable Spawn Eggs And Spawner","category":"Crafting & Materials","side":"Both","notes":"talonas_craftable_spawn_eggs-1.0.0-forge-1.20.1.jar"},
+    {"name":"Craftable Nametags","category":"Gameplay & QoL","side":"Both","notes":"crafttag1.20.2.jar"},
+    {"name":"Leather From Rotten Flesh","category":"Crafting & Materials","side":"Both","notes":"zaynens_leather_from_rotten_flesh_mod_1.20.1.jar"},
+
+    {"name":"Almanac","category":"Libraries / API","side":"Both","notes":"almanac-1.20.x-forge-1.0.2.jar"},
+    {"name":"Architectury","category":"Libraries / API","side":"Both","notes":"architectury-9.2.14-forge.jar"},
+    {"name":"Balm","category":"Libraries / API","side":"Both","notes":"balm-forge-1.20.1-7.3.37-all.jar"},
+    {"name":"Cloth Config v10 API","category":"Libraries / API","side":"Both","notes":"cloth-config-11.1.136-forge.jar"},
+    {"name":"Collective","category":"Libraries / API","side":"Both","notes":"collective-1.20.1-8.13.jar"},
+    {"name":"EdivadLib","category":"Libraries / API","side":"Both","notes":"EdivadLib-1.20.1-2.0.1.jar"},
+    {"name":"Emotecraft","category":"Libraries / API","side":"Both","notes":"emotecraft-for-MC1.20.1-2.2.7-b.build.50-forge.jar"},
+    {"name":"GlitchCore","category":"Libraries / API","side":"Both","notes":"GlitchCore-forge-1.20.1-0.0.1.1.jar"},
+    {"name":"Kiwi Library","category":"Libraries / API","side":"Both","notes":"Kiwi-1.20.1-Forge-11.9.2.jar"},
+    {"name":"Kotlinfor 4.12.0 All","category":"Libraries / API","side":"Both","notes":"kotlinforforge-4.12.0-all.jar"},
+    {"name":"Libnonymous","category":"Libraries / API","side":"Both","notes":"libnonymous-1.20.1-2.3.1.jar"},
+    {"name":"MCPitanLib","category":"Libraries / API","side":"Both","notes":"mcpitanlib-3.4.3-1.20.1-forge.jar"},
+    {"name":"Moonlight Library","category":"Libraries / API","side":"Both","notes":"moonlight-1.20-2.16.22-forge.jar"},
+    {"name":"OreLibrary","category":"Libraries / API","side":"Both","notes":"OreLibrary-1.20.1-1.2.1.jar"},
+    {"name":"Placebo","category":"Libraries / API","side":"Both","notes":"Placebo-1.20.1-8.6.3.jar"},
+    {"name":"Player Animator","category":"Libraries / API","side":"Both","notes":"player-animation-lib-forge-1.0.2-rc1+1.20.jar"},
+    {"name":"Puzzles Lib","category":"Libraries / API","side":"Both","notes":"PuzzlesLib-v8.1.33-1.20.1-Forge.jar"},
+    {"name":"Resourceful Lib","category":"Libraries / API","side":"Both","notes":"resourcefullib-forge-1.20.1-2.1.29.jar"},
+    {"name":"Sodium Options API","category":"Libraries / API","side":"Client","notes":"sodiumoptionsapi-forge-1.0.10-1.20.1.jar"},
+    {"name":"SuperMartijn642's Config Library","category":"Libraries / API","side":"Both","notes":"supermartijn642configlib-1.1.8-forge-mc1.20.jar"},
+    {"name":"SuperMartijn642's Core Lib","category":"Libraries / API","side":"Both","notes":"supermartijn642corelib-1.1.18-forge-mc1.20.1.jar"},
+    {"name":"YetAnotherConfigLib","category":"Libraries / API","side":"Both","notes":"yet_another_config_lib_v3-3.6.6+1.20.1-forge.jar"},
+    {"name":"YUNG's API","category":"Libraries / API","side":"Both","notes":"YungsApi-1.20-Forge-4.0.6.jar"}
   ]
 }
