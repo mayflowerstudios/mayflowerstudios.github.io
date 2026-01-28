@@ -3,8 +3,8 @@
   "address": "play.mayflowerstudios.net",
   "howToJoinUrl": "server-info.html",
   "discordUrl": "https://discord.com/invite/MutqYAdrwz",
-  "mapEmbedUrl": "https://map.mayflowerstudios.net",
-  "worldStateUrl": "https://world.mayflowerstudios.net/worldstate.json",
+  "mapEmbedUrl": "https://map.mayflowerstudios.net:8443",
+  "worldStateUrl": "https://world.mayflowerstudios.net:8443/worldstate.json",
   "bluemapWorldId": "world",
   "modpack": {
   "curseforgeUrl": "https://www.curseforge.com/minecraft/modpacks/lunas-guns-and-stuff",

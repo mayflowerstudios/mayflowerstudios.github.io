@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mayflower Movie Night</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .movieWrap{max-width:980px;margin:0 auto;padding:24px}
+    .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.45);padding:22px}
+    .title{font-size:38px;margin:0 0 6px}
+    .muted{opacity:.78;line-height:1.5}
+    .btnRow{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:10px;
+      padding:12px 16px;border-radius:14px;border:1px solid rgba(255,255,255,.14);
+      text-decoration:none;color:inherit;background:rgba(251,113,133,.18)
+    }
+    .btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
+    .btn.secondary{background:rgba(255,255,255,.06)}
+    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;margin-top:14px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+    .step{display:flex;gap:10px;margin:10px 0}
+    .num{width:26px;height:26px;border-radius:10px;display:grid;place-items:center;
+      border:1px solid rgba(255,255,255,.16);background:rgba(34,197,94,.10)}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(167,139,250,.14);border:1px solid rgba(167,139,250,.25);margin-right:8px}
+    .tiny{font-size:13px;opacity:.75}
+    .hr{height:1px;background:rgba(255,255,255,.10);margin:16px 0}
+    .note{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.18);border-radius:14px;padding:12px}
+  </style>
+</head>
+
+<body data-nav="home">
+  <div class="wrap">
+    <div id="shared-nav"></div>
+
+    <div class="movieWrap">
+      <div class="card">
+        <div class="pill">🎬 Watch Together</div>
+        <div class="pill">🌿 Mayflower Movie Night</div>
+
+        <h1 class="title">Movie Night</h1>
+        <p class="muted">
+          This is our cozy watch hub. Click into Jellyfin, pick a movie, and use <strong>SyncPlay</strong> so everyone stays in sync.
+        </p>
+
+        <div class="btnRow">
+          <a class="btn" href="https://jellyfin.mayflowerstudios.net:8443" target="_blank" rel="noopener">
+            ▶ Open Jellyfin
+          </a>
+          <a class="btn secondary" href="https://jellyfin.mayflowerstudios.net:8443/web/#/home.html" target="_blank" rel="noopener">
+            🏠 Home
+          </a>
+          <a class="btn secondary" href="https://jellyfin.mayflowerstudios.net:8443/web/#/movies.html" target="_blank" rel="noopener">
+            🍿 Movies
+          </a>
+          <a class="btn secondary" href="https://jellyfin.mayflowerstudios.net:8443/web/#/tv.html" target="_blank" rel="noopener">
+            📺 Shows
+          </a>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="grid">
+          <div class="card" style="padding:16px;border-radius:16px">
+            <h2 style="margin:0 0 8px">How to Watch Together (SyncPlay)</h2>
+
+            <div class="step"><div class="num">1</div><div>Open Jellyfin and log in with your account.</div></div>
+            <div class="step"><div class="num">2</div><div>Pick a movie/show and start playing it.</div></div>
+            <div class="step"><div class="num">3</div><div>Open the player menu → choose <strong>SyncPlay</strong>.</div></div>
+            <div class="step"><div class="num">4</div><div>Create a group (or join the group name I tell you in Discord).</div></div>
+
+            <p class="tiny">Tip: If someone buffers, SyncPlay will keep everyone aligned.</p>
+          </div>
+
+          <div class="card" style="padding:16px;border-radius:16px">
+            <h2 style="margin:0 0 8px">Tonight’s Plan</h2>
+            <p class="muted" style="margin:0 0 8px">
+              Put the movie title + time here whenever you want.
+            </p>
+
+            <div class="note">
+              <div><strong>🎥 Movie:</strong> (set later)</div>
+              <div><strong>🕗 Time:</strong> (set later)</div>
+              <div><strong>🎧 Voice:</strong> Discord (optional)</div>
+            </div>
+
+            <div class="btnRow" style="margin-top:12px">
+              <!-- Optional: replace with your Discord invite or voice channel link -->
+              <a class="btn secondary" href="#" onclick="alert('Add your Discord link here!'); return false;">💬 Discord</a>
+            </div>
+          </div>
+        </div>
+
+        <p class="tiny" style="margin-top:14px">
+          If you can’t log in, message Sammie for an account invite.
+        </p>
+      </div>
+    </div>
+
+    <div id="shared-footer"></div>
+  </div>
+
+  <script src="fireflies.js"></script>
+  <script src="shared.js"></script>
+</body>
+</html>
