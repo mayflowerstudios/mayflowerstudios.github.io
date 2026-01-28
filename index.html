@@ -5,49 +5,210 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mayflower Studios</title>
   <link rel="stylesheet" href="style.css" />
+
+  <style>
+    /* Home-only additions (keeps your existing site style) */
+    .homeHeroGrid{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:18px;
+      align-items:stretch;
+    }
+    @media (max-width:980px){ .homeHeroGrid{grid-template-columns:1fr} }
+
+    .heroCard{
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      box-shadow: 0 18px 60px rgba(0,0,0,.45);
+      overflow:hidden;
+      position:relative;
+    }
+    .heroCard::before{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        radial-gradient(900px 380px at 20% 0%, rgba(251,113,133,.10), transparent 60%),
+        radial-gradient(700px 320px at 90% 10%, rgba(167,139,250,.08), transparent 55%),
+        radial-gradient(700px 320px at 50% 115%, rgba(34,197,94,.06), transparent 60%);
+      pointer-events:none;
+    }
+    .heroCard .inner{position:relative; z-index:1; padding:22px}
+
+    .homeKicker{
+      display:inline-flex;
+      gap:10px;
+      align-items:center;
+      padding:7px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      backdrop-filter: blur(6px);
+      font-size:13px;
+      opacity:.92;
+    }
+    .homeTitle{
+      margin:12px 0 8px;
+      font-size:48px;
+      letter-spacing:.2px;
+      line-height:1.05;
+    }
+    @media (max-width:520px){ .homeTitle{font-size:40px} }
+
+    .homeSub{
+      margin:0;
+      opacity:.78;
+      line-height:1.65;
+      max-width:70ch;
+    }
+
+    .ctaRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:14px;
+      align-items:center;
+    }
+
+    .tileGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      margin-top:18px;
+    }
+    @media (max-width:520px){ .tileGrid{grid-template-columns:1fr} }
+
+    .tile{
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.035);
+      padding:14px;
+      backdrop-filter: blur(6px);
+    }
+    .tile strong{display:block; margin:0 0 6px}
+    .tile p{margin:0; opacity:.78; line-height:1.55}
+
+    .spotlightStack{
+      display:grid;
+      gap:12px;
+      height:100%;
+    }
+
+    .spotlight{
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.035);
+      box-shadow: 0 18px 60px rgba(0,0,0,.35);
+      padding:18px;
+    }
+    .spotlight h3{
+      margin:0 0 8px;
+      font-size:18px;
+      letter-spacing:.2px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .spotlight .desc{margin:0; opacity:.78; line-height:1.6}
+    .spotlight .btnrow{margin-top:12px; display:flex; gap:10px; flex-wrap:wrap}
+
+    .miniRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+
+    .dividerLine{
+      height:1px;
+      background: rgba(255,255,255,.10);
+      margin:18px 0;
+    }
+  </style>
 </head>
 
 <body data-nav="home">
   <div class="wrap">
-
     <div id="shared-nav"></div>
 
     <!-- HERO -->
-    <section class="hero">
-      <div>
-        <p class="kicker">Clean builds • Cozy polish • Real-server ready</p>
-        <h1>🌿 Mayflower Studios</h1>
-        <p class="muted">
-          A small indie studio building <strong>worlds</strong>, <strong>mods</strong>, and <strong>bots</strong> with heart —
-          designed for cozy communities, long-term adventures, and a little extra magic.
-        </p>
-        <div class="ctaRow">
-          <a class="btn primary" href="projects.html">🚀 Explore Projects</a>
-          <a class="btn ghost" href="lore.html">📜 EchoBloom Lore</a>
+    <section class="homeHeroGrid">
+      <!-- Main hero card -->
+      <div class="heroCard">
+        <div class="inner">
+          <div class="homeKicker">Clean builds • Cozy polish • Real-server ready</div>
+          <h1 class="homeTitle">🌿 Mayflower Studios</h1>
+          <p class="homeSub">
+            A small indie studio building <strong>worlds</strong>, <strong>mods</strong>, and <strong>bots</strong> with heart —
+            designed for cozy communities, long-term adventures, and a little extra magic.
+          </p>
+
+          <div class="ctaRow">
+            <a class="btn primary" href="projects.html">🚀 Explore Projects</a>
+            <a class="btn ghost" href="lore.html">📜 EchoBloom Lore</a>
+            <a class="btn ghost" href="movienight.html">🍿 Movie Night</a>
+          </div>
+
+          <div class="tileGrid">
+            <div class="tile">
+              <strong>🧱 Minecraft Mods</strong>
+              <p>Server-ready mechanics with clean UI and configurable balance.</p>
+            </div>
+            <div class="tile">
+              <strong>🤖 Discord Bots</strong>
+              <p>Companions, progression, and lore systems built for long-term servers.</p>
+            </div>
+            <div class="tile">
+              <strong>⚙️ Real-World Reliability</strong>
+              <p>Predictable behavior, tidy edge cases, and maintainable code.</p>
+            </div>
+            <div class="tile">
+              <strong>🌸 Cozy Polish</strong>
+              <p>Whimsical flavor, minimal clutter, and interfaces that make sense.</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="tileGrid">
-        <div class="tile">
-          <strong>🧱 Minecraft Mods</strong>
-          <p>Server-ready mechanics with clean UI and configurable balance.</p>
+      <!-- Spotlight stack -->
+      <div class="spotlightStack">
+        <div class="spotlight">
+          <h3>
+            <span>🍿 Mayflower Movie Night</span>
+            <span class="badge">Theater</span>
+          </h3>
+          <p class="desc">
+            SyncPlay watch parties in our Jellyfin theater. Join as <strong>Guest</strong> — no password —
+            and hop into the group when we start.
+          </p>
+          <div class="btnrow">
+            <a class="button mods" href="movienight.html">✨ Open Movie Night</a>
+            <a class="button ghost" href="https://jellyfin.mayflowerstudios.net:8443" target="_blank" rel="noopener">▶ Open Jellyfin</a>
+          </div>
         </div>
-        <div class="tile">
-          <strong>🤖 Discord Bots</strong>
-          <p>Private server companions + long-term progression systems.</p>
-        </div>
-        <div class="tile">
-          <strong>⚙️ Real-World Reliability</strong>
-          <p>Predictable behavior, tidy edge cases, and maintainable code.</p>
-        </div>
-        <div class="tile">
-          <strong>🌸 Cozy Polish</strong>
-          <p>Whimsical flavor, minimal clutter, and interfaces that make sense.</p>
+
+        <div class="spotlight">
+          <h3>
+            <span>🌎 Minecraft Server</span>
+            <span class="badge">Live World</span>
+          </h3>
+          <p class="desc">
+            Join info, modpack download, rules, and the live map — all in one place.
+          </p>
+          <div class="btnrow">
+            <a class="button mods" href="server.html">🛰️ Server Page</a>
+            <a class="button ghost" href="rules.html">📜 Rules</a>
+            <a class="button ghost" href="https://map.mayflowerstudios.net" target="_blank" rel="noopener">🗺️ Map</a>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- HOME PORTAL -->
+    <div class="dividerLine"></div>
+
+    <!-- START HERE -->
     <div class="sectionTitle" id="portal">
       <h2>🧭 Start Here</h2>
       <span>Pick a path — projects, world, or lore</span>
@@ -68,20 +229,6 @@
       </div>
 
       <div class="card">
-        <h3>🌎 Minecraft Server <span class="badge">Live World</span></h3>
-        <p class="desc">
-          Everything for the server: join info, modpack download, map, rules, and status.
-        </p>
-        <div class="btnrow">
-          <a class="button mods" href="server.html">🛰️ Server Page</a>
-          <a class="button ghost" href="rules.html">📜 Rules</a>
-          <a class="button ghost" href="https://map.mayflowerstudios.net">🗺️ Map</a>
-        </div>
-      </div>
-    </section>
-
-    <section class="grid2">
-      <div class="card">
         <h3>🌙 EchoBloom Lore <span class="badge">Blossoming Realms</span></h3>
         <p class="desc">
           The living world behind the bot: realms, ranks, seasonal events, and story chapters —
@@ -94,7 +241,9 @@
           <a class="button ghost" href="calendar.html">🗓️ Event Calendar</a>
         </div>
       </div>
+    </section>
 
+    <section class="grid2">
       <div class="card">
         <h3>🌸 Featured Spotlight <span class="badge">Current Build</span></h3>
         <p class="desc">
@@ -106,9 +255,21 @@
           <a class="button ghost" href="logichest.html">🧠 LogiChest</a>
         </div>
       </div>
+
+      <div class="card">
+        <h3>💫 Community Nights <span class="badge">Cozy Events</span></h3>
+        <p class="desc">
+          Movie nights, seasonal events, and little surprise moments that make the server feel alive.
+          Drop in any time.
+        </p>
+        <div class="btnrow">
+          <a class="button mods" href="movienight.html">🍿 Movie Night</a>
+          <a class="button ghost" href="https://discord.gg/MutqYAdrwz" target="_blank" rel="noopener">💬 Discord</a>
+        </div>
+      </div>
     </section>
 
-    <!-- ABOUT (short + clean on home) -->
+    <!-- ABOUT -->
     <div class="sectionTitle" id="about">
       <h2>🌿 About Mayflower Studios</h2>
       <span>How we build</span>
@@ -130,8 +291,9 @@
       </p>
 
       <div class="ctaRow">
-        <a class="btn ghost" href="https://discord.gg/MutqYAdrwz">💬 Discord</a>
+        <a class="btn ghost" href="https://discord.gg/MutqYAdrwz" target="_blank" rel="noopener">💬 Discord</a>
         <a class="btn primary" href="projects.html">🚀 Projects</a>
+        <a class="btn ghost" href="movienight.html">🍿 Movie Night</a>
       </div>
     </section>
 
