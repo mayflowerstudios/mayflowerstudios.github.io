@@ -5,28 +5,210 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mayflower Movie Night</title>
   <link rel="stylesheet" href="style.css" />
+
   <style>
-    .movieWrap{max-width:980px;margin:0 auto;padding:24px}
-    .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.45);padding:22px}
-    .title{font-size:38px;margin:0 0 6px}
-    .muted{opacity:.78;line-height:1.5}
-    .btnRow{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}
-    .btn{
-      display:inline-flex;align-items:center;justify-content:center;gap:10px;
-      padding:12px 16px;border-radius:14px;border:1px solid rgba(255,255,255,.14);
-      text-decoration:none;color:inherit;background:rgba(251,113,133,.18)
+    /* =========================
+       Movie Night – clean cozy
+       ========================= */
+
+    .movieWrap{max-width:1100px;margin:0 auto;padding:22px}
+    .glass{
+      background: rgba(255,255,255,.045);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 22px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.45);
+      overflow:hidden;
+      position:relative;
     }
-    .btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
-    .btn.secondary{background:rgba(255,255,255,.06)}
-    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;margin-top:14px}
-    @media (max-width:900px){.grid{grid-template-columns:1fr}}
-    .step{display:flex;gap:10px;margin:10px 0}
-    .num{width:26px;height:26px;border-radius:10px;display:grid;place-items:center;
-      border:1px solid rgba(255,255,255,.16);background:rgba(34,197,94,.10)}
-    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(167,139,250,.14);border:1px solid rgba(167,139,250,.25);margin-right:8px}
-    .tiny{font-size:13px;opacity:.75}
-    .hr{height:1px;background:rgba(255,255,255,.10);margin:16px 0}
-    .note{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.18);border-radius:14px;padding:12px}
+
+    /* subtle top sheen (not rainbow blobs) */
+    .glass::before{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        radial-gradient(900px 380px at 20% 0%, rgba(251,113,133,.10), transparent 60%),
+        radial-gradient(700px 320px at 90% 10%, rgba(167,139,250,.08), transparent 55%),
+        radial-gradient(700px 320px at 50% 115%, rgba(34,197,94,.06), transparent 60%);
+      pointer-events:none;
+    }
+
+    .content{position:relative; z-index:1; padding:22px}
+    .topRow{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+
+    .kicker{
+      display:inline-flex;
+      gap:10px;
+      align-items:center;
+      padding:7px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      backdrop-filter: blur(6px);
+      font-size:13px;
+      opacity:.9;
+    }
+
+    .title{
+      margin:10px 0 6px;
+      font-size:44px;
+      letter-spacing:.2px;
+      line-height:1.05;
+    }
+    .sub{
+      margin:0;
+      opacity:.78;
+      line-height:1.6;
+      max-width:70ch;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      margin-top:6px;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:12px 16px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.14);
+      text-decoration:none;
+      color:inherit;
+      background:rgba(255,255,255,.06);
+      transition: transform .12s ease, filter .12s ease, background .12s ease;
+      backdrop-filter: blur(6px);
+      white-space:nowrap;
+    }
+    .btn:hover{transform:translateY(-1px);filter:brightness(1.06)}
+    .btn.primary{
+      background: rgba(251,113,133,.18);
+      border-color: rgba(251,113,133,.26);
+    }
+    .btn.warm{
+      background: rgba(251,191,36,.14);
+      border-color: rgba(251,191,36,.22);
+    }
+    .btn.link{
+      background: transparent;
+      border-color: rgba(255,255,255,.10);
+      opacity:.9;
+    }
+
+    .divider{
+      height:1px;
+      background: rgba(255,255,255,.10);
+      margin:18px 0;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:14px;
+      align-items:stretch;
+    }
+    @media (max-width:980px){ .grid{grid-template-columns:1fr} }
+
+    .panel{
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 18px;
+      padding:16px;
+      backdrop-filter: blur(8px);
+    }
+
+    .panel h2{
+      margin:0 0 10px;
+      font-size:18px;
+      letter-spacing:.2px;
+    }
+
+    .plan{
+      display:grid;
+      gap:10px;
+      margin-top:8px;
+    }
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:10px 12px;
+      border-radius:14px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .row strong{font-size:13px; opacity:.9; letter-spacing:.2px}
+    .row span{opacity:.82}
+
+    .tiny{font-size:13px;opacity:.72;margin:10px 0 0;line-height:1.5}
+
+    .steps{
+      display:grid;
+      gap:10px;
+      margin-top:8px;
+    }
+    .step{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+    }
+    .num{
+      width:26px;height:26px;
+      border-radius:10px;
+      display:grid;
+      place-items:center;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(34,197,94,.10);
+      flex:0 0 auto;
+      font-size:13px;
+    }
+
+    /* Embedded player area */
+    .playerWrap{
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.12);
+      overflow:hidden;
+      background: rgba(0,0,0,.22);
+    }
+    .playerHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+    }
+    .playerHeader strong{font-size:14px}
+    .badge{
+      font-size:12px; opacity:.82;
+      padding:5px 9px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+    }
+    iframe.player{
+      width:100%;
+      height:420px;
+      border:0;
+      display:block;
+    }
+    @media (max-width:980px){ iframe.player{height:360px} }
+
+    .embedFallback{
+      padding:14px;
+      display:none;
+    }
   </style>
 </head>
 
@@ -35,67 +217,111 @@
     <div id="shared-nav"></div>
 
     <div class="movieWrap">
-      <div class="card">
-        <div class="pill">🎬 Watch Together</div>
-        <div class="pill">🌿 Mayflower Movie Night</div>
+      <section class="glass">
+        <div class="content">
 
-        <h1 class="title">Movie Night</h1>
-        <p class="muted">
-          This is our cozy watch hub. Click into Jellyfin, pick a movie, and use <strong>SyncPlay</strong> so everyone stays in sync.
-        </p>
-
-        <div class="btnRow">
-          <a class="btn" href="https://jellyfin.mayflowerstudios.net:8443" target="_blank" rel="noopener">
-            ▶ Open Jellyfin
-          </a>
-          <a class="btn secondary" href="https://jellyfin.mayflowerstudios.net:8443/web/#/home.html" target="_blank" rel="noopener">
-            🏠 Home
-          </a>
-          <a class="btn secondary" href="https://jellyfin.mayflowerstudios.net:8443/web/#/movies.html" target="_blank" rel="noopener">
-            🍿 Movies
-          </a>
-          <a class="btn secondary" href="https://jellyfin.mayflowerstudios.net:8443/web/#/tv.html" target="_blank" rel="noopener">
-            📺 Shows
-          </a>
-        </div>
-
-        <div class="hr"></div>
-
-        <div class="grid">
-          <div class="card" style="padding:16px;border-radius:16px">
-            <h2 style="margin:0 0 8px">How to Watch Together (SyncPlay)</h2>
-
-            <div class="step"><div class="num">1</div><div>Open Jellyfin and log in with your account.</div></div>
-            <div class="step"><div class="num">2</div><div>Pick a movie/show and start playing it.</div></div>
-            <div class="step"><div class="num">3</div><div>Open the player menu → choose <strong>SyncPlay</strong>.</div></div>
-            <div class="step"><div class="num">4</div><div>Create a group (or join the group name I tell you in Discord).</div></div>
-
-            <p class="tiny">Tip: If someone buffers, SyncPlay will keep everyone aligned.</p>
-          </div>
-
-          <div class="card" style="padding:16px;border-radius:16px">
-            <h2 style="margin:0 0 8px">Tonight’s Plan</h2>
-            <p class="muted" style="margin:0 0 8px">
-              Put the movie title + time here whenever you want.
-            </p>
-
-            <div class="note">
-              <div><strong>🎥 Movie:</strong> (set later)</div>
-              <div><strong>🕗 Time:</strong> (set later)</div>
-              <div><strong>🎧 Voice:</strong> Discord (optional)</div>
+          <div class="topRow">
+            <div>
+              <div class="kicker">🕯️ Cozy Mode <span style="opacity:.6">•</span> 🎬 Movie Night</div>
+              <h1 class="title">Mayflower Movie Night</h1>
+              <p class="sub">
+                Snacks ready? We’ll keep everything synced with <strong>SyncPlay</strong>.
+                Jellyfin is the theater — Discord voice is optional.
+              </p>
             </div>
 
-            <div class="btnRow" style="margin-top:12px">
-              <!-- Optional: replace with your Discord invite or voice channel link -->
-              <a class="btn secondary" href="#" onclick="alert('Add your Discord link here!'); return false;">💬 Discord</a>
+            <div class="actions">
+              <a class="btn primary" href="https://jellyfin.mayflowerstudios.net:8443" target="_blank" rel="noopener">
+                ▶ Open Theater
+              </a>
+              <a class="btn warm" href="https://jellyfin.mayflowerstudios.net:8443/web/#/home.html" target="_blank" rel="noopener">
+                🏠 Browse
+              </a>
+              <a class="btn link" href="https://jellyfin.mayflowerstudios.net:8443/web/#/settings" target="_blank" rel="noopener">
+                ⚙ Settings
+              </a>
+              <!-- Replace with your real Discord link -->
+              <a class="btn link" href="#" onclick="alert('Replace this with your Discord link!'); return false;">
+                💬 Discord
+              </a>
             </div>
           </div>
-        </div>
 
-        <p class="tiny" style="margin-top:14px">
-          If you can’t log in, message Sammie for an account invite.
-        </p>
-      </div>
+          <div class="divider"></div>
+
+          <div class="grid">
+            <div class="panel">
+              <h2>Tonight’s Plan</h2>
+              <div class="plan">
+                <div class="row">
+                  <strong>🎥 What</strong>
+                  <span id="movieTitle">(set later)</span>
+                </div>
+                <div class="row">
+                  <strong>🕗 Time</strong>
+                  <span id="movieTime">(set later)</span>
+                </div>
+                <div class="row">
+                  <strong>🎧 Voice</strong>
+                  <span id="movieVoice">Discord (optional)</span>
+                </div>
+              </div>
+
+              <p class="tiny">
+                Tip: Keep voice separate from movie audio so SyncPlay stays clean.
+              </p>
+            </div>
+
+            <div class="panel">
+              <h2>Watch Together</h2>
+              <div class="steps">
+                <div class="step"><div class="num">1</div><div>Open Jellyfin and log in.</div></div>
+                <div class="step"><div class="num">2</div><div>Start a movie or episode.</div></div>
+                <div class="step"><div class="num">3</div><div>In the player menu, choose <strong>SyncPlay</strong>.</div></div>
+                <div class="step"><div class="num">4</div><div>Create a group — or join the name I post in Discord.</div></div>
+              </div>
+
+              <p class="tiny">
+                If you can’t log in, message Sammie for an invite.
+              </p>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="panel">
+            <div class="playerWrap">
+              <div class="playerHeader">
+                <strong>🖥️ Embedded Player (optional)</strong>
+                <span class="badge" id="embedStatus">Trying to load…</span>
+              </div>
+
+              <iframe
+                class="player"
+                id="jfFrame"
+                src="https://jellyfin.mayflowerstudios.net:8443/web/"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                allowfullscreen
+              ></iframe>
+
+              <div class="embedFallback" id="embedFallback">
+                <p class="sub" style="margin:0 0 10px">
+                  Embedding Jellyfin is blocked here (pretty common). Use the Theater button instead — it’s perfect.
+                </p>
+                <a class="btn primary" href="https://jellyfin.mayflowerstudios.net:8443" target="_blank" rel="noopener">
+                  ▶ Open Theater
+                </a>
+                <p class="tiny" style="margin-top:10px">
+                  If you *want* embedding to work, you’ll need nginx/Jellyfin headers that allow iframes.
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
     </div>
 
     <div id="shared-footer"></div>
@@ -103,5 +329,34 @@
 
   <script src="shared.js"></script>
   <script src="fireflies.js"></script>
+  <script>
+    // Easy editables
+    const plan = {
+      title: "(set later)",
+      time: "(set later)",
+      voice: "Discord (optional)",
+    };
+    document.getElementById("movieTitle").textContent = plan.title;
+    document.getElementById("movieTime").textContent = plan.time;
+    document.getElementById("movieVoice").textContent = plan.voice;
+
+    // iframe embed detection + fallback
+    const frame = document.getElementById("jfFrame");
+    const status = document.getElementById("embedStatus");
+    const fallback = document.getElementById("embedFallback");
+    let loaded = false;
+
+    frame.addEventListener("load", () => {
+      loaded = true;
+      status.textContent = "Loaded";
+    });
+
+    setTimeout(() => {
+      if (!loaded) {
+        status.textContent = "Blocked (use Theater)";
+        fallback.style.display = "block";
+      }
+    }, 3500);
+  </script>
 </body>
 </html>
