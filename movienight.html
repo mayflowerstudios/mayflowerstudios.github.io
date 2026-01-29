@@ -1,4 +1,4 @@
-<!-- movie-night.html -->
+<!-- movie-night.html (MAIN SITE) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -205,6 +205,18 @@
     @media (max-width:980px){ iframe.player{height:360px} }
 
     .embedFallback{padding:14px;display:none}
+
+    /* Optional: a tiny error pill if config fails */
+    .configError{
+      margin-top:12px;
+      display:none;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(248,113,113,.35);
+      background:rgba(248,113,113,.10);
+      color:rgba(255,255,255,.9);
+      font-size:13px;
+    }
   </style>
 </head>
 
@@ -223,6 +235,10 @@
               <p class="sub" id="pageSubtitle">
                 Snacks ready? We’ll keep everything synced with <strong>SyncPlay</strong>. Jellyfin is the theater — Discord voice is optional.
               </p>
+
+              <div class="configError" id="configError">
+                Couldn’t load Movie Night config right now. Try refreshing.
+              </div>
             </div>
 
             <div class="actions" id="actionButtons">
@@ -310,77 +326,123 @@
   <script src="shared.js"></script>
   <script src="fireflies.js"></script>
 
-  <!-- easy edit file -->
-  <script src="data/movienight-config.js"></script>
-
   <script>
-    // ---- Apply config ----
-    const c = window.MOVIE_NIGHT || {};
+    const MOVIE_CONFIG_URL = "/data/movienight.json";
 
-    // Header text
-    if (c.kickerText) document.getElementById("kickerText").textContent = c.kickerText;
-    if (c.pageTitle) document.getElementById("pageTitle").textContent = c.pageTitle;
-    if (c.pageSubtitle) document.getElementById("pageSubtitle").innerHTML = c.pageSubtitle;
+    const el = (id) => document.getElementById(id);
 
-    // Buttons
-    const actionWrap = document.getElementById("actionButtons");
-    actionWrap.innerHTML = "";
-    (c.buttons || []).forEach(b => {
-      const a = document.createElement("a");
-      a.className = `btn ${b.style || "link"}`;
-      a.href = b.href || "#";
-      a.target = "_blank";
-      a.rel = "noopener";
-      a.textContent = b.label || "Open";
-      actionWrap.appendChild(a);
+    async function loadMovieNightConfig(){
+      const res = await fetch(MOVIE_CONFIG_URL, { cache: "no-store" });
+      if(!res.ok) throw new Error(`Failed to load config (${res.status})`);
+      return await res.json();
+    }
+
+    function safeText(id, v, fallback=""){
+      const node = el(id);
+      if(node) node.textContent = (v ?? fallback);
+    }
+
+    function safeHtml(id, v, fallback=""){
+      const node = el(id);
+      if(node) node.innerHTML = (v ?? fallback);
+    }
+
+    function setConfigError(msg){
+      const box = el("configError");
+      if(!box) return;
+      box.textContent = msg || "Couldn’t load Movie Night config right now. Try refreshing.";
+      box.style.display = "block";
+    }
+
+    function buildButtons(buttons){
+      const actionWrap = el("actionButtons");
+      actionWrap.innerHTML = "";
+
+      (buttons || []).forEach(b => {
+        const a = document.createElement("a");
+        a.className = `btn ${b.style || "link"}`;
+        a.href = b.href || "#";
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.textContent = b.label || "Open";
+        actionWrap.appendChild(a);
+      });
+    }
+
+    function buildJoinSteps(steps){
+      const joinSteps = el("joinSteps");
+      joinSteps.innerHTML = "";
+
+      (steps || []).forEach((text, i) => {
+        const step = document.createElement("div");
+        step.className = "step";
+        step.innerHTML = `<div class="num">${i+1}</div><div>${text}</div>`;
+        joinSteps.appendChild(step);
+      });
+    }
+
+    async function applyConfig(){
+      const c = await loadMovieNightConfig();
+
+      // Header
+      safeText("kickerText", c.kickerText, "🕯️ Cozy Mode • 🎬 Movie Night");
+      safeText("pageTitle", c.pageTitle, "Mayflower Movie Night");
+      safeHtml("pageSubtitle", c.pageSubtitle, "Snacks ready? We’ll keep everything synced with <strong>SyncPlay</strong>.");
+
+      // Buttons
+      buildButtons(c.buttons);
+
+      // Plan block
+      safeText("planTitle", c.planTitle, "Tonight’s Plan");
+      safeText("movieTitle", c.plan?.title, "(set later)");
+      safeText("movieTime",  c.plan?.time, "(set later)");
+      safeText("movieVoice", c.plan?.voice, "Discord (optional)");
+      safeText("planTip", c.planTip, "Tip: Keep voice separate from movie audio so SyncPlay stays clean.");
+
+      // Join block
+      safeText("joinTitle", c.joinTitle, "How to Join");
+      buildJoinSteps(c.joinSteps);
+      safeText("joinNote", c.joinNote, "If something’s not working, message Sammie.");
+
+      // Embed
+      safeText("embedTitle", c.embedTitle, "🖥️ Theater Preview");
+      safeText("embedFallbackText", c.embedFallbackText, "Use the Theater button above to watch — it’s the smoothest way.");
+      safeText("embedFallbackTiny", c.embedFallbackTiny, "If the preview doesn’t show, that’s okay — the Theater link always works.");
+
+      const frame = el("jfFrame");
+      const status = el("embedStatus");
+      const fallback = el("embedFallback");
+
+      const theaterUrl =
+        c.theaterUrl ||
+        (c.buttons && c.buttons[0] && c.buttons[0].href) ||
+        "#";
+
+      el("fallbackTheaterBtn").href = theaterUrl;
+
+      frame.src = c.embedUrl || theaterUrl;
+
+      // iframe load / fallback
+      let loaded = false;
+      frame.addEventListener("load", () => {
+        loaded = true;
+        if(status) status.textContent = "Ready";
+      }, { once:true });
+
+      setTimeout(() => {
+        if (!loaded) {
+          if(status) status.textContent = "Open Theater";
+          if(fallback) fallback.style.display = "block";
+        }
+      }, (c.embedTimeoutMs || 3500));
+    }
+
+    applyConfig().catch(err => {
+      console.error(err);
+      const status = el("embedStatus");
+      if(status) status.textContent = "Config error";
+      setConfigError("Couldn’t load Movie Night config right now. Check the JSON URL or refresh.");
     });
-
-    // Plan block
-    document.getElementById("planTitle").textContent = c.planTitle || "Tonight’s Plan";
-    document.getElementById("movieTitle").textContent = (c.plan && c.plan.title) || "(set later)";
-    document.getElementById("movieTime").textContent = (c.plan && c.plan.time) || "(set later)";
-    document.getElementById("movieVoice").textContent = (c.plan && c.plan.voice) || "Discord (optional)";
-    document.getElementById("planTip").textContent = c.planTip || "Tip: Keep voice separate from movie audio so SyncPlay stays clean.";
-
-    // Join block
-    document.getElementById("joinTitle").textContent = c.joinTitle || "How to Join";
-    const joinSteps = document.getElementById("joinSteps");
-    joinSteps.innerHTML = "";
-    (c.joinSteps || []).forEach((text, i) => {
-      const step = document.createElement("div");
-      step.className = "step";
-      step.innerHTML = `<div class="num">${i+1}</div><div>${text}</div>`;
-      joinSteps.appendChild(step);
-    });
-    document.getElementById("joinNote").textContent = c.joinNote || "If something’s not working, message Sammie.";
-
-    // Embed
-    const frame = document.getElementById("jfFrame");
-    const status = document.getElementById("embedStatus");
-    const fallback = document.getElementById("embedFallback");
-
-    document.getElementById("embedTitle").textContent = c.embedTitle || "🖥️ Theater Preview";
-    document.getElementById("embedFallbackText").textContent = c.embedFallbackText || "Use the Theater button above to watch — it’s the smoothest way.";
-    document.getElementById("embedFallbackTiny").textContent = c.embedFallbackTiny || "If the preview doesn’t show, that’s okay — the Theater link always works.";
-
-    const theaterUrl = c.theaterUrl || (c.buttons && c.buttons[0] && c.buttons[0].href) || "#";
-    document.getElementById("fallbackTheaterBtn").href = theaterUrl;
-
-    frame.src = c.embedUrl || theaterUrl;
-
-    // iframe load / fallback
-    let loaded = false;
-    frame.addEventListener("load", () => {
-      loaded = true;
-      status.textContent = "Ready";
-    });
-
-    setTimeout(() => {
-      if (!loaded) {
-        status.textContent = "Open Theater";
-        fallback.style.display = "block";
-      }
-    }, (c.embedTimeoutMs || 3500));
   </script>
 </body>
 </html>
