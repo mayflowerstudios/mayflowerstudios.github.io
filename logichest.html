@@ -18,7 +18,8 @@
         <p class="kicker">Minecraft Mod (Forge)</p>
         <h1>🧠 LogiChest</h1>
         <p class="muted">
-          Hub-and-sorter storage routing with clean rules, survival-friendly pacing, and upgrade-based scaling.
+          Hub-and-sorter storage routing with clean rules, survival-friendly pacing, and upgrade-based scaling —
+          including optional autocrafting, autosmelting, and multi-hub authorization.
         </p>
         <div class="ctaRow">
           <a class="btn primary" href="https://www.curseforge.com/minecraft/mc-mods/logichest">📦 Download</a>
@@ -30,19 +31,19 @@
       <div class="tileGrid">
         <div class="tile">
           <strong>🏠 Hub Routing</strong>
-          <p>Moves items from the container the Hub is facing into sorter destinations.</p>
+          <p>Pulls from the container the Hub is facing and routes into sorter destinations.</p>
         </div>
         <div class="tile">
           <strong>🧩 Sorter Filters</strong>
-          <p>10-slot whitelist (ghost filters) that routes by item type.</p>
+          <p>10-slot whitelist (ghost filters) routes by item type (simple & predictable).</p>
         </div>
         <div class="tile">
-          <strong>⚙️ Upgrades</strong>
-          <p>Autocrafting, speed, batch size, and multi-hub keychain support.</p>
+          <strong>🛠️ Autocraft + Autosmelt</strong>
+          <p>Optional upgrades craft or smelt directly from the Hub into a sorter’s output.</p>
         </div>
         <div class="tile">
-          <strong>🧠 Predictable Automation</strong>
-          <p>Round-robin routing across linked sorters for fairness and stability.</p>
+          <strong>🔑 Keychains</strong>
+          <p>Keychain Module adds a 9-slot key ring so one sorter can authorize multiple hubs.</p>
         </div>
       </div>
     </section>
@@ -56,51 +57,88 @@
     <section class="card">
       <p class="desc">
         <strong>LogiChest</strong> is a lightweight Forge mod that adds a clean logistics layer to survival storage.
-        You build a <strong>Hub</strong> to act as the router, then attach <strong>Sorters</strong> that define what
+        You build a <strong>Hub</strong> to act as the router, then attach <strong>Sorters</strong> that decide what
         items should be routed and where they should be delivered.
       </p>
 
       <p class="desc">
-        The goal is simple: keep storage automation <strong>readable</strong>, <strong>predictable</strong>, and
-        <strong>survival-friendly</strong>—without turning your base into a complex pipe network.
+        The goal: keep automation <strong>readable</strong>, <strong>predictable</strong>, and
+        <strong>server-friendly</strong> — without turning your base into a spaghetti pipe network.
       </p>
 
       <div class="divider" style="margin:14px 0;"></div>
 
-      <h3 style="margin:0 0 6px;">🔗 How routing works (for real)</h3>
+      <h3 style="margin:0 0 6px;">🔗 How routing works (simple, real, reliable)</h3>
       <p class="desc" style="margin-top:0;">
         The Hub pulls items from the inventory <strong>directly in front of it</strong> (the direction the Hub is facing).
         Each linked Sorter points at a <strong>destination inventory</strong> (the container in front of the Sorter).
         If an item in the Hub’s source matches a Sorter’s filters, the Hub moves it into that Sorter’s destination.
       </p>
 
-      <h3 style="margin:14px 0 6px;">🗝️ Link Keys</h3>
+      <h3 style="margin:14px 0 6px;">🗝️ LogiLink Keys (Hub-bound)</h3>
       <p class="desc" style="margin-top:0;">
-        Link Keys are crafted <strong>inside the Hub</strong> over time and become bound to that specific Hub (ID + position + dimension).
-        Put a Link Key into a Sorter to link it. If the Hub is at its maximum linked sorters, the link is rejected.
+        Link Keys are crafted <strong>inside the Hub</strong> over time and become bound to that specific Hub
+        (<strong>ID + position + dimension</strong>). Put the key into a Sorter’s link slot to connect it.
+        If the Hub is at max linked Sorters, the link is rejected.
       </p>
+
+      <div class="callout" style="margin-top:12px;">
+        <strong>Hub key ingredients</strong>
+        <p class="muted small" style="margin:6px 0 0;">
+          The Hub crafts a LogiLink Key using: <code>Iron Ingot</code> + <code>Redstone</code> + <code>Amethyst Shard</code>
+          (craft time is configurable).
+        </p>
+      </div>
 
       <h3 style="margin:14px 0 6px;">📦 Filter whitelist (10 slots)</h3>
       <p class="desc" style="margin-top:0;">
         Each Sorter has <strong>10 ghost filter slots</strong>. Filters match by <strong>item type</strong>
-        (NBT isn’t considered). Only items that match a Sorter’s filter list are eligible to be routed to it.
+        (NBT isn’t considered). Only items that match a Sorter’s filter list are eligible to be routed into it.
       </p>
 
-      <h3 style="margin:14px 0 6px;">⚙️ Server-friendly defaults (configurable)</h3>
+      <h3 style="margin:14px 0 6px;">⚙️ Upgrades (4 slots, stackable where it matters)</h3>
       <p class="desc" style="margin-top:0;">
-        LogiChest includes a Forge config to tune pacing and limits. Default values:
+        Each Sorter has <strong>4 upgrade slots</strong>. Some upgrades can stack to scale performance and throughput.
+      </p>
+      <ul class="muted small" style="margin:0; padding-left:18px;">
+        <li><strong>Speed Coil</strong>: reduces routing/autotick cooldown (faster sorting and faster craft/smelt intervals). <em>Stacks (up to 8 per stack).</em></li>
+        <li><strong>Stack Booster</strong>: increases how many items move per batch (base 1 + boosters). <em>Stacks (up to 8 per stack).</em></li>
+        <li><strong>Autocrafter Core</strong>: enables crafting from Hub inventory directly into the sorter’s destination container.</li>
+        <li><strong>Autosmelter Core</strong>: enables smelting from Hub inventory into the sorter’s destination container (fuel is pulled from the Hub, furnace-style).</li>
+        <li><strong>Keychain Module</strong>: adds a built-in 9-slot keychain inventory so the sorter can authorize multiple hubs.</li>
+      </ul>
+
+      <h3 style="margin:14px 0 6px;">🧷 Keychain Module (multi-hub authorization)</h3>
+      <p class="desc" style="margin-top:0;">
+        Install the <strong>Keychain Module</strong> to give the sorter a hidden <strong>9-slot keychain</strong> inventory.
+        Put multiple Hub-bound Link Keys into it and the sorter can register with multiple hubs (as long as each hub has capacity).
+      </p>
+      <p class="muted small" style="margin:6px 0 0;">
+        Bonus: the Keychain Module item itself can be right-clicked to open its own 9-slot GUI (handy for managing keys).
+      </p>
+
+      <h3 style="margin:14px 0 6px;">🔥 Autosmelting (fuel handled “like a furnace”)</h3>
+      <p class="desc" style="margin-top:0;">
+        With <strong>Autosmelter Core</strong> installed, the sorter can smelt items using real fuel burn time rules.
+        Fuel is pulled from the Hub inventory (and container items like buckets are returned when possible).
+        Output goes to the sorter’s destination container.
+      </p>
+
+      <h3 style="margin:14px 0 6px;">🧊 Server-friendly defaults (configurable)</h3>
+      <p class="desc" style="margin-top:0;">
+        LogiChest includes a Forge server config to tune pacing and limits. Defaults:
       </p>
       <ul>
         <li><strong>Max linked sorters per Hub:</strong> 8</li>
         <li><strong>Hub transfer cooldown:</strong> 8 ticks (vanilla hopper speed)</li>
-        <li><strong>Transfers per cycle:</strong> 3 (moves up to 3 distinct item types per eligible sorter per cycle)</li>
-        <li><strong>Link Key craft time:</strong> 600 ticks (30 seconds)</li>
+        <li><strong>Transfers per cycle:</strong> 3</li>
+        <li><strong>LogiLink Key craft time:</strong> 600 ticks (30 seconds)</li>
       </ul>
 
       <div class="callout" style="margin-top:12px;">
         <strong>Best used for</strong>
         <p class="muted small" style="margin:6px 0 0;">
-          Storage rooms, farm outputs, smelter lines, and “loot intake” systems where you want clean routing without complexity.
+          Storage rooms, farm outputs, smelter buffers, and “loot intake” systems where you want clean routing without complexity.
         </p>
       </div>
     </section>
@@ -115,25 +153,25 @@
       <div class="card">
         <h3>📦 Hub → Sorter Routing <span class="badge">Core</span></h3>
         <p class="desc">
-          The Hub routes items from its facing inventory to sorter destinations based on sorter filter whitelists.
+          The Hub routes items from its facing inventory to sorter destinations based on sorter whitelist filters.
         </p>
         <ul>
           <li>Round-robin fairness across linked sorters</li>
-          <li>Routes only if the sorter has filters set</li>
-          <li>Per-sorter cooldowns so upgrades matter</li>
+          <li>Routes only items that match a sorter’s filters</li>
+          <li>Stable, “rules-first” automation (no surprises)</li>
         </ul>
       </div>
 
       <div class="card">
-        <h3>🧩 Upgrade-based Scaling <span class="badge">Polish</span></h3>
+        <h3>⚙️ Upgrade-driven Scaling <span class="badge">Polish</span></h3>
         <p class="desc">
-          Sorters have 4 upgrade slots that change how much they move/craft and how fast they operate.
+          Sorters scale with upgrades: faster cycles, bigger batches, plus optional craft/smelt automation.
         </p>
         <ul>
-          <li>Speed Coils: faster routing + faster autocrafting</li>
-          <li>Stack Boosters: larger batch size per item type</li>
-          <li>Autocrafter Core: crafts from hub inventory into sorter output</li>
-          <li>Keychain Module: authorize a sorter for multiple hubs</li>
+          <li>Speed Coils: faster routing + faster auto intervals</li>
+          <li>Stack Boosters: higher throughput per matched item type</li>
+          <li>Autocrafter Core + Autosmelter Core: craft/smelt from Hub into output</li>
+          <li>Keychain Module: authorize one sorter for multiple hubs</li>
         </ul>
       </div>
     </section>
@@ -149,8 +187,8 @@
         <h3>1) Decide your “source” inventory</h3>
         <p class="desc">The Hub pulls from the container it is facing.</p>
         <ul>
-          <li>Example sources: a chest that receives farm output, a buffer chest, a drop-off chest</li>
-          <li>Place the Hub so it is facing that container</li>
+          <li>Example sources: farm output chest, buffer chest, drop-off chest</li>
+          <li>Place the Hub so it faces that container</li>
           <li>That facing container becomes the Hub’s input source</li>
         </ul>
       </div>
@@ -159,19 +197,19 @@
         <h3>2) Place Sorters at destinations</h3>
         <p class="desc">Each sorter points at the container it should fill.</p>
         <ul>
-          <li>Put a Sorter next to a destination chest/barrel</li>
+          <li>Put a Sorter beside a destination chest/barrel</li>
           <li>Make the Sorter face the destination container</li>
           <li>That facing container becomes the sorter’s output destination</li>
         </ul>
       </div>
 
       <div class="card">
-        <h3>3) Create a Link Key in the Hub</h3>
-        <p class="desc">The Hub crafts keys over time using a simple recipe.</p>
+        <h3>3) Craft a LogiLink Key in the Hub</h3>
+        <p class="desc">The Hub crafts keys over time using 3 ingredients.</p>
         <ul>
-          <li>Insert the Link Key ingredients into the Hub crafting slots</li>
-          <li>Wait for progress to complete (configurable time)</li>
-          <li>The crafted Link Key is bound to that Hub</li>
+          <li>Put <code>Iron Ingot</code>, <code>Redstone</code>, <code>Amethyst Shard</code> into the Hub inputs</li>
+          <li>Wait for the progress to finish (default: 30s)</li>
+          <li>The key is bound to that Hub (ID + pos + dimension)</li>
         </ul>
       </div>
 
@@ -179,9 +217,29 @@
         <h3>4) Link Sorters & set filters</h3>
         <p class="desc">Link keys connect a sorter to a hub, filters decide what it accepts.</p>
         <ul>
-          <li>Put the Link Key into the sorter’s link slot</li>
+          <li>Put the LogiLink Key into the sorter’s link slot</li>
           <li>Set the sorter’s 10 filter slots (ghost items)</li>
-          <li>Now the Hub can route matching items into that sorter’s destination</li>
+          <li>The Hub will route matching items into that sorter’s destination</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>5) Add upgrades (optional)</h3>
+        <p class="desc">Scale routing, enable crafting, or enable smelting.</p>
+        <ul>
+          <li>Speed Coils: faster cycles</li>
+          <li>Stack Boosters: bigger batches</li>
+          <li>Autocrafter/Autosmelter: craft or smelt from Hub inventory into output</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>6) Multi-hub sorters (Keychain Module)</h3>
+        <p class="desc">Authorize one sorter for multiple hubs by storing multiple keys.</p>
+        <ul>
+          <li>Install Keychain Module in the sorter upgrade slots</li>
+          <li>Open it and insert multiple LogiLink Keys</li>
+          <li>Sorter registers with each hub (if each hub has space)</li>
         </ul>
       </div>
     </section>
@@ -189,7 +247,7 @@
     <!-- CRAFTING RECIPES -->
     <div class="sectionTitle">
       <h2>🧱 Crafting Recipes</h2>
-      <span>Core blocks & items</span>
+      <span>Core blocks & upgrades</span>
     </div>
 
     <section class="grid2">
@@ -199,35 +257,51 @@
         <div class="codebox" style="margin-top:10px;">
           <code>
 Recipe:
-[ ]      [Hopper]    [ ]
-[Hopper] [Chest]     [Hopper]
-[ ]      [Hopper]    [ ]
+[ ]      [Hopper]   [ ]
+[Hopper] [Wood Chest] [Hopper]
+[ ]      [Hopper]   [ ]
           </code>
         </div>
+        <p class="muted small" style="margin:8px 0 0;">
+          Uses <code>forge:chests/wooden</code> (any wooden chest).
+        </p>
       </div>
 
       <div class="card">
         <h3>🧩 Sorter</h3>
-        <p class="desc">Whitelist filter + destination delivery. Points at the output container it fills.</p>
+        <p class="desc">Whitelist filter + destination delivery. Faces the output container it fills.</p>
         <div class="codebox" style="margin-top:10px;">
           <code>
 Recipe:
-[ ]        [Hopper]       [ ]
-[Redstone] [Comparator]   [Redstone]
-[ ]        [Hopper]       [ ]
+[ ]        [Hopper]      [ ]
+[Redstone] [Comparator]  [Redstone]
+[ ]        [Hopper]      [ ]
           </code>
         </div>
       </div>
 
       <div class="card">
         <h3>🛠️ Autocrafter Core</h3>
-        <p class="desc">Upgrade item. When installed in a sorter, enables autocrafting into its destination container.</p>
+        <p class="desc">Upgrade. Enables crafting from Hub inventory into the sorter destination.</p>
         <div class="codebox" style="margin-top:10px;">
           <code>
 Recipe:
-[Iron]    [Redstone]     [Iron]
-[Redstone][CraftingTable][Redstone]
-[Iron]    [Redstone]     [Iron]
+[Iron]    [Redstone]      [Iron]
+[Redstone][Crafting Table][Redstone]
+[Iron]    [Redstone]      [Iron]
+          </code>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🔥 Autosmelter Core</h3>
+        <p class="desc">Upgrade. Enables smelting from Hub inventory into the sorter destination (fuel from the Hub).</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>
+Recipe:
+[Iron]    [Redstone]  [Iron]
+[Redstone][Furnace]   [Redstone]
+[Iron]    [Redstone]  [Iron]
           </code>
         </div>
       </div>
@@ -235,15 +309,15 @@ Recipe:
       <div class="card">
         <h3>⏩ Speed Coil</h3>
         <p class="desc">
-          Upgrade item. More coils = faster routing cooldown for that sorter, and faster autocrafting interval.
-          (Coils stack; with 4 upgrade slots, you can stack multiple per slot.)
+          Upgrade. More coils = faster sorter cooldown (and faster craft/smelt interval).
+          Stacks up to 8 per stack.
         </p>
         <div class="codebox" style="margin-top:10px;">
           <code>
 Recipe:
-[Gold]    [Redstone]   [Gold]
-[Redstone][Piston]     [Redstone]
-[Gold]    [Redstone]   [Gold]
+[Gold]    [Redstone]  [Gold]
+[Redstone][Piston]    [Redstone]
+[Gold]    [Redstone]  [Gold]
           </code>
         </div>
       </div>
@@ -251,24 +325,26 @@ Recipe:
       <div class="card">
         <h3>➕ Stack Booster</h3>
         <p class="desc">
-          Upgrade item. Increases how many items move/craft per item-type batch (base 1 + boosters).
-          Great for high-volume routing.
+          Upgrade. Increases transfer batch amount (base 1 + boosters).
+          Stacks up to 8 per stack.
         </p>
         <div class="codebox" style="margin-top:10px;">
           <code>
 Recipe:
-[Iron]   [Hopper]   [Iron]
-[Hopper] [Chest]    [Hopper]
-[Iron]   [Hopper]   [Iron]
+[Iron]   [Hopper]    [Iron]
+[Hopper] [Wood Chest][Hopper]
+[Iron]   [Hopper]    [Iron]
           </code>
         </div>
+        <p class="muted small" style="margin:8px 0 0;">
+          Uses <code>forge:chests/wooden</code> (any wooden chest).
+        </p>
       </div>
 
       <div class="card">
         <h3>🔑 Keychain Module</h3>
         <p class="desc">
-          Upgrade item. Adds an internal 9-slot keychain inventory that can hold multiple Link Keys,
-          authorizing this sorter for multiple hubs (and registering it with those hubs if capacity allows).
+          Upgrade. Adds an internal 9-slot keychain inventory to a sorter (authorize multiple hubs).
         </p>
         <div class="codebox" style="margin-top:10px;">
           <code>
@@ -281,13 +357,13 @@ Recipe:
       </div>
 
       <div class="card">
-        <h3>🗝️ Link Key (crafted in the Hub)</h3>
+        <h3>🗝️ LogiLink Key (crafted in the Hub)</h3>
         <p class="desc">
-          Crafted over time inside the Hub (not a crafting-table recipe). The key stores the hub’s ID + position + dimension.
+          Crafted over time inside the Hub (not a crafting-table recipe). Stores hub ID + position + dimension.
         </p>
         <div class="codebox" style="margin-top:10px;">
           <code>
-Hub crafting ingredients:
+Hub inputs:
 - Iron Ingot
 - Redstone
 - Amethyst Shard
