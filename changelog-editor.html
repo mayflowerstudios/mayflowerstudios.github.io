@@ -26,16 +26,19 @@
       border-radius:999px;border:1px solid rgba(255,255,255,.16);
       padding:10px 14px;background:rgba(255,255,255,.06);color:inherit;
       cursor:pointer;text-decoration:none;
+      user-select:none;
     }
     .btn2.primary{background:rgba(251,113,133,.22);border-color:rgba(251,113,133,.45)}
     .btn2.good{background:rgba(34,197,94,.16);border-color:rgba(34,197,94,.35)}
     .btn2.warn{background:rgba(251,191,36,.16);border-color:rgba(251,191,36,.35)}
+    .btn2.bad{background:rgba(248,113,113,.16);border-color:rgba(248,113,113,.35)}
     .tiny{font-size:.85rem;color:rgba(255,255,255,.62)}
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
     .hr{height:1px;background:rgba(255,255,255,.10);margin:14px 0}
     .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);
       background:rgba(0,0,0,.75);border:1px solid rgba(255,255,255,.12);
       padding:10px 14px;border-radius:999px;display:none;z-index:50}
+    .rowRight{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
   </style>
 </head>
 <body data-nav="mods">
@@ -68,7 +71,7 @@
 
         <div class="row">
           <div style="flex:1;min-width:220px">
-            <label>Mod</label>
+            <label>Project (mod/bot)</label>
             <select id="modSelect"></select>
           </div>
 
@@ -77,7 +80,9 @@
             <select id="versionSelect"></select>
           </div>
 
-          <div style="flex:0 0 auto;align-self:end">
+          <div style="flex:0 0 auto;align-self:end" class="rowRight">
+            <button class="btn2" id="newModBtn" title="Add a new mod/bot/project">🧩 Add project</button>
+            <button class="btn2 bad" id="deleteModBtn" title="Deletes the selected project + all versions">🗑 Delete project</button>
             <button class="btn2" id="newVersionBtn">➕ New version</button>
           </div>
         </div>
@@ -97,19 +102,19 @@
         </div>
 
         <label>Added (one per line)</label>
-        <textarea id="added" placeholder="Added: ..."></textarea>
+        <textarea id="added" placeholder="Upgrade items...&#10;New safe tier..."></textarea>
 
         <label>Changed (one per line)</label>
-        <textarea id="changed" placeholder="Changed: ..."></textarea>
+        <textarea id="changed" placeholder="Tweaked crafting recipes..."></textarea>
 
         <label>Fixed (one per line)</label>
-        <textarea id="fixed" placeholder="Fixed: ..."></textarea>
+        <textarea id="fixed" placeholder="Fixed door drops..."></textarea>
 
         <label>Stability (optional, one per line)</label>
-        <textarea id="stability" placeholder="Performance, reliability, etc."></textarea>
+        <textarea id="stability" placeholder="Reduced lag when sorting..."></textarea>
 
         <label>Known Issues (optional, one per line)</label>
-        <textarea id="knownIssues" placeholder="Known issues…"></textarea>
+        <textarea id="knownIssues" placeholder="Vault top texture may flicker..."></textarea>
 
         <div class="hr"></div>
 
@@ -191,7 +196,7 @@
     }
 
     function linesToArr(text){
-      return text
+      return String(text ?? "")
         .split("\n")
         .map(s => s.trim())
         .filter(Boolean);
@@ -203,6 +208,24 @@
 
     function refreshJsonOut(){
       $("jsonOut").value = JSON.stringify(state.data, null, 2);
+    }
+
+    function safeMods(){
+      if (!state.data || typeof state.data !== "object") state.data = {};
+      if (!Array.isArray(state.data.mods)) state.data.mods = [];
+      if (!state.data.mods.length){
+        // Keep editor usable even if JSON is empty
+        state.data.mods.push({
+          id: "steelhold",
+          name: "Steelhold",
+          emoji: "🔐",
+          kicker: "Minecraft Mod",
+          backHref: "steelhold.html",
+          downloadHref: "https://www.curseforge.com/minecraft/mc-mods/steelhold",
+          output: "steelholdchangelog.html",
+          versions: []
+        });
+      }
     }
 
     function fillModSelect(){
@@ -339,7 +362,76 @@
       state.versionIndex = 0;
       refreshJsonOut();
       fillVersionSelect();
-      toast("Deleted 🗑");
+      toast("Deleted version 🗑");
+    }
+
+    function slugify(s){
+      return String(s ?? "")
+        .trim()
+        .toLowerCase()
+        .replace(/['"]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+    }
+
+    function newMod(){
+      const name = prompt("New mod/bot/project name? (example: EchoBloom, FoxBot, SpawnAnchor)");
+      if (!name) return;
+
+      const idDefault = slugify(name);
+      const id = (prompt("ID (lowercase, no spaces):", idDefault) || idDefault).trim() || idDefault;
+      const emoji = (prompt("Emoji icon (example: 🔐, 📦, 🌙):", "🧾") || "🧾").trim();
+
+      const type = (prompt("Type? (mod/bot/tool) - just for labeling:", "mod") || "mod").trim().toLowerCase();
+      const kickerDefault = type === "bot" ? "Discord Bot" : (type === "tool" ? "Tool" : "Minecraft Mod");
+      const kicker = (prompt("Kicker text (shows above title):", kickerDefault) || kickerDefault).trim();
+
+      const backHrefDefault = `${id}.html`;
+      const backHref = (prompt("Back page href (example: steelhold.html):", backHrefDefault) || backHrefDefault).trim();
+
+      const outputDefault = `${id}changelog.html`;
+      const output = (prompt("Output changelog filename:", outputDefault) || outputDefault).trim();
+
+      const downloadHref = (prompt("Download link (CurseForge/GitHub). Leave blank if none:", "") || "").trim();
+
+      state.data.mods = state.data.mods ?? [];
+      state.data.mods.push({
+        id,
+        name,
+        emoji,
+        kicker,
+        backHref,
+        downloadHref,
+        output,
+        versions: []
+      });
+
+      state.modIndex = state.data.mods.length - 1;
+      state.versionIndex = 0;
+
+      fillModSelect();
+      fillVersionSelect();
+      refreshJsonOut();
+      toast("Added project 🧩");
+    }
+
+    function deleteMod(){
+      const mod = state.data.mods[state.modIndex];
+      if (!mod) return;
+
+      const label = mod.name ?? mod.id ?? "this project";
+      if (!confirm(`Delete "${label}" and ALL its versions?`)) return;
+
+      state.data.mods.splice(state.modIndex, 1);
+      state.modIndex = 0;
+      state.versionIndex = 0;
+
+      safeMods();
+      fillModSelect();
+      fillVersionSelect();
+      refreshJsonOut();
+      toast("Deleted project 🗑");
     }
 
     function downloadJson(){
@@ -426,7 +518,9 @@
         $("jsonOut").value = "Could not load /data/changelogs.json. Make sure it exists.";
         return;
       }
+
       state.data = await res.json();
+      safeMods();
 
       fillModSelect();
       fillVersionSelect();
@@ -436,7 +530,7 @@
         state.modIndex = Number(e.target.value);
         state.versionIndex = 0;
         fillVersionSelect();
-        toast("Switched mod");
+        toast("Switched project");
       });
 
       $("versionSelect").addEventListener("change", (e) => {
@@ -451,10 +545,14 @@
       $("copyBtn").addEventListener("click", copyJson);
       $("commitBtn").addEventListener("click", githubCommitJson);
 
+      $("newModBtn").addEventListener("click", newMod);
+      $("deleteModBtn").addEventListener("click", deleteMod);
+
       // allow editing JSON directly (power user)
       $("jsonOut").addEventListener("change", () => {
         try{
           state.data = JSON.parse($("jsonOut").value);
+          safeMods();
           state.modIndex = 0;
           state.versionIndex = 0;
           fillModSelect();
