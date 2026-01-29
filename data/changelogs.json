@@ -146,6 +146,16 @@
           "fixed": [],
           "stability": [],
           "knownIssues": []
+        },
+        {
+          "version": "",
+          "date": "2026-01-29",
+          "badge": "",
+          "added": [],
+          "changed": [],
+          "fixed": [],
+          "stability": [],
+          "knownIssues": []
         }
       ]
     }
