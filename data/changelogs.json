@@ -94,6 +94,20 @@
       "output": "logichestchangelog.html",
       "versions": [
         {
+          "version": "9.9.9",
+          "date": "2026-01-29",
+          "badge": "Testing",
+          "added": [
+            "Just testing something"
+          ],
+          "changed": [
+            "this will be deleted"
+          ],
+          "fixed": [],
+          "stability": [],
+          "knownIssues": []
+        },
+        {
           "version": "1.1.2",
           "date": "",
           "badge": "New Upgrade",
@@ -143,20 +157,6 @@
             "Hub + sorter framework and basic linking."
           ],
           "changed": [],
-          "fixed": [],
-          "stability": [],
-          "knownIssues": []
-        },
-        {
-          "version": "9.9.9",
-          "date": "2026-01-29",
-          "badge": "Testing",
-          "added": [
-            "Just testing something"
-          ],
-          "changed": [
-            "this will be deleted"
-          ],
           "fixed": [],
           "stability": [],
           "knownIssues": []
