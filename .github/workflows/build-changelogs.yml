@@ -1,0 +1,36 @@
+name: Build changelog pages
+
+on:
+  push:
+    paths:
+      - "data/changelogs.json"
+      - "tools/build-changelogs.mjs"
+      - "tools/changelog-template.html"
+      - ".github/workflows/build-changelogs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build changelog pages
+        run: node tools/build-changelogs.mjs
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add steelholdchangelog.html logichestchangelog.html
+          # If you later add more mods, this will catch them too:
+          git add **/*changelog*.html || true
+          git diff --cached --quiet || git commit -m "Auto-build changelog pages"
+          git push

@@ -1,0 +1,40 @@
+{
+  "mods": [
+    {
+      "id": "steelhold",
+      "name": "Steelhold",
+      "emoji": "🔐",
+      "kicker": "Minecraft Mod",
+      "backHref": "steelhold.html",
+      "downloadHref": "https://www.curseforge.com/minecraft/mc-mods/steelhold",
+      "output": "steelholdchangelog.html",
+      "versions": [
+        {
+          "version": "1.2.1",
+          "date": "2026-01-28",
+          "badge": "Bug fixes and upgrade items",
+          "added": [
+            "Upgrade items: right-click a safe to upgrade instead of breaking it first."
+          ],
+          "changed": [
+            "Doors can now be renamed like safes."
+          ],
+          "fixed": [
+            "Doors now drop the item when broken (fixed missing drop issue)."
+          ],
+          "stability": []
+        }
+      ]
+    },
+    {
+      "id": "logichest",
+      "name": "LogiChest",
+      "emoji": "📦",
+      "kicker": "Minecraft Mod",
+      "backHref": "logichest.html",
+      "downloadHref": "https://www.curseforge.com/minecraft/mc-mods/logichest",
+      "output": "logichestchangelog.html",
+      "versions": []
+    }
+  ]
+}
