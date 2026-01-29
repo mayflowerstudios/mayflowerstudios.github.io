@@ -51,9 +51,7 @@ function buildForMod(mod, template) {
     return String(b.version).localeCompare(String(a.version), undefined, { numeric: true });
   });
 
-  const entries = versions
-    .map((v, i) => (i === 0 ? entryHTML(v) : `${entryHTML(v)}\n<hr class="sep">`))
-    .join("\n");
+  const entries = versions.map(entryHTML).join("\n<hr class=\"sep\">\n");
 
   const out = template
     .replaceAll("{{TITLE}}", esc(`${mod.name} Changelog • Mayflower Studios`))
