@@ -3,7 +3,7 @@
     {
       "id": "steelhold",
       "name": "Steelhold",
-      "emoji": "🔐",
+      "emoji": "🧾",
       "kicker": "Minecraft Mod",
       "backHref": "steelhold.html",
       "downloadHref": "https://www.curseforge.com/minecraft/mc-mods/steelhold",
@@ -11,30 +11,143 @@
       "versions": [
         {
           "version": "1.2.1",
-          "date": "2026-01-28",
+          "date": "",
           "badge": "Bug fixes and upgrade items",
           "added": [
-            "Upgrade items: right-click a safe to upgrade instead of breaking it first."
+            "Upgrade items to just right click a safe to upgrade it instead of needing to break them first to use in crafting."
           ],
           "changed": [
-            "Doors can now be renamed like safes."
+            "Doors can now be renamed like the safes."
           ],
           "fixed": [
-            "Doors now drop the item when broken (fixed missing drop issue)."
+            "Door issue with not dropping items. Doors now drop the item when broken."
           ],
-          "stability": []
+          "stability": [],
+          "knownIssues": []
+        },
+        {
+          "version": "1.2.0",
+          "date": "",
+          "badge": "DOORS!",
+          "added": [
+            "Added a door that locks just like the safes do.",
+            "The doors can also give off a redstone signal when used without the key just like the safes."
+          ],
+          "changed": [],
+          "fixed": [],
+          "stability": [],
+          "knownIssues": []
+        },
+        {
+          "version": "1.1.1",
+          "date": "",
+          "badge": "Bug fixes plus some changes",
+          "added": [
+            "Safes now emit a redstone signal when trying to open with the wrong key so you can set up an alarm/trap system for them."
+          ],
+          "changed": [
+            "No longer uses a command to make a key. You craft unbound keys and right click your safe to bind it.",
+            "Crafting recipes have changed making them easier to make but still balanced."
+          ],
+          "fixed": [
+            "Vault safe breaking texture for the top block is fixed."
+          ],
+          "stability": [],
+          "knownIssues": []
+        },
+        {
+          "version": "1.1.0",
+          "date": "",
+          "badge": "Safe Size Update",
+          "added": [],
+          "changed": [
+            "Vault safe is now a 2 block tall safe.",
+            "Bank safe is now a 2x2x2 safe."
+          ],
+          "fixed": [],
+          "stability": [],
+          "knownIssues": [
+            "There are some texture issues with the Vault safe that are being looked into."
+          ]
+        },
+        {
+          "version": "1.0.0",
+          "date": "",
+          "badge": "Initial",
+          "added": [
+            "Core secure storage system, first safe blocks, key/ownership foundation."
+          ],
+          "changed": [],
+          "fixed": [],
+          "stability": [],
+          "knownIssues": []
         }
       ]
     },
     {
       "id": "logichest",
       "name": "LogiChest",
-      "emoji": "📦",
+      "emoji": "🧾",
       "kicker": "Minecraft Mod",
       "backHref": "logichest.html",
       "downloadHref": "https://www.curseforge.com/minecraft/mc-mods/logichest",
       "output": "logichestchangelog.html",
-      "versions": []
+      "versions": [
+        {
+          "version": "1.1.2",
+          "date": "",
+          "badge": "New Upgrade",
+          "added": [
+            "New upgrade: The Autosmelter Core."
+          ],
+          "changed": [
+            "Updated the item textures."
+          ],
+          "fixed": [],
+          "stability": [],
+          "knownIssues": []
+        },
+        {
+          "version": "1.1.1",
+          "date": "",
+          "badge": "Compatability Update",
+          "added": [],
+          "changed": [
+            "Hub + sorter are now compatable with inventories from mods such as sophisticated storage."
+          ],
+          "fixed": [],
+          "stability": [],
+          "knownIssues": []
+        },
+        {
+          "version": "1.1.0",
+          "date": "",
+          "badge": "\"Upgrades\" Update",
+          "added": [
+            "Autocrafter Core (crafts items in your whitelist if the materials are in the hub chest).",
+            "Keychain Module (lets you add 9 more hub keys to a sorter — right click with the upgrade in hand to open).",
+            "Stack Booster (increases the stack number of transferred items).",
+            "Speed Coil (increases the speed at which items get transferred).",
+            "Note: Speed Coil and Stack Booster are stackable up to 8 per stack to increase the effectiveness of the upgrade."
+          ],
+          "changed": [],
+          "fixed": [],
+          "stability": [],
+          "knownIssues": []
+        },
+        {
+          "version": "1.0.0",
+          "date": "",
+          "badge": "Initial",
+          "added": [
+            "Hub + sorter framework and basic linking."
+          ],
+          "changed": [],
+          "fixed": [],
+          "stability": [],
+          "knownIssues": []
+        }
+      ]
     }
   ]
 }
