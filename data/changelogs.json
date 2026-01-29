@@ -148,11 +148,15 @@
           "knownIssues": []
         },
         {
-          "version": "",
+          "version": "9.9.9",
           "date": "2026-01-29",
-          "badge": "",
-          "added": [],
-          "changed": [],
+          "badge": "Testing",
+          "added": [
+            "Just testing something"
+          ],
+          "changed": [
+            "this will be deleted"
+          ],
           "fixed": [],
           "stability": [],
           "knownIssues": []
