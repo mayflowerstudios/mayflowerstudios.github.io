@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Steelhold • Mayflower Studios</title>
+
+  <!-- ✅ Root-relative CSS -->
+  <link rel="stylesheet" href="/style.css" />
+</head>
+
+<body data-nav="mods" data-mod-json="/data/mods/steelhold.json">
+  <div class="wrap">
+    <div id="shared-nav"></div>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div>
+        <p class="kicker" id="modKicker"></p>
+        <h1 id="modName"></h1>
+        <p class="muted" id="modTagline"></p>
+        <div class="ctaRow" id="modCtas"></div>
+      </div>
+
+      <div class="tileGrid" id="heroTiles"></div>
+    </section>
+
+    <!-- DESCRIPTION -->
+    <div class="sectionTitle">
+      <h2>📝 Description</h2>
+      <span>What this mod is</span>
+    </div>
+    <section class="card" id="descriptionBlock"></section>
+
+    <!-- FEATURES -->
+    <div class="sectionTitle">
+      <h2>⭐ Features</h2>
+      <span>What it focuses on</span>
+    </div>
+    <section class="grid2" id="featuresGrid"></section>
+
+    <!-- HOW TO USE -->
+    <div class="sectionTitle">
+      <h2>📘 How to Use</h2>
+      <span>Quick gameplay guide</span>
+    </div>
+    <section class="grid2" id="howToGrid"></section>
+
+    <!-- COMMANDS -->
+    <div class="sectionTitle" id="commandsTitle">
+      <h2>⌨️ Commands</h2>
+      <span>Admin + debugging utilities</span>
+    </div>
+    <section class="card" id="commandsBlock"></section>
+
+    <!-- RECIPES -->
+    <div class="sectionTitle">
+      <h2>🧱 Crafting Recipes</h2>
+      <span>Recipes & progression</span>
+    </div>
+    <section class="grid2" id="recipesGrid"></section>
+
+    <!-- MEDIA -->
+    <div class="sectionTitle">
+      <h2>🖼️ Media</h2>
+      <span>Icon & screenshots</span>
+    </div>
+    <section class="card" id="mediaBlock"></section>
+
+    <!-- INSTALL -->
+    <div class="sectionTitle">
+      <h2>📥 Install</h2>
+      <span>Quick notes</span>
+    </div>
+    <section class="card" id="installBlock"></section>
+
+    <div id="shared-footer"></div>
+  </div>
+
+  <!-- ✅ Root-relative scripts -->
+  <script src="/shared.js"></script>
+  <script src="/fireflies.js"></script>
+  <script src="/tools/mods-page.js"></script>
+</body>
+</html>

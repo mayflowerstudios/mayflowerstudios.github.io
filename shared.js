@@ -49,8 +49,8 @@ function highlightNav() {
   injectFavicon("/assets/icons/favicon.png");
   injectFireflies();
 
-  await loadPartial("#shared-nav", "partials/nav.html");
-  await loadPartial("#shared-footer", "partials/footer.html");
+  await loadPartial("#shared-nav", "/partials/nav.html");
+  await loadPartial("#shared-footer", "/partials/footer.html");
   setYear();
   highlightNav();
 })();

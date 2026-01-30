@@ -1,0 +1,227 @@
+{
+  "slug": "steelhold",
+  "kicker": "Minecraft Mod",
+  "emojiName": "🔐 Steelhold",
+  "title": "Steelhold • Mayflower Studios",
+  "tagline": "Heavy-duty safes for Forge survival — player ownership, bindable keys, in-place upgrades, and “anvil-style”\nfalling behavior for secure builds and long-running worlds.",
+  "cta": [
+    { "label": "📦 Download", "href": "https://www.curseforge.com/minecraft/mc-mods/steelhold", "class": "btn primary" },
+    { "label": "🧾 Changelog", "href": "changelogs/steelholdchangelog.html", "class": "btn ghost" },
+    { "label": "⬅ Back to Projects", "href": "/projects.html", "class": "btn ghost" }
+  ],
+  "heroTiles": [
+    { "title": "🔑 Bindable Keys", "body": "Craft keys, then bind them to a safe/door you own." },
+    { "title": "🧱 Tiered Safes", "body": "Basic → Reinforced → Steelhold → Vault → Bank." },
+    { "title": "🧰 Upgrade Kits", "body": "Right-click upgrade a safe in-place (keeps data + inventory)." },
+    { "title": "🚪 Steelhold Door", "body": "A locked iron door with alarms + optional redstone rules." }
+  ],
+
+  "descriptionHtml": [
+    "<p class=\"desc\"><strong>Steelhold</strong> is a Forge mod that adds player-owned safes with a practical lock-and-key workflow. When a safe (or Steelhold Door) is placed, it stores an <strong>Owner</strong> and a unique <strong>Lock ID</strong>. The owner can open it freely; everyone else needs a matching key.</p>",
+    "<p class=\"desc\">Steelhold is built for survival pacing and server longevity: safes can be tuned via config, support multiple tiers, and behave like real heavy objects — if you remove the block underneath, they <strong>fall like anvils</strong>.</p>",
+    "<div class=\"divider\" style=\"margin:14px 0;\"></div>",
+    "<h3 style=\"margin:0 0 6px;\">🔑 Keys (Craft → Bind → Share)</h3>",
+    "<p class=\"muted small\" style=\"margin:0 0 10px;\">Keys are crafted as blanks, then <strong>bound by right-clicking</strong> a safe/door you own.</p>",
+    "<p class=\"desc\" style=\"margin-top:0;\">Once bound, keys store the Lock ID in NBT and can open any Steelhold block that shares that lock (safes + doors). Tooltips show a short lock ID and extra context so you can manage multiple keys without losing track.</p>",
+    "<h3 style=\"margin:14px 0 6px;\">🧰 Upgrade Kits (In-Place Upgrades)</h3>",
+    "<p class=\"desc\" style=\"margin-top:0;\">Upgrade kits let you <strong>right-click a safe</strong> to upgrade it to the next tier without picking it up. The upgrade preserves the important stuff: <strong>inventory</strong>, <strong>custom name</strong>, <strong>owner</strong>, and <strong>Lock ID</strong>.</p>",
+    "<ul class=\"muted small\" style=\"margin:0; padding-left:18px;\"><li>Reinforced Upgrade Kit: Basic → Reinforced</li><li>Steelhold Upgrade Kit: Reinforced → Steelhold</li><li>Vault Upgrade Kit: Steelhold → Vault (2-block tall)</li><li>Bank Upgrade Kit: Vault → Bank (2×2×2 structure)</li></ul>",
+    "<div class=\"callout\" style=\"margin-top:12px;\"><strong>Space checks included</strong><p class=\"muted small\" style=\"margin:6px 0 0;\">Upgrades that expand into multi-block safes verify space first, so you don’t accidentally overwrite blocks.</p></div>",
+    "<h3 style=\"margin:14px 0 6px;\">🚪 Steelhold Door (Locked + Alarm + Redstone)</h3>",
+    "<p class=\"desc\" style=\"margin-top:0;\">The Steelhold Door is a locked iron door that uses the same ownership + key system as safes. If a non-owner tries to open it, it can trigger an <strong>alarm state</strong> and emit a strong redstone signal.</p>",
+    "<ul class=\"muted small\" style=\"margin:0; padding-left:18px;\"><li><strong>Alarm output:</strong> emits redstone while alarm is active (great for sirens, lights, or alerts).</li><li><strong>Optional redstone open:</strong> config can allow or deny opening via button/lever.</li><li><strong>Tool requirement:</strong> configurable pickaxe level gate for proper drops/breaking behavior.</li></ul>",
+    "<h3 style=\"margin:14px 0 6px;\">⬇️ Falling Safes (Anvil-Style Physics)</h3>",
+    "<p class=\"desc\" style=\"margin-top:0;\">Safes are heavy: if the block under them disappears, they convert into a falling block entity (like anvils) and keep their stored data while falling/landing — including inventory, owner, and lock ID.</p>",
+    "<h3 style=\"margin:14px 0 6px;\">🏗️ Sizes &amp; Structure</h3>",
+    "<ul class=\"muted small\" style=\"margin:0; padding-left:18px;\"><li><strong>Basic / Reinforced / Steelhold</strong>: single-block safes.</li><li><strong>Vault Safe</strong>: a <strong>2-block-tall</strong> safe placed as a lower + upper half.</li><li><strong>Bank Safe</strong>: a <strong>2×2×2 “mega safe”</strong> (8 blocks). Only the origin block stores the inventory and drives the structure.</li></ul>",
+    "<h3 style=\"margin:14px 0 6px;\">⚙️ Configurable Balance</h3>",
+    "<p class=\"desc\" style=\"margin-top:0;\">Steelhold ships with a Forge <strong>common config</strong> that lets pack makers and servers tune: <strong>slot counts</strong>, <strong>hardness</strong>, <strong>blast resistance</strong>, and <strong>required pickaxe tier</strong> per safe tier. There are also global toggles for whether safes <strong>drop contents on break</strong> and whether <strong>explosions can destroy Steelhold blocks</strong>.</p>",
+    "<div class=\"callout\" style=\"margin-top:12px;\"><strong>Note: slot counts won’t shrink existing safes</strong><p class=\"muted small\" style=\"margin:6px 0 0;\">Slot settings apply to newly placed safes only. Existing safes keep their original size to prevent item loss.</p></div>"
+  ],
+
+  "features": [
+    {
+      "title": "🔐 Ownership + Locks",
+      "badge": "Core",
+      "desc": "A simple, explicit ownership + lock ID approach that works well in survival and multiplayer.",
+      "bullets": [
+        "Owner can always open",
+        "Non-owners require a matching key",
+        "Same key can work for safes + doors (shared Lock ID)"
+      ]
+    },
+    {
+      "title": "🔑 Craft + Bind Keys",
+      "badge": "New",
+      "desc": "Craft blank keys and bind them by right-clicking a Steelhold block you own.",
+      "bullets": [
+        "Bind to safes or Steelhold Doors",
+        "Share keys with trusted players",
+        "Tooltips help track what key goes to what"
+      ]
+    },
+    {
+      "title": "🧰 Upgrade Kits",
+      "badge": "Add-on",
+      "desc": "Upgrade safe tiers in-place while preserving inventory + lock data.",
+      "bullets": [
+        "Right-click upgrade flow",
+        "Preserves owner, lock ID, name, and contents",
+        "Space checks for multi-block upgrades"
+      ]
+    },
+    {
+      "title": "🚨 Alarm + Redstone",
+      "badge": "Add-on",
+      "desc": "Steelhold Door can alarm on intrusion and output redstone while active.",
+      "bullets": [
+        "Perfect for sirens, warning lamps, or alerts",
+        "Optional redstone-opening behavior via config",
+        "Tool requirement to prevent cheesy breaks"
+      ]
+    },
+    {
+      "title": "⬇️ Physical Behavior",
+      "badge": "World",
+      "desc": "Safes fall like anvils and keep their data when they land.",
+      "bullets": [
+        "Inventory, owner, and lock ID persist through falling",
+        "Vault Safe handles both halves cleanly",
+        "Bank Safe keeps the structure consistent"
+      ]
+    },
+    {
+      "title": "⚙️ Server Tuning",
+      "badge": "Config",
+      "desc": "Balance the grind, security, and progression to match your pack or server rules.",
+      "bullets": [
+        "Slots / hardness / blast resistance per tier",
+        "Required tool level per tier",
+        "Explosion + drop-contents toggles"
+      ]
+    }
+  ],
+
+  "howTo": [
+    {
+      "title": "1) Craft & Place",
+      "desc": "Place a safe (or Steelhold Door) like any block — it binds to the player who placed it.",
+      "bullets": [
+        "Owner is stored on the block",
+        "Each gets a unique Lock ID",
+        "Vault is 2-block tall; Bank is a 2×2×2 structure"
+      ]
+    },
+    {
+      "title": "2) Craft Keys, Then Bind (Owner)",
+      "desc": "Make blank keys, then right-click the safe/door you own to bind.",
+      "bullets": [
+        "Craft: Steelhold Key",
+        "Right-click your safe/door to bind",
+        "Share bound keys with trusted players"
+      ]
+    },
+    {
+      "title": "3) Upgrade In-Place (Optional)",
+      "desc": "Use upgrade kits to step safes up without moving items around.",
+      "bullets": [
+        "Right-click a safe with the correct kit",
+        "Preserves inventory + lock data",
+        "Expanding tiers check for space"
+      ]
+    },
+    {
+      "title": "4) Alarms & Automation (Door)",
+      "desc": "Use the door alarm redstone output to wire up a security system.",
+      "bullets": [
+        "Intrusion attempts can trigger alarm mode",
+        "Alarm emits redstone while active",
+        "Config can allow/deny redstone opening"
+      ]
+    }
+  ],
+
+  "commandsIntro": "Steelhold includes a small set of server commands for management and testing (you must be looking at the safe/door within 5 blocks).",
+  "commandsCode": "/steelhold resetlock     → owner-only: resets the Lock ID (old keys stop working)\n/steelhold whoowns       → shows current owner (safe or door)\n/steelhold setowner <player> → admin/tooling: set the owner (safe or door)\n/steelhold fakeintrusion → triggers the alarm (safe/bank/vault/door) for testing",
+  "commandsCalloutTitle": "Resetting a lock invalidates old keys",
+  "commandsCalloutBody": "Use <code>/steelhold resetlock</code> if a key gets stolen or you’re rotating access rules on a server.",
+
+  "recipes": [
+    {
+      "title": "🔓 Basic Safe",
+      "desc": "Starter-tier safe crafted from iron and a wooden chest.",
+      "code": "Recipe:\n[Iron Ingot] [Iron Ingot] [Iron Ingot]\n[Iron Ingot] [Wood Chest] [Iron Ingot]\n[Iron Ingot] [Iron Ingot] [Iron Ingot]"
+    },
+    {
+      "title": "🛠️ Reinforced Safe",
+      "desc": "Upgrade-tier safe using iron blocks, obsidian, and a Basic Safe.",
+      "code": "Recipe:\n[Obsidian]   [Iron Block]   [Obsidian]\n[Iron Block] [Basic Safe]   [Iron Block]\n[Obsidian]   [Iron Block]   [Obsidian]"
+    },
+    {
+      "title": "⚙️ Steelhold Safe",
+      "desc": "Higher security tier using gold blocks, obsidian, and a Reinforced Safe.",
+      "code": "Recipe:\n[Obsidian]   [Gold Block]       [Obsidian]\n[Gold Block] [Reinforced Safe]  [Gold Block]\n[Obsidian]   [Gold Block]       [Obsidian]"
+    },
+    {
+      "title": "🧱 Vault Safe (2-block tall)",
+      "desc": "Large safe tier crafted with diamond blocks, obsidian, and a Steelhold Safe.",
+      "code": "Recipe:\n[Obsidian]      [Diamond Block]   [Obsidian]\n[Diamond Block] [Steelhold Safe]  [Diamond Block]\n[Obsidian]      [Diamond Block]   [Obsidian]"
+    },
+    {
+      "title": "🏦 Bank Safe (2×2×2 mega safe)",
+      "desc": "Endgame safe built from emerald blocks, obsidian, ender chests, and the Vault Safe.",
+      "code": "Recipe:\n[Emerald Block] [Obsidian]    [Emerald Block]\n[Obsidian]      [Ender Chest] [Obsidian]\n[Emerald Block] [Vault Safe]  [Emerald Block]"
+    },
+    {
+      "title": "🔑 Steelhold Key",
+      "desc": "Craft blank keys, then bind by right-clicking your safe/door.",
+      "code": "Recipe:\n[   ]        [Iron Ingot]   [   ]\n[   ]        [Iron Nugget]  [   ]\n[   ]        [Iron Nugget]  [   ]\n\nBind:\nRight-click a Steelhold safe/door you own"
+    },
+    {
+      "title": "🚪 Steelhold Door",
+      "desc": "A locked iron door crafted by combining an iron door with a Basic Safe.",
+      "code": "Recipe (Shapeless):\n[Basic Safe] + [Iron Door] → [Steelhold Door]"
+    },
+    {
+      "title": "🧰 Reinforced Upgrade Kit",
+      "desc": "Upgrade: Basic → Reinforced (right-click on a Basic Safe).",
+      "code": "Recipe:\n[Obsidian]   [Iron Block]      [Obsidian]\n[Iron Block] [Redstone Block]  [Iron Block]\n[Obsidian]   [Iron Block]      [Obsidian]"
+    },
+    {
+      "title": "🧰 Steelhold Upgrade Kit",
+      "desc": "Upgrade: Reinforced → Steelhold (right-click on a Reinforced Safe).",
+      "code": "Recipe:\n[Obsidian]  [Gold Block]      [Obsidian]\n[Gold Block][Redstone Block]  [Gold Block]\n[Obsidian]  [Gold Block]      [Obsidian]"
+    },
+    {
+      "title": "🧰 Vault Upgrade Kit",
+      "desc": "Upgrade: Steelhold → Vault (right-click on a Steelhold Safe).",
+      "code": "Recipe:\n[Obsidian]      [Diamond Block]   [Obsidian]\n[Diamond Block] [Redstone Block]  [Diamond Block]\n[Obsidian]      [Diamond Block]   [Obsidian]"
+    },
+    {
+      "title": "🧰 Bank Upgrade Kit",
+      "desc": "Upgrade: Vault → Bank (right-click on a Vault Safe).",
+      "code": "Recipe:\n[Emerald Block] [Obsidian]       [Emerald Block]\n[Obsidian]      [Ender Chest]    [Obsidian]\n[Emerald Block] [Redstone Block] [Emerald Block]"
+    }
+  ],
+
+  "media": {
+    "icon": "/assets/icons/steelhold.png",
+    "name": "Steelhold",
+    "subtitle": "Safes, keys, doors, and upgrade progression",
+    "shots": [
+      { "src": "assets/shots/steelhold-1.png", "alt": "Steelhold screenshot 1", "cap": "Single-block tiers — compact and survival-friendly." },
+      { "src": "assets/shots/steelhold-2.png", "alt": "Steelhold screenshot 2", "cap": "Tiered UI storage that scales with config settings." },
+      { "src": "assets/shots/steelhold-3.png", "alt": "Steelhold screenshot 3", "cap": "Vault/Bank tiers — larger structures for dedicated secure rooms." }
+    ]
+  },
+
+  "install": {
+    "calloutTitle": "Recommended setup",
+    "calloutBody": "Keep client + server mod versions in sync. Pin versions for packs and servers.",
+    "stepsCode": "1) Install Forge (matching your mod version)\n2) Drop Steelhold into /mods\n3) Launch once to generate config\n4) Restart after config changes",
+    "buttons": [
+      { "label": "📦 CurseForge", "href": "https://www.curseforge.com/minecraft/mc-mods/steelhold", "class": "button mods" },
+      { "label": "🧾 Changelog", "href": "changelogs/steelholdchangelog.html", "class": "button ghost" }
+    ]
+  }
+}

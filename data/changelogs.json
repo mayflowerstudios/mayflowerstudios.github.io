@@ -5,9 +5,9 @@
       "name": "Steelhold",
       "emoji": "🔐",
       "kicker": "Minecraft Mod",
-      "backHref": "steelhold.html",
+      "backHref": "/mods/steelhold.html",
       "downloadHref": "https://www.curseforge.com/minecraft/mc-mods/steelhold",
-      "output": "steelholdchangelog.html",
+      "output": "mods/changelogs/steelholdchangelog.html",
       "versions": [
         {
           "version": "1.2.1",
@@ -89,9 +89,9 @@
       "name": "LogiChest",
       "emoji": "⚙️",
       "kicker": "Minecraft Mod",
-      "backHref": "logichest.html",
+      "backHref": "/mods/logichest.html",
       "downloadHref": "https://www.curseforge.com/minecraft/mc-mods/logichest",
-      "output": "logichestchangelog.html",
+      "output": "/mods/changelogs/logichestchangelog.html",
       "versions": [
         {
           "version": "1.1.2",
