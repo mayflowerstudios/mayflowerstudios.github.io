@@ -385,12 +385,6 @@
       "notes": "supermartijn642corelib-1.1.18-forge-mc1.20.1.jar"
     },
     {
-      "name": "Vlib",
-      "category": "Libraries / API",
-      "side": "Both",
-      "notes": "vlib-1.20.1-0.1.1+forge.jar"
-    },
-    {
       "name": "YUNG's API",
       "category": "Libraries / API",
       "side": "Both",
@@ -685,18 +679,6 @@
       "notes": "DynmapBlockScan-3.7-beta-6-fabric-1.20.jar"
     },
     {
-      "name": "Eureka",
-      "category": "Uncategorized",
-      "side": "Both",
-      "notes": "eureka-1201-1.6.1.jar"
-    },
-    {
-      "name": "Eurekaintergrated",
-      "category": "Uncategorized",
-      "side": "Both",
-      "notes": "eurekaintergrated-1.0.0-forge-1.20.1.jar"
-    },
-    {
       "name": "Framedblocks",
       "category": "Uncategorized",
       "side": "Both",
@@ -751,12 +733,6 @@
       "notes": "phosphophyllite-1.20.1-0.7.0-alpha.0.2.jar"
     },
     {
-      "name": "Pirates",
-      "category": "Uncategorized",
-      "side": "Both",
-      "notes": "pirates-1.20.1-1.9.3-forge.jar"
-    },
-    {
       "name": "Quark",
       "category": "Uncategorized",
       "side": "Both",
@@ -809,12 +785,6 @@
       "category": "Uncategorized",
       "side": "Both",
       "notes": "twoplayersonehorse-forge-1.20.1-1.0.3.jar"
-    },
-    {
-      "name": "Valkyrienskies",
-      "category": "Uncategorized",
-      "side": "Both",
-      "notes": "valkyrienskies-120-2.4.9.jar"
     },
     {
       "name": "Zeta",
