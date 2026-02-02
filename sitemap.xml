@@ -1,60 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset
-  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-
-  <!-- Core Pages -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://mayflowerstudios.net/</loc>
+    <loc>https://mayflowerstudios.net/404.html</loc>
   </url>
-
-  <url>
-    <loc>https://mayflowerstudios.net/projects.html</loc>
-  </url>
-
-  <url>
-    <loc>https://mayflowerstudios.net/mods.html</loc>
-  </url>
-
-  <url>
-    <loc>https://mayflowerstudios.net/server-info.html</loc>
-  </url>
-
-  <url>
-    <loc>https://mayflowerstudios.net/calendar.html</loc>
-  </url>
-
-  <!-- EchoBloom -->
-  <url>
-    <loc>https://mayflowerstudios.net/echobloom.html</loc>
-  </url>
-
-  <url>
-    <loc>https://mayflowerstudios.net/lore.html</loc>
-  </url>
-
-  <url>
-    <loc>https://mayflowerstudios.net/about_grove.html</loc>
-  </url>
-
   <url>
     <loc>https://mayflowerstudios.net/about_ember.html</loc>
   </url>
-
   <url>
-    <loc>https://mayflowerstudios.net/about_lake.html</loc>
+    <loc>https://mayflowerstudios.net/about_grove.html</loc>
   </url>
-
+  <url>
+    <loc>https://mayflowerstudios.net/about_mirror.html</loc>
+  </url>
   <url>
     <loc>https://mayflowerstudios.net/about_moonroot.html</loc>
   </url>
-
-  <!-- Mods -->
   <url>
-    <loc>https://mayflowerstudios.net/steelhold.html</loc>
+    <loc>https://mayflowerstudios.net/bots/echobloom.html</loc>
   </url>
-
   <url>
-    <loc>https://mayflowerstudios.net/logichest.html</loc>
+    <loc>https://mayflowerstudios.net/bots/foxbot.html</loc>
   </url>
-
+  <url>
+    <loc>https://mayflowerstudios.net/calendar.html</loc>
+  </url>
+  <url>
+    <loc>https://mayflowerstudios.net/</loc>
+  </url>
+  <url>
+    <loc>https://mayflowerstudios.net/license.html</loc>
+  </url>
+  <url>
+    <loc>https://mayflowerstudios.net/lore.html</loc>
+  </url>
+  <url>
+    <loc>https://mayflowerstudios.net/mods/changelogs/logichestchangelog.html</loc>
+  </url>
+  <url>
+    <loc>https://mayflowerstudios.net/mods/changelogs/steelholdchangelog.html</loc>
+  </url>
+  <url>
+    <loc>https://mayflowerstudios.net/mods/logichest.html</loc>
+  </url>
+  <url>
+    <loc>https://mayflowerstudios.net/mods/steelhold.html</loc>
+  </url>
+  <url>
+    <loc>https://mayflowerstudios.net/movienight.html</loc>
+  </url>
+  <url>
+    <loc>https://mayflowerstudios.net/projects.html</loc>
+  </url>
+  <url>
+    <loc>https://mayflowerstudios.net/rules.html</loc>
+  </url>
+  <url>
+    <loc>https://mayflowerstudios.net/server-info.html</loc>
+  </url>
+  <url>
+    <loc>https://mayflowerstudios.net/server.html</loc>
+  </url>
 </urlset>
