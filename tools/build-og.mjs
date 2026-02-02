@@ -10,10 +10,16 @@ const OUT_DIR = path.join(ROOT, "assets", "og");
 const OG_START = "<!-- OG:START -->";
 const OG_END = "<!-- OG:END -->";
 
-function listHtmlPages() {
-  return fs.readdirSync(ROOT)
-    .filter(f => f.endsWith(".html"))
-    .filter(f => !f.startsWith("admin-")); // tweak if you want
+function ensureDir(p) {
+  fs.mkdirSync(p, { recursive: true });
+}
+
+function escAttr(s = "") {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 function getTitle(html, fallback) {
@@ -22,15 +28,40 @@ function getTitle(html, fallback) {
 }
 
 function getDescription(html) {
-  const m = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']\s*\/?>/i);
+  const m = html.match(
+    /<meta\s+name=["']description["']\s+content=["']([^"']+)["']\s*\/?>/i
+  );
   return (m?.[1] || "").trim();
 }
 
-function escAttr(s="") {
-  return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+function walk(dir) {
+  const out = [];
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+  for (const ent of entries) {
+    const p = path.join(dir, ent.name);
+
+    if (ent.isDirectory()) {
+      if (ent.name === ".git" || ent.name === "node_modules") continue;
+      out.push(...walk(p));
+      continue;
+    }
+
+    if (!ent.isFile()) continue;
+    if (!ent.name.endsWith(".html")) continue;
+
+    // skip admin pages
+    if (ent.name.startsWith("admin-")) continue;
+
+    out.push(p);
+  }
+
+  return out;
 }
 
-function ensureDir(p) { fs.mkdirSync(p, { recursive: true }); }
+function listHtmlPages() {
+  return walk(ROOT);
+}
 
 function ogMeta({ title, description, url, imageUrl }) {
   return `<!-- OG:START -->
@@ -69,13 +100,40 @@ function ogCardHtml({ title, description, pagePath }) {
       linear-gradient(180deg,var(--bg1),var(--bg2));
     color:var(--text);
   }
-  .wrap{padding:70px 72px; height:100%; box-sizing:border-box; display:flex; flex-direction:column; gap:18px;}
-  .brand{font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:rgba(255,242,246,.72); display:flex; gap:10px; align-items:center;}
-  .title{font-size:64px; line-height:1.05; margin:0; font-weight:900;}
-  .desc{font-size:26px; line-height:1.35; color:rgba(255,242,246,.78); max-width:980px;}
+  .wrap{
+    padding:70px 72px;
+    height:100%;
+    box-sizing:border-box;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+  .brand{
+    font-weight:800;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:rgba(255,242,246,.72);
+    display:flex;
+    gap:10px;
+    align-items:center;
+  }
+  .title{
+    font-size:64px;
+    line-height:1.05;
+    margin:0;
+    font-weight:900;
+  }
+  .desc{
+    font-size:26px;
+    line-height:1.35;
+    color:rgba(255,242,246,.78);
+    max-width:980px;
+  }
   .pill{
     margin-top:auto;
-    display:inline-flex; gap:12px; align-items:center;
+    display:inline-flex;
+    gap:12px;
+    align-items:center;
     padding:12px 16px;
     border:1px solid rgba(255,255,255,.14);
     border-radius:999px;
@@ -83,18 +141,41 @@ function ogCardHtml({ title, description, pagePath }) {
     width: fit-content;
     font-weight:700;
   }
-  .url{color:rgba(255,242,246,.7); font-weight:700;}
+  .url{
+    color:rgba(255,242,246,.7);
+    font-weight:700;
+  }
 </style>
 </head>
 <body>
   <div class="wrap">
     <div class="brand">🌸 Mayflower Studios</div>
-    <h1 class="title">${title}</h1>
-    <div class="desc">${description}</div>
-    <div class="pill">✨ ${pagePath} <span class="url">• ${SITE.replace("https://","")}</span></div>
+    <h1 class="title">${escAttr(title)}</h1>
+    <div class="desc">${escAttr(description)}</div>
+    <div class="pill">✨ ${escAttr(pagePath)} <span class="url">• ${escAttr(
+    SITE.replace("https://", "")
+  )}</span></div>
   </div>
 </body>
 </html>`;
+}
+
+function makePagePathFromFile(filePathAbs) {
+  // Convert absolute path -> repo-relative URL path
+  // e.g. /repo/mods/steelhold.html -> /mods/steelhold.html
+  const rel = path.relative(ROOT, filePathAbs).replaceAll(path.sep, "/");
+  return rel === "index.html" ? "/" : `/${rel}`;
+}
+
+function makeSlugFromPagePath(pagePath) {
+  // Unique + filesystem-safe:
+  // "/" -> "home"
+  // "/mods/steelhold.html" -> "mods__steelhold"
+  if (pagePath === "/") return "home";
+  return pagePath
+    .replace(/^\//, "")
+    .replace(/\.html$/i, "")
+    .replaceAll("/", "__");
 }
 
 async function main() {
@@ -104,35 +185,39 @@ async function main() {
   const browser = await chromium.launch({ args: ["--no-sandbox"] });
   const page = await browser.newPage({ viewport: { width: 1200, height: 630 } });
 
-  for (const file of files) {
-    const filePath = path.join(ROOT, file);
+  for (const filePath of files) {
     const html = fs.readFileSync(filePath, "utf8");
 
-    const pagePath = file === "index.html" ? "/" : `/${file}`;
+    const pagePath = makePagePathFromFile(filePath);
     const url = `${SITE}${pagePath}`;
 
     const title = getTitle(html, "Mayflower Studios");
     let description = getDescription(html);
 
     if (!description) {
-      // fallback: a clean default (or you can map per page later)
-      description = "Cozy mods, bots, and worlds built with heart — designed for long-term communities.";
+      description =
+        "Cozy mods, bots, and worlds built with heart — designed for long-term communities.";
     }
 
-    // 1) render OG image
-    const slug = (file === "index.html") ? "home" : file.replace(/\.html$/i, "");
+    const slug = makeSlugFromPagePath(pagePath);
     const outPngRel = `/assets/og/${slug}.png`;
     const outPngAbs = path.join(OUT_DIR, `${slug}.png`);
 
-    await page.setContent(ogCardHtml({ title, description, pagePath }), { waitUntil: "load" });
+    // 1) Render OG image
+    await page.setContent(ogCardHtml({ title, description, pagePath }), {
+      waitUntil: "load",
+    });
     await page.screenshot({ path: outPngAbs, type: "png" });
 
-    // 2) inject OG tags into HTML head
+    // 2) Inject OG tags into HTML head (only if markers exist)
     const imageUrl = `${SITE}${outPngRel}`;
     const block = ogMeta({ title, description, url, imageUrl });
 
     if (!html.includes(OG_START) || !html.includes(OG_END)) {
-      console.warn(`[OG] ${file}: missing OG markers, skipping injection (image still generated).`);
+      console.warn(
+        `[OG] ${pagePath}: missing OG markers, skipping injection (image still generated).`
+      );
+      console.warn(`     Add these inside <head>: ${OG_START} ... ${OG_END}`);
       continue;
     }
 
@@ -142,7 +227,7 @@ async function main() {
     );
 
     fs.writeFileSync(filePath, updated, "utf8");
-    console.log(`[OG] ${file}: ${outPngRel}`);
+    console.log(`[OG] ${pagePath}: ${outPngRel}`);
   }
 
   await browser.close();
