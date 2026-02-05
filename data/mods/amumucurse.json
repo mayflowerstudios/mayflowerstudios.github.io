@@ -5,7 +5,7 @@
   "title": "Amumu Curse • Mayflower Studios",
   "tagline": "A quiet, sorrow-driven curse that seeps into the world around you — subtle decay, uneasy villagers, and a ritual-based path to cleansing.",
   "cta": [
-    { "label": "📦 Download", "href": "https://www.curseforge.com/minecraft/mc-mods/amumucurse", "class": "btn primary" },
+    { "label": "📦 Download", "href": "https://www.curseforge.com/minecraft/mc-mods/amumu-curse", "class": "btn primary" },
     { "label": "🧾 Changelog", "href": "changelogs/amumucursechangelog.html", "class": "btn ghost" },
     { "label": "⬅ Back to Projects", "href": "/projects.html", "class": "btn ghost" }
   ],
@@ -163,7 +163,7 @@
     "calloutBody": "Keep client and server versions in sync for consistent behavior.",
     "stepsCode": "1) Install Forge (matching your Minecraft version)\n2) Drop Amumu Curse into /mods\n3) Launch once to generate config\n4) Restart after config changes",
     "buttons": [
-      { "label": "📦 CurseForge", "href": "https://www.curseforge.com/minecraft/mc-mods/amumucurse", "class": "button mods" },
+      { "label": "📦 CurseForge", "href": "https://www.curseforge.com/minecraft/mc-mods/amumu-curse", "class": "button mods" },
       { "label": "🧾 Changelog", "href": "changelogs/amumucursechangelog.html", "class": "button ghost" }
     ]
   }
