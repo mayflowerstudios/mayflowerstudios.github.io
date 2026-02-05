@@ -137,7 +137,7 @@
     {
       "title": "🩹 Tattered Bandages",
       "desc": "Basic bandages used to suppress sorrow for a short time. Offers relief, but does not cure the curse.",
-      "code": "Recipe:\n[String]  [Paper]    [String]\n[]        [Charcoal]      []\n[String]  [Paper]    [String]"
+      "code": "Recipe:\n[String]  [Paper]    [String]\n[]        [Charcoal] []\n[String]  [Paper]    [String]"
     },
     {
       "title": "✨ Golden Bandages",
