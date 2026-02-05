@@ -53,7 +53,9 @@
             "Vault safe breaking texture for the top block is fixed."
           ],
           "stability": [],
-          "knownIssues": []
+          "knownIssues": [
+            "There are some texture issues with the Vault safe that are being looked into."
+          ]
         },
         {
           "version": "1.1.0",
@@ -141,6 +143,36 @@
           "badge": "Initial",
           "added": [
             "Hub + sorter framework and basic linking."
+          ],
+          "changed": [],
+          "fixed": [],
+          "stability": [],
+          "knownIssues": []
+        }
+      ]
+    },
+    {
+      "id": "amumucurse",
+      "name": "Amumu Curse",
+      "emoji": "💔",
+      "kicker": "Minecraft Mod",
+      "backHref": "/mods/amumucurse.html",
+      "downloadHref": "https://www.curseforge.com/minecraft/mc-mods/amumucurse",
+      "output": "/mods/changelogs/amumucursechangelog.html",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "date": "",
+          "badge": "Initial Release",
+          "added": [
+            "Sorrow system that builds over time while cursed.",
+            "Environmental decay effects that intensify as sorrow rises.",
+            "Light sources (torches, lanterns, etc.) can flicker or dim when sorrow is high.",
+            "Villagers react to cursed players by stepping back instead of taking damage.",
+            "Passive mobs take damage over time near high-sorrow players.",
+            "Bandages that suppress sorrow growth (temporary relief, not a cure).",
+            "Golden Bandages that allow solo cleansing (ritual still required).",
+            "Cleansing ritual at midnight using Crying Obsidian + a wooden altar + candles."
           ],
           "changed": [],
           "fixed": [],

@@ -1,0 +1,170 @@
+{
+  "slug": "amumucurse",
+  "kicker": "Minecraft Mod",
+  "emojiName": "💔 Amumu Curse",
+  "title": "Amumu Curse • Mayflower Studios",
+  "tagline": "A quiet, sorrow-driven curse that seeps into the world around you — subtle decay, uneasy villagers, and a ritual-based path to cleansing.",
+  "cta": [
+    { "label": "📦 Download", "href": "https://www.curseforge.com/minecraft/mc-mods/amumucurse", "class": "btn primary" },
+    { "label": "🧾 Changelog", "href": "changelogs/amumucursechangelog.html", "class": "btn ghost" },
+    { "label": "⬅ Back to Projects", "href": "/projects.html", "class": "btn ghost" }
+  ],
+
+  "heroTiles": [
+    { "title": "💔 Sorrow System", "body": "A creeping curse that grows quietly over time." },
+    { "title": "🌒 World Decay", "body": "Light falters and the environment reacts to your presence." },
+    { "title": "👥 Uneasy Villagers", "body": "Villagers sense the sorrow and recoil instead of fighting it." },
+    { "title": "🕯️ Ritual Cleansing", "body": "Cure the curse through a midnight ritual — alone or with help." }
+  ],
+
+  "descriptionHtml": [
+    "<p class=\"desc\"><strong>Amumu Curse</strong> adds a slow-burning affliction inspired by sorrow itself. This is not a curse that harms you outright — it lingers, changes the mood of the world, and leaves subtle signs that something is wrong.</p>",
+    "<p class=\"desc\">There are no warnings, no timers, and no flashing indicators. The curse reveals itself through atmosphere, decay, and how others react to you.</p>",
+    "<div class=\"divider\" style=\"margin:14px 0;\"></div>",
+
+    "<h3 style=\"margin:0 0 6px;\">💔 The Curse & Sorrow</h3>",
+    "<p class=\"desc\" style=\"margin-top:0;\">Once afflicted, sorrow slowly builds over time. As it grows, the world begins to feel heavier in your presence. The curse does not announce itself — it simply becomes noticeable.</p>",
+
+    "<h3 style=\"margin:14px 0 6px;\">🌒 Environmental Decay</h3>",
+    "<p class=\"desc\" style=\"margin-top:0;\">Sorrow affects the environment around you:</p>",
+    "<ul class=\"muted small\" style=\"margin:0; padding-left:18px;\"><li>Torches, lanterns, and fires may flicker or dim</li><li>The area around you feels unstable and uneasy</li><li>Light itself seems to struggle as sorrow deepens</li></ul>",
+
+    "<h3 style=\"margin:14px 0 6px;\">👥 Villagers & Creatures</h3>",
+    "<p class=\"desc\" style=\"margin-top:0;\">Villagers do not take damage from the curse. Instead, they react to it.</p>",
+    "<ul class=\"muted small\" style=\"margin:0; padding-left:18px;\"><li>Villagers subtly step back from cursed players</li><li>Their behavior reflects discomfort, not fear</li></ul>",
+    "<p class=\"desc\" style=\"margin-top:8px;\">Other passive creatures are not as resilient. As sorrow grows, passive mobs near you begin to take damage, as if the land itself is slowly decaying.</p>",
+
+    "<h3 style=\"margin:14px 0 6px;\">🩹 Bandages</h3>",
+    "<p class=\"desc\" style=\"margin-top:0;\"><strong>Bandages</strong> offer temporary relief, slowing sorrow’s growth but never curing it. They are meant to help you endure — not escape.</p>",
+    "<p class=\"desc\"><strong>Golden Bandages</strong> are rarer and more powerful. They allow the curse to be cleansed without another player present, using the same ritual process.</p>",
+
+    "<h3 style=\"margin:14px 0 6px;\">🕯️ The Cleansing Ritual</h3>",
+    "<p class=\"desc\" style=\"margin-top:0;\">The curse cannot be removed casually. Cleansing requires a ritual performed under specific conditions:</p>",
+    "<ul class=\"muted small\" style=\"margin:0; padding-left:18px;\"><li>Crying Obsidian beneath the afflicted player</li><li>A three-block wooden altar (any wood type)</li><li>Candles placed at both ends of the altar</li><li>The ritual must occur around midnight</li></ul>",
+    "<p class=\"desc\" style=\"margin-top:8px;\">Normally, another player must be present to complete the ritual. Golden Bandages allow the ritual to succeed alone.</p>",
+    "<p class=\"desc\">If any part of the ritual is incorrect, nothing happens. The curse remains.</p>"
+  ],
+
+  "features": [
+    {
+      "title": "💔 Sorrow-Based Curse",
+      "badge": "Core",
+      "desc": "A slow, atmospheric curse that builds quietly over time.",
+      "bullets": [
+        "No direct damage to the player",
+        "No UI spam or warnings",
+        "Designed to be felt, not fought"
+      ]
+    },
+    {
+      "title": "🌒 Environmental Effects",
+      "badge": "World",
+      "desc": "The world subtly reacts to sorrow.",
+      "bullets": [
+        "Flickering or dimming light sources",
+        "Uneasy environmental atmosphere",
+        "Gradual, noticeable decay"
+      ]
+    },
+    {
+      "title": "👥 Villager Reactions",
+      "badge": "Behavior",
+      "desc": "Villagers sense sorrow without being harmed by it.",
+      "bullets": [
+        "Villagers step back instead of attacking",
+        "Adds emotional weight without violence"
+      ]
+    },
+    {
+      "title": "🩹 Bandages & Golden Bandages",
+      "badge": "Items",
+      "desc": "Temporary relief and alternate cleansing paths.",
+      "bullets": [
+        "Bandages suppress sorrow growth",
+        "Golden Bandages enable solo cleansing",
+        "Neither bypasses the ritual"
+      ]
+    },
+    {
+      "title": "🕯️ Ritual Cleansing",
+      "badge": "Lore",
+      "desc": "A deliberate, timing-based cure rooted in ritual.",
+      "bullets": [
+        "Midnight-only cleansing",
+        "Structure-based ritual",
+        "Failure gives no feedback"
+      ]
+    }
+  ],
+
+  "howTo": [
+    {
+      "title": "1) Become Cursed",
+      "desc": "Once afflicted, sorrow begins to grow naturally over time.",
+      "bullets": [
+        "No immediate effects",
+        "Changes become noticeable gradually"
+      ]
+    },
+    {
+      "title": "2) Endure or Suppress",
+      "desc": "Use bandages to slow sorrow if needed.",
+      "bullets": [
+        "Temporary relief only",
+        "Does not remove the curse"
+      ]
+    },
+    {
+      "title": "3) Prepare the Ritual",
+      "desc": "Build the cleansing structure correctly.",
+      "bullets": [
+        "Crying Obsidian base",
+        "Three-block wooden altar",
+        "Candles on both ends"
+      ]
+    },
+    {
+      "title": "4) Cleanse at Midnight",
+      "desc": "Perform the ritual at the correct time.",
+      "bullets": [
+        "Another player required, unless using Golden Bandages",
+        "Incorrect rituals silently fail"
+      ]
+    }
+  ],
+
+  "recipes": [
+    {
+      "title": "🩹 Tattered Bandages",
+      "desc": "Basic bandages used to suppress sorrow for a short time. Offers relief, but does not cure the curse.",
+      "code": "Recipe:\n[String]  [Paper]    [String]\n[Paper]   [Charcoal] [Paper]\n[String]  [Paper]    [String]"
+    },
+    {
+      "title": "✨ Golden Bandages",
+      "desc": "A rare, reinforced form of bandages that allows the cleansing ritual to be performed alone.",
+      "code": "Recipe:\n[Gold Ingot] [Gold Ingot] [Gold Ingot]\n[Ghast Tear] [Bandages]   [Ghast Tear]\n[Gold Ingot] [Gold Ingot] [Gold Ingot]",
+      "note": "Uses <code>amumucurse:bandages</code> as the center ingredient."
+    }
+  ],
+
+  "media": {
+    "icon": "/assets/icons/amumucurse.png",
+    "name": "Amumu Curse",
+    "subtitle": "A sorrow-driven curse of atmosphere and decay",
+    "shots": [
+      { "src": "assets/shots/amumu-1.png", "alt": "Amumu Curse screenshot 1", "cap": "Subtle environmental decay as sorrow rises." },
+      { "src": "assets/shots/amumu-2.png", "alt": "Amumu Curse screenshot 2", "cap": "Villagers reacting uneasily to a cursed player." },
+      { "src": "assets/shots/amumu-3.png", "alt": "Amumu Curse screenshot 3", "cap": "The cleansing ritual performed at midnight." }
+    ]
+  },
+
+  "install": {
+    "calloutTitle": "Recommended setup",
+    "calloutBody": "Keep client and server versions in sync for consistent behavior.",
+    "stepsCode": "1) Install Forge (matching your Minecraft version)\n2) Drop Amumu Curse into /mods\n3) Launch once to generate config\n4) Restart after config changes",
+    "buttons": [
+      { "label": "📦 CurseForge", "href": "https://www.curseforge.com/minecraft/mc-mods/amumucurse", "class": "button mods" },
+      { "label": "🧾 Changelog", "href": "changelogs/amumucursechangelog.html", "class": "button ghost" }
+    ]
+  }
+}

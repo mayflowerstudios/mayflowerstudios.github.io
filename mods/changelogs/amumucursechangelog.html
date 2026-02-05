@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{TITLE}}</title>
+  <link rel="stylesheet" href="/style.css" />
+  <!-- OG:START -->
+  <!-- OG:END -->
+</head>
+<body data-nav="mods">
+  <div class="wrap">
+
+    <div id="shared-nav"></div>
+
+    <section class="hero">
+      <div>
+        <p class="kicker">{{KICKER}}</p>
+        <h1>{{EMOJI}} {{NAME}} Changelog</h1>
+        <p class="muted">A clean history of updates.</p>
+        <div class="ctaRow">
+          <a class="btn primary" href="{{BACK_HREF}}">← Back to {{NAME}}</a>
+          <a class="btn ghost" href="{{DOWNLOAD_HREF}}">📦 Download</a>
+        </div>
+      </div>
+
+      <div class="tileGrid">
+        <div class="tile"><strong>Additions</strong><p>New features and content.</p></div>
+        <div class="tile"><strong>Changes</strong><p>Adjustments and refinements.</p></div>
+        <div class="tile"><strong>Fixes</strong><p>Resolved bugs and issues.</p></div>
+        <div class="tile"><strong>Stability</strong><p>Performance and reliability improvements.</p></div>
+      </div>
+    </section>
+
+    <div class="sectionTitle">
+      <h2>📌 Latest</h2>
+      <span>Newest first</span>
+    </div>
+
+    <section class="card">
+      {{ENTRIES}}
+    </section>
+
+    <div id="shared-footer"></div>
+  </div>
+
+  <script src="/shared.js"></script>
+  <script src="/fireflies.js"></script>
+</body>
+</html>
