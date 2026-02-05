@@ -62,10 +62,15 @@ function buildForMod(mod, template) {
     .replaceAll("{{DOWNLOAD_HREF}}", esc(mod.downloadHref ?? "#"))
     .replaceAll("{{ENTRIES}}", entries || `<p class="muted">No releases yet.</p>`);
 
-  const outPath = path.join(ROOT, mod.output ?? `${mod.id}changelog.html`);
+  const safeOut = String(mod.output ?? `${mod.id}changelog.html`).replace(/^\/+/, "");
+  const outPath = path.join(ROOT, safeOut);
+
+  // ensure directory exists
+  fs.mkdirSync(path.dirname(outPath), { recursive: true });
+
   fs.writeFileSync(outPath, out, "utf8");
-  console.log(`✅ Wrote ${path.relative(ROOT, outPath)}`);
-}
+    console.log(`✅ Wrote ${path.relative(ROOT, outPath)}`);
+  }
 
 function main() {
   const data = JSON.parse(fs.readFileSync(DATA_PATH, "utf8"));

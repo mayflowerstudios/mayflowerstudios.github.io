@@ -93,7 +93,7 @@
       "kicker": "Minecraft Mod",
       "backHref": "/mods/logichest.html",
       "downloadHref": "https://www.curseforge.com/minecraft/mc-mods/logichest",
-      "output": "/mods/changelogs/logichestchangelog.html",
+      "output": "mods/changelogs/logichestchangelog.html",
       "versions": [
         {
           "version": "1.1.2",
@@ -158,7 +158,7 @@
       "kicker": "Minecraft Mod",
       "backHref": "/mods/amumucurse.html",
       "downloadHref": "https://www.curseforge.com/minecraft/mc-mods/amumucurse",
-      "output": "/mods/changelogs/amumucursechangelog.html",
+      "output": "mods/changelogs/amumucursechangelog.html",
       "versions": [
         {
           "version": "1.0.0",
