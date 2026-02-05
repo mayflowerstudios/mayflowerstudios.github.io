@@ -83,6 +83,18 @@
           "fixed": [],
           "stability": [],
           "knownIssues": []
+        },
+        {
+          "version": "1.2.2",
+          "date": "2026-02-05",
+          "badge": "Trapdoor",
+          "added": [
+            "Locked Trapdoor"
+          ],
+          "changed": [],
+          "fixed": [],
+          "stability": [],
+          "knownIssues": []
         }
       ]
     },
