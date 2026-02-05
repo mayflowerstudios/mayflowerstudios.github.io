@@ -180,12 +180,14 @@
           "knownIssues": []
         },
         {
-          "version": "",
+          "version": "1.0.0_1",
           "date": "2026-02-05",
-          "badge": "",
+          "badge": "Hotfix",
           "added": [],
           "changed": [],
-          "fixed": [],
+          "fixed": [
+            "Server crash issue"
+          ],
           "stability": [],
           "knownIssues": []
         }
