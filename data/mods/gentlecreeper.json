@@ -1,8 +1,8 @@
 {
   "slug": "gentlecreeper",
   "kicker": "Minecraft Mod",
-  "emojiName": "🧸 Creeper",
-  "title": "Creeper • Mayflower Studios",
+  "emojiName": "🧸 The Gentle Creeper",
+  "title": "The Gentle Creeper • Mayflower Studios",
   "tagline": "A non-exploding creeper who just wanted a friend.",
   "cta": [
     {
@@ -60,7 +60,7 @@
   "commandsCalloutBody": "",
   "media": {
     "icon": "/assets/icons/gentlecreeper.png",
-    "name": "Creeper",
+    "name": "The Gentle Creeper",
     "subtitle": "Minecraft Mod",
     "shots": []
   },
