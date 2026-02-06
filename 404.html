@@ -4,12 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Lost in the Grove • Mayflower Studios</title>
-  <link rel="stylesheet" href="/style.css" />
+
+  <!-- Match the rest of the site (relative paths) -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body data-nav="home">
   <div class="wrap">
 
+    <!-- shared.js injects nav + footer into these -->
     <div id="shared-nav"></div>
 
     <section class="hero">
@@ -22,8 +25,8 @@
         </p>
 
         <div class="ctaRow">
-          <a class="btn primary" href="/index.html">🏡 Return Home</a>
-          <a class="btn ghost" href="/projects.html">✨ Explore Projects</a>
+          <a class="btn primary" href="index.html">🏡 Return Home</a>
+          <a class="btn ghost" href="projects.html">✨ Explore Projects</a>
         </div>
       </div>
     </section>
@@ -31,16 +34,18 @@
     <section class="card">
       <h2>Helpful Trails</h2>
       <ul>
-        <li><a href="/projects.html#mods">Minecraft Mods</a></li>
-        <li><a href="/echobloom.html">EchoBloom Realms</a></li>
-        <li><a href="/server-info.html">Join the Server</a></li>
-        <li><a href="/calendar.html">Seasonal Events</a></li>
+        <li><a href="projects.html#mods">Minecraft Mods</a></li>
+        <li><a href="bots/echobloom.html">EchoBloom Realms</a></li>
+        <li><a href="server-info.html">Join the Server</a></li>
+        <li><a href="calendar.html">Seasonal Events</a></li>
       </ul>
     </section>
 
+    <div id="shared-footer"></div>
   </div>
 
-  <script src="/shared.js"></script>
-  <script src="/fireflies.js"></script>
+  <!-- Same include style as other pages -->
+  <script src="shared.js"></script>
+  <script src="fireflies.js"></script>
 </body>
 </html>

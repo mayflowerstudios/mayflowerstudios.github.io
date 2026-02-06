@@ -1,0 +1,107 @@
+{
+  "generatedAt": "2026-02-06T04:03:34.276Z",
+  "mods": [
+    {
+      "type": "mod",
+      "slug": "amumucurse",
+      "title": "💔 Amumu Curse",
+      "desc": "A quiet, sorrow-driven curse that seeps into the world around you — subtle decay, uneasy villagers, and a ritual-based path to cleansing.",
+      "links": [
+        {
+          "label": "📄 Project Page",
+          "href": "/mods/amumucurse.html",
+          "class": "button mods"
+        },
+        {
+          "label": "🧾 Changelog",
+          "href": "/mods/changelog.html?mod=amumucurse",
+          "class": "button ghost"
+        },
+        {
+          "label": "📦 Download",
+          "href": "https://www.curseforge.com/minecraft/mc-mods/amumu-curse",
+          "class": "button ghost"
+        }
+      ]
+    },
+    {
+      "type": "mod",
+      "slug": "logichest",
+      "title": "🧠 LogiChest",
+      "desc": "Hub-and-sorter storage routing with clean rules, survival-friendly pacing, and upgrade-based scaling —\nincluding optional autocrafting, autosmelting, and multi-hub authorization.",
+      "links": [
+        {
+          "label": "📄 Project Page",
+          "href": "/mods/logichest.html",
+          "class": "button mods"
+        },
+        {
+          "label": "🧾 Changelog",
+          "href": "/mods/changelog.html?mod=logichest",
+          "class": "button ghost"
+        },
+        {
+          "label": "📦 Download",
+          "href": "https://www.curseforge.com/minecraft/mc-mods/logichest",
+          "class": "button ghost"
+        }
+      ]
+    },
+    {
+      "type": "mod",
+      "slug": "steelhold",
+      "title": "🔐 Steelhold",
+      "desc": "Heavy-duty safes for Forge survival — player ownership, bindable keys, in-place upgrades, and “anvil-style”\nfalling behavior for secure builds and long-running worlds.",
+      "links": [
+        {
+          "label": "📄 Project Page",
+          "href": "/mods/steelhold.html",
+          "class": "button mods"
+        },
+        {
+          "label": "🧾 Changelog",
+          "href": "/mods/changelog.html?mod=steelhold",
+          "class": "button ghost"
+        },
+        {
+          "label": "📦 Download",
+          "href": "https://www.curseforge.com/minecraft/mc-mods/steelhold",
+          "class": "button ghost"
+        }
+      ]
+    }
+  ],
+  "bots": [
+    {
+      "type": "bot",
+      "slug": "echobloom",
+      "title": "🌙 EchoBloom",
+      "desc": "",
+      "links": [
+        {
+          "label": "📄 Info Page",
+          "href": "/bots/echobloom.html",
+          "class": "button bots"
+        },
+        {
+          "label": "📜 Lore Page",
+          "href": "/lore.html",
+          "class": "button ghost"
+        }
+      ]
+    },
+    {
+      "type": "bot",
+      "slug": "foxbot",
+      "title": "🦊 FoxBot",
+      "desc": "",
+      "links": [
+        {
+          "label": "📄 Info Page",
+          "href": "/bots/foxbot.html",
+          "class": "button bots"
+        }
+      ]
+    }
+  ]
+}

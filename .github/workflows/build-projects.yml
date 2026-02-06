@@ -1,12 +1,13 @@
-name: Build changelog pages
+name: Build projects index
 
 on:
   push:
     paths:
-      - "data/changelogs.json"
-      - "tools/build-changelogs.mjs"
-      - "tools/changelog-template.html"
-      - ".github/workflows/build-changelogs.yml"
+      - "data/mods/*.json"
+      - "bots/*.html"
+      - "projects.html"
+      - "tools/build-projects.mjs"
+      - "tools/projects-page.js"
   workflow_dispatch:
 
 permissions:
@@ -22,15 +23,14 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Build changelog pages
-        run: node tools/build-changelogs.mjs
+      - name: Build data/projects.json
+        run: node tools/build-projects.mjs
 
       - name: Commit changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add -A
-
-          git diff --cached --quiet || git commit -m "Auto-build changelog pages"
+          git add data/projects.json
+          git diff --cached --quiet || git commit -m "Auto-build projects index"
           git push

@@ -3,24 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{TITLE}}</title>
+  <title>Changelog • Mayflower Studios</title>
   <link rel="stylesheet" href="/style.css" />
   <!-- OG:START -->
   <!-- OG:END -->
 </head>
+
 <body data-nav="mods">
   <div class="wrap">
-
     <div id="shared-nav"></div>
 
     <section class="hero">
       <div>
-        <p class="kicker">{{KICKER}}</p>
-        <h1>{{EMOJI}} {{NAME}} Changelog</h1>
-        <p class="muted">A clean history of updates.</p>
+        <p class="kicker" id="kicker">Minecraft Mod</p>
+        <h1 id="pageTitle">🧾 Changelog</h1>
+        <p class="muted" id="tagline">Newest first</p>
         <div class="ctaRow">
-          <a class="btn primary" href="{{BACK_HREF}}">← Back to {{NAME}}</a>
-          <a class="btn ghost" href="{{DOWNLOAD_HREF}}">📦 Download</a>
+          <a class="btn primary" id="backBtn" href="/projects.html">← Back</a>
+          <a class="btn ghost" id="downloadBtn" href="#" target="_blank" rel="noopener">📦 Download</a>
         </div>
       </div>
 
@@ -34,11 +34,11 @@
 
     <div class="sectionTitle">
       <h2>📌 Latest</h2>
-      <span>Newest first</span>
+      <span id="subtitle">—</span>
     </div>
 
-    <section class="card">
-      {{ENTRIES}}
+    <section class="card" id="entries">
+      <p class="muted">Loading…</p>
     </section>
 
     <div id="shared-footer"></div>
@@ -46,5 +46,6 @@
 
   <script src="/shared.js"></script>
   <script src="/fireflies.js"></script>
+  <script src="/tools/changelog-page.js"></script>
 </body>
 </html>
