@@ -1,8 +1,8 @@
 {
   "slug": "gentlecreeper",
   "kicker": "Minecraft Mod",
-  "emojiName": "🧸 The Gentle Creeper",
-  "title": "The Gentle Creeper • Mayflower Studios",
+  "emojiName": "🧸 Gentle Creeper",
+  "title": "Gentle Creeper • Mayflower Studios",
   "tagline": "A non-exploding creeper who just wanted a friend.",
   "cta": [
     {
@@ -41,28 +41,33 @@
     "<p>It’s perfect for cozy playthroughs and servers that want occasional wholesome moments without losing Minecraft’s danger.</p>",
     "<p>Sometimes you get a jumpscare. Sometimes you get a little creature that just stands there like: “hi.”</p>"
   ],
-  "featureCards": [
+  "features": [
     {
       "title": "✅ Vanilla Creepers Unchanged",
-      "body": "The original creeper remains 100% normal — same AI, same threat, same boom."
+      "desc": "The original creeper remains 100% normal — same AI, same threat, same boom."
     },
     {
       "title": "🧸 New Gentle Creeper Variant",
-      "body": "Adds an additional creeper type with calmer behavior and a more peaceful vibe."
+      "desc": "Adds an additional creeper type with calmer behavior and a more peaceful vibe."
     },
     {
       "title": "🎲 Naturally Spawns In-World",
-      "body": "The gentle variant can appear alongside regular creepers, making encounters feel fresh and unpredictable."
+      "desc": "The gentle variant can appear alongside regular creepers, making encounters feel fresh and unpredictable."
     },
     {
       "title": "🌙 Cozy Without “Peaceful Mode”",
-      "body": "Keeps the risk of survival intact — just adds occasional softness to the night."
+      "desc": "Keeps the risk of survival intact — just adds occasional softness to the night."
     }
   ],
+  "howTo": [],
   "recipes": [],
+  "commandsIntro": "",
+  "commandsCode": "",
+  "commandsCalloutTitle": "",
+  "commandsCalloutBody": "",
   "media": {
     "icon": "/assets/icons/gentlecreeper.png",
-    "name": "The Gentle Creeper",
+    "name": "Gentle Creeper",
     "subtitle": "Minecraft Mod",
     "shots": []
   },
