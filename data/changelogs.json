@@ -204,6 +204,26 @@
           "knownIssues": []
         }
       ]
+    },
+    {
+      "id": "gentlecreeper",
+      "name": "The Gentle Creeper",
+      "emoji": "🧸",
+      "kicker": "Minecraft Mod",
+      "backHref": "https://mayflowerstudios.net/projects.html",
+      "downloadHref": "https://www.curseforge.com/minecraft/mc-mods/gentle-creeper",
+      "output": "gentlecreeperchangelog.html",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "date": "2026-02-06",
+          "note": "Initial release",
+          "added": [],
+          "changed": [],
+          "fixed": [],
+          "other": []
+        }
+      ]
     }
   ]
 }
