@@ -166,22 +166,22 @@
     "subtitle": "A sorrow-driven curse of atmosphere and decay",
     "shots": [
       {
-        "src": "assets/shots/amumu-1.png",
+        "src": "/assets/shots/amumu-1.png",
         "alt": "Amumu Curse screenshot 1",
         "cap": "Tomb found in the desert. Watch out for the lingering curse."
       },
       {
-        "src": "assets/shots/amumu-2.png",
+        "src": "/assets/shots/amumu-2.png",
         "alt": "Amumu Curse screenshot 2",
         "cap": "Alter used to clear the curse."
       },
       {
-        "src": "assets/shots/amumu-3.png",
+        "src": "/assets/shots/amumu-3.png",
         "alt": "Amumu Curse screenshot 3",
         "cap": "Crafting recipe for the Tatered Bandage."
       },
       {
-        "src": "assets/shots/amumu-4.png",
+        "src": "/assets/shots/amumu-4.png",
         "alt": "Amumu Curse screenshot 4",
         "cap": "Crafting recipe for the Golden Bandages."
       }

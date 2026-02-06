@@ -228,19 +228,9 @@
     "subtitle": "Safes, keys, doors, and upgrade progression",
     "shots": [
       {
-        "src": "assets/shots/steelhold-1.png",
+        "src": "/assets/shots/steelhold-1.png",
         "alt": "Steelhold screenshot 1",
         "cap": "Single-block tiers \u2014 compact and survival-friendly."
-      },
-      {
-        "src": "assets/shots/steelhold-2.png",
-        "alt": "Steelhold screenshot 2",
-        "cap": "Tiered UI storage that scales with config settings."
-      },
-      {
-        "src": "assets/shots/steelhold-3.png",
-        "alt": "Steelhold screenshot 3",
-        "cap": "Vault/Bank tiers \u2014 larger structures for dedicated secure rooms."
       }
     ]
   },

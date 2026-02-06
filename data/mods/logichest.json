@@ -196,32 +196,32 @@
     "subtitle": "Hub routing, sorter filters, and upgrade-driven automation",
     "shots": [
       {
-        "src": "assets/shots/logichest-1.png",
+        "src": "/assets/shots/logichest-1.png",
         "alt": "LogiChest screenshot 1",
         "cap": "Hub crafting recipe."
       },
       {
-        "src": "assets/shots/logichest-2.png",
+        "src": "/assets/shots/logichest-2.png",
         "alt": "LogiChest screenshot 2",
         "cap": "Sorter crafting recipe."
       },
       {
-        "src": "assets/shots/logichest-3.png",
+        "src": "/assets/shots/logichest-3.png",
         "alt": "LogiChest screenshot 3",
         "cap": "Autocrafter Core crafting recipe."
       },
       {
-        "src": "assets/shots/logichest-4.png",
+        "src": "/assets/shots/logichest-4.png",
         "alt": "LogiChest screenshot 4",
         "cap": "Keychain Module crafting recipe."
       },
       {
-        "src": "assets/shots/logichest-5.png",
+        "src": "/assets/shots/logichest-5.png",
         "alt": "LogiChest screenshot 5",
         "cap": "Speed Coil crafting recipe."
       },
       {
-        "src": "assets/shots/logichest-6.png",
+        "src": "/assets/shots/logichest-6.png",
         "alt": "LogiChest screenshot 6",
         "cap": "Stack Booster crafting recipe."
       }
