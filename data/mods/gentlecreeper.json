@@ -1,0 +1,86 @@
+{
+  "slug": "gentlecreeper",
+  "kicker": "Minecraft Mod",
+  "emojiName": "🧸 The Gentle Creeper",
+  "title": "The Gentle Creeper • Mayflower Studios",
+  "tagline": "A non-exploding creeper who just wanted a friend.",
+  "cta": [
+    {
+      "label": "📦 Download",
+      "href": "https://www.curseforge.com/minecraft/mc-mods/gentle-creeper",
+      "class": "btn primary"
+    },
+    {
+      "label": "🧾 Changelog",
+      "href": "/mods/changelog.html?mod=gentlecreeper",
+      "class": "btn ghost"
+    },
+    {
+      "label": "⬅ Back to Projects",
+      "href": "/projects.html",
+      "class": "btn ghost"
+    }
+  ],
+  "heroTiles": [
+    {
+      "title": "🤍 Adds a Gentle Variant",
+      "body": "Vanilla creepers are untouched — this mod introduces an additional creeper type that’s peaceful by nature."
+    },
+    {
+      "title": "🌿 Cozy Encounters, Same Danger",
+      "body": "You can still get classic creepers… but sometimes you’ll meet one that just wants to exist near you."
+    },
+    {
+      "title": "✨ Surprise Friend Energy",
+      "body": "A rare “wait… it’s not exploding?” moment that turns fear into a little bit of wholesome."
+    }
+  ],
+  "descriptionHtml": [
+    "<p><strong>The Gentle Creeper</strong> doesn’t remove or replace anything — it adds a brand new creeper variant that’s… kind.</p>",
+    "<p>Vanilla creepers still behave exactly like vanilla creepers. This mod simply gives the world a chance to spawn a gentler green friend alongside the usual chaos.</p>",
+    "<p>It’s perfect for cozy playthroughs and servers that want occasional wholesome moments without losing Minecraft’s danger.</p>",
+    "<p>Sometimes you get a jumpscare. Sometimes you get a little creature that just stands there like: “hi.”</p>"
+  ],
+  "featureCards": [
+    {
+      "title": "✅ Vanilla Creepers Unchanged",
+      "body": "The original creeper remains 100% normal — same AI, same threat, same boom."
+    },
+    {
+      "title": "🧸 New Gentle Creeper Variant",
+      "body": "Adds an additional creeper type with calmer behavior and a more peaceful vibe."
+    },
+    {
+      "title": "🎲 Naturally Spawns In-World",
+      "body": "The gentle variant can appear alongside regular creepers, making encounters feel fresh and unpredictable."
+    },
+    {
+      "title": "🌙 Cozy Without “Peaceful Mode”",
+      "body": "Keeps the risk of survival intact — just adds occasional softness to the night."
+    }
+  ],
+  "recipes": [],
+  "media": {
+    "icon": "/assets/icons/gentlecreeper.png",
+    "name": "The Gentle Creeper",
+    "subtitle": "Minecraft Mod",
+    "shots": []
+  },
+  "install": {
+    "calloutTitle": "Recommended setup",
+    "calloutBody": "Keep client and server versions in sync for consistent behavior.",
+    "stepsCode": "1) Install Forge (matching your Minecraft version)\n2) Drop The Gentle Creeper into /mods\n3) Launch once to generate config\n4) Restart after config changes",
+    "buttons": [
+      {
+        "label": "📦 CurseForge",
+        "href": "https://www.curseforge.com/minecraft/mc-mods/gentle-creeper",
+        "class": "btn ghost"
+      },
+      {
+        "label": "🧾 Changelog",
+        "href": "/mods/changelog.html?mod=gentlecreeper",
+        "class": "btn ghost"
+      }
+    ]
+  }
+}
