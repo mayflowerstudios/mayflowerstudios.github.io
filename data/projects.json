@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-06T04:25:32.709Z",
+  "generatedAt": "2026-02-06T06:38:36.907Z",
   "mods": [
     {
       "type": "mod",
@@ -20,6 +20,29 @@
         {
           "label": "📦 Download",
           "href": "https://www.curseforge.com/minecraft/mc-mods/amumu-curse",
+          "class": "button ghost"
+        }
+      ]
+    },
+    {
+      "type": "mod",
+      "slug": "gentlecreeper",
+      "title": "🧸 Gentle Creeper",
+      "desc": "A non-exploding creeper who just wanted a friend.",
+      "links": [
+        {
+          "label": "📄 Project Page",
+          "href": "/mods/gentlecreeper.html",
+          "class": "button mods"
+        },
+        {
+          "label": "🧾 Changelog",
+          "href": "/mods/changelog.html?mod=gentlecreeper",
+          "class": "button ghost"
+        },
+        {
+          "label": "📦 Download",
+          "href": "https://www.curseforge.com/minecraft/mc-mods/gentle-creeper",
           "class": "button ghost"
         }
       ]
