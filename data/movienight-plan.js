@@ -1,37 +1,5 @@
-{
-  "kickerText": "🕯️ Cozy Mode • 🎬 Movie Night",
-  "pageTitle": "Mayflower Movie Night",
-  "pageSubtitle": "Snacks ready? We’ll keep everything synced with <strong>SyncPlay</strong>. Jellyfin is the theater — Discord voice is optional.",
-
-  "theaterUrl": "https://jellyfin.mayflowerstudios.net:8443",
-  "buttons": [
-    { "label": "▶ Open Theater", "href": "https://jellyfin.mayflowerstudios.net:8443", "style": "primary" },
-    { "label": "🏠 Browse", "href": "https://jellyfin.mayflowerstudios.net:8443/web/#/home.html", "style": "warm" },
-    { "label": "⚙ Settings", "href": "https://jellyfin.mayflowerstudios.net:8443/web/#/settings", "style": "link" },
-    { "label": "💬 Discord", "href": "https://discord.com/invite/MutqYAdrwz", "style": "link" }
-  ],
-
-  "planTitle": "Tonight’s Plan",
-  "plan": {
-    "title": "Nothing Scheduled",
-    "time": "Nothing Scheduled",
-    "voice": "Discord (optional)"
-  },
-  "planTip": "Tip: Keep voice separate from movie audio so SyncPlay stays clean.",
-
-  "joinTitle": "How to Join",
-  "joinSteps": [
-    "Open Jellyfin using the <strong>Open Theater</strong> button.",
-    "Log in with <strong>Username: Guest</strong> and <strong>No Password</strong>.",
-    "Pick the movie or episode we’re watching.",
-    "In the player menu, choose <strong>SyncPlay</strong>.",
-    "Create a group of your own — or join the watch party group."
-  ],
-  "joinNote": "If something’s not working, message Luna on discord.",
-
-  "embedTitle": "🖥️ Theater Preview",
-  "embedUrl": "https://jellyfin.mayflowerstudios.net:8443/web/",
-  "embedTimeoutMs": 3500,
-  "embedFallbackText": "If the preview doesn’t show, that’s okay — the Theater link always works.",
-  "embedFallbackTiny": "Open Theater is the smoothest way to watch."
-}
+// data/movienight-plan.js
+window.MOVIE_PLAN = {
+  title: "Nothing Scheduled",
+  time: ""
+};
