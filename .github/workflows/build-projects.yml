@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "data/mods/*.json"
+      - "mods/*.html"
       - "bots/*.html"
       - "projects.html"
       - "tools/build-projects.mjs"
