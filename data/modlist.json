@@ -584,49 +584,49 @@
     },
     {
       "name": "Amendments",
-      "category": "Uncategorized",
+      "category": "Crafting & Materials",
       "side": "Both",
       "notes": "amendments-1.20-2.2.5.jar"
     },
     {
       "name": "Ars Nouveau",
-      "category": "Uncategorized",
+      "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "ars_nouveau-1.20.1-4.12.7-all.jar"
     },
     {
       "name": "Athena Forge",
-      "category": "Uncategorized",
+      "category": "Libraries / API",
       "side": "Both",
       "notes": "athena-forge-1.20.1-3.1.2.jar"
     },
     {
       "name": "Auto Repair Kits",
-      "category": "Uncategorized",
+      "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "Auto-Repair-Kits-1.20.1-1.0.4.jar"
     },
     {
       "name": "Bakeries",
-      "category": "Uncategorized",
+      "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "bakeries-1.20.1-forge-1.2.5.jar"
     },
     {
       "name": "Biggerreactors",
-      "category": "Uncategorized",
+      "category": "Tech & Automation",
       "side": "Both",
       "notes": "biggerreactors-1.20.1-0.6.0-beta.10.5.jar"
     },
     {
       "name": "Brewinandchewin",
-      "category": "Uncategorized",
+      "category": "Crafting & Materials",
       "side": "Both",
       "notes": "BrewinAndChewin-1.20.1-3.2.1.jar"
     },
     {
       "name": "Callablehorses",
-      "category": "Uncategorized",
+      "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "callablehorses-1.20.1-1.3.0.1.jar"
     },
@@ -638,157 +638,151 @@
     },
     {
       "name": "Chipped Forge",
-      "category": "Uncategorized",
+      "category": "Crafting & Materials",
       "side": "Both",
       "notes": "chipped-forge-1.20.1-3.0.7.jar"
     },
     {
       "name": "Coldsweat",
-      "category": "Uncategorized",
+      "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "ColdSweat-2.4-b06f.jar"
     },
     {
       "name": "Continents",
-      "category": "Uncategorized",
+      "category": "Worldgen & Structures",
       "side": "Both",
       "notes": "Continents_1.21.x_v1.1.12.jar"
     },
     {
       "name": "Curios Forge",
-      "category": "Uncategorized",
+      "category": "Libraries / API",
       "side": "Both",
       "notes": "curios-forge-5.14.1+1.20.1.jar"
     },
     {
       "name": "Delightful",
-      "category": "Uncategorized",
+      "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "Delightful-1.20.1-3.7.8.jar"
     },
     {
       "name": "Dynmap",
-      "category": "Uncategorized",
+      "category": "Utilities & Admin",
       "side": "Both",
       "notes": "Dynmap-3.6-forge-1.20.jar"
     },
     {
-      "name": "Dynmapblockscan",
-      "category": "Uncategorized",
-      "side": "Both",
-      "notes": "DynmapBlockScan-3.7-beta-6-fabric-1.20.jar"
-    },
-    {
       "name": "Framedblocks",
-      "category": "Uncategorized",
+      "category": "Tech & Automation",
       "side": "Both",
       "notes": "FramedBlocks-9.4.3.jar"
     },
     {
       "name": "Hexerei",
-      "category": "Uncategorized",
+      "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "hexerei-0.4.2.3.jar"
     },
     {
       "name": "Horsescanswim",
-      "category": "Uncategorized",
+      "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "horsescanswim-1.0.1.jar"
     },
     {
       "name": "Immersivepetroleum",
-      "category": "Uncategorized",
+      "category": "Tech & Automation",
       "side": "Both",
       "notes": "ImmersivePetroleum-1.20.1-4.3.1-36.jar"
     },
     {
       "name": "Lithostitched Forge",
-      "category": "Uncategorized",
+      "category": "Libraries / API",
       "side": "Both",
       "notes": "lithostitched-forge-1.20.1-1.4.11.jar"
     },
     {
       "name": "Merequester Forge",
-      "category": "Uncategorized",
+      "category": "Libraries / API",
       "side": "Both",
       "notes": "merequester-forge-1.20.1-1.1.5.jar"
     },
     {
       "name": "Movingelevators",
-      "category": "Uncategorized",
+      "category": "Tech & Automation",
       "side": "Both",
       "notes": "movingelevators-1.4.11-forge-mc1.20.1.jar"
     },
     {
       "name": "Patchouli",
-      "category": "Uncategorized",
+      "category": "Libraries / API",
       "side": "Both",
       "notes": "Patchouli-1.20.1-84.1-FORGE.jar"
     },
     {
       "name": "Phosphophyllite",
-      "category": "Uncategorized",
+      "category": "Libraries / API",
       "side": "Both",
       "notes": "phosphophyllite-1.20.1-0.7.0-alpha.0.2.jar"
     },
     {
       "name": "Quark",
-      "category": "Uncategorized",
+      "category": "Crafting & Materials",
       "side": "Both",
       "notes": "Quark-4.0-462.jar"
     },
     {
       "name": "Quartz",
-      "category": "Uncategorized",
+      "category": "Libraries / API",
       "side": "Both",
       "notes": "quartz-1.20.1-0.2.0-alpha.0.1.jar"
     },
     {
       "name": "Rftoolsbase",
-      "category": "Uncategorized",
+      "category": "Libraries / API",
       "side": "Both",
       "notes": "rftoolsbase-1.20-5.0.6.jar"
     },
     {
       "name": "Rftoolsutility",
-      "category": "Uncategorized",
+      "category": "Tech & Automation",
       "side": "Both",
       "notes": "rftoolsutility-1.20-6.0.6.jar"
     },
     {
       "name": "Shinyhorses",
-      "category": "Uncategorized",
+      "category": "Crafting & Materials",
       "side": "Both",
       "notes": "ShinyHorses-1.20.1-1.3.jar"
     },
     {
       "name": "Supplementaries",
-      "category": "Uncategorized",
+      "category": "Crafting & Materials",
       "side": "Both",
       "notes": "supplementaries-1.20-3.1.42-forge.jar"
     },
     {
       "name": "Tectonic",
-      "category": "Uncategorized",
+      "category": "Worldgen & Structures",
       "side": "Both",
       "notes": "tectonic-3.0.17-forge-1.20.1.jar"
     },
     {
       "name": "Towns And Towers",
-      "category": "Uncategorized",
+      "category": "Worldgen & Structures",
       "side": "Both",
       "notes": "Towns-and-Towers-1.12-Fabric+Forge.jar"
     },
     {
       "name": "Twoplayersonehorse Forge",
-      "category": "Uncategorized",
+      "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "twoplayersonehorse-forge-1.20.1-1.0.3.jar"
     },
     {
       "name": "Zeta",
-      "category": "Uncategorized",
+      "category": "Libraries / API",
       "side": "Both",
       "notes": "Zeta-1.0-31.jar"
     },
