@@ -23,7 +23,9 @@
             "Door issue with not dropping items. Doors now drop the item when broken."
           ],
           "stability": [],
-          "knownIssues": []
+          "knownIssues": [],
+          "note": "",
+          "other": []
         },
         {
           "version": "1.2.0",
@@ -95,6 +97,17 @@
           "fixed": [],
           "stability": [],
           "knownIssues": []
+        },
+        {
+          "version": "1.2.3",
+          "date": "2026-02-08",
+          "note": "Key Update",
+          "added": [],
+          "changed": [
+            "Keys now store multiple doors, trapdoors, and safes"
+          ],
+          "fixed": [],
+          "other": []
         }
       ]
     },
