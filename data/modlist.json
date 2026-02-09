@@ -19,12 +19,6 @@
       "notes": "handcrafted-forge-1.20.1-3.0.6.jar"
     },
     {
-      "name": "Immersive Paintings",
-      "category": "Building & Decor",
-      "side": "Both",
-      "notes": "immersive_paintings-0.6.8+1.20.1-forge.jar"
-    },
-    {
       "name": "ItemPhysic",
       "category": "Client Visuals & Animations",
       "side": "Both",
@@ -91,6 +85,30 @@
       "notes": "weaponmaster_ydm-forge-1.20.1-4.2.3.jar"
     },
     {
+      "name": "Amendments",
+      "category": "Crafting & Materials",
+      "side": "Both",
+      "notes": "amendments-1.20-2.2.5.jar"
+    },
+    {
+      "name": "Brewinandchewin",
+      "category": "Crafting & Materials",
+      "side": "Both",
+      "notes": "BrewinAndChewin-1.20.1-3.2.1.jar"
+    },
+    {
+      "name": "CHA S",
+      "category": "Crafting & Materials",
+      "side": "Both",
+      "notes": "CHA-S-1.20-forge.jar"
+    },
+    {
+      "name": "Chipped Forge",
+      "category": "Crafting & Materials",
+      "side": "Both",
+      "notes": "chipped-forge-1.20.1-3.0.7.jar"
+    },
+    {
       "name": "Glass",
       "category": "Crafting & Materials",
       "side": "Both",
@@ -101,6 +119,24 @@
       "category": "Crafting & Materials",
       "side": "Both",
       "notes": "zaynens_leather_from_rotten_flesh_mod_1.20.1.jar"
+    },
+    {
+      "name": "Quark",
+      "category": "Crafting & Materials",
+      "side": "Both",
+      "notes": "Quark-4.0-462.jar"
+    },
+    {
+      "name": "Shinyhorses",
+      "category": "Crafting & Materials",
+      "side": "Both",
+      "notes": "ShinyHorses-1.20.1-1.3.jar"
+    },
+    {
+      "name": "Supplementaries",
+      "category": "Crafting & Materials",
+      "side": "Both",
+      "notes": "supplementaries-1.20-3.1.42-forge.jar"
     },
     {
       "name": "Talona's Craftable Spawn Eggs And Spawner",
@@ -121,16 +157,46 @@
       "notes": "aileron-1.20.1-forge-1.1.1.jar"
     },
     {
+      "name": "Ars Nouveau",
+      "category": "Gameplay & QoL",
+      "side": "Both",
+      "notes": "ars_nouveau-1.20.1-4.12.7-all.jar"
+    },
+    {
+      "name": "Auto Repair Kits",
+      "category": "Gameplay & QoL",
+      "side": "Both",
+      "notes": "Auto-Repair-Kits-1.20.1-1.0.4.jar"
+    },
+    {
+      "name": "Bakeries",
+      "category": "Gameplay & QoL",
+      "side": "Both",
+      "notes": "bakeries-1.20.1-forge-1.2.5.jar"
+    },
+    {
       "name": "Blood Bits",
       "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "bloodbits-2.0-forge-1.20.1.jar"
     },
     {
+      "name": "Callablehorses",
+      "category": "Gameplay & QoL",
+      "side": "Both",
+      "notes": "callablehorses-1.20.1-1.3.0.1.jar"
+    },
+    {
       "name": "Carry On",
       "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "carryon-forge-1.20.1-2.1.2.7.jar"
+    },
+    {
+      "name": "Coldsweat",
+      "category": "Gameplay & QoL",
+      "side": "Both",
+      "notes": "ColdSweat-2.4-b06f.jar"
     },
     {
       "name": "Corpse",
@@ -151,22 +217,34 @@
       "notes": "daily_rewards_1.20.1-5.3.0.jar"
     },
     {
+      "name": "Delightful",
+      "category": "Gameplay & QoL",
+      "side": "Both",
+      "notes": "Delightful-1.20.1-3.7.8.jar"
+    },
+    {
       "name": "FallingTree",
       "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "FallingTree-1.20.1-4.3.4.jar"
     },
     {
-      "name": "Farmer's Delight",
-      "category": "Gameplay & QoL",
-      "side": "Both",
-      "notes": "FarmersDelight-1.20.1-1.2.9.jar"
-    },
-    {
       "name": "Guard Villagers",
       "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "guardvillagers-1.20.1-1.6.15.jar"
+    },
+    {
+      "name": "Hexerei",
+      "category": "Gameplay & QoL",
+      "side": "Both",
+      "notes": "hexerei-0.4.2.3.jar"
+    },
+    {
+      "name": "Horsescanswim",
+      "category": "Gameplay & QoL",
+      "side": "Both",
+      "notes": "horsescanswim-1.0.1.jar"
     },
     {
       "name": "Immersive Armors",
@@ -223,6 +301,12 @@
       "notes": "ToolBelt-1.20.1-1.20.02.jar"
     },
     {
+      "name": "Twoplayersonehorse Forge",
+      "category": "Gameplay & QoL",
+      "side": "Both",
+      "notes": "twoplayersonehorse-forge-1.20.1-1.0.3.jar"
+    },
+    {
       "name": "Veinst",
       "category": "Gameplay & QoL",
       "side": "Both",
@@ -245,6 +329,12 @@
       "category": "Libraries / API",
       "side": "Both",
       "notes": "architectury-9.2.14-forge.jar"
+    },
+    {
+      "name": "Athena Forge",
+      "category": "Libraries / API",
+      "side": "Both",
+      "notes": "athena-forge-1.20.1-3.1.2.jar"
     },
     {
       "name": "Balm",
@@ -277,6 +367,12 @@
       "notes": "cristellib-1.1.6-forge.jar"
     },
     {
+      "name": "Curios Forge",
+      "category": "Libraries / API",
+      "side": "Both",
+      "notes": "curios-forge-5.14.1+1.20.1.jar"
+    },
+    {
       "name": "EdivadLib",
       "category": "Libraries / API",
       "side": "Both",
@@ -287,12 +383,6 @@
       "category": "Libraries / API",
       "side": "Both",
       "notes": "emotecraft-for-MC1.20.1-2.2.7-b.build.50-forge.jar"
-    },
-    {
-      "name": "Geckolib Forge",
-      "category": "Libraries / API",
-      "side": "Both",
-      "notes": "geckolib-forge-1.20.1-4.8.2.jar"
     },
     {
       "name": "GlitchCore",
@@ -325,10 +415,22 @@
       "notes": "Library_of_Exile-1.20.1-2.1.5.jar"
     },
     {
+      "name": "Lithostitched Forge",
+      "category": "Libraries / API",
+      "side": "Both",
+      "notes": "lithostitched-forge-1.20.1-1.4.11.jar"
+    },
+    {
       "name": "Mcjtylib",
       "category": "Libraries / API",
       "side": "Both",
       "notes": "mcjtylib-1.20-8.0.7.jar"
+    },
+    {
+      "name": "Merequester Forge",
+      "category": "Libraries / API",
+      "side": "Both",
+      "notes": "merequester-forge-1.20.1-1.1.5.jar"
     },
     {
       "name": "Moonlight Library",
@@ -341,6 +443,18 @@
       "category": "Libraries / API",
       "side": "Both",
       "notes": "OreLibrary-1.20.1-1.2.1.jar"
+    },
+    {
+      "name": "Patchouli",
+      "category": "Libraries / API",
+      "side": "Both",
+      "notes": "Patchouli-1.20.1-84.1-FORGE.jar"
+    },
+    {
+      "name": "Phosphophyllite",
+      "category": "Libraries / API",
+      "side": "Both",
+      "notes": "phosphophyllite-1.20.1-0.7.0-alpha.0.2.jar"
     },
     {
       "name": "Placebo",
@@ -361,16 +475,22 @@
       "notes": "PuzzlesLib-v8.1.33-1.20.1-Forge.jar"
     },
     {
+      "name": "Quartz",
+      "category": "Libraries / API",
+      "side": "Both",
+      "notes": "quartz-1.20.1-0.2.0-alpha.0.1.jar"
+    },
+    {
       "name": "Resourceful Lib",
       "category": "Libraries / API",
       "side": "Both",
       "notes": "resourcefullib-forge-1.20.1-2.1.29.jar"
     },
     {
-      "name": "Sophisticated Core",
+      "name": "Rftoolsbase",
       "category": "Libraries / API",
       "side": "Both",
-      "notes": "sophisticatedcore-1.20.1-1.3.1.1446.jar"
+      "notes": "rftoolsbase-1.20-5.0.6.jar"
     },
     {
       "name": "SuperMartijn642's Config Library",
@@ -389,6 +509,12 @@
       "category": "Libraries / API",
       "side": "Both",
       "notes": "YungsApi-1.20-Forge-4.0.6.jar"
+    },
+    {
+      "name": "Zeta",
+      "category": "Libraries / API",
+      "side": "Both",
+      "notes": "Zeta-1.0-31.jar"
     },
     {
       "name": "All The Leaks",
@@ -481,18 +607,6 @@
       "notes": "logichest-1.1.2.jar"
     },
     {
-      "name": "Sophisticated Backpacks",
-      "category": "Storage & Logistics",
-      "side": "Both",
-      "notes": "sophisticatedbackpacks-1.20.1-3.24.20.1500.jar"
-    },
-    {
-      "name": "Sophisticated Storage",
-      "category": "Storage & Logistics",
-      "side": "Both",
-      "notes": "sophisticatedstorage-1.20.1-1.4.21.1446.jar"
-    },
-    {
       "name": "Storagedelight",
       "category": "Storage & Logistics",
       "side": "Both",
@@ -517,6 +631,12 @@
       "notes": "Arda's Cobblestone Generator 1.0 [FORGE] [1.20.1].jar"
     },
     {
+      "name": "Biggerreactors",
+      "category": "Tech & Automation",
+      "side": "Both",
+      "notes": "biggerreactors-1.20.1-0.6.0-beta.10.5.jar"
+    },
+    {
       "name": "Bonsai Trees 3",
       "category": "Tech & Automation",
       "side": "Both",
@@ -535,6 +655,12 @@
       "notes": "easy-villagers-forge-1.20.1-1.1.23.jar"
     },
     {
+      "name": "Framedblocks",
+      "category": "Tech & Automation",
+      "side": "Both",
+      "notes": "FramedBlocks-9.4.3.jar"
+    },
+    {
       "name": "Immersive Aircraft",
       "category": "Tech & Automation",
       "side": "Both",
@@ -545,6 +671,12 @@
       "category": "Tech & Automation",
       "side": "Both",
       "notes": "ImmersiveEngineering-1.20.1-10.2.0-183.jar"
+    },
+    {
+      "name": "Immersivepetroleum",
+      "category": "Tech & Automation",
+      "side": "Both",
+      "notes": "ImmersivePetroleum-1.20.1-4.3.1-36.jar"
     },
     {
       "name": "Iron Furnaces",
@@ -565,6 +697,18 @@
       "notes": "MekanismGenerators-1.20.1-10.4.16.80.jar"
     },
     {
+      "name": "Movingelevators",
+      "category": "Tech & Automation",
+      "side": "Both",
+      "notes": "movingelevators-1.4.11-forge-mc1.20.1.jar"
+    },
+    {
+      "name": "Rftoolsutility",
+      "category": "Tech & Automation",
+      "side": "Both",
+      "notes": "rftoolsutility-1.20-6.0.6.jar"
+    },
+    {
       "name": "SolarGeneration",
       "category": "Tech & Automation",
       "side": "Both",
@@ -583,210 +727,6 @@
       "notes": "wirelessredstone-forge-1.2.2+1.20.1.jar"
     },
     {
-      "name": "Amendments",
-      "category": "Crafting & Materials",
-      "side": "Both",
-      "notes": "amendments-1.20-2.2.5.jar"
-    },
-    {
-      "name": "Ars Nouveau",
-      "category": "Gameplay & QoL",
-      "side": "Both",
-      "notes": "ars_nouveau-1.20.1-4.12.7-all.jar"
-    },
-    {
-      "name": "Athena Forge",
-      "category": "Libraries / API",
-      "side": "Both",
-      "notes": "athena-forge-1.20.1-3.1.2.jar"
-    },
-    {
-      "name": "Auto Repair Kits",
-      "category": "Gameplay & QoL",
-      "side": "Both",
-      "notes": "Auto-Repair-Kits-1.20.1-1.0.4.jar"
-    },
-    {
-      "name": "Bakeries",
-      "category": "Gameplay & QoL",
-      "side": "Both",
-      "notes": "bakeries-1.20.1-forge-1.2.5.jar"
-    },
-    {
-      "name": "Biggerreactors",
-      "category": "Tech & Automation",
-      "side": "Both",
-      "notes": "biggerreactors-1.20.1-0.6.0-beta.10.5.jar"
-    },
-    {
-      "name": "Brewinandchewin",
-      "category": "Crafting & Materials",
-      "side": "Both",
-      "notes": "BrewinAndChewin-1.20.1-3.2.1.jar"
-    },
-    {
-      "name": "Callablehorses",
-      "category": "Gameplay & QoL",
-      "side": "Both",
-      "notes": "callablehorses-1.20.1-1.3.0.1.jar"
-    },
-    {
-      "name": "CHA S",
-      "category": "Crafting & Materials",
-      "side": "Both",
-      "notes": "CHA-S-1.20-forge.jar"
-    },
-    {
-      "name": "Chipped Forge",
-      "category": "Crafting & Materials",
-      "side": "Both",
-      "notes": "chipped-forge-1.20.1-3.0.7.jar"
-    },
-    {
-      "name": "Coldsweat",
-      "category": "Gameplay & QoL",
-      "side": "Both",
-      "notes": "ColdSweat-2.4-b06f.jar"
-    },
-    {
-      "name": "Continents",
-      "category": "Worldgen & Structures",
-      "side": "Both",
-      "notes": "Continents_1.21.x_v1.1.12.jar"
-    },
-    {
-      "name": "Curios Forge",
-      "category": "Libraries / API",
-      "side": "Both",
-      "notes": "curios-forge-5.14.1+1.20.1.jar"
-    },
-    {
-      "name": "Delightful",
-      "category": "Gameplay & QoL",
-      "side": "Both",
-      "notes": "Delightful-1.20.1-3.7.8.jar"
-    },
-    {
-      "name": "Dynmap",
-      "category": "Utilities & Admin",
-      "side": "Both",
-      "notes": "Dynmap-3.6-forge-1.20.jar"
-    },
-    {
-      "name": "Framedblocks",
-      "category": "Tech & Automation",
-      "side": "Both",
-      "notes": "FramedBlocks-9.4.3.jar"
-    },
-    {
-      "name": "Hexerei",
-      "category": "Gameplay & QoL",
-      "side": "Both",
-      "notes": "hexerei-0.4.2.3.jar"
-    },
-    {
-      "name": "Horsescanswim",
-      "category": "Gameplay & QoL",
-      "side": "Both",
-      "notes": "horsescanswim-1.0.1.jar"
-    },
-    {
-      "name": "Immersivepetroleum",
-      "category": "Tech & Automation",
-      "side": "Both",
-      "notes": "ImmersivePetroleum-1.20.1-4.3.1-36.jar"
-    },
-    {
-      "name": "Lithostitched Forge",
-      "category": "Libraries / API",
-      "side": "Both",
-      "notes": "lithostitched-forge-1.20.1-1.4.11.jar"
-    },
-    {
-      "name": "Merequester Forge",
-      "category": "Libraries / API",
-      "side": "Both",
-      "notes": "merequester-forge-1.20.1-1.1.5.jar"
-    },
-    {
-      "name": "Movingelevators",
-      "category": "Tech & Automation",
-      "side": "Both",
-      "notes": "movingelevators-1.4.11-forge-mc1.20.1.jar"
-    },
-    {
-      "name": "Patchouli",
-      "category": "Libraries / API",
-      "side": "Both",
-      "notes": "Patchouli-1.20.1-84.1-FORGE.jar"
-    },
-    {
-      "name": "Phosphophyllite",
-      "category": "Libraries / API",
-      "side": "Both",
-      "notes": "phosphophyllite-1.20.1-0.7.0-alpha.0.2.jar"
-    },
-    {
-      "name": "Quark",
-      "category": "Crafting & Materials",
-      "side": "Both",
-      "notes": "Quark-4.0-462.jar"
-    },
-    {
-      "name": "Quartz",
-      "category": "Libraries / API",
-      "side": "Both",
-      "notes": "quartz-1.20.1-0.2.0-alpha.0.1.jar"
-    },
-    {
-      "name": "Rftoolsbase",
-      "category": "Libraries / API",
-      "side": "Both",
-      "notes": "rftoolsbase-1.20-5.0.6.jar"
-    },
-    {
-      "name": "Rftoolsutility",
-      "category": "Tech & Automation",
-      "side": "Both",
-      "notes": "rftoolsutility-1.20-6.0.6.jar"
-    },
-    {
-      "name": "Shinyhorses",
-      "category": "Crafting & Materials",
-      "side": "Both",
-      "notes": "ShinyHorses-1.20.1-1.3.jar"
-    },
-    {
-      "name": "Supplementaries",
-      "category": "Crafting & Materials",
-      "side": "Both",
-      "notes": "supplementaries-1.20-3.1.42-forge.jar"
-    },
-    {
-      "name": "Tectonic",
-      "category": "Worldgen & Structures",
-      "side": "Both",
-      "notes": "tectonic-3.0.17-forge-1.20.1.jar"
-    },
-    {
-      "name": "Towns And Towers",
-      "category": "Worldgen & Structures",
-      "side": "Both",
-      "notes": "Towns-and-Towers-1.12-Fabric+Forge.jar"
-    },
-    {
-      "name": "Twoplayersonehorse Forge",
-      "category": "Gameplay & QoL",
-      "side": "Both",
-      "notes": "twoplayersonehorse-forge-1.20.1-1.0.3.jar"
-    },
-    {
-      "name": "Zeta",
-      "category": "Libraries / API",
-      "side": "Both",
-      "notes": "Zeta-1.0-31.jar"
-    },
-    {
       "name": "Chunky",
       "category": "Utilities & Admin",
       "side": "Server",
@@ -803,6 +743,12 @@
       "category": "Utilities & Admin",
       "side": "Both",
       "notes": "cupboard-1.20.1-2.7.jar"
+    },
+    {
+      "name": "Dynmap",
+      "category": "Utilities & Admin",
+      "side": "Both",
+      "notes": "Dynmap-3.6-forge-1.20.jar"
     },
     {
       "name": "GuideME",
@@ -853,12 +799,6 @@
       "notes": "spark-1.10.53-forge.jar"
     },
     {
-      "name": "Steelhold",
-      "category": "Utilities & Admin",
-      "side": "Both",
-      "notes": "steelhold-1.2.1.jar"
-    },
-    {
       "name": "Worldstate",
       "category": "Utilities & Admin",
       "side": "Both",
@@ -869,6 +809,12 @@
       "category": "Worldgen & Structures",
       "side": "Both",
       "notes": "AdditionalStructures-1.20.x-(v.4.2.2).jar"
+    },
+    {
+      "name": "Continents",
+      "category": "Worldgen & Structures",
+      "side": "Both",
+      "notes": "Continents_1.21.x_v1.1.12.jar"
     },
     {
       "name": "FarmersStructures",
@@ -901,10 +847,22 @@
       "notes": "Structory_1.20.x_v1.3.5.jar"
     },
     {
+      "name": "Tectonic",
+      "category": "Worldgen & Structures",
+      "side": "Both",
+      "notes": "tectonic-3.0.17-forge-1.20.1.jar"
+    },
+    {
       "name": "This Rocks! (Forge)",
       "category": "Worldgen & Structures",
       "side": "Both",
       "notes": "ThisRocks-1.20.1-1.5.1.jar"
+    },
+    {
+      "name": "Towns And Towers",
+      "category": "Worldgen & Structures",
+      "side": "Both",
+      "notes": "Towns-and-Towers-1.12-Fabric+Forge.jar"
     },
     {
       "name": "YUNG's Better Caves",
@@ -935,6 +893,114 @@
       "category": "Worldgen & Structures",
       "side": "Both",
       "notes": "YungsBetterMineshafts-1.20-Forge-4.0.4.jar"
+    },
+    {
+      "name": "amumucurse",
+      "category": "Uncategorized",
+      "side": "Both",
+      "notes": "amumucurse-1.0.0_1.jar"
+    },
+    {
+      "name": "cosmeticarmorreworked",
+      "category": "Uncategorized",
+      "side": "Both",
+      "notes": "cosmeticarmorreworked-1.20.1-v1a.jar"
+    },
+    {
+      "name": "cozyclothing_1.0.0",
+      "category": "Uncategorized",
+      "side": "Both",
+      "notes": "cozyclothing_1.0.0-1.20.1-Forge.jar"
+    },
+    {
+      "name": "FarmersDelight",
+      "category": "Uncategorized",
+      "side": "Both",
+      "notes": "FarmersDelight-1.20.1-1.2.10.jar"
+    },
+    {
+      "name": "FazRoleplayClothes",
+      "category": "Uncategorized",
+      "side": "Both",
+      "notes": "FazRoleplayClothes-1.20.1-2.4.jar"
+    },
+    {
+      "name": "geckolib-forge",
+      "category": "Uncategorized",
+      "side": "Both",
+      "notes": "geckolib-forge-1.20.1-4.8.3.jar"
+    },
+    {
+      "name": "gentlecreeper",
+      "category": "Uncategorized",
+      "side": "Both",
+      "notes": "gentlecreeper-1.0.0.jar"
+    },
+    {
+      "name": "immersive_paintings",
+      "category": "Uncategorized",
+      "side": "Both",
+      "notes": "immersive_paintings-0.6.9+1.20.1-forge.jar"
+    },
+    {
+      "name": "MekanismTools",
+      "category": "Uncategorized",
+      "side": "Both",
+      "notes": "MekanismTools-1.20.1-10.4.16.80.jar"
+    },
+    {
+      "name": "MekanismWeapons",
+      "category": "Uncategorized",
+      "side": "Both",
+      "notes": "MekanismWeapons-1.20.1-3.0.jar"
+    },
+    {
+      "name": "multitools-forge",
+      "category": "Uncategorized",
+      "side": "Both",
+      "notes": "multitools-forge-1.20.1-2.0.1.jar"
+    },
+    {
+      "name": "QuarkOddities",
+      "category": "Uncategorized",
+      "side": "Both",
+      "notes": "QuarkOddities-1.20.1.jar"
+    },
+    {
+      "name": "redstoneclock",
+      "category": "Uncategorized",
+      "side": "Both",
+      "notes": "redstoneclock-1.0.0.jar"
+    },
+    {
+      "name": "smallships-forge",
+      "category": "Uncategorized",
+      "side": "Both",
+      "notes": "smallships-forge-1.20.1-2.0.0-b1.4.jar"
+    },
+    {
+      "name": "sophisticatedbackpacks",
+      "category": "Uncategorized",
+      "side": "Both",
+      "notes": "sophisticatedbackpacks-1.20.1-3.24.21.1515.jar"
+    },
+    {
+      "name": "sophisticatedcore",
+      "category": "Uncategorized",
+      "side": "Both",
+      "notes": "sophisticatedcore-1.20.1-1.3.2.1468.jar"
+    },
+    {
+      "name": "sophisticatedstorage",
+      "category": "Uncategorized",
+      "side": "Both",
+      "notes": "sophisticatedstorage-1.20.1-1.4.24.1486.jar"
+    },
+    {
+      "name": "steelhold",
+      "category": "Uncategorized",
+      "side": "Both",
+      "notes": "steelhold-1.2.3.jar"
     }
   ]
 }
