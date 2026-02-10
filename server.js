@@ -41,9 +41,15 @@
   const playersGrid = el("playersGrid");
   const playersOnlineNote = el("playersOnlineNote");
 
-  // Chat
+  // Chat (feed)
   const chatList = el("chatList");
   const chatNote = el("chatNote");
+
+  // Chat (composer)
+  const chatName = el("chatName");
+  const chatMsg = el("chatMsg");
+  const chatSendBtn = el("chatSendBtn");
+  const chatSendStatus = el("chatSendStatus");
 
   // Waystones
   const waystoneSearch = el("waystoneSearch");
@@ -150,6 +156,15 @@
     return `${h}h ago`;
   }
 
+  function setChatStatus(text, kind = "neutral") {
+    if (!chatSendStatus) return;
+    chatSendStatus.textContent = text;
+
+    chatSendStatus.classList.remove("good", "bad");
+    if (kind === "good") chatSendStatus.classList.add("good");
+    if (kind === "bad") chatSendStatus.classList.add("bad");
+  }
+
   // Fetch with timeout + abort
   async function fetchJson(url, timeoutMs = 5500) {
     const controller = new AbortController();
@@ -164,8 +179,47 @@
     }
   }
 
+  async function fetchJsonPost(url, bodyObj, headers = {}, timeoutMs = 6500) {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        cache: "no-store",
+        signal: controller.signal,
+        headers: {
+          "Content-Type": "application/json",
+          ...headers
+        },
+        body: JSON.stringify(bodyObj)
+      });
+      const text = await res.text();
+      let json = null;
+      try { json = text ? JSON.parse(text) : null; } catch { /* ignore */ }
+      if (!res.ok) {
+        const code = json?.error || `HTTP_${res.status}`;
+        const err = new Error(code);
+        err.status = res.status;
+        err.payload = json;
+        err.raw = text;
+        throw err;
+      }
+      return json;
+    } finally {
+      clearTimeout(t);
+    }
+  }
+
   async function copyText(txt) {
     try { await navigator.clipboard.writeText(txt); return true; } catch { return false; }
+  }
+
+  function clampChat(str, max) {
+    const s = String(str ?? "");
+    if (!s) return "";
+    // remove control chars except basic whitespace
+    const cleaned = s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim();
+    return cleaned.length > max ? cleaned.slice(0, max) : cleaned;
   }
 
   // -----------------------------
@@ -174,7 +228,6 @@
   let lastPlayersKey = "";
 
   function playersKey(list) {
-    // stable-ish key to avoid rerendering if unchanged
     if (!Array.isArray(list)) return "";
     return list.map(p => `${p?.name ?? ""}|${p?.dimension ?? ""}|${p?.activity ?? ""}`).join(";");
   }
@@ -185,7 +238,6 @@
     const list = Array.isArray(publicPlayers) ? publicPlayers : [];
     const key = playersKey(list);
 
-    // Avoid re-rendering if no changes (reduces flicker)
     if (key === lastPlayersKey) {
       if (playersOnlineNote) playersOnlineNote.textContent = noteText;
       return;
@@ -240,7 +292,7 @@
   }
 
   // -----------------------------
-  // Chat (keep scroll position if user is reading)
+  // Chat feed (keep scroll position if user is reading)
   // -----------------------------
   let lastChatKey = "";
 
@@ -262,7 +314,6 @@
     const arr = Array.isArray(lines) ? lines : [];
     const key = chatKey(arr);
 
-    // No work if unchanged
     if (key === lastChatKey) return;
     lastChatKey = key;
 
@@ -328,7 +379,6 @@
 
   function wayKey(list) {
     if (!Array.isArray(list)) return "";
-    // key off a small stable signature
     return list.slice(0, 120).map(w => `${getWayName(w)}|${w?.dimension ?? ""}|${w?.x ?? ""},${w?.y ?? ""},${w?.z ?? ""}|${w?.isGlobal ? 1 : 0}`).join(";");
   }
 
@@ -338,7 +388,6 @@
     const q = (waystoneSearch?.value || "").trim().toLowerCase();
     const filtered = waystones.filter(w => matchesWaystone(w, q));
 
-    // Avoid repaint unless needed (or search changed)
     const k = `${q}::${wayKey(filtered)}`;
     if (!force && k === lastWayKey) return;
     lastWayKey = k;
@@ -421,7 +470,13 @@
   const serverName = (cfg.serverName || "").trim();
   const address = (cfg.address || "").trim();
   const refreshSeconds = Math.max(10, Number(cfg.refreshSeconds || 30));
+
+  // IMPORTANT: this should be a full URL like "https://api.mayflowerstudios.net/api/public"
+  // In your existing setup it's likely the endpoint that returns your snapshot.
   const worldStateUrl = (cfg.worldStateUrl || "").trim();
+
+  // NEW: token for POST /api/chat
+  const worldStateToken = String(cfg.worldStateToken || "").trim();
 
   if (serverTitle) serverTitle.textContent = serverName ? `🛰️ ${serverName}` : "🛰️ Server Dashboard";
   safeSetText(serverAddress, address || "—");
@@ -453,6 +508,109 @@
         setTimeout(() => (copyIpBtn.textContent = "📋 Copy"), 1200);
       } else {
         alert("Couldn’t copy automatically — manually copy:\n" + address);
+      }
+    });
+  }
+
+  // -----------------------------
+  // Chat sending (POST /api/chat)
+  // -----------------------------
+  function apiBaseFromWorldStateUrl(wsUrl) {
+    // Your server exposes:
+    //   GET  /api/public (website-friendly)
+    //   GET/POST /api/chat
+    //
+    // If config points at .../api/public or .../api/worldstate, we want the same host.
+    // We'll strip the trailing path down to the origin, then re-add /api/chat.
+    try {
+      const u = new URL(wsUrl);
+      return `${u.protocol}//${u.host}`;
+    } catch {
+      return "";
+    }
+  }
+
+  const worldApiBase = (cfg.worldApiBase || "").trim();
+  const chatPostUrl = worldApiBase ? `${worldApiBase.replace(/\/$/, "")}/api/chat` : "";
+
+  function chatCanSend() {
+    return Boolean(chatPostUrl) && Boolean(worldStateToken);
+  }
+
+  function initChatComposer() {
+    if (!chatSendBtn || !chatMsg || !chatName) return;
+
+    // Prefill a name from localStorage
+    const savedName = localStorage.getItem("mf_webchat_name");
+    if (savedName && !chatName.value) chatName.value = savedName;
+
+    if (!chatCanSend()) {
+      setChatStatus(worldStateToken ? "Chat endpoint missing" : "Token missing", "bad");
+      chatSendBtn.disabled = true;
+      chatSendBtn.style.opacity = ".6";
+      chatSendBtn.style.cursor = "not-allowed";
+      return;
+    }
+
+    setChatStatus("Ready to send", "good");
+
+    function setSending(on) {
+      if (!chatSendBtn) return;
+      chatSendBtn.disabled = on;
+      chatSendBtn.textContent = on ? "Sending…" : "📨 Send";
+    }
+
+    async function doSend() {
+      if (!chatCanSend()) return;
+
+      const name = clampChat(chatName.value, 24) || "Web";
+      const msg = clampChat(chatMsg.value, 200);
+
+      localStorage.setItem("mf_webchat_name", name);
+
+      if (!msg) {
+        setChatStatus("Type a message first", "bad");
+        chatMsg.focus();
+        return;
+      }
+
+      setSending(true);
+      setChatStatus("Sending…", "neutral");
+
+      try {
+        await fetchJsonPost(
+          chatPostUrl,
+          { name, msg },
+          { "X-Worldstate-Token": worldStateToken },
+          7000
+        );
+
+        chatMsg.value = "";
+        setChatStatus("Sent ✔", "good");
+
+        // Pull latest state quickly so your message shows up in the feed
+        remaining = 1;
+      } catch (e) {
+        const code = String(e?.message || "send_failed");
+        if (code === "rate_limited" || e?.status === 429) {
+          setChatStatus("Rate limited (wait a sec)", "bad");
+        } else if (code === "forbidden" || e?.status === 403) {
+          setChatStatus("Forbidden (bad token)", "bad");
+        } else if (code === "web_chat_disabled") {
+          setChatStatus("Web chat disabled server-side", "bad");
+        } else {
+          setChatStatus(`Failed: ${code}`, "bad");
+        }
+      } finally {
+        setSending(false);
+      }
+    }
+
+    chatSendBtn.addEventListener("click", doSend);
+    chatMsg.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter" && !ev.shiftKey) {
+        ev.preventDefault();
+        doSend();
       }
     });
   }
@@ -513,6 +671,10 @@
 
     safeSetText(lastUpdate, nowLabel());
     lastApplyAt = Date.now();
+
+    // Improve composer status once we know server is reachable
+    if (chatCanSend()) setChatStatus("Ready to send", "good");
+    else setChatStatus(worldStateToken ? "Token set (endpoint?)" : "Token missing", chatCanSend() ? "good" : "bad");
   }
 
   async function fetchStatusFallback() {
@@ -557,6 +719,10 @@
     renderChat([]);
     if (chatNote) chatNote.textContent = "Chat feed unavailable.";
     if (waystoneNote) waystoneNote.textContent = "Waystones unavailable.";
+
+    // Composer status
+    if (!chatCanSend()) setChatStatus(worldStateToken ? "Token set (server offline?)" : "Token missing", "bad");
+    else setChatStatus("Server offline/stale", "bad");
   }
 
   async function refreshAll() {
@@ -573,16 +739,14 @@
     } catch (e) {
       console.warn("WorldState failed:", e);
 
-      // backoff grows (0, 1, 2, 4, 8...) up to 60s extra
       backoff = Math.min(60, backoff ? backoff * 2 : 2);
 
-      // If we had good data recently, mark as "stale" instead of hard "offline"
       const age = Date.now() - (lastGoodMs || 0);
-      if (lastGoodMs && age < 120000) { // 2 minutes
+      if (lastGoodMs && age < 120000) {
         setOnlineState("stale");
         if (chatNote) chatNote.textContent = `Showing last known data (${msAgeLabel(age)}).`;
         if (waystoneNote) waystoneNote.textContent = `Showing last known data (${msAgeLabel(age)}).`;
-        // Keep panels as-is (don’t clear)
+        if (chatCanSend()) setChatStatus(`Stale (${msAgeLabel(age)})`, "bad");
       } else {
         await fetchStatusFallback();
         clearLivePanels("WorldState endpoint/CORS/offline.");
@@ -591,12 +755,8 @@
   }
 
   function updateLastUpdateAge() {
-    // Adds extra clarity if it’s been a bit
     if (!lastApplyAt) return;
     const age = Date.now() - lastApplyAt;
-    // If you want, you can show “last update: 3m ago” instead of a clock time:
-    // safeSetText(lastUpdate, msAgeLabel(age));
-    // Keeping your original clock time, but we can mark stale visually via status.
     if (age > 120000) setOnlineState("stale");
   }
 
@@ -606,7 +766,6 @@
 
   async function tick() {
     if (document.hidden) {
-      // Don’t spam your server while tab is hidden
       safeSetText(refreshIn, "paused");
       updateLastUpdateAge();
       return;
@@ -627,14 +786,13 @@
   setOnlineState("loading");
   remaining = effectiveRefreshSeconds();
   safeSetText(refreshIn, `${remaining}s`);
+
+  initChatComposer();
   await refreshAll();
   setInterval(tick, 1000);
 
-  // If user returns to tab, refresh quickly
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) {
-      remaining = 1;
-    }
+    if (!document.hidden) remaining = 1;
   });
 
   // -----------------------------
