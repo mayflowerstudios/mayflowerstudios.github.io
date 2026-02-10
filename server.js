@@ -299,13 +299,33 @@
   function chatKey(lines) {
     if (!Array.isArray(lines)) return "";
     const tail = lines.slice(-20);
-    return tail.map(l => `${l?.ts ?? l?.time ?? ""}|${l?.name ?? l?.user ?? ""}|${l?.msg ?? l?.message ?? ""}`).join(";");
+    // include player/type/t so "Server" fallback doesn't collapse keys
+    return tail.map(l => `${l?.t ?? l?.ts ?? l?.time ?? ""}|${l?.type ?? ""}|${l?.player ?? l?.name ?? l?.user ?? ""}|${l?.msg ?? l?.message ?? ""}`).join(";");
   }
 
   function isNearBottom(node) {
     if (!node) return true;
     const threshold = 40;
     return node.scrollHeight - node.scrollTop - node.clientHeight < threshold;
+  }
+
+  function typeBadge(type) {
+    const t = String(type || "chat").toLowerCase();
+    if (t === "chat") return "";
+    if (t === "advancement") return "🏆 ";
+    if (t === "join") return "🟢 ";
+    if (t === "leave") return "🔴 ";
+    if (t === "death") return "💀 ";
+    if (t === "server") return "🛰️ ";
+    if (t === "info") return "ℹ️ ";
+    return "• ";
+  }
+
+  function defaultNameForType(type, player) {
+    const t = String(type || "chat").toLowerCase();
+    if (player) return player;
+    if (t === "server") return "Server";
+    return "Unknown";
   }
 
   function renderChat(lines) {
@@ -333,17 +353,27 @@
     const frag = document.createDocumentFragment();
 
     for (const l of arr.slice(-60)) {
-      const name = l.name ?? l.user ?? "Server";
-      const msg = l.msg ?? l.message ?? "";
-      const ts = (l.ts != null) ? Number(l.ts) : (l.time ?? l.timestamp ?? null);
+      const type = l?.type ?? "chat";
+      const name =
+        l?.player ??
+        l?.name ??
+        l?.user ??
+        defaultNameForType(type, null);
+
+      const msg = l?.msg ?? l?.message ?? "";
+      const ts = (l?.t != null) ? Number(l.t)
+        : ((l?.ts != null) ? Number(l.ts)
+          : (l?.time ?? l?.timestamp ?? null));
+
       const ms = Number.isFinite(ts) ? (ts < 2e10 ? ts * 1000 : ts) : null;
       const timeLabel = ms ? new Date(ms).toLocaleTimeString() : "";
+      const badge = typeBadge(type);
 
       const div = document.createElement("div");
       div.className = "chatLine";
       div.innerHTML = `
         <div class="chatTop">
-          <span>${escapeHtml(name)}</span>
+          <span>${escapeHtml(badge + name)}</span>
           <span>${escapeHtml(timeLabel)}</span>
         </div>
         <div class="chatMsg">${escapeHtml(msg)}</div>
@@ -515,13 +545,8 @@
   // -----------------------------
   // Chat sending (POST /api/chat)
   // -----------------------------
+  // (still here in case you want it later, but you’re using cfg.worldApiBase now)
   function apiBaseFromWorldStateUrl(wsUrl) {
-    // Your server exposes:
-    //   GET  /api/public (website-friendly)
-    //   GET/POST /api/chat
-    //
-    // If config points at .../api/public or .../api/worldstate, we want the same host.
-    // We'll strip the trailing path down to the origin, then re-add /api/chat.
     try {
       const u = new URL(wsUrl);
       return `${u.protocol}//${u.host}`;
@@ -530,6 +555,9 @@
     }
   }
 
+  // ✅ Use explicit API base (recommended)
+  // Put this in data/server.json:
+  //   "worldApiBase": "https://api.mayflowerstudios.net"
   const worldApiBase = (cfg.worldApiBase || "").trim();
   const chatPostUrl = worldApiBase ? `${worldApiBase.replace(/\/$/, "")}/api/chat` : "";
 
