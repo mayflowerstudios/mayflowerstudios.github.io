@@ -19,10 +19,15 @@
   const sparkLink = el("sparkLink");
   const openMapBtn = el("openMapBtn");
 
-  const mcDayEl = el("mcDay");
-  const mcTimeEl = el("mcTime");
-  const mcSeasonEl = el("mcSeason");
-  const mcWeatherEl = el("mcWeather");
+  // NEW: mood UI
+  const worldMoodTitle = el("worldMoodTitle");
+  const worldMoodFooter = el("worldMoodFooter");
+  const worldMoodClock = el("worldMoodClock");
+  const worldMoodWeather = el("worldMoodWeather");
+  const worldMoodSeason = el("worldMoodSeason");
+  const worldMoodMoon = el("worldMoodMoon");
+
+  // Performance UI
   const tpsLine = el("tpsLine");
   const msptLine = el("msptLine");
   const memLine = el("memLine");
@@ -109,6 +114,49 @@
       return raw.toLowerCase().split("_").filter(Boolean).map(w => w[0].toUpperCase() + w.slice(1)).join(" ");
     }
     return raw.replace(/([a-z])([A-Z])/g, "$1 $2");
+  }
+
+  function extractClockFromHeadline(headline) {
+    if (!headline) return "";
+    const m = String(headline).match(/\b(\d{1,2}:\d{2}\s*(?:AM|PM))\b/i);
+    return m ? m[1] : "";
+  }
+
+  function extractClockFromHeadline(headline) {
+    if (!headline) return "";
+    const m = String(headline).match(/\b(\d{1,2}:\d{2}\s*(?:AM|PM))\b/i);
+    return m ? m[1] : "";
+  }
+
+  function prettyFirstSeasonToken(seasonRaw) {
+    // "LATE_SPRING SPRING" -> "Late Spring"
+    const s = String(seasonRaw || "").trim();
+    if (!s) return "";
+    const first = s.split(/\s+/).filter(Boolean)[0] || "";
+    return prettyToken(first);
+  }
+
+  function moonEmoji(phase) {
+    const p = Number(phase);
+    if (!Number.isFinite(p)) return "🌙";
+    const e = ["🌕","🌖","🌗","🌘","🌑","🌒","🌓","🌔"];
+    return e[p & 7];
+  }
+
+  function moonLabel(phase) {
+    const p = Number(phase);
+    if (!Number.isFinite(p)) return "Moon";
+    const n = [
+      "Full Moon",
+      "Waning Gibbous",
+      "Last Quarter",
+      "Waning Crescent",
+      "New Moon",
+      "Waxing Crescent",
+      "First Quarter",
+      "Waxing Gibbous"
+    ];
+    return n[p & 7];
   }
 
   function fmtWeather(w) {
@@ -205,6 +253,39 @@
     if (!s) return "";
     const cleaned = s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim();
     return cleaned.length > max ? cleaned.slice(0, max) : cleaned;
+  }
+
+  // --- NEW: mood helpers ---
+  function extractClockFromHeadline(headline) {
+    if (!headline) return "";
+    const m = String(headline).match(/\b(\d{1,2}:\d{2}\s*(?:AM|PM))\b/i);
+    return m ? m[1] : "";
+  }
+
+  function moodTitleFrom(ws) {
+    const mood = ws?.mood || null;
+    if (mood) {
+      const clock = extractClockFromHeadline(mood.headline) || "";
+      const weather = mood.weather ? String(mood.weather) : "";
+      const season = mood.season ? prettyToken(mood.season) : "";
+      const parts = [clock, weather, season].filter(Boolean);
+      if (parts.length) return parts.join(" • ");
+    }
+
+    // fallback to old fields if mood missing
+    const time = ws?.time || {};
+    const clock2 = time.clock ? String(time.clock) : "";
+    const weather2 = fmtWeather(ws?.weather);
+    const s = ws?.season || {};
+    const season2 = (s.sereneSeasonsLoaded === false) ? "" : seasonLabel(s.season, s.subSeason, s.seasonDay);
+    const parts2 = [clock2, (weather2 !== "—" ? weather2 : ""), season2].filter(Boolean);
+    return parts2.length ? parts2.join(" • ") : "—";
+  }
+
+  function moodFlavorFrom(ws) {
+    const mood = ws?.mood || null;
+    if (mood?.flavor) return String(mood.flavor);
+    return "—";
   }
 
   let lastPlayersKey = "";
@@ -613,14 +694,23 @@
     const max = (meta.maxPlayers != null) ? meta.maxPlayers : null;
     setCountsEverywhere(online, max);
 
-    const time = ws?.time || {};
-    safeSetText(mcDayEl, Number.isFinite(Number(time.day)) ? `Day ${Number(time.day)}` : "Day ?");
-    safeSetText(mcTimeEl, time.clock ? String(time.clock) : "Time ?");
+    // NEW: World mood card (clock + weather + season + flavor)
+    const mood = ws?.mood || {};
 
-    const s = ws?.season || {};
-    safeSetText(mcSeasonEl, s.sereneSeasonsLoaded === false ? "—" : seasonLabel(s.season, s.subSeason, s.seasonDay));
+    const clock = extractClockFromHeadline(mood.headline) || "—";
+    const weather = mood.weather ? String(mood.weather) : (ws?.weather ? fmtWeather(ws.weather).replace(/^.\s*/, "") : "—");
+    const season = mood.season ? prettyFirstSeasonToken(mood.season) : "—";
 
-    safeSetText(mcWeatherEl, fmtWeather(ws?.weather));
+    const mEmoji = moonEmoji(mood.moonPhase);
+    const mName = moonLabel(mood.moonPhase);
+
+    const flavor = mood.flavor ? String(mood.flavor) : "—";
+
+    safeSetText(worldMoodClock, clock);
+    safeSetText(worldMoodWeather, weather);
+    safeSetText(worldMoodSeason, season);
+    safeSetText(worldMoodMoon, `${mEmoji} ${mName}`);
+    safeSetText(worldMoodFooter, flavor);
 
     const perf = ws?.perf || {};
     safeSetText(tpsLine, Number.isFinite(Number(perf.estTps)) ? Number(perf.estTps).toFixed(1) : "—");
@@ -677,10 +767,10 @@
 
   function clearLivePanels(reason) {
     safeSetText(serverMotd, reason || "WorldState not available.");
-    safeSetText(mcDayEl, "—");
-    safeSetText(mcTimeEl, "—");
-    safeSetText(mcSeasonEl, "—");
-    safeSetText(mcWeatherEl, "—");
+
+    safeSetText(worldMoodTitle, "—");
+    safeSetText(worldMoodFlavor, "—");
+
     safeSetText(tpsLine, "—");
     safeSetText(msptLine, "—");
     safeSetText(memLine, "—");
