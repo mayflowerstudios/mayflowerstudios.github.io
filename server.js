@@ -782,6 +782,41 @@
     }
   }
 
+  // -----------------------------
+  // Fast chat-only polling
+  // -----------------------------
+  const chatFastSeconds = Math.max(1, Number(cfg.chatFastSeconds || 2)); // add to server.json if you want
+  let chatRemaining = chatFastSeconds;
+
+  function applyChatOnly(ws) {
+    // ONLY touch chat (and its note), do not re-render everything
+    const chat = Array.isArray(ws?.chat) ? ws.chat : [];
+    renderChat(chat);
+    if (chatNote) chatNote.textContent = chat.length ? "Live feed from WorldState." : "No recent chat messages.";
+  }
+
+  async function refreshChatOnly() {
+    if (!worldStateUrl) return;
+
+    try {
+      const ws = await fetchWorldState();
+      applyChatOnly(ws);
+      // don't change status dot / lastUpdate / players etc here
+    } catch (e) {
+      // ignore chat failures silently; main loop handles status/backoff
+    }
+  }
+
+  async function chatTick() {
+    if (document.hidden) return;
+
+    chatRemaining -= 1;
+    if (chatRemaining <= 0) {
+      chatRemaining = chatFastSeconds;
+      await refreshChatOnly();
+    }
+  }
+
   function updateLastUpdateAge() {
     if (!lastApplyAt) return;
     const age = Date.now() - lastApplyAt;
@@ -818,6 +853,10 @@
   initChatComposer();
   await refreshAll();
   setInterval(tick, 1000);
+
+  // Fast chat updates without hammering everything else
+  chatRemaining = 1;                 // grab chat quickly on load
+  setInterval(chatTick, 1000);       // runs every second, fetches chat every chatFastSeconds
 
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) remaining = 1;
