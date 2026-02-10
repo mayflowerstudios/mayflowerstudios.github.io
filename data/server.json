@@ -21,6 +21,6 @@
     "sparkUrl": "https://spark.lucko.me/nUhzB5o0Zj",
     "rulesUrl": "rules.html"
   },
-  "refreshSeconds": 30,
+  "refreshSeconds": 10,
   "chatFastSeconds": 2
 }
