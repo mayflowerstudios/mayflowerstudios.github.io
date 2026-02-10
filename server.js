@@ -2,7 +2,6 @@
   const el = (id) => document.getElementById(id);
   const safeSetText = (node, text) => { if (node) node.textContent = text; };
 
-  // Header
   const statusDot = el("statusDot");
   const statusText = el("statusText");
   const refreshIn = el("refreshIn");
@@ -20,7 +19,6 @@
   const sparkLink = el("sparkLink");
   const openMapBtn = el("openMapBtn");
 
-  // HUD strip
   const mcDayEl = el("mcDay");
   const mcTimeEl = el("mcTime");
   const mcSeasonEl = el("mcSeason");
@@ -29,11 +27,9 @@
   const msptLine = el("msptLine");
   const memLine = el("memLine");
 
-  // Map
   const bluemapFrame = el("bluemapFrame");
   const mapFallback = el("mapFallback");
 
-  // Players
   const playersOnlineCount = el("playersOnlineCount");
   const playersMaxCount = el("playersMaxCount");
   const playersOnlineCountMini = el("playersOnlineCountMini");
@@ -41,31 +37,24 @@
   const playersGrid = el("playersGrid");
   const playersOnlineNote = el("playersOnlineNote");
 
-  // Chat (feed)
   const chatList = el("chatList");
   const chatNote = el("chatNote");
 
-  // Chat (composer)
   const chatName = el("chatName");
   const chatMsg = el("chatMsg");
   const chatSendBtn = el("chatSendBtn");
   const chatSendStatus = el("chatSendStatus");
 
-  // Waystones
   const waystoneSearch = el("waystoneSearch");
   const waystoneList = el("waystoneList");
   const waystoneMeta = el("waystoneMeta");
   const waystoneNote = el("waystoneNote");
 
-  // Modlist
   const modSearch = el("modSearch");
   const categoryRow = el("categoryRow");
   const modTbody = el("modTbody");
   const modCountEl = el("modCount");
 
-  // -----------------------------
-  // Helpers
-  // -----------------------------
   function escapeHtml(str) {
     return String(str ?? "")
       .replaceAll("&", "&amp;")
@@ -83,14 +72,13 @@
   }
 
   function setOnlineState(state) {
-    // state: "online" | "offline" | "stale" | "loading"
     if (!statusDot || !statusText) return;
     statusDot.classList.remove("online", "offline");
     if (state === "online") {
       statusDot.classList.add("online");
       statusText.textContent = "Online";
     } else if (state === "stale") {
-      statusDot.classList.add("offline"); // visually red; feel free to add a CSS class "stale" later
+      statusDot.classList.add("offline");
       statusText.textContent = "Stale";
     } else if (state === "loading") {
       statusText.textContent = "Loading…";
@@ -159,13 +147,11 @@
   function setChatStatus(text, kind = "neutral") {
     if (!chatSendStatus) return;
     chatSendStatus.textContent = text;
-
     chatSendStatus.classList.remove("good", "bad");
     if (kind === "good") chatSendStatus.classList.add("good");
     if (kind === "bad") chatSendStatus.classList.add("bad");
   }
 
-  // Fetch with timeout + abort
   async function fetchJson(url, timeoutMs = 5500) {
     const controller = new AbortController();
     const t = setTimeout(() => controller.abort(), timeoutMs);
@@ -195,7 +181,7 @@
       });
       const text = await res.text();
       let json = null;
-      try { json = text ? JSON.parse(text) : null; } catch { /* ignore */ }
+      try { json = text ? JSON.parse(text) : null; } catch { }
       if (!res.ok) {
         const code = json?.error || `HTTP_${res.status}`;
         const err = new Error(code);
@@ -217,14 +203,10 @@
   function clampChat(str, max) {
     const s = String(str ?? "");
     if (!s) return "";
-    // remove control chars except basic whitespace
     const cleaned = s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim();
     return cleaned.length > max ? cleaned.slice(0, max) : cleaned;
   }
 
-  // -----------------------------
-  // Players (smarter rendering)
-  // -----------------------------
   let lastPlayersKey = "";
 
   function playersKey(list) {
@@ -291,15 +273,11 @@
     if (playersOnlineNote) playersOnlineNote.textContent = noteText;
   }
 
-  // -----------------------------
-  // Chat feed (keep scroll position if user is reading)
-  // -----------------------------
   let lastChatKey = "";
 
   function chatKey(lines) {
     if (!Array.isArray(lines)) return "";
     const tail = lines.slice(-20);
-    // include player/type/t so "Server" fallback doesn't collapse keys
     return tail.map(l => `${l?.t ?? l?.ts ?? l?.time ?? ""}|${l?.type ?? ""}|${l?.player ?? l?.name ?? l?.user ?? ""}|${l?.msg ?? l?.message ?? ""}`).join(";");
   }
 
@@ -321,9 +299,8 @@
     return "• ";
   }
 
-  function defaultNameForType(type, player) {
+  function defaultNameForType(type) {
     const t = String(type || "chat").toLowerCase();
-    if (player) return player;
     if (t === "server") return "Server";
     return "Unknown";
   }
@@ -358,7 +335,7 @@
         l?.player ??
         l?.name ??
         l?.user ??
-        defaultNameForType(type, null);
+        defaultNameForType(type);
 
       const msg = l?.msg ?? l?.message ?? "";
       const ts = (l?.t != null) ? Number(l.t)
@@ -385,9 +362,6 @@
     if (stickToBottom) chatList.scrollTop = chatList.scrollHeight;
   }
 
-  // -----------------------------
-  // Waystones (same behavior, just faster + stable)
-  // -----------------------------
   let waystones = [];
   let lastWayKey = "";
 
@@ -484,9 +458,6 @@
 
   if (waystoneSearch) waystoneSearch.addEventListener("input", () => renderWaystones(true));
 
-  // -----------------------------
-  // Config
-  // -----------------------------
   let cfg;
   try {
     cfg = await fetchJson("data/server.json", 6000);
@@ -501,12 +472,11 @@
   const address = (cfg.address || "").trim();
   const refreshSeconds = Math.max(10, Number(cfg.refreshSeconds || 30));
 
-  // IMPORTANT: this should be a full URL like "https://api.mayflowerstudios.net/api/public"
-  // In your existing setup it's likely the endpoint that returns your snapshot.
   const worldStateUrl = (cfg.worldStateUrl || "").trim();
-
-  // NEW: token for POST /api/chat
+  const worldApiBase = (cfg.worldApiBase || "").trim().replace(/\/$/, "");
   const worldStateToken = String(cfg.worldStateToken || "").trim();
+
+  const chatFastSeconds = Math.max(1, Number(cfg.chatFastSeconds || 2));
 
   if (serverTitle) serverTitle.textContent = serverName ? `🛰️ ${serverName}` : "🛰️ Server Dashboard";
   safeSetText(serverAddress, address || "—");
@@ -517,7 +487,6 @@
   if (sparkLink) sparkLink.href = cfg.links?.sparkUrl || "#";
   if (modpackCurseforge) modpackCurseforge.href = cfg.modpack?.curseforgeUrl || "#";
 
-  // Map
   const mapUrl = (window.MAYFLOWER_BLUEMAP_URL || cfg.mapEmbedUrl || "").trim();
   const fixedMap = withProtocol(mapUrl);
   if (openMapBtn) openMapBtn.href = fixedMap || "#";
@@ -528,7 +497,6 @@
     if (mapFallback) mapFallback.style.display = "block";
   }
 
-  // Copy IP
   if (copyIpBtn) {
     copyIpBtn.addEventListener("click", async () => {
       if (!address) return alert("Server address isn't set yet (data/server.json).");
@@ -542,24 +510,7 @@
     });
   }
 
-  // -----------------------------
-  // Chat sending (POST /api/chat)
-  // -----------------------------
-  // (still here in case you want it later, but you’re using cfg.worldApiBase now)
-  function apiBaseFromWorldStateUrl(wsUrl) {
-    try {
-      const u = new URL(wsUrl);
-      return `${u.protocol}//${u.host}`;
-    } catch {
-      return "";
-    }
-  }
-
-  // ✅ Use explicit API base (recommended)
-  // Put this in data/server.json:
-  //   "worldApiBase": "https://api.mayflowerstudios.net"
-  const worldApiBase = (cfg.worldApiBase || "").trim();
-  const chatPostUrl = worldApiBase ? `${worldApiBase.replace(/\/$/, "")}/api/chat` : "";
+  const chatPostUrl = worldApiBase ? `${worldApiBase}/api/chat` : "";
 
   function chatCanSend() {
     return Boolean(chatPostUrl) && Boolean(worldStateToken);
@@ -568,7 +519,6 @@
   function initChatComposer() {
     if (!chatSendBtn || !chatMsg || !chatName) return;
 
-    // Prefill a name from localStorage
     const savedName = localStorage.getItem("mf_webchat_name");
     if (savedName && !chatName.value) chatName.value = savedName;
 
@@ -583,7 +533,6 @@
     setChatStatus("Ready to send", "good");
 
     function setSending(on) {
-      if (!chatSendBtn) return;
       chatSendBtn.disabled = on;
       chatSendBtn.textContent = on ? "Sending…" : "📨 Send";
     }
@@ -616,8 +565,8 @@
         chatMsg.value = "";
         setChatStatus("Sent ✔", "good");
 
-        // Pull latest state quickly so your message shows up in the feed
         remaining = 1;
+        chatRemaining = 1;
       } catch (e) {
         const code = String(e?.message || "send_failed");
         if (code === "rate_limited" || e?.status === 429) {
@@ -643,11 +592,8 @@
     });
   }
 
-  // -----------------------------
-  // WorldState + Fallback
-  // -----------------------------
   let lastGoodMs = 0;
-  let backoff = 0; // grows on failures
+  let backoff = 0;
   let lastApplyAt = 0;
 
   async function fetchWorldState() {
@@ -700,7 +646,6 @@
     safeSetText(lastUpdate, nowLabel());
     lastApplyAt = Date.now();
 
-    // Improve composer status once we know server is reachable
     if (chatCanSend()) setChatStatus("Ready to send", "good");
     else setChatStatus(worldStateToken ? "Token set (endpoint?)" : "Token missing", chatCanSend() ? "good" : "bad");
   }
@@ -727,10 +672,8 @@
     }
   }
 
-  // -----------------------------
-  // Polling (pause when hidden + backoff)
-  // -----------------------------
   let remaining = refreshSeconds;
+  let chatRemaining = chatFastSeconds;
 
   function clearLivePanels(reason) {
     safeSetText(serverMotd, reason || "WorldState not available.");
@@ -748,7 +691,6 @@
     if (chatNote) chatNote.textContent = "Chat feed unavailable.";
     if (waystoneNote) waystoneNote.textContent = "Waystones unavailable.";
 
-    // Composer status
     if (!chatCanSend()) setChatStatus(worldStateToken ? "Token set (server offline?)" : "Token missing", "bad");
     else setChatStatus("Server offline/stale", "bad");
   }
@@ -782,14 +724,7 @@
     }
   }
 
-  // -----------------------------
-  // Fast chat-only polling
-  // -----------------------------
-  const chatFastSeconds = Math.max(1, Number(cfg.chatFastSeconds || 2)); // add to server.json if you want
-  let chatRemaining = chatFastSeconds;
-
   function applyChatOnly(ws) {
-    // ONLY touch chat (and its note), do not re-render everything
     const chat = Array.isArray(ws?.chat) ? ws.chat : [];
     renderChat(chat);
     if (chatNote) chatNote.textContent = chat.length ? "Live feed from WorldState." : "No recent chat messages.";
@@ -797,24 +732,10 @@
 
   async function refreshChatOnly() {
     if (!worldStateUrl) return;
-
     try {
       const ws = await fetchWorldState();
       applyChatOnly(ws);
-      // don't change status dot / lastUpdate / players etc here
-    } catch (e) {
-      // ignore chat failures silently; main loop handles status/backoff
-    }
-  }
-
-  async function chatTick() {
-    if (document.hidden) return;
-
-    chatRemaining -= 1;
-    if (chatRemaining <= 0) {
-      chatRemaining = chatFastSeconds;
-      await refreshChatOnly();
-    }
+    } catch { }
   }
 
   function updateLastUpdateAge() {
@@ -844,7 +765,16 @@
     updateLastUpdateAge();
   }
 
-  // Start
+  async function chatTick() {
+    if (document.hidden) return;
+
+    chatRemaining -= 1;
+    if (chatRemaining <= 0) {
+      chatRemaining = chatFastSeconds;
+      await refreshChatOnly();
+    }
+  }
+
   setCountsEverywhere("—", "—");
   setOnlineState("loading");
   remaining = effectiveRefreshSeconds();
@@ -852,19 +782,19 @@
 
   initChatComposer();
   await refreshAll();
+
   setInterval(tick, 1000);
 
-  // Fast chat updates without hammering everything else
-  chatRemaining = 1;                 // grab chat quickly on load
-  setInterval(chatTick, 1000);       // runs every second, fetches chat every chatFastSeconds
+  chatRemaining = 1;
+  setInterval(chatTick, 1000);
 
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) remaining = 1;
+    if (!document.hidden) {
+      remaining = 1;
+      chatRemaining = 1;
+    }
   });
 
-  // -----------------------------
-  // Modlist (unchanged behavior, tiny optimizations)
-  // -----------------------------
   let mods = [];
   try {
     const modData = await fetchJson("data/modlist.json", 6000);

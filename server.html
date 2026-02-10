@@ -181,7 +181,42 @@
       opacity: .82;
     }
     .chatMsg { margin-top: 6px; line-height: 1.25; }
+
     .chatControls { padding: 10px; border-top: 1px solid rgba(255,255,255,.08); }
+
+    .chatComposer {
+      display: grid;
+      grid-template-columns: 160px 1fr auto;
+      gap: 8px;
+      margin-top: 10px;
+      align-items: center;
+    }
+    @media (max-width: 720px) {
+      .chatComposer { grid-template-columns: 1fr; }
+    }
+
+    .chatHintRow {
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top: 10px;
+    }
+
+    .miniPill {
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      font-size: 12px;
+      font-weight: 750;
+      opacity: .92;
+    }
+    .miniPill.bad { border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10); }
+    .miniPill.good { border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.10); }
 
     /* -------- Players + Waystones -------- */
     .grid2Equal {
@@ -395,13 +430,29 @@
     <section class="card">
       <div class="sectionTitle">
         <h2>💬 Server Chat</h2>
-        <span>Live feed</span>
+        <span>Send messages</span>
       </div>
 
       <div class="chatWrap">
         <div id="chatList" class="chatList" aria-live="polite"></div>
+
         <div class="chatControls">
           <div class="small" id="chatNote">Read-only feed from your WorldState mod.</div>
+
+          <!-- NEW: composer -->
+          <div class="chatComposer">
+            <input id="chatName" class="input" placeholder="Name (ex: Sammie)" maxlength="24" />
+            <input id="chatMsg" class="input" placeholder="Type a message to send in-game…" maxlength="200" />
+            <button id="chatSendBtn" class="btn2 primary" type="button">📨 Send</button>
+          </div>
+
+          <div class="chatHintRow">
+            <span id="chatSendStatus" class="miniPill">Not connected</span>
+          </div>
+
+          <p class="small" style="margin-top:10px; opacity:.78;">
+            Say hi to the server from here — your message will show up in-game. ✨
+          </p>
         </div>
       </div>
     </section>
@@ -439,7 +490,6 @@
       </div>
 
       <input id="modSearch" class="input" placeholder="Search mods…" />
-
       <div class="categoryBar" id="categoryRow" style="margin-top:10px;"></div>
 
       <div class="tableScroll" style="margin-top:12px;">
