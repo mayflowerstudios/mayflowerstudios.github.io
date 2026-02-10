@@ -87,19 +87,19 @@
     }
   </style>
   <!-- OG:START -->
-<meta name="description" content="Cozy mods, bots, and worlds built with heart — designed for long-term communities." />
-<meta property="og:title" content="Server • Mayflower Studios" />
-<meta property="og:description" content="Cozy mods, bots, and worlds built with heart — designed for long-term communities." />
-<meta property="og:url" content="https://mayflowerstudios.net/server.html" />
-<meta property="og:type" content="website" />
-<meta property="og:image" content="https://mayflowerstudios.net/assets/og/server.png" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Server • Mayflower Studios" />
-<meta name="twitter:description" content="Cozy mods, bots, and worlds built with heart — designed for long-term communities." />
-<meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/server.png" />
-<!-- OG:END -->
+  <meta name="description" content="Cozy mods, bots, and worlds built with heart — designed for long-term communities." />
+  <meta property="og:title" content="Server • Mayflower Studios" />
+  <meta property="og:description" content="Cozy mods, bots, and worlds built with heart — designed for long-term communities." />
+  <meta property="og:url" content="https://mayflowerstudios.net/server.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://mayflowerstudios.net/assets/og/server.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Server • Mayflower Studios" />
+  <meta name="twitter:description" content="Cozy mods, bots, and worlds built with heart — designed for long-term communities." />
+  <meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/server.png" />
+  <!-- OG:END -->
 </head>
 
 <body data-nav="server">
@@ -116,6 +116,12 @@
           <span class="pill">
             <span id="statusDot" class="statusDot"></span>
             <strong id="statusText">Loading…</strong>
+          </span>
+
+          <!-- ✅ Mini players pill (unique IDs; no duplicates) -->
+          <span class="pill">
+            <span class="small">Players</span>
+            <strong><span id="playersOnlineCountMini">—</span>/<span id="playersMaxCountMini">—</span></strong>
           </span>
 
           <span class="pill">
@@ -137,13 +143,13 @@
             <span class="small">Season</span>
             <strong id="mcSeason">—</strong>
           </span>
-          
+
           <span class="pill">
             <span class="small">World Time</span>
             <strong id="mcTime">—</strong>
           </span>
         </div>
-          
+
         <div class="row" style="margin-top:14px;">
           <button class="btn2 primary" id="copyIpBtn">📋 Copy Server IP</button>
           <a class="btn2" id="discordLink" href="#" target="_blank" rel="noreferrer">💬 Discord</a>
@@ -154,10 +160,9 @@
             <div class="k">Server Address</div>
             <div class="v" id="serverAddress">—</div>
           </div>
-          <div class="kv">
-            <div class="k">Players</div>
-            <div class="v" id="playersLine">—</div>
-          </div>
+
+          <!-- ✅ Removed duplicate/broken "Players" KV (playersLine) -->
+
           <div class="kv">
             <div class="k">Version</div>
             <div class="v" id="versionLine">—</div>
@@ -168,7 +173,7 @@
           </div>
         </div>
 
-        <div class="list" id="playerTags"></div>
+        <!-- ✅ Removed duplicate/broken hero player tag list (#playerTags) -->
       </div>
 
       <div class="tileGrid">
@@ -195,7 +200,7 @@
           <strong>🗺️ World Map</strong>
           <p class="muted2">Live map view.</p>
           <div class="row" style="margin-top:10px;">
-            <a class="btn2 primary" id="openMapBtn" href="24.115.182.134:8100" target="_blank" rel="noreferrer">Open Map</a>
+            <a class="btn2 primary" id="openMapBtn" href="#" target="_blank" rel="noreferrer">Open Map</a>
           </div>
           <div class="small muted2" id="mapHint" style="margin-top:10px;">
             If the embed is blank, open the map in a new tab.

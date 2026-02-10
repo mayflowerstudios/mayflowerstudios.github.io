@@ -10,11 +10,8 @@
   const lastUpdate = el("lastUpdate");
 
   const serverAddress = el("serverAddress");
-  const playersLine = el("playersLine");
   const versionLine = el("versionLine");
   const pingLine = el("pingLine");
-
-  const playerTags = el("playerTags");
 
   const copyIpBtn = el("copyIpBtn");
   const joinLink = el("joinLink");
@@ -43,6 +40,10 @@
   const playersOnlineList = el("playersOnlineList");
   const playersOnlineNote = el("playersOnlineNote");
 
+  // Hero mini player pill (unique IDs)
+  const playersOnlineCountMini = el("playersOnlineCountMini");
+  const playersMaxCountMini = el("playersMaxCountMini");
+
   // Minecraft pills
   const mcDayEl = el("mcDay");
   const mcTimeEl = el("mcTime");
@@ -59,10 +60,7 @@
     if (!node) return;
     node.textContent = text;
   }
-  function safeSetHtml(node, html) {
-    if (!node) return;
-    node.innerHTML = html;
-  }
+
   function escapeHtml(str) {
     return String(str)
       .replaceAll("&", "&amp;")
@@ -70,6 +68,13 @@
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
+  }
+
+  function withProtocol(url) {
+    const u = String(url || "").trim();
+    if (!u) return "";
+    if (u.startsWith("http://") || u.startsWith("https://")) return u;
+    return "https://" + u;
   }
 
   function ticksToIRLClock(ticks) {
@@ -90,31 +95,10 @@
     statusText.textContent = online ? "Online" : "Offline";
   }
 
-  function renderPlayers(list) {
-    if (!playerTags) return;
-    playerTags.innerHTML = "";
-    if (!list || !Array.isArray(list) || list.length === 0) return;
-
-    const shown = list.slice(0, 20);
-    for (const p of shown) {
-      const name = p?.name_clean || p?.name_raw || p?.name || "Player";
-      const span = document.createElement("span");
-      span.className = "tag";
-      span.textContent = name;
-      playerTags.appendChild(span);
-    }
-
-    if (list.length > shown.length) {
-      const more = document.createElement("span");
-      more.className = "tag";
-      more.textContent = `+${list.length - shown.length} more`;
-      playerTags.appendChild(more);
-    }
-  }
-
   function wireMapButtons(url) {
-    if (openMapBtn) openMapBtn.href = url || "#";
-    if (openMapBtn2) openMapBtn2.href = url || "#";
+    const fixed = withProtocol(url);
+    if (openMapBtn) openMapBtn.href = fixed || "#";
+    if (openMapBtn2) openMapBtn2.href = fixed || "#";
   }
 
   // Accept a few possible field names and normalize into one shape
@@ -169,6 +153,16 @@
     return raw.replace(/([a-z])([A-Z])/g, "$1 $2");
   }
 
+  function setCountsEverywhere(online, max) {
+    const o = (online == null) ? "—" : String(online);
+    const m = (max == null) ? "—" : String(max);
+
+    if (playersOnlineCount) playersOnlineCount.textContent = o;
+    if (playersMaxCount) playersMaxCount.textContent = m;
+    if (playersOnlineCountMini) playersOnlineCountMini.textContent = o;
+    if (playersMaxCountMini) playersMaxCountMini.textContent = m;
+  }
+
   // -----------------------------
   // Load config
   // -----------------------------
@@ -183,7 +177,6 @@
     return;
   }
 
-  // ✅ Only ONE address now (show + query)
   const address = (cfg.address || "").trim();
   const refreshSeconds = Math.max(10, Number(cfg.refreshSeconds || 30));
   const worldStateUrl = (cfg.worldStateUrl || "").trim();
@@ -204,7 +197,6 @@
 
   // -----------------------------
   // Map embed + open button fallback
-  // (BlueMap UI, NOT used for time)
   // -----------------------------
   const mapUrl = (window.MAYFLOWER_BLUEMAP_URL || cfg.mapEmbedUrl || "").trim();
   const mapButtonUrl = (cfg.mapEmbedUrl || mapUrl || "").trim();
@@ -249,13 +241,12 @@
     });
   }
 
-  // If address isn't set, stop here (prevents bad API calls)
   if (!address) {
     safeSetText(statusText, "Set server address");
-    safeSetText(playersLine, "—");
     safeSetText(versionLine, "—");
     safeSetText(pingLine, "—");
     safeSetText(refreshIn, "—");
+    setCountsEverywhere(null, null);
 
     safeSetText(mcDayEl, "—");
     safeSetText(mcTimeEl, "—");
@@ -264,11 +255,14 @@
   }
 
   // -----------------------------
-  // Server Status (mcstatus.io)
+  // Status (mcstatus.io) — used for online/version/ping + fallback player counts
   // -----------------------------
   const statusUrl = `https://api.mcstatus.io/v2/status/java/${encodeURIComponent(
     address
   )}`;
+
+  let fallbackOnline = null;
+  let fallbackMax = null;
 
   async function fetchStatus() {
     const t0 = performance.now();
@@ -280,9 +274,12 @@
 
       setOnline(!!data.online);
 
-      const online = data?.players?.online ?? 0;
-      const max = data?.players?.max ?? 0;
-      safeSetText(playersLine, `${online} / ${max}`);
+      // Fallback counts only (Query may override)
+      fallbackOnline = data?.players?.online ?? null;
+      fallbackMax = data?.players?.max ?? null;
+      if (playersOnlineCount && playersOnlineCount.textContent === "—") {
+        setCountsEverywhere(fallbackOnline, fallbackMax);
+      }
 
       const version =
         data?.version?.name_clean ||
@@ -295,32 +292,25 @@
       const latency = data?.latency ?? Math.round(performance.now() - t0);
       safeSetText(pingLine, `${latency} ms`);
 
-      renderPlayers(data?.players?.list);
       safeSetText(lastUpdate, new Date().toLocaleTimeString());
     } catch (err) {
       setOnline(false);
-      safeSetText(playersLine, "—");
       safeSetText(versionLine, "—");
       safeSetText(pingLine, "—");
-      safeSetHtml(playerTags, "");
       safeSetText(lastUpdate, new Date().toLocaleTimeString());
       console.warn("Status fetch failed:", err);
     }
   }
 
   // -----------------------------
-  // Players Online (Query via mcsrvstat.us)
+  // Players Online (Query via mcsrvstat.us) — primary source for counts + list
   // -----------------------------
   async function fetchPlayersViaQuery() {
     const url = `https://api.mcsrvstat.us/2/${encodeURIComponent(address)}`;
 
-    if (
-      !playersOnlineCount ||
-      !playersMaxCount ||
-      !playersOnlineList ||
-      !playersOnlineNote
-    )
+    if (!playersOnlineCount || !playersMaxCount || !playersOnlineList || !playersOnlineNote) {
       return;
+    }
 
     try {
       const res = await fetch(url, { cache: "no-store" });
@@ -328,20 +318,18 @@
       const data = await res.json();
 
       if (!data.online) {
-        playersOnlineCount.textContent = "0";
-        playersMaxCount.textContent = "—";
+        setCountsEverywhere(0, fallbackMax);
         playersOnlineList.innerHTML = "";
         playersOnlineNote.textContent =
-          "Server appears offline (or blocked from status/query).";
+          "Server appears offline (or Query/status is blocked).";
         return;
       }
 
-      const online = data?.players?.online ?? 0;
-      const max = data?.players?.max ?? "—";
+      const online = data?.players?.online ?? fallbackOnline ?? 0;
+      const max = data?.players?.max ?? fallbackMax ?? "—";
       const list = data?.players?.list ?? [];
 
-      playersOnlineCount.textContent = String(online);
-      playersMaxCount.textContent = String(max);
+      setCountsEverywhere(online, max);
 
       playersOnlineList.innerHTML = "";
 
@@ -362,15 +350,15 @@
       } else {
         playersOnlineNote.textContent =
           online > 0
-            ? "Players are online, but names aren’t available. Enable Query in server.properties and forward UDP."
+            ? "Players are online, but names aren’t available. (Enable Query + forward UDP in your firewall/router.)"
             : "Nobody online right now.";
       }
     } catch (e) {
-      playersOnlineCount.textContent = "—";
-      playersMaxCount.textContent = "—";
+      // Fall back to mcstatus counts if we have them
+      setCountsEverywhere(fallbackOnline, fallbackMax);
       playersOnlineList.innerHTML = "";
       playersOnlineNote.textContent =
-        "Couldn’t fetch player list (API/network issue).";
+        "Couldn’t fetch Query player list (API/network issue).";
       console.warn("Query player fetch failed:", e);
     }
   }
@@ -382,16 +370,12 @@
     if (!worldStateUrl) return null;
 
     const res = await fetch(worldStateUrl, { cache: "no-store" });
-
-    // Helpful debugging:
     const ct = res.headers.get("content-type") || "";
     const text = await res.text();
 
     if (!res.ok) {
       throw new Error(`worldStateUrl HTTP ${res.status}: ${text.slice(0, 120)}`);
     }
-
-    // If it isn't JSON, you'll see it here in the error message.
     if (!ct.includes("application/json")) {
       console.warn("worldStateUrl content-type:", ct);
     }
@@ -404,47 +388,28 @@
   }
 
   async function updateWorldHud() {
-    // show loading while fetching
     if (mcDayEl) safeSetText(mcDayEl, worldStateUrl ? "Loading…" : "Set worldStateUrl");
     if (mcTimeEl) safeSetText(mcTimeEl, worldStateUrl ? "Loading…" : "Set worldStateUrl");
     if (mcSeasonEl) safeSetText(mcSeasonEl, worldStateUrl ? "Loading…" : "Set worldStateUrl");
-
     if (!worldStateUrl) return;
 
     try {
       const raw = await fetchWorldStateFromMod();
       const ws = normalizeWorldState(raw);
-
       if (!ws) throw new Error("worldstate.json returned invalid data");
 
-      // Day
-      if (mcDayEl && Number.isFinite(Number(ws.day))) {
-        safeSetText(mcDayEl, `Day ${Number(ws.day)}`);
-      } else if (mcDayEl) {
-        safeSetText(mcDayEl, "Day ?");
-      }
+      if (mcDayEl && Number.isFinite(Number(ws.day))) safeSetText(mcDayEl, `Day ${Number(ws.day)}`);
+      else if (mcDayEl) safeSetText(mcDayEl, "Day ?");
 
-      // Time (ticks required)
-      if (mcTimeEl && Number.isFinite(Number(ws.ticks))) {
-        safeSetText(mcTimeEl, ticksToIRLClock(Number(ws.ticks)));
-      } else if (mcTimeEl) {
-        safeSetText(mcTimeEl, "Time ?");
-      }
+      if (mcTimeEl && Number.isFinite(Number(ws.ticks))) safeSetText(mcTimeEl, ticksToIRLClock(Number(ws.ticks)));
+      else if (mcTimeEl) safeSetText(mcTimeEl, "Time ?");
 
-      // Season (optional)
       if (mcSeasonEl) {
         const season = ws.season;
         const sub = ws.subSeason;
         const sDay = ws.seasonDay;
 
-        const seasonEmoji = {
-          Spring: "🌸",
-          Summer: "☀️",
-          Autumn: "🍂",
-          Fall: "🍂",
-          Winter: "❄️",
-        };
-
+        const seasonEmoji = { Spring: "🌸", Summer: "☀️", Autumn: "🍂", Fall: "🍂", Winter: "❄️" };
         const pSeason = prettySeasonToken(season);
         const pSub = prettySeasonToken(sub);
 
@@ -490,7 +455,8 @@
     safeSetText(refreshIn, `${remaining}s`);
   }
 
-  // Initial fetches
+  // Initial
+  setCountsEverywhere("—", "—");
   await fetchStatus();
   await fetchPlayersViaQuery();
   await updateWorldHud();
@@ -503,9 +469,7 @@
   // -----------------------------
   let mods = [];
   try {
-    const modData = await fetch("data/modlist.json", {
-      cache: "no-store",
-    }).then((r) => r.json());
+    const modData = await fetch("data/modlist.json", { cache: "no-store" }).then((r) => r.json());
     mods = Array.isArray(modData?.mods) ? modData.mods : [];
   } catch (e) {
     console.warn("Could not load data/modlist.json", e);
@@ -524,7 +488,7 @@
 
     for (const cat of categories) {
       const btn = document.createElement("button");
-      btn.className = "btn";
+      btn.className = "btn2";
       if (cat === activeCategory) btn.classList.add("primary");
       btn.textContent = cat;
 
@@ -540,9 +504,7 @@
 
   function matches(mod, q) {
     if (!q) return true;
-    const blob = `${mod.name || ""} ${mod.category || ""} ${mod.side || ""} ${
-      mod.notes || ""
-    }`.toLowerCase();
+    const blob = `${mod.name || ""} ${mod.category || ""} ${mod.side || ""} ${mod.notes || ""}`.toLowerCase();
     return blob.includes(q);
   }
 
@@ -550,12 +512,10 @@
     const q = (modSearch?.value || "").trim().toLowerCase();
 
     const filtered = mods.filter((m) => {
-      if (activeCategory !== "All" && (m.category || "") !== activeCategory)
-        return false;
+      if (activeCategory !== "All" && (m.category || "") !== activeCategory) return false;
       return matches(m, q);
     });
 
-    // ✅ ALWAYS update mod count first
     if (modCountEl) {
       modCountEl.textContent =
         activeCategory === "All" && !q
@@ -563,7 +523,6 @@
           : `${filtered.length} of ${mods.length}`;
     }
 
-    // ❗ Only bail AFTER updating the count
     if (!modTbody) return;
 
     modTbody.innerHTML = "";

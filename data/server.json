@@ -5,11 +5,11 @@
   "discordUrl": "https://discord.com/invite/MutqYAdrwz",
   "mapEmbedUrl": "https://map.mayflowerstudios.net:8445",
   "worldStateUrl": "https://world.mayflowerstudios.net:8446/worldstate.json",
-  "bluemapWorldId": "world",
+  "bluemapWorldId": "world-mayflower",
   "modpack": {
-  "curseforgeUrl": "https://www.curseforge.com/minecraft/modpacks/lunas-guns-and-stuff",
-  "directZipUrl": "",
-  "note": "Install via CurseForge for the easiest setup. Direct ZIP will appear here once we host one."
+    "curseforgeUrl": "https://www.curseforge.com/minecraft/modpacks/lunas-guns-and-stuff",
+    "directZipUrl": "",
+    "note": "Install via CurseForge for the easiest setup. Direct ZIP will appear here once we host one."
   },
   "links": {
     "sparkUrl": "https://spark.lucko.me/nUhzB5o0Zj",
