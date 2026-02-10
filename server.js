@@ -61,7 +61,7 @@
   // Helpers
   // -----------------------------
   function escapeHtml(str) {
-    return String(str)
+    return String(str ?? "")
       .replaceAll("&", "&amp;")
       .replaceAll("<", "&lt;")
       .replaceAll(">", "&gt;")
@@ -76,11 +76,22 @@
     return "https://" + u;
   }
 
-  function setOnline(online) {
+  function setOnlineState(state) {
+    // state: "online" | "offline" | "stale" | "loading"
     if (!statusDot || !statusText) return;
     statusDot.classList.remove("online", "offline");
-    statusDot.classList.add(online ? "online" : "offline");
-    statusText.textContent = online ? "Online" : "Offline";
+    if (state === "online") {
+      statusDot.classList.add("online");
+      statusText.textContent = "Online";
+    } else if (state === "stale") {
+      statusDot.classList.add("offline"); // visually red; feel free to add a CSS class "stale" later
+      statusText.textContent = "Stale";
+    } else if (state === "loading") {
+      statusText.textContent = "Loading…";
+    } else {
+      statusDot.classList.add("offline");
+      statusText.textContent = "Offline";
+    }
   }
 
   function setCountsEverywhere(online, max) {
@@ -124,21 +135,76 @@
       : (label ? `${emoji}${label}` : "—");
   }
 
-  function renderPlayers(publicPlayers, noteText="") {
+  function nowLabel() {
+    return new Date().toLocaleTimeString();
+  }
+
+  function msAgeLabel(ms) {
+    if (!Number.isFinite(ms)) return "";
+    const s = Math.max(0, Math.floor(ms / 1000));
+    if (s < 10) return "just now";
+    if (s < 60) return `${s}s ago`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    return `${h}h ago`;
+  }
+
+  // Fetch with timeout + abort
+  async function fetchJson(url, timeoutMs = 5500) {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { cache: "no-store", signal: controller.signal });
+      const text = await res.text();
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${text.slice(0, 160)}`);
+      return JSON.parse(text);
+    } finally {
+      clearTimeout(t);
+    }
+  }
+
+  async function copyText(txt) {
+    try { await navigator.clipboard.writeText(txt); return true; } catch { return false; }
+  }
+
+  // -----------------------------
+  // Players (smarter rendering)
+  // -----------------------------
+  let lastPlayersKey = "";
+
+  function playersKey(list) {
+    // stable-ish key to avoid rerendering if unchanged
+    if (!Array.isArray(list)) return "";
+    return list.map(p => `${p?.name ?? ""}|${p?.dimension ?? ""}|${p?.activity ?? ""}`).join(";");
+  }
+
+  function renderPlayers(publicPlayers, noteText = "") {
     if (!playersGrid) return;
-    playersGrid.innerHTML = "";
 
     const list = Array.isArray(publicPlayers) ? publicPlayers : [];
+    const key = playersKey(list);
+
+    // Avoid re-rendering if no changes (reduces flicker)
+    if (key === lastPlayersKey) {
+      if (playersOnlineNote) playersOnlineNote.textContent = noteText;
+      return;
+    }
+    lastPlayersKey = key;
+
+    playersGrid.innerHTML = "";
 
     if (!list.length) {
       if (playersOnlineNote) playersOnlineNote.textContent = noteText || "Nobody online right now.";
       return;
     }
 
+    const frag = document.createDocumentFragment();
+
     for (const p of list.slice(0, 24)) {
       const name = p?.name || "Player";
       const activity = p?.activity ? String(p.activity) : "Exploring…";
-      const dim = p?.dimension ? String(p.dimension).replace("minecraft:", "").replaceAll("_"," ") : "";
+      const dim = p?.dimension ? String(p.dimension).replace("minecraft:", "").replaceAll("_", " ") : "";
       const sub = [activity, dim].filter(Boolean).join(" • ");
 
       const card = document.createElement("div");
@@ -159,24 +225,50 @@
 
       card.appendChild(av);
       card.appendChild(meta);
-      playersGrid.appendChild(card);
+      frag.appendChild(card);
     }
 
     if (list.length > 24) {
       const more = document.createElement("div");
       more.className = "pCard";
       more.innerHTML = `<div class="pMeta"><div class="pName">+${list.length - 24} more</div><div class="pSub">Online</div></div>`;
-      playersGrid.appendChild(more);
+      frag.appendChild(more);
     }
 
+    playersGrid.appendChild(frag);
     if (playersOnlineNote) playersOnlineNote.textContent = noteText;
+  }
+
+  // -----------------------------
+  // Chat (keep scroll position if user is reading)
+  // -----------------------------
+  let lastChatKey = "";
+
+  function chatKey(lines) {
+    if (!Array.isArray(lines)) return "";
+    const tail = lines.slice(-20);
+    return tail.map(l => `${l?.ts ?? l?.time ?? ""}|${l?.name ?? l?.user ?? ""}|${l?.msg ?? l?.message ?? ""}`).join(";");
+  }
+
+  function isNearBottom(node) {
+    if (!node) return true;
+    const threshold = 40;
+    return node.scrollHeight - node.scrollTop - node.clientHeight < threshold;
   }
 
   function renderChat(lines) {
     if (!chatList) return;
-    chatList.innerHTML = "";
 
     const arr = Array.isArray(lines) ? lines : [];
+    const key = chatKey(arr);
+
+    // No work if unchanged
+    if (key === lastChatKey) return;
+    lastChatKey = key;
+
+    const stickToBottom = isNearBottom(chatList);
+
+    chatList.innerHTML = "";
 
     if (!arr.length) {
       const empty = document.createElement("div");
@@ -186,6 +278,8 @@
       chatList.appendChild(empty);
       return;
     }
+
+    const frag = document.createDocumentFragment();
 
     for (const l of arr.slice(-60)) {
       const name = l.name ?? l.user ?? "Server";
@@ -203,18 +297,22 @@
         </div>
         <div class="chatMsg">${escapeHtml(msg)}</div>
       `;
-      chatList.appendChild(div);
+      frag.appendChild(div);
     }
 
-    chatList.scrollTop = chatList.scrollHeight;
+    chatList.appendChild(frag);
+    if (stickToBottom) chatList.scrollTop = chatList.scrollHeight;
   }
 
-  // Waystones
+  // -----------------------------
+  // Waystones (same behavior, just faster + stable)
+  // -----------------------------
   let waystones = [];
+  let lastWayKey = "";
 
   function fmtXYZ(w) {
     const x = w?.x, y = w?.y, z = w?.z;
-    if ([x,y,z].every(v => Number.isFinite(Number(v)))) return `${Number(x)}, ${Number(y)}, ${Number(z)}`;
+    if ([x, y, z].every(v => Number.isFinite(Number(v)))) return `${Number(x)}, ${Number(y)}, ${Number(z)}`;
     return "—";
   }
 
@@ -228,14 +326,22 @@
     return blob.includes(q);
   }
 
-  async function copyText(txt) {
-    try { await navigator.clipboard.writeText(txt); return true; } catch { return false; }
+  function wayKey(list) {
+    if (!Array.isArray(list)) return "";
+    // key off a small stable signature
+    return list.slice(0, 120).map(w => `${getWayName(w)}|${w?.dimension ?? ""}|${w?.x ?? ""},${w?.y ?? ""},${w?.z ?? ""}|${w?.isGlobal ? 1 : 0}`).join(";");
   }
 
-  function renderWaystones() {
+  function renderWaystones(force = false) {
     if (!waystoneList) return;
+
     const q = (waystoneSearch?.value || "").trim().toLowerCase();
     const filtered = waystones.filter(w => matchesWaystone(w, q));
+
+    // Avoid repaint unless needed (or search changed)
+    const k = `${q}::${wayKey(filtered)}`;
+    if (!force && k === lastWayKey) return;
+    lastWayKey = k;
 
     waystoneList.innerHTML = "";
     if (waystoneMeta) {
@@ -248,9 +354,11 @@
       return;
     }
 
+    const frag = document.createDocumentFragment();
+
     for (const w of filtered.slice(0, 80)) {
       const name = getWayName(w);
-      const dim = String(w?.dimension || "—").replace("minecraft:", "").replaceAll("_"," ");
+      const dim = String(w?.dimension || "—").replace("minecraft:", "").replaceAll("_", " ");
       const xyz = fmtXYZ(w);
       const global = w?.isGlobal ? " • Global" : "";
 
@@ -282,28 +390,31 @@
         setTimeout(() => (btnCoords.textContent = "🧭 Copy coords"), 900);
       });
 
-      waystoneList.appendChild(card);
+      frag.appendChild(card);
     }
 
     if (filtered.length > 80) {
       const more = document.createElement("div");
       more.className = "wayItem";
       more.innerHTML = `<div class="wayName">+${filtered.length - 80} more</div><div class="waySub">Refine your search to narrow it down.</div>`;
-      waystoneList.appendChild(more);
+      frag.appendChild(more);
     }
+
+    waystoneList.appendChild(frag);
   }
 
-  if (waystoneSearch) waystoneSearch.addEventListener("input", renderWaystones);
+  if (waystoneSearch) waystoneSearch.addEventListener("input", () => renderWaystones(true));
 
   // -----------------------------
   // Config
   // -----------------------------
   let cfg;
   try {
-    cfg = await fetch("data/server.json", { cache: "no-store" }).then(r => r.json());
+    cfg = await fetchJson("data/server.json", 6000);
   } catch (e) {
     console.error("Could not load data/server.json", e);
     safeSetText(statusText, "Config missing");
+    setOnlineState("offline");
     return;
   }
 
@@ -336,29 +447,31 @@
   if (copyIpBtn) {
     copyIpBtn.addEventListener("click", async () => {
       if (!address) return alert("Server address isn't set yet (data/server.json).");
-      try {
-        await navigator.clipboard.writeText(address);
+      const ok = await copyText(address);
+      if (ok) {
         copyIpBtn.textContent = "✅ Copied!";
         setTimeout(() => (copyIpBtn.textContent = "📋 Copy"), 1200);
-      } catch {
+      } else {
         alert("Couldn’t copy automatically — manually copy:\n" + address);
       }
     });
   }
 
   // -----------------------------
-  // WorldState (primary)
+  // WorldState + Fallback
   // -----------------------------
+  let lastGoodMs = 0;
+  let backoff = 0; // grows on failures
+  let lastApplyAt = 0;
+
   async function fetchWorldState() {
     if (!worldStateUrl) return null;
-    const res = await fetch(worldStateUrl, { cache: "no-store" });
-    const text = await res.text();
-    if (!res.ok) throw new Error(`worldStateUrl HTTP ${res.status}: ${text.slice(0, 120)}`);
-    return JSON.parse(text);
+    return await fetchJson(worldStateUrl, 5500);
   }
 
   function applyWorldState(ws) {
-    setOnline(true);
+    lastGoodMs = Date.now();
+    setOnlineState("online");
 
     const meta = ws?.meta || {};
     if (meta.motd) safeSetText(serverMotd, meta.motd);
@@ -392,25 +505,22 @@
     if (waystoneNote) {
       waystoneNote.textContent = waystones.length ? "Waystones loaded from WorldState." : "No waystones found (or none are public).";
     }
-    renderWaystones();
+    renderWaystones(true);
 
     const chat = Array.isArray(ws?.chat) ? ws.chat : [];
     renderChat(chat);
     if (chatNote) chatNote.textContent = chat.length ? "Live feed from WorldState." : "No recent chat messages.";
 
-    safeSetText(lastUpdate, new Date().toLocaleTimeString());
+    safeSetText(lastUpdate, nowLabel());
+    lastApplyAt = Date.now();
   }
 
-  // Fallback: mcstatus.io
   async function fetchStatusFallback() {
     if (!address) return;
     const statusUrl = `https://api.mcstatus.io/v2/status/java/${encodeURIComponent(address)}`;
     try {
-      const res = await fetch(statusUrl, { cache: "no-store" });
-      if (!res.ok) throw new Error(`Status HTTP ${res.status}`);
-      const data = await res.json();
-
-      setOnline(!!data.online);
+      const data = await fetchJson(statusUrl, 6500);
+      setOnlineState(data.online ? "online" : "offline");
 
       const motd = data?.motd?.clean?.join(" ") || data?.motd?.raw?.join(" ") || "";
       if (motd) safeSetText(serverMotd, motd);
@@ -419,82 +529,133 @@
       const max = data?.players?.max ?? null;
       if (online != null || max != null) setCountsEverywhere(online, max);
 
-      safeSetText(lastUpdate, new Date().toLocaleTimeString());
+      safeSetText(lastUpdate, nowLabel());
+      lastApplyAt = Date.now();
     } catch (e) {
-      setOnline(false);
+      setOnlineState("offline");
       console.warn("Fallback status failed:", e);
     }
   }
 
   // -----------------------------
-  // Polling
+  // Polling (pause when hidden + backoff)
   // -----------------------------
   let remaining = refreshSeconds;
 
+  function clearLivePanels(reason) {
+    safeSetText(serverMotd, reason || "WorldState not available.");
+    safeSetText(mcDayEl, "—");
+    safeSetText(mcTimeEl, "—");
+    safeSetText(mcSeasonEl, "—");
+    safeSetText(mcWeatherEl, "—");
+    safeSetText(tpsLine, "—");
+    safeSetText(msptLine, "—");
+    safeSetText(memLine, "—");
+    renderPlayers([], reason || "WorldState is not configured.");
+    waystones = [];
+    renderWaystones(true);
+    renderChat([]);
+    if (chatNote) chatNote.textContent = "Chat feed unavailable.";
+    if (waystoneNote) waystoneNote.textContent = "Waystones unavailable.";
+  }
+
   async function refreshAll() {
     if (!worldStateUrl) {
-      setOnline(false);
-      safeSetText(serverMotd, "Set worldStateUrl in data/server.json.");
-      safeSetText(mcDayEl, "—");
-      safeSetText(mcTimeEl, "—");
-      safeSetText(mcSeasonEl, "—");
-      safeSetText(mcWeatherEl, "—");
-      safeSetText(tpsLine, "—");
-      safeSetText(msptLine, "—");
-      safeSetText(memLine, "—");
-      renderPlayers([], "WorldState is not configured.");
-      waystones = [];
-      renderWaystones();
-      renderChat([]);
+      setOnlineState("offline");
+      clearLivePanels("Set worldStateUrl in data/server.json.");
       return;
     }
 
     try {
       const ws = await fetchWorldState();
       applyWorldState(ws);
+      backoff = 0;
     } catch (e) {
       console.warn("WorldState failed:", e);
-      await fetchStatusFallback();
-      renderChat([]);
-      waystones = [];
-      renderWaystones();
-      if (chatNote) chatNote.textContent = "Chat feed unavailable (endpoint/CORS/offline).";
-      if (waystoneNote) waystoneNote.textContent = "Waystones unavailable (endpoint/CORS/offline).";
+
+      // backoff grows (0, 1, 2, 4, 8...) up to 60s extra
+      backoff = Math.min(60, backoff ? backoff * 2 : 2);
+
+      // If we had good data recently, mark as "stale" instead of hard "offline"
+      const age = Date.now() - (lastGoodMs || 0);
+      if (lastGoodMs && age < 120000) { // 2 minutes
+        setOnlineState("stale");
+        if (chatNote) chatNote.textContent = `Showing last known data (${msAgeLabel(age)}).`;
+        if (waystoneNote) waystoneNote.textContent = `Showing last known data (${msAgeLabel(age)}).`;
+        // Keep panels as-is (don’t clear)
+      } else {
+        await fetchStatusFallback();
+        clearLivePanels("WorldState endpoint/CORS/offline.");
+      }
     }
+  }
+
+  function updateLastUpdateAge() {
+    // Adds extra clarity if it’s been a bit
+    if (!lastApplyAt) return;
+    const age = Date.now() - lastApplyAt;
+    // If you want, you can show “last update: 3m ago” instead of a clock time:
+    // safeSetText(lastUpdate, msAgeLabel(age));
+    // Keeping your original clock time, but we can mark stale visually via status.
+    if (age > 120000) setOnlineState("stale");
+  }
+
+  function effectiveRefreshSeconds() {
+    return refreshSeconds + backoff;
   }
 
   async function tick() {
+    if (document.hidden) {
+      // Don’t spam your server while tab is hidden
+      safeSetText(refreshIn, "paused");
+      updateLastUpdateAge();
+      return;
+    }
+
     remaining -= 1;
     if (remaining <= 0) {
-      remaining = refreshSeconds;
+      remaining = effectiveRefreshSeconds();
       await refreshAll();
     }
+
     safeSetText(refreshIn, `${remaining}s`);
+    updateLastUpdateAge();
   }
 
+  // Start
   setCountsEverywhere("—", "—");
+  setOnlineState("loading");
+  remaining = effectiveRefreshSeconds();
   safeSetText(refreshIn, `${remaining}s`);
   await refreshAll();
   setInterval(tick, 1000);
 
+  // If user returns to tab, refresh quickly
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      remaining = 1;
+    }
+  });
+
   // -----------------------------
-  // Modlist
+  // Modlist (unchanged behavior, tiny optimizations)
   // -----------------------------
   let mods = [];
   try {
-    const modData = await fetch("data/modlist.json", { cache: "no-store" }).then(r => r.json());
+    const modData = await fetchJson("data/modlist.json", 6000);
     mods = Array.isArray(modData?.mods) ? modData.mods : [];
   } catch (e) {
     console.warn("Could not load data/modlist.json", e);
   }
 
   const catSet = new Set(mods.map(m => (m.category || "").trim()).filter(Boolean));
-  const categories = ["All", ...Array.from(catSet).sort((a,b)=>a.localeCompare(b))];
+  const categories = ["All", ...Array.from(catSet).sort((a, b) => a.localeCompare(b))];
   let activeCategory = "All";
 
   function renderCategoryButtons() {
     if (!categoryRow) return;
     categoryRow.innerHTML = "";
+    const frag = document.createDocumentFragment();
     for (const cat of categories) {
       const btn = document.createElement("button");
       btn.type = "button";
@@ -505,8 +666,9 @@
         renderCategoryButtons();
         renderMods();
       });
-      categoryRow.appendChild(btn);
+      frag.appendChild(btn);
     }
+    categoryRow.appendChild(frag);
   }
 
   function matches(mod, q) {
@@ -532,6 +694,8 @@
     if (!modTbody) return;
     modTbody.innerHTML = "";
 
+    const frag = document.createDocumentFragment();
+
     for (const m of filtered) {
       const tr = document.createElement("tr");
 
@@ -551,7 +715,7 @@
       tdNotes.textContent = m.notes || "";
       tr.appendChild(tdNotes);
 
-      modTbody.appendChild(tr);
+      frag.appendChild(tr);
     }
 
     if (filtered.length === 0) {
@@ -560,8 +724,10 @@
       td.colSpan = 4;
       td.innerHTML = `<span style="opacity:.78;">No mods matched that search.</span>`;
       tr.appendChild(td);
-      modTbody.appendChild(tr);
+      frag.appendChild(tr);
     }
+
+    modTbody.appendChild(frag);
   }
 
   if (modSearch) modSearch.addEventListener("input", renderMods);
