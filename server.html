@@ -7,216 +7,370 @@
 
   <link rel="stylesheet" href="style.css" />
 
-  <!-- Page-specific styles (you can move these into style.css later) -->
   <style>
-    .grid2 { display:grid; gap:16px; grid-template-columns: 1.1fr .9fr; }
-    .grid3 { display:grid; gap:16px; grid-template-columns: repeat(3, 1fr); }
-    @media (max-width: 980px){ .grid2, .grid3 { grid-template-columns: 1fr; } }
+    /* =========================================================
+       SERVER PAGE (clean layout, no sidebar, flows top->bottom)
+       ========================================================= */
 
-    .pill { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); }
-    .statusDot { width:10px; height:10px; border-radius:50%; background:#888; box-shadow: 0 0 0 3px rgba(255,255,255,.06); }
-    .statusDot.online { background:#22c55e; }
-    .statusDot.offline { background:#ef4444; }
+    /* Reduce top "dead air" */
+    body[data-nav="server"] { padding: 18px; }
+    body[data-nav="server"] .wrap { width: min(1180px, 100%); gap: 14px; }
 
-    .kvs { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top: 10px; }
-    .kv { padding:10px; border-radius:14px; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.03); }
-    .kv .k { font-size: 12px; opacity:.75; }
-    .kv .v { font-size: 16px; font-weight: 700; margin-top: 2px; word-break: break-word; }
+    /* Tighten section header spacing on this page */
+    body[data-nav="server"] .sectionTitle { margin: 10px 0 10px; }
 
-    .row { display:flex; gap:10px; flex-wrap: wrap; align-items:center; }
-    .btn2 { display:inline-flex; align-items:center; gap:10px; padding:10px 12px; border-radius:14px; border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); color: inherit; text-decoration:none; cursor:pointer; }
-    .btn2:hover { background: rgba(255,255,255,.07); }
-    .btn2.primary { border-color: rgba(56,189,248,.35); box-shadow: 0 0 0 1px rgba(56,189,248,.15) inset; }
-    .small { font-size: 12px; opacity:.8; }
+    /* -------- Header card -------- */
+    .serverHero {
+      margin-top: 0;
+      padding: 16px;
+      display: block; /* override global hero grid */
+    }
 
-    .list { display:flex; flex-wrap: wrap; gap:8px; margin-top:10px; }
-    .tag { font-size: 12px; padding:6px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.03); opacity:.95; }
+    .serverHeroTop {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
 
+    .serverActions {
+      border-top: 1px solid rgba(255,255,255,.10);
+      padding-top: 12px;
+    }
+
+    .ipInline {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .ipCode {
+      font-family: var(--mono);
+      font-weight: 900;
+      background: rgba(0,0,0,.18);
+      border: 1px solid rgba(255,255,255,.14);
+      padding: 8px 10px;
+      border-radius: 12px;
+      word-break: break-word;
+    }
+
+    .actionRow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .metaRow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    /* Buttons */
+    .btn2 {
+      text-decoration: none;
+      font-weight: 850;
+      padding: 11px 12px;
+      border-radius: var(--radius-1);
+      border: 1px solid rgba(255,255,255,.18);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: transform var(--t), filter var(--t);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      cursor: pointer;
+      user-select: none;
+    }
+    .btn2:hover { transform: var(--lift); filter: brightness(1.06); }
+    .btn2.primary { color:#1a1020; background: linear-gradient(90deg, var(--accent), var(--good)); }
+    .btn2.ghost { background: rgba(255,255,255,.06); border: 1px solid var(--border); font-weight: 750; }
+
+    /* Pills */
+    .hudPill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      backdrop-filter: blur(10px);
+      font-size: 13px;
+      font-weight: 750;
+    }
+    .hudPill .label { font-size: 12px; opacity: .78; font-weight: 650; }
+
+    .statusDot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #888;
+      box-shadow: 0 0 0 3px rgba(255,255,255,.06);
+    }
+    .statusDot.online { background: #22c55e; }
+    .statusDot.offline { background: #ef4444; }
+
+    /* -------- HUD strip above map -------- */
+    .hudStrip { padding: 14px; }
+    .hudStripRow {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .hudStripRow { grid-template-columns: 1fr; }
+    }
+
+    .hudGroup {
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.10);
+      border-radius: 16px;
+      padding: 12px;
+    }
+    .hudLabel {
+      font-size: 12px;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.70);
+      margin-bottom: 8px;
+    }
+    .hudValues {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    /* -------- Map -------- */
+    .iframeWrap {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-3);
+      overflow: hidden;
+      background: rgba(0,0,0,.18);
+      box-shadow: 0 0 0 1px rgba(253,164,175,.06) inset;
+    }
+    .iframeWrap iframe { width: 100%; height: 620px; border: 0; display: block; }
+    @media (max-width: 900px) { .iframeWrap iframe { height: 460px; } }
+
+    /* -------- Chat -------- */
+    .chatWrap {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-3);
+      background: rgba(0,0,0,.14);
+      overflow: hidden;
+    }
+    .chatList { max-height: 340px; overflow: auto; padding: 10px 10px 0 10px; }
+    .chatLine {
+      padding: 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+      margin-bottom: 8px;
+    }
+    .chatTop {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+      font-size: 12px;
+      opacity: .82;
+    }
+    .chatMsg { margin-top: 6px; line-height: 1.25; }
+    .chatControls { padding: 10px; border-top: 1px solid rgba(255,255,255,.08); }
+
+    /* -------- Players + Waystones -------- */
+    .grid2Equal {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 900px) { .grid2Equal { grid-template-columns: 1fr; } }
+
+    .playersGrid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    @media (max-width: 520px) { .playersGrid { grid-template-columns: 1fr; } }
+
+    .pCard {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      border-radius: var(--radius-3);
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.14);
+    }
+    .avatar {
+      width: 34px; height: 34px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.25);
+      overflow: hidden;
+      flex: 0 0 auto;
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .pMeta { min-width: 0; }
+    .pName { font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pSub { font-size: 12px; opacity: .78; margin-top: 2px; }
+
+    /* Waystones */
     .input {
-      width:100%;
-      padding:12px 12px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.14);
+      width: 100%;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
       background: rgba(0,0,0,.15);
       color: inherit;
-      outline:none;
+      outline: none;
     }
-
-    .table { width:100%; border-collapse: collapse; overflow:hidden; border-radius: 16px; border: 1px solid rgba(255,255,255,.10); }
-    .table th, .table td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,.08); text-align:left; vertical-align: top; }
-    .table th { font-size: 12px; opacity:.8; }
-    .table tr:hover td { background: rgba(255,255,255,.03); }
-
-    .iframeWrap {
-      border-radius: 18px;
-      overflow:hidden;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.2);
-      min-height: 380px;
+    .wayItem {
+      padding: 12px;
+      border-radius: var(--radius-3);
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.14);
     }
-    .iframeWrap iframe { width:100%; height: 420px; border:0; display:block; }
-
-    .muted2 { opacity:.78; }
-
-    .tableScroll{
-      max-height: 520px;
-      overflow: auto;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.08);
+    .wayName { font-weight: 900; letter-spacing: -.01em; }
+    .waySub { font-size: 12px; opacity: .78; margin-top: 3px; }
+    .wayBtns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .btnMini {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: inherit;
+      text-decoration: none;
+      cursor: pointer;
+      font-size: 12px;
+      user-select: none;
+      transition: transform var(--t), filter var(--t);
     }
-    .tableScroll .table{ border:0; border-radius:0; }
-    .tableScroll .table thead th{
-      position: sticky;
-      top: 0;
-      z-index: 2;
-      background: rgba(15,23,42,.92);
-      backdrop-filter: blur(6px);
-    }
-    .categoryBar{
+    .btnMini:hover { transform: var(--lift); filter: brightness(1.06); }
+
+    /* -------- Mod categories (scroll chips) -------- */
+    .categoryBar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
       flex-wrap: nowrap;
       overflow-x: auto;
-      padding-bottom: 6px;
+      padding: 6px 2px 10px 2px;
       -webkit-overflow-scrolling: touch;
     }
-    .categoryBar > *{ flex: 0 0 auto; }
-    .categoryBar::-webkit-scrollbar{ height: 10px; }
-    .categoryBar::-webkit-scrollbar-thumb{
+    .categoryBar::-webkit-scrollbar { height: 10px; }
+    .categoryBar::-webkit-scrollbar-thumb {
       background: rgba(255,255,255,.14);
       border-radius: 999px;
     }
+    .catChip {
+      flex: 0 0 auto;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+      transition: transform var(--t), filter var(--t);
+      white-space: nowrap;
+    }
+    .catChip:hover { transform: var(--lift); filter: brightness(1.06); }
+    .catChip.active {
+      border-color: rgba(253,164,175,.40);
+      background: rgba(253,164,175,.10);
+      box-shadow: 0 10px 30px rgba(0,0,0,.20);
+    }
   </style>
-  <!-- OG:START -->
-  <meta name="description" content="Cozy mods, bots, and worlds built with heart — designed for long-term communities." />
-  <meta property="og:title" content="Server • Mayflower Studios" />
-  <meta property="og:description" content="Cozy mods, bots, and worlds built with heart — designed for long-term communities." />
-  <meta property="og:url" content="https://mayflowerstudios.net/server.html" />
-  <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://mayflowerstudios.net/assets/og/server.png" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Server • Mayflower Studios" />
-  <meta name="twitter:description" content="Cozy mods, bots, and worlds built with heart — designed for long-term communities." />
-  <meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/server.png" />
-  <!-- OG:END -->
 </head>
 
 <body data-nav="server">
   <div class="wrap">
     <div id="shared-nav"></div>
 
-    <section class="hero">
-      <div>
-        <p class="kicker">Minecraft Server</p>
-        <h1>🛰️ Server Dashboard</h1>
-        <p class="muted">Server status, players online, the world map, and the modpack.</p>
-
-        <div class="row" style="margin-top:12px;">
-          <span class="pill">
-            <span id="statusDot" class="statusDot"></span>
-            <strong id="statusText">Loading…</strong>
-          </span>
-
-          <!-- ✅ Mini players pill (unique IDs; no duplicates) -->
-          <span class="pill">
-            <span class="small">Players</span>
-            <strong><span id="playersOnlineCountMini">—</span>/<span id="playersMaxCountMini">—</span></strong>
-          </span>
-
-          <span class="pill">
-            <span class="small">Refresh</span>
-            <strong id="refreshIn">—</strong>
-          </span>
-
-          <span class="pill">
-            <span class="small">Last update</span>
-            <strong id="lastUpdate">—</strong>
-          </span>
-
-          <span class="pill">
-            <span class="small">World Day</span>
-            <strong id="mcDay">—</strong>
-          </span>
-
-          <span class="pill">
-            <span class="small">Season</span>
-            <strong id="mcSeason">—</strong>
-          </span>
-
-          <span class="pill">
-            <span class="small">World Time</span>
-            <strong id="mcTime">—</strong>
-          </span>
+    <!-- HEADER -->
+    <section class="hero serverHero">
+      <div class="serverHeroTop">
+        <div>
+          <p class="kicker">Minecraft Server</p>
+          <h1 id="serverTitle">🛰️ Server Dashboard</h1>
+          <p class="muted">Live world time + season, map, chat, players, waystones, and the modpack.</p>
         </div>
 
-        <div class="row" style="margin-top:14px;">
-          <button class="btn2 primary" id="copyIpBtn">📋 Copy Server IP</button>
-          <a class="btn2" id="discordLink" href="#" target="_blank" rel="noreferrer">💬 Discord</a>
-        </div>
-
-        <div class="kvs">
-          <div class="kv">
-            <div class="k">Server Address</div>
-            <div class="v" id="serverAddress">—</div>
+        <div class="serverActions">
+          <div class="ipInline">
+            <span class="badge">Server IP</span>
+            <code id="serverAddress" class="ipCode">—</code>
+            <button class="btn2 primary" id="copyIpBtn">📋 Copy</button>
           </div>
 
-          <!-- ✅ Removed duplicate/broken "Players" KV (playersLine) -->
+          <div class="actionRow">
+            <a class="btn2 ghost" id="joinLink" href="#">🧭 How to Join</a>
+            <a class="btn2 ghost" id="rulesLink" href="#">📜 Rules</a>
+            <a class="btn2 ghost" id="discordLink" href="#" target="_blank" rel="noreferrer">💬 Discord</a>
+            <a class="btn2 ghost" id="modpackCurseforge" href="#" target="_blank" rel="noreferrer">📦 Modpack</a>
+            <a class="btn2 ghost" id="sparkLink" href="#" target="_blank" rel="noreferrer">📈 Spark</a>
+            <a class="btn2 ghost" id="openMapBtn" href="#" target="_blank" rel="noreferrer">🗺️ Open Map</a>
+          </div>
 
-          <div class="kv">
-            <div class="k">Version</div>
-            <div class="v" id="versionLine">—</div>
+          <div class="metaRow">
+            <span class="hudPill">
+              <span id="statusDot" class="statusDot"></span>
+              <strong id="statusText">Loading…</strong>
+            </span>
+            <span class="hudPill"><span class="label">Players</span> <strong><span id="playersOnlineCountMini">—</span>/<span id="playersMaxCountMini">—</span></strong></span>
+            <span class="hudPill"><span class="label">Last update</span> <strong id="lastUpdate">—</strong></span>
+            <span class="hudPill"><span class="label">Refresh</span> <strong id="refreshIn">—</strong></span>
           </div>
-          <div class="kv">
-            <div class="k">Ping</div>
-            <div class="v" id="pingLine">—</div>
-          </div>
-        </div>
 
-        <!-- ✅ Removed duplicate/broken hero player tag list (#playerTags) -->
-      </div>
-
-      <div class="tileGrid">
-        <div class="tile">
-          <strong>⬇️ Modpack</strong>
-          <p class="muted2">Install the pack to join the server.</p>
-          <div class="row" style="margin-top:10px;">
-            <a class="btn2 primary" id="modpackCurseforge" href="#" target="_blank" rel="noreferrer">CurseForge</a>
-          </div>
-          <div class="small" id="modpackNote" style="margin-top:10px;"></div>
-        </div>
-
-        <div class="tile">
-          <strong>🧪 Server Tools</strong>
-          <p class="muted2">Links and info.</p>
-          <div class="row" style="margin-top:10px;">
-            <a class="btn2 primary" id="joinLink" href="#">🧭 How to Join</a>
-            <a class="btn2" id="sparkLink" href="#" target="_blank" rel="noreferrer">📈 Spark</a>
-            <a class="btn2" id="rulesLink" href="#">📜 Rules</a>
-          </div>
-        </div>
-
-        <div class="tile">
-          <strong>🗺️ World Map</strong>
-          <p class="muted2">Live map view.</p>
-          <div class="row" style="margin-top:10px;">
-            <a class="btn2 primary" id="openMapBtn" href="#" target="_blank" rel="noreferrer">Open Map</a>
-          </div>
-          <div class="small muted2" id="mapHint" style="margin-top:10px;">
-            If the embed is blank, open the map in a new tab.
-          </div>
+          <div class="small" style="margin-top:8px; opacity:.82;" id="serverMotd">—</div>
         </div>
       </div>
     </section>
 
+    <!-- HUD STRIP -->
+    <section class="card hudStrip">
+      <div class="hudStripRow">
+        <div class="hudGroup">
+          <div class="hudLabel">World</div>
+          <div class="hudValues">
+            <span class="hudPill"><span class="label">Day</span> <strong id="mcDay">—</strong></span>
+            <span class="hudPill"><span class="label">Time</span> <strong id="mcTime">—</strong></span>
+            <span class="hudPill"><span class="label">Season</span> <strong id="mcSeason">—</strong></span>
+            <span class="hudPill"><span class="label">Weather</span> <strong id="mcWeather">—</strong></span>
+          </div>
+        </div>
+
+        <div class="hudGroup">
+          <div class="hudLabel">Performance</div>
+          <div class="hudValues">
+            <span class="hudPill"><span class="label">TPS</span> <strong id="tpsLine">—</strong></span>
+            <span class="hudPill"><span class="label">MSPT</span> <strong id="msptLine">—</strong></span>
+            <span class="hudPill"><span class="label">Memory</span> <strong id="memLine">—</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <p class="small" style="margin-top:10px; opacity:.78;">
+        Live from your WorldState mod.
+      </p>
+    </section>
+
+    <!-- MAP -->
     <section class="card">
       <div class="sectionTitle">
         <h2>🗺️ Live World Map</h2>
         <span>BlueMap</span>
       </div>
 
-      <div class="iframeWrap" id="mapWrap">
-        <!-- BlueMap embed -->
+      <div class="iframeWrap">
         <iframe
           id="bluemapFrame"
           title="BlueMap Live Map"
@@ -226,47 +380,67 @@
           allowfullscreen
         ></iframe>
 
-        <!-- Fallback (shown if src is missing / blocked) -->
         <div id="mapFallback" style="padding:16px; display:none;">
           <strong>Map unavailable.</strong>
-          <p class="muted2" style="margin-top:6px;">Use the button below to open it.</p>
-          <a class="btn2 primary" id="openMapBtn2" href="#" target="_blank" rel="noreferrer">Open Map</a>
+          <p class="muted" style="margin-top:6px;">Use “Open Map” at the top.</p>
         </div>
       </div>
+
+      <p class="small" style="margin-top:10px; opacity:.78;">
+        If the embed is blank, open the map in a new tab (some browsers block iframes).
+      </p>
     </section>
 
+    <!-- CHAT -->
     <section class="card">
       <div class="sectionTitle">
-        <h2>👥 Players Online</h2>
-        <span>Live list</span>
+        <h2>💬 Server Chat</h2>
+        <span>Live feed</span>
       </div>
 
-      <div class="kvs">
-        <div class="kv">
-          <div class="k">Online</div>
-          <div class="v" id="playersOnlineCount">—</div>
-        </div>
-        <div class="kv">
-          <div class="k">Max</div>
-          <div class="v" id="playersMaxCount">—</div>
+      <div class="chatWrap">
+        <div id="chatList" class="chatList"></div>
+        <div class="chatControls">
+          <div class="small" id="chatNote">Read-only feed from your WorldState mod.</div>
         </div>
       </div>
-
-      <div class="list" id="playersOnlineList"></div>
-      <div class="small muted2" id="playersOnlineNote" style="margin-top:10px;"></div>
     </section>
 
+    <!-- Players + Waystones -->
+    <section class="grid2Equal">
+      <section class="card">
+        <div class="sectionTitle">
+          <h2>👥 Players Online</h2>
+          <span><strong><span id="playersOnlineCount">—</span>/<span id="playersMaxCount">—</span></strong></span>
+        </div>
+
+        <div id="playersGrid" class="playersGrid"></div>
+        <p class="small" id="playersOnlineNote" style="margin-top:10px;"></p>
+      </section>
+
+      <section class="card">
+        <div class="sectionTitle">
+          <h2>🧭 Waystones</h2>
+          <span>Fast travel directory</span>
+        </div>
+
+        <input id="waystoneSearch" class="input" placeholder="Search waystones…" />
+        <div class="small" id="waystoneMeta" style="margin-top:10px;"></div>
+        <div id="waystoneList" style="display:flex; flex-direction:column; gap:10px; margin-top:12px;"></div>
+        <div class="small" id="waystoneNote" style="margin-top:10px;"></div>
+      </section>
+    </section>
+
+    <!-- MODLIST -->
     <section class="card">
       <div class="sectionTitle">
         <h2>🧩 Modlist</h2>
-        <span>Browse the pack · <strong><span id="modCount">—</span> mods</strong></span>
+        <span><strong><span id="modCount">—</span></strong></span>
       </div>
 
-      <div class="row" style="margin-bottom:12px;">
-        <input id="modSearch" class="input" placeholder="Search mods…" />
-      </div>
+      <input id="modSearch" class="input" placeholder="Search mods…" />
 
-      <div class="row categoryBar" id="categoryRow"></div>
+      <div class="categoryBar" id="categoryRow" style="margin-top:10px;"></div>
 
       <div class="tableScroll" style="margin-top:12px;">
         <table class="table">

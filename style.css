@@ -569,3 +569,37 @@ body[data-nav="server"] .categoryBar::-webkit-scrollbar-thumb{
   background: rgba(255,255,255,.14);
   border-radius: 999px;
 }
+
+/* ===========================
+   Server page hero fixes
+   =========================== */
+body[data-nav="server"] .hero{
+  grid-template-columns: 1.25fr .75fr; /* give the right side a bit more room */
+  align-items: start;
+}
+@media (max-width: 900px){
+  body[data-nav="server"] .hero{ grid-template-columns: 1fr; }
+}
+
+/* The big fix: right side tiles should be a ONE-column stack */
+body[data-nav="server"] .hero .tileGrid{
+  grid-template-columns: 1fr !important;
+}
+
+/* Buttons inside server hero tiles should NOT force 190px min width */
+body[data-nav="server"] a.button{
+  min-width: 0 !important;
+  width: 100%;
+  justify-content: center;
+}
+
+/* Make tool buttons look tidy instead of wrapping weird */
+body[data-nav="server"] .hero .tile .btnrow{
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* Optional: tighten tile padding a hair (helps the right column feel less chunky) */
+body[data-nav="server"] .hero .tile{
+  padding: 12px;
+}

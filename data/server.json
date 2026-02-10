@@ -5,6 +5,7 @@
   "discordUrl": "https://discord.com/invite/MutqYAdrwz",
   "mapEmbedUrl": "https://map.mayflowerstudios.net:8445",
   "worldStateUrl": "https://world.mayflowerstudios.net:8446/worldstate.json",
+  "waystonesUrl": "https://world.mayflowerstudios.net:8446/waystones.json",
   "bluemapWorldId": "world-mayflower",
   "modpack": {
     "curseforgeUrl": "https://www.curseforge.com/minecraft/modpacks/lunas-guns-and-stuff",
