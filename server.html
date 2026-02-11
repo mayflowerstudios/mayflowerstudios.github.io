@@ -108,11 +108,11 @@
     .hudStrip { padding: 14px; }
     .hudStripRow {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr;
       gap: 14px;
       align-items: start;
     }
-    @media (max-width: 900px) {
+    @media (max-width: 1100px) {
       .hudStripRow { grid-template-columns: 1fr; }
     }
 
@@ -143,7 +143,6 @@
       gap: 10px;
     }
 
-    /* NEW: cute World mood card */
     .worldMood{
       border: 1px solid rgba(255,255,255,.10);
       background: rgba(255,255,255,.03);
@@ -178,7 +177,7 @@
       opacity: .78;
       line-height: 1.35;
     }
-    
+
     .iframeWrap {
       border: 1px solid var(--border);
       border-radius: var(--radius-3);
@@ -248,6 +247,7 @@
     }
     .miniPill.bad { border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10); }
     .miniPill.good { border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.10); }
+    .miniPill.warn { border-color: rgba(253,164,175,.45); background: rgba(253,164,175,.12); }
 
     .grid2Equal {
       display: grid;
@@ -351,6 +351,45 @@
       background: rgba(253,164,175,.10);
       box-shadow: 0 10px 30px rgba(0,0,0,.20);
     }
+
+    /* Starter kits */
+    .kitItem{
+      padding: 12px;
+      border-radius: var(--radius-3);
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.14);
+    }
+    .kitTop{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:flex-start;
+    }
+    .kitName{ font-weight: 900; letter-spacing: -.01em; }
+    .kitBadges{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+    .kitBadge{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      font-size:12px;
+      font-weight: 800;
+      opacity: .95;
+    }
+    .kitBadge.off{
+      border-color: rgba(239,68,68,.35);
+      background: rgba(239,68,68,.10);
+    }
+    .kitDesc{
+      margin-top:8px;
+      font-size:12px;
+      opacity:.82;
+      line-height:1.35;
+    }
+    .kitBtns{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
   </style>
 </head>
 
@@ -422,10 +461,21 @@
           </div>
         </div>
 
+        <div class="hudGroup">
+          <div class="hudLabel">AE2 Network</div>
+
+          <div class="hudValues" style="gap:8px;">
+            <span class="miniPill" id="ae2Pill">🧠 AE2: —</span>
+            <span class="hudPill"><span class="label">Online</span> <strong id="ae2Online">—</strong></span>
+            <span class="hudPill"><span class="label">Offline</span> <strong id="ae2Offline">—</strong></span>
+            <span class="hudPill"><span class="label">Conflicted</span> <strong id="ae2Conflicted">—</strong></span>
+          </div>
+
+          <div class="small" id="ae2DimNote" style="margin-top:8px; opacity:.78;">—</div>
+        </div>
+
       </div>
-      <p class="small hudStripFooter" id="worldMoodFooter">
-        —
-      </p>
+      <p class="small hudStripFooter" id="worldMoodFooter">—</p>
     </section>
 
     <section class="card">
@@ -506,6 +556,19 @@
         <div id="waystoneList" style="display:flex; flex-direction:column; gap:10px; margin-top:12px;"></div>
         <div class="small" id="waystoneNote" style="margin-top:10px;"></div>
       </section>
+    </section>
+
+    <section class="card">
+      <div class="sectionTitle">
+        <h2>🎒 Starter Kits</h2>
+        <span><strong id="kitCount">—</strong></span>
+      </div>
+
+      <input id="kitSearch" class="input" placeholder="Search kits…" />
+      <div class="categoryBar" id="kitFilterRow" style="margin-top:10px;"></div>
+
+      <div id="kitList" style="display:flex; flex-direction:column; gap:10px; margin-top:12px;"></div>
+      <div class="small" id="kitNote" style="margin-top:10px; opacity:.78;"></div>
     </section>
 
     <section class="card">

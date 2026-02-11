@@ -19,8 +19,7 @@
   const sparkLink = el("sparkLink");
   const openMapBtn = el("openMapBtn");
 
-  // NEW: mood UI
-  const worldMoodTitle = el("worldMoodTitle");
+  // Mood UI
   const worldMoodFooter = el("worldMoodFooter");
   const worldMoodClock = el("worldMoodClock");
   const worldMoodWeather = el("worldMoodWeather");
@@ -31,6 +30,13 @@
   const tpsLine = el("tpsLine");
   const msptLine = el("msptLine");
   const memLine = el("memLine");
+
+  // AE2 UI
+  const ae2Pill = el("ae2Pill");
+  const ae2Online = el("ae2Online");
+  const ae2Offline = el("ae2Offline");
+  const ae2Conflicted = el("ae2Conflicted");
+  const ae2DimNote = el("ae2DimNote");
 
   const bluemapFrame = el("bluemapFrame");
   const mapFallback = el("mapFallback");
@@ -54,6 +60,13 @@
   const waystoneList = el("waystoneList");
   const waystoneMeta = el("waystoneMeta");
   const waystoneNote = el("waystoneNote");
+
+  // Starter kits UI
+  const kitCount = el("kitCount");
+  const kitSearch = el("kitSearch");
+  const kitFilterRow = el("kitFilterRow");
+  const kitList = el("kitList");
+  const kitNote = el("kitNote");
 
   const modSearch = el("modSearch");
   const categoryRow = el("categoryRow");
@@ -122,14 +135,7 @@
     return m ? m[1] : "";
   }
 
-  function extractClockFromHeadline(headline) {
-    if (!headline) return "";
-    const m = String(headline).match(/\b(\d{1,2}:\d{2}\s*(?:AM|PM))\b/i);
-    return m ? m[1] : "";
-  }
-
   function prettyFirstSeasonToken(seasonRaw) {
-    // "LATE_SPRING SPRING" -> "Late Spring"
     const s = String(seasonRaw || "").trim();
     if (!s) return "";
     const first = s.split(/\s+/).filter(Boolean)[0] || "";
@@ -166,17 +172,6 @@
     return "☁️ Clear";
   }
 
-  function seasonLabel(season, subSeason, seasonDay) {
-    const seasonEmoji = { Spring: "🌸", Summer: "☀️", Autumn: "🍂", Fall: "🍂", Winter: "❄️" };
-    const pSeason = prettyToken(season);
-    const pSub = prettyToken(subSeason);
-    const label = [pSub, pSeason].filter(Boolean).join(" ").trim();
-    const emoji = seasonEmoji[pSeason] ? `${seasonEmoji[pSeason]} ` : "";
-    return Number.isFinite(Number(seasonDay))
-      ? `${emoji}${label} (Day ${Number(seasonDay)})`
-      : (label ? `${emoji}${label}` : "—");
-  }
-
   function nowLabel() {
     return new Date().toLocaleTimeString();
   }
@@ -195,9 +190,17 @@
   function setChatStatus(text, kind = "neutral") {
     if (!chatSendStatus) return;
     chatSendStatus.textContent = text;
-    chatSendStatus.classList.remove("good", "bad");
+    chatSendStatus.classList.remove("good", "bad", "warn");
     if (kind === "good") chatSendStatus.classList.add("good");
     if (kind === "bad") chatSendStatus.classList.add("bad");
+    if (kind === "warn") chatSendStatus.classList.add("warn");
+  }
+
+  function setPill(node, text, kind) {
+    if (!node) return;
+    node.textContent = text;
+    node.classList.remove("good", "bad", "warn");
+    if (kind) node.classList.add(kind);
   }
 
   async function fetchJson(url, timeoutMs = 5500) {
@@ -255,39 +258,7 @@
     return cleaned.length > max ? cleaned.slice(0, max) : cleaned;
   }
 
-  // --- NEW: mood helpers ---
-  function extractClockFromHeadline(headline) {
-    if (!headline) return "";
-    const m = String(headline).match(/\b(\d{1,2}:\d{2}\s*(?:AM|PM))\b/i);
-    return m ? m[1] : "";
-  }
-
-  function moodTitleFrom(ws) {
-    const mood = ws?.mood || null;
-    if (mood) {
-      const clock = extractClockFromHeadline(mood.headline) || "";
-      const weather = mood.weather ? String(mood.weather) : "";
-      const season = mood.season ? prettyToken(mood.season) : "";
-      const parts = [clock, weather, season].filter(Boolean);
-      if (parts.length) return parts.join(" • ");
-    }
-
-    // fallback to old fields if mood missing
-    const time = ws?.time || {};
-    const clock2 = time.clock ? String(time.clock) : "";
-    const weather2 = fmtWeather(ws?.weather);
-    const s = ws?.season || {};
-    const season2 = (s.sereneSeasonsLoaded === false) ? "" : seasonLabel(s.season, s.subSeason, s.seasonDay);
-    const parts2 = [clock2, (weather2 !== "—" ? weather2 : ""), season2].filter(Boolean);
-    return parts2.length ? parts2.join(" • ") : "—";
-  }
-
-  function moodFlavorFrom(ws) {
-    const mood = ws?.mood || null;
-    if (mood?.flavor) return String(mood.flavor);
-    return "—";
-  }
-
+  // ---------- Players ----------
   let lastPlayersKey = "";
 
   function playersKey(list) {
@@ -354,6 +325,7 @@
     if (playersOnlineNote) playersOnlineNote.textContent = noteText;
   }
 
+  // ---------- Chat ----------
   let lastChatKey = "";
 
   function chatKey(lines) {
@@ -377,6 +349,7 @@
     if (t === "death") return "💀 ";
     if (t === "server") return "🛰️ ";
     if (t === "info") return "ℹ️ ";
+    if (t === "boss") return "👑 ";
     return "• ";
   }
 
@@ -443,6 +416,7 @@
     if (stickToBottom) chatList.scrollTop = chatList.scrollHeight;
   }
 
+  // ---------- Waystones ----------
   let waystones = [];
   let lastWayKey = "";
 
@@ -539,6 +513,183 @@
 
   if (waystoneSearch) waystoneSearch.addEventListener("input", () => renderWaystones(true));
 
+  // ---------- AE2 ----------
+  function dimPretty(id){
+    return String(id || "")
+      .replace("minecraft:", "")
+      .replaceAll("_", " ")
+      .replace(/\bthe\s+nether\b/i, "Nether")
+      .replace(/\bthe\s+end\b/i, "The End")
+      .replace(/\boverworld\b/i, "Overworld");
+  }
+
+  function renderAE2(ws){
+    const ae2 = ws?.ae2 || null;
+
+    if (!ae2?.ae2Loaded) {
+      safeSetText(ae2Online, "—");
+      safeSetText(ae2Offline, "—");
+      safeSetText(ae2Conflicted, "—");
+      setPill(ae2Pill, "🧠 AE2: Not available", "bad");
+      safeSetText(ae2DimNote, "—");
+      return;
+    }
+
+    const total = ae2.total || {};
+    safeSetText(ae2Online, Number(total.online ?? 0));
+    safeSetText(ae2Offline, Number(total.offline ?? 0));
+    safeSetText(ae2Conflicted, Number(total.conflicted ?? 0));
+
+    const has = Boolean(ae2.hasConflicts);
+    setPill(
+      ae2Pill,
+      has ? "⚠️ AE2: Conflicts detected" : "✅ AE2: Healthy",
+      has ? "warn" : "good"
+    );
+
+    const rows = Array.isArray(ae2.byDimension) ? ae2.byDimension : [];
+    if (!rows.length) {
+      safeSetText(ae2DimNote, "No controllers tracked yet (load chunks with controllers).");
+      return;
+    }
+
+    const parts = rows.map(r => {
+      const d = dimPretty(r?.dimension);
+      const c = r?.controllers || {};
+      const conflict = Boolean(r?.hasConflicts) || (Number(c.conflicted || 0) > 0);
+      const online = Number(c.online || 0);
+      const off = Number(c.offline || 0);
+      const conf = Number(c.conflicted || 0);
+      return `${conflict ? "⚠️" : "•"} ${d}: ${online} on, ${off} off, ${conf} conflict`;
+    });
+
+    safeSetText(ae2DimNote, parts.join("  |  "));
+  }
+
+  // ---------- Starter Kits ----------
+  let starterKits = [];
+  let kitCategory = "All";
+  const KIT_CATS = ["All", "Active", "Inactive"];
+
+  function kitNamePretty(n){
+    const s = String(n || "").trim();
+    if (!s) return "Kit";
+    return s.replaceAll("_"," ").replace(/\s+/g," ").trim();
+  }
+
+  function kitMatches(k, q){
+    if (!q) return true;
+    const blob = `${k?.name||""} ${k?.description||""}`.toLowerCase();
+    return blob.includes(q);
+  }
+
+  function renderKitFilters(){
+    if (!kitFilterRow) return;
+    kitFilterRow.innerHTML = "";
+    const frag = document.createDocumentFragment();
+
+    for (const cat of KIT_CATS){
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "catChip" + (cat === kitCategory ? " active" : "");
+      btn.textContent = cat;
+      btn.addEventListener("click", () => {
+        kitCategory = cat;
+        renderKitFilters();
+        renderKits(true);
+      });
+      frag.appendChild(btn);
+    }
+
+    kitFilterRow.appendChild(frag);
+  }
+
+  function renderKits(force=false){
+    if (!kitList) return;
+
+    const q = (kitSearch?.value || "").trim().toLowerCase();
+    let filtered = starterKits.slice();
+
+    if (kitCategory === "Active") filtered = filtered.filter(k => k?.active);
+    if (kitCategory === "Inactive") filtered = filtered.filter(k => !k?.active);
+
+    filtered = filtered.filter(k => kitMatches(k, q));
+
+    kitList.innerHTML = "";
+
+    if (kitCount) {
+      kitCount.textContent = q || kitCategory !== "All"
+        ? `${filtered.length} of ${starterKits.length}`
+        : `${starterKits.length} kits`;
+    }
+
+    if (!filtered.length){
+      kitList.innerHTML = `<div class="kitItem"><div class="kitName">No kits found.</div><div class="kitDesc">Try a different search or filter.</div></div>`;
+      if (kitNote) kitNote.textContent = "";
+      return;
+    }
+
+    const frag = document.createDocumentFragment();
+
+    for (const k of filtered.slice(0, 60)){
+      const name = kitNamePretty(k?.name);
+      const desc = String(k?.description || "").trim();
+      const active = Boolean(k?.active);
+
+      const card = document.createElement("div");
+      card.className = "kitItem";
+      card.innerHTML = `
+        <div class="kitTop">
+          <div>
+            <div class="kitName">${escapeHtml(name)}</div>
+            ${desc ? `<div class="kitDesc">${escapeHtml(desc)}</div>` : `<div class="kitDesc">No description yet.</div>`}
+          </div>
+          <div class="kitBadges">
+            <span class="kitBadge ${active ? "" : "off"}">${active ? "✅ Active" : "⛔ Inactive"}</span>
+          </div>
+        </div>
+        <div class="kitBtns">
+          <button class="btnMini kitCopyName" type="button">📌 Copy kit name</button>
+          ${k?.raw ? `<button class="btnMini kitCopyRaw" type="button">📋 Copy raw</button>` : ``}
+        </div>
+      `;
+
+      card.querySelector(".kitCopyName")?.addEventListener("click", async () => {
+        const ok = await copyText(k?.name || name);
+        const btn = card.querySelector(".kitCopyName");
+        if (!btn) return;
+        btn.textContent = ok ? "✅ Copied!" : "Copy failed";
+        setTimeout(() => (btn.textContent = "📌 Copy kit name"), 900);
+      });
+
+      card.querySelector(".kitCopyRaw")?.addEventListener("click", async () => {
+        const ok = await copyText(String(k?.raw || ""));
+        const btn = card.querySelector(".kitCopyRaw");
+        if (!btn) return;
+        btn.textContent = ok ? "✅ Copied!" : "Copy failed";
+        setTimeout(() => (btn.textContent = "📋 Copy raw"), 900);
+      });
+
+      frag.appendChild(card);
+    }
+
+    if (filtered.length > 60){
+      const more = document.createElement("div");
+      more.className = "kitItem";
+      more.innerHTML = `<div class="kitName">+${filtered.length - 60} more</div><div class="kitDesc">Refine your search to narrow it down.</div>`;
+      frag.appendChild(more);
+    }
+
+    kitList.appendChild(frag);
+
+    if (kitNote) kitNote.textContent =
+      "Kits are loaded from the server via WorldState (StarterKit config).";
+  }
+
+  if (kitSearch) kitSearch.addEventListener("input", () => renderKits(true));
+  renderKitFilters();
+
+  // ---------- Load config ----------
   let cfg;
   try {
     cfg = await fetchJson("data/server.json", 6000);
@@ -694,16 +845,14 @@
     const max = (meta.maxPlayers != null) ? meta.maxPlayers : null;
     setCountsEverywhere(online, max);
 
-    // NEW: World mood card (clock + weather + season + flavor)
+    // Mood card
     const mood = ws?.mood || {};
-
-    const clock = extractClockFromHeadline(mood.headline) || "—";
+    const clock = extractClockFromHeadline(mood.headline) || (ws?.time?.clock ? String(ws.time.clock) : "—");
     const weather = mood.weather ? String(mood.weather) : (ws?.weather ? fmtWeather(ws.weather).replace(/^.\s*/, "") : "—");
     const season = mood.season ? prettyFirstSeasonToken(mood.season) : "—";
 
     const mEmoji = moonEmoji(mood.moonPhase);
     const mName = moonLabel(mood.moonPhase);
-
     const flavor = mood.flavor ? String(mood.flavor) : "—";
 
     safeSetText(worldMoodClock, clock);
@@ -712,6 +861,7 @@
     safeSetText(worldMoodMoon, `${mEmoji} ${mName}`);
     safeSetText(worldMoodFooter, flavor);
 
+    // Perf
     const perf = ws?.perf || {};
     safeSetText(tpsLine, Number.isFinite(Number(perf.estTps)) ? Number(perf.estTps).toFixed(1) : "—");
     safeSetText(msptLine, Number.isFinite(Number(perf.avgMspt)) ? `${Number(perf.avgMspt).toFixed(1)}` : "—");
@@ -721,17 +871,28 @@
       safeSetText(memLine, "—");
     }
 
+    // Players
     renderPlayers(pubPlayers, pubPlayers.length ? "Live list from WorldState." : "Nobody online right now.");
 
+    // Waystones
     waystones = Array.isArray(ws?.waystones) ? ws.waystones : [];
     if (waystoneNote) {
       waystoneNote.textContent = waystones.length ? "Waystones loaded from WorldState." : "No waystones found (or none are public).";
     }
     renderWaystones(true);
 
+    // Chat
     const chat = Array.isArray(ws?.chat) ? ws.chat : [];
     renderChat(chat);
     if (chatNote) chatNote.textContent = chat.length ? "Live feed from WorldState." : "No recent chat messages.";
+
+    // AE2
+    renderAE2(ws);
+
+    // Starter Kits
+    starterKits = Array.isArray(ws?.starterKits) ? ws.starterKits : [];
+    renderKitFilters();
+    renderKits(true);
 
     safeSetText(lastUpdate, nowLabel());
     lastApplyAt = Date.now();
@@ -768,18 +929,30 @@
   function clearLivePanels(reason) {
     safeSetText(serverMotd, reason || "WorldState not available.");
 
-    safeSetText(worldMoodTitle, "—");
-    safeSetText(worldMoodFlavor, "—");
+    safeSetText(worldMoodClock, "—");
+    safeSetText(worldMoodWeather, "—");
+    safeSetText(worldMoodSeason, "—");
+    safeSetText(worldMoodMoon, "—");
+    safeSetText(worldMoodFooter, "—");
 
     safeSetText(tpsLine, "—");
     safeSetText(msptLine, "—");
     safeSetText(memLine, "—");
+
     renderPlayers([], reason || "WorldState is not configured.");
     waystones = [];
     renderWaystones(true);
     renderChat([]);
+
     if (chatNote) chatNote.textContent = "Chat feed unavailable.";
     if (waystoneNote) waystoneNote.textContent = "Waystones unavailable.";
+
+    renderAE2({ ae2: { ae2Loaded: false } });
+
+    starterKits = [];
+    if (kitList) kitList.innerHTML = "";
+    if (kitCount) kitCount.textContent = "—";
+    if (kitNote) kitNote.textContent = "Starter kits unavailable.";
 
     if (!chatCanSend()) setChatStatus(worldStateToken ? "Token set (server offline?)" : "Token missing", "bad");
     else setChatStatus("Server offline/stale", "bad");
@@ -806,7 +979,7 @@
         setOnlineState("stale");
         if (chatNote) chatNote.textContent = `Showing last known data (${msAgeLabel(age)}).`;
         if (waystoneNote) waystoneNote.textContent = `Showing last known data (${msAgeLabel(age)}).`;
-        if (chatCanSend()) setChatStatus(`Stale (${msAgeLabel(age)})`, "bad");
+        if (chatCanSend()) setChatStatus(`Stale (${msAgeLabel(age)})`, "warn");
       } else {
         await fetchStatusFallback();
         clearLivePanels("WorldState endpoint/CORS/offline.");
@@ -885,6 +1058,7 @@
     }
   });
 
+  // ---------- Modlist ----------
   let mods = [];
   try {
     const modData = await fetchJson("data/modlist.json", 6000);
