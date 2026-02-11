@@ -1,3 +1,4 @@
+// server.js
 (async function () {
   const el = (id) => document.getElementById(id);
   const safeSetText = (node, text) => { if (node) node.textContent = text; };
@@ -604,6 +605,70 @@
     kitFilterRow.appendChild(frag);
   }
 
+  function prettyItemNameFromId(id){
+    const raw = String(id || "").trim();
+    if (!raw) return "Item";
+    const parts = raw.split(":");
+    const name = (parts[1] || parts[0] || raw).replaceAll("_", " ");
+    return name.split(" ").filter(Boolean).map(w => w[0].toUpperCase() + w.slice(1)).join(" ");
+  }
+
+  function parseItemNbtString(nbtStr){
+    const s = String(nbtStr || "").trim();
+    if (!s) return null;
+
+    const idMatch = s.match(/id:\s*"(.*?)"/);
+    const id = idMatch ? idMatch[1] : "";
+
+    const cMatch = s.match(/Count:\s*([0-9]+)/);
+    const count = cMatch ? Number(cMatch[1]) : 1;
+
+    if (!id) return null;
+    return { id, count };
+  }
+
+  function parseKitRawToItems(raw){
+    const text = String(raw || "");
+    if (!text) return [];
+
+    const items = [];
+    const lines = text.split("\n");
+
+    for (const line of lines){
+      const l = line.trim();
+      if (!l) continue;
+
+      const m = l.match(/^'?([a-zA-Z0-9_]+)'?\s*:\s*'(.*)'\s*,?\s*$/);
+      if (!m) continue;
+
+      const key = m[1];
+      const val = m[2];
+
+      if (!val || val === "''" || val === "" || val === " ") continue;
+
+      const isArmorOrHand = ["head","chest","legs","feet","offhand"].includes(key);
+      const slotNum = Number(key);
+      const isSlot = Number.isFinite(slotNum) && slotNum >= 0 && slotNum <= 35;
+
+      if (!isArmorOrHand && !isSlot) continue;
+
+      const parsed = parseItemNbtString(val);
+      if (!parsed) continue;
+
+      items.push({ id: parsed.id, count: parsed.count });
+    }
+
+    const map = new Map();
+    for (const it of items){
+      const k = it.id;
+      map.set(k, (map.get(k) || 0) + (Number(it.count) || 1));
+    }
+
+    return Array.from(map.entries())
+      .map(([id, count]) => ({ id, count }))
+      .sort((a, b) => prettyItemNameFromId(a.id).localeCompare(prettyItemNameFromId(b.id)));
+  }
+
   function renderKits(force=false){
     if (!kitList) return;
 
@@ -615,16 +680,20 @@
 
     filtered = filtered.filter(k => kitMatches(k, q));
 
+    kitList.classList.add("kitGrid");
     kitList.innerHTML = "";
 
     if (kitCount) {
-      kitCount.textContent = q || kitCategory !== "All"
+      kitCount.textContent = (q || kitCategory !== "All")
         ? `${filtered.length} of ${starterKits.length}`
         : `${starterKits.length} kits`;
     }
 
     if (!filtered.length){
-      kitList.innerHTML = `<div class="kitItem"><div class="kitName">No kits found.</div><div class="kitDesc">Try a different search or filter.</div></div>`;
+      kitList.innerHTML = `<div class="kitCard">
+        <div class="kitName">No kits found.</div>
+        <div class="kitDesc">Try a different search or filter.</div>
+      </div>`;
       if (kitNote) kitNote.textContent = "";
       return;
     }
@@ -637,46 +706,55 @@
       const active = Boolean(k?.active);
 
       const card = document.createElement("div");
-      card.className = "kitItem";
-      card.innerHTML = `
-        <div class="kitTop">
-          <div>
-            <div class="kitName">${escapeHtml(name)}</div>
-            ${desc ? `<div class="kitDesc">${escapeHtml(desc)}</div>` : `<div class="kitDesc">No description yet.</div>`}
-          </div>
-          <div class="kitBadges">
-            <span class="kitBadge ${active ? "" : "off"}">${active ? "✅ Active" : "⛔ Inactive"}</span>
-          </div>
+      card.className = "kitCard";
+
+      const head = document.createElement("div");
+      head.className = "kitHead";
+      head.innerHTML = `
+        <div>
+          <div class="kitName">${escapeHtml(name)}</div>
+          ${desc ? `<div class="kitDesc">${escapeHtml(desc)}</div>` : ``}
         </div>
-        <div class="kitBtns">
-          <button class="btnMini kitCopyName" type="button">📌 Copy kit name</button>
-          ${k?.raw ? `<button class="btnMini kitCopyRaw" type="button">📋 Copy raw</button>` : ``}
+        <div>
+          <span class="kitBadge ${active ? "" : "off"}">${active ? "✅ Active" : "⛔ Inactive"}</span>
         </div>
       `;
 
-      card.querySelector(".kitCopyName")?.addEventListener("click", async () => {
-        const ok = await copyText(k?.name || name);
-        const btn = card.querySelector(".kitCopyName");
-        if (!btn) return;
-        btn.textContent = ok ? "✅ Copied!" : "Copy failed";
-        setTimeout(() => (btn.textContent = "📌 Copy kit name"), 900);
-      });
+      const itemsWrap = document.createElement("div");
+      itemsWrap.className = "kitItems";
 
-      card.querySelector(".kitCopyRaw")?.addEventListener("click", async () => {
-        const ok = await copyText(String(k?.raw || ""));
-        const btn = card.querySelector(".kitCopyRaw");
-        if (!btn) return;
-        btn.textContent = ok ? "✅ Copied!" : "Copy failed";
-        setTimeout(() => (btn.textContent = "📋 Copy raw"), 900);
-      });
+      const items = parseKitRawToItems(k?.raw);
 
+      card.appendChild(head);
+
+      if (!items.length){
+        const empty = document.createElement("div");
+        empty.className = "kitItemsEmpty";
+        empty.textContent = "No items found in this kit.";
+        card.appendChild(empty);
+        frag.appendChild(card);
+        continue;
+      }
+
+      for (const it of items){
+        const chip = document.createElement("div");
+        chip.className = "itemChip";
+        chip.innerHTML = `
+          <span class="count">x${escapeHtml(String(it.count))}</span>
+          <span class="iname">${escapeHtml(prettyItemNameFromId(it.id))}</span>
+        `;
+        itemsWrap.appendChild(chip);
+      }
+
+      card.appendChild(itemsWrap);
       frag.appendChild(card);
     }
 
     if (filtered.length > 60){
       const more = document.createElement("div");
-      more.className = "kitItem";
-      more.innerHTML = `<div class="kitName">+${filtered.length - 60} more</div><div class="kitDesc">Refine your search to narrow it down.</div>`;
+      more.className = "kitCard";
+      more.innerHTML = `<div class="kitName">+${filtered.length - 60} more</div>
+                        <div class="kitDesc">Refine your search to narrow it down.</div>`;
       frag.appendChild(more);
     }
 
@@ -845,7 +923,6 @@
     const max = (meta.maxPlayers != null) ? meta.maxPlayers : null;
     setCountsEverywhere(online, max);
 
-    // Mood card
     const mood = ws?.mood || {};
     const clock = extractClockFromHeadline(mood.headline) || (ws?.time?.clock ? String(ws.time.clock) : "—");
     const weather = mood.weather ? String(mood.weather) : (ws?.weather ? fmtWeather(ws.weather).replace(/^.\s*/, "") : "—");
@@ -861,7 +938,6 @@
     safeSetText(worldMoodMoon, `${mEmoji} ${mName}`);
     safeSetText(worldMoodFooter, flavor);
 
-    // Perf
     const perf = ws?.perf || {};
     safeSetText(tpsLine, Number.isFinite(Number(perf.estTps)) ? Number(perf.estTps).toFixed(1) : "—");
     safeSetText(msptLine, Number.isFinite(Number(perf.avgMspt)) ? `${Number(perf.avgMspt).toFixed(1)}` : "—");
@@ -871,25 +947,20 @@
       safeSetText(memLine, "—");
     }
 
-    // Players
     renderPlayers(pubPlayers, pubPlayers.length ? "Live list from WorldState." : "Nobody online right now.");
 
-    // Waystones
     waystones = Array.isArray(ws?.waystones) ? ws.waystones : [];
     if (waystoneNote) {
       waystoneNote.textContent = waystones.length ? "Waystones loaded from WorldState." : "No waystones found (or none are public).";
     }
     renderWaystones(true);
 
-    // Chat
     const chat = Array.isArray(ws?.chat) ? ws.chat : [];
     renderChat(chat);
     if (chatNote) chatNote.textContent = chat.length ? "Live feed from WorldState." : "No recent chat messages.";
 
-    // AE2
     renderAE2(ws);
 
-    // Starter Kits
     starterKits = Array.isArray(ws?.starterKits) ? ws.starterKits : [];
     renderKitFilters();
     renderKits(true);

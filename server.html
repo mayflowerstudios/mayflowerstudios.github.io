@@ -1,3 +1,4 @@
+<!-- server.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -352,21 +353,48 @@
       box-shadow: 0 10px 30px rgba(0,0,0,.20);
     }
 
-    /* Starter kits */
-    .kitItem{
+    /* Starter kits (grid cards, no buttons) */
+    .kitGrid{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    @media (max-width: 1100px){
+      .kitGrid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 680px){
+      .kitGrid{ grid-template-columns: 1fr; }
+    }
+
+    .kitCard{
       padding: 12px;
       border-radius: var(--radius-3);
       border: 1px solid var(--border);
       background: rgba(0,0,0,.14);
-    }
-    .kitTop{
       display:flex;
-      justify-content:space-between;
-      gap:10px;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .kitHead{
+      display:flex;
+      justify-content: space-between;
+      gap: 10px;
       align-items:flex-start;
     }
-    .kitName{ font-weight: 900; letter-spacing: -.01em; }
-    .kitBadges{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+
+    .kitName{
+      font-weight: 950;
+      letter-spacing: -.01em;
+      line-height: 1.1;
+    }
+    .kitDesc{
+      margin-top: 6px;
+      font-size: 12px;
+      opacity:.82;
+      line-height: 1.35;
+    }
+
     .kitBadge{
       display:inline-flex;
       gap:8px;
@@ -376,20 +404,48 @@
       border:1px solid rgba(255,255,255,.14);
       background: rgba(255,255,255,.05);
       font-size:12px;
-      font-weight: 800;
+      font-weight: 850;
       opacity: .95;
+      white-space: nowrap;
     }
     .kitBadge.off{
       border-color: rgba(239,68,68,.35);
       background: rgba(239,68,68,.10);
     }
-    .kitDesc{
-      margin-top:8px;
-      font-size:12px;
-      opacity:.82;
-      line-height:1.35;
+
+    .kitItems{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 8px;
     }
-    .kitBtns{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+
+    .itemChip{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .itemChip .count{
+      font-family: var(--mono);
+      font-weight: 950;
+      opacity: .9;
+    }
+    .itemChip .iname{
+      opacity: .92;
+    }
+
+    .kitItemsEmpty{
+      font-size: 12px;
+      opacity: .72;
+      font-style: italic;
+      line-height: 1.35;
+    }
   </style>
 </head>
 
@@ -567,7 +623,7 @@
       <input id="kitSearch" class="input" placeholder="Search kits…" />
       <div class="categoryBar" id="kitFilterRow" style="margin-top:10px;"></div>
 
-      <div id="kitList" style="display:flex; flex-direction:column; gap:10px; margin-top:12px;"></div>
+      <div id="kitList" class="kitGrid" style="margin-top:12px;"></div>
       <div class="small" id="kitNote" style="margin-top:10px; opacity:.78;"></div>
     </section>
 
