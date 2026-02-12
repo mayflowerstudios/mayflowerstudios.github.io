@@ -446,12 +446,52 @@
       font-style: italic;
       line-height: 1.35;
     }
+
+    .maintenanceBanner {
+      margin-bottom: 14px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(239,68,68,.35);
+      background: linear-gradient(
+        90deg,
+        rgba(239,68,68,.18),
+        rgba(253,164,175,.18)
+      );
+      box-shadow: 0 0 0 1px rgba(255,255,255,.05) inset;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .maintenanceIcon {
+      font-size: 20px;
+    }
+
+    .maintenanceText {
+      font-weight: 900;
+      letter-spacing: -.01em;
+    }
+
+    .maintenanceSub {
+      font-size: 13px;
+      opacity: .85;
+      margin-top: 4px;
+    }
   </style>
 </head>
 
 <body data-nav="server">
   <div class="wrap">
     <div id="shared-nav"></div>
+
+    <div class="maintenanceBanner" id="maintenanceBanner" style="display:none;" aria-live="polite">
+      <div class="maintenanceIcon">🚧</div>
+      <div>
+        <div class="maintenanceText">Server Maintenance</div>
+        <div class="maintenanceSub">Updates in progress.</div>
+      </div>
+    </div>
 
     <section class="hero serverHero">
       <div class="serverHeroTop">

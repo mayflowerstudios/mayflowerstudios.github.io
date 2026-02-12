@@ -20,6 +20,9 @@
   const sparkLink = el("sparkLink");
   const openMapBtn = el("openMapBtn");
 
+  // Maintenance banner
+  const maintenanceBanner = el("maintenanceBanner");
+
   // Mood UI
   const worldMoodFooter = el("worldMoodFooter");
   const worldMoodClock = el("worldMoodClock");
@@ -99,6 +102,9 @@
     } else if (state === "stale") {
       statusDot.classList.add("offline");
       statusText.textContent = "Stale";
+    } else if (state === "maintenance") {
+      statusDot.classList.add("offline");
+      statusText.textContent = "Maintenance";
     } else if (state === "loading") {
       statusText.textContent = "Loading…";
     } else {
@@ -257,6 +263,71 @@
     if (!s) return "";
     const cleaned = s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim();
     return cleaned.length > max ? cleaned.slice(0, max) : cleaned;
+  }
+
+  // ---------- Maintenance ----------
+  let maintenance = {
+    enabled: false,
+    title: "",
+    message: "",
+    disableJoinButtons: false,
+    disableWebChat: false
+  };
+
+  function disableButtonLike(node) {
+    if (!node) return;
+    node.style.pointerEvents = "none";
+    node.style.opacity = "0.55";
+    node.style.filter = "grayscale(0.65)";
+    node.style.cursor = "not-allowed";
+    if ("disabled" in node) node.disabled = true;
+    node.setAttribute("aria-disabled", "true");
+    node.setAttribute("tabindex", "-1");
+  }
+
+  function applyMaintenanceFromCfg(cfg) {
+    maintenance = {
+      enabled: Boolean(cfg?.maintenance?.enabled),
+      title: String(cfg?.maintenance?.title || "").trim(),
+      message: String(cfg?.maintenance?.message || "").trim(),
+      disableJoinButtons: Boolean(cfg?.maintenance?.disableJoinButtons),
+      disableWebChat: Boolean(cfg?.maintenance?.disableWebChat)
+    };
+
+    // Banner
+    if (maintenanceBanner) {
+      if (!maintenance.enabled) {
+        maintenanceBanner.style.display = "none";
+      } else {
+        maintenanceBanner.style.display = "flex";
+
+        const titleNode = maintenanceBanner.querySelector(".maintenanceText");
+        const msgNode = maintenanceBanner.querySelector(".maintenanceSub");
+
+        if (titleNode) titleNode.textContent = maintenance.title || "Server Maintenance";
+        if (msgNode) msgNode.textContent = maintenance.message || "Server is being updated. Please check back later.";
+      }
+    }
+
+    if (maintenance.enabled) {
+      setOnlineState("maintenance");
+      safeSetText(serverMotd, maintenance.message || "Server is currently being updated.");
+
+      if (maintenance.disableJoinButtons) {
+        disableButtonLike(joinLink);
+        disableButtonLike(modpackCurseforge);
+        disableButtonLike(copyIpBtn);
+      }
+
+      // Optional: also disable map button if you want it tied to join disable
+      // if (maintenance.disableJoinButtons) disableButtonLike(openMapBtn);
+
+      if (maintenance.disableWebChat) {
+        disableButtonLike(chatSendBtn);
+        if (chatNote) chatNote.textContent = "Web chat is disabled during maintenance.";
+        setChatStatus("Disabled (maintenance)", "warn");
+      }
+    }
   }
 
   // ---------- Players ----------
@@ -778,6 +849,9 @@
     return;
   }
 
+  // Apply maintenance ASAP (so banner/buttons update immediately)
+  applyMaintenanceFromCfg(cfg);
+
   const serverName = (cfg.serverName || "").trim();
   const address = (cfg.address || "").trim();
   const refreshSeconds = Math.max(10, Number(cfg.refreshSeconds || 30));
@@ -823,6 +897,7 @@
   const chatPostUrl = worldApiBase ? `${worldApiBase}/api/chat` : "";
 
   function chatCanSend() {
+    if (maintenance?.enabled && maintenance?.disableWebChat) return false;
     return Boolean(chatPostUrl) && Boolean(worldStateToken);
   }
 
@@ -833,7 +908,10 @@
     if (savedName && !chatName.value) chatName.value = savedName;
 
     if (!chatCanSend()) {
-      setChatStatus(worldStateToken ? "Chat endpoint missing" : "Token missing", "bad");
+      const reason = (maintenance?.enabled && maintenance?.disableWebChat)
+        ? "Disabled (maintenance)"
+        : (worldStateToken ? "Chat endpoint missing" : "Token missing");
+      setChatStatus(reason, "bad");
       chatSendBtn.disabled = true;
       chatSendBtn.style.opacity = ".6";
       chatSendBtn.style.cursor = "not-allowed";
@@ -912,11 +990,13 @@
   }
 
   function applyWorldState(ws) {
+    // If maintenance is enabled, we still allow data to show (unless you want to hard-stop).
+    // We do NOT override the Maintenance status text.
     lastGoodMs = Date.now();
-    setOnlineState("online");
+    if (!(maintenance?.enabled)) setOnlineState("online");
 
     const meta = ws?.meta || {};
-    if (meta.motd) safeSetText(serverMotd, meta.motd);
+    if (meta.motd && !(maintenance?.enabled)) safeSetText(serverMotd, meta.motd);
 
     const pubPlayers = Array.isArray(ws?.publicPlayers) ? ws.publicPlayers : [];
     const online = pubPlayers.length;
@@ -969,7 +1049,12 @@
     lastApplyAt = Date.now();
 
     if (chatCanSend()) setChatStatus("Ready to send", "good");
-    else setChatStatus(worldStateToken ? "Token set (endpoint?)" : "Token missing", chatCanSend() ? "good" : "bad");
+    else {
+      const reason = (maintenance?.enabled && maintenance?.disableWebChat)
+        ? "Disabled (maintenance)"
+        : (worldStateToken ? "Token set (endpoint?)" : "Token missing");
+      setChatStatus(reason, chatCanSend() ? "good" : "bad");
+    }
   }
 
   async function fetchStatusFallback() {
@@ -977,10 +1062,10 @@
     const statusUrl = `https://api.mcstatus.io/v2/status/java/${encodeURIComponent(address)}`;
     try {
       const data = await fetchJson(statusUrl, 6500);
-      setOnlineState(data.online ? "online" : "offline");
+      if (!maintenance?.enabled) setOnlineState(data.online ? "online" : "offline");
 
       const motd = data?.motd?.clean?.join(" ") || data?.motd?.raw?.join(" ") || "";
-      if (motd) safeSetText(serverMotd, motd);
+      if (motd && !maintenance?.enabled) safeSetText(serverMotd, motd);
 
       const online = data?.players?.online ?? null;
       const max = data?.players?.max ?? null;
@@ -989,7 +1074,7 @@
       safeSetText(lastUpdate, nowLabel());
       lastApplyAt = Date.now();
     } catch (e) {
-      setOnlineState("offline");
+      if (!maintenance?.enabled) setOnlineState("offline");
       console.warn("Fallback status failed:", e);
     }
   }
@@ -1025,13 +1110,19 @@
     if (kitCount) kitCount.textContent = "—";
     if (kitNote) kitNote.textContent = "Starter kits unavailable.";
 
-    if (!chatCanSend()) setChatStatus(worldStateToken ? "Token set (server offline?)" : "Token missing", "bad");
-    else setChatStatus("Server offline/stale", "bad");
+    if (!chatCanSend()) {
+      const reason2 = (maintenance?.enabled && maintenance?.disableWebChat)
+        ? "Disabled (maintenance)"
+        : (worldStateToken ? "Token set (server offline?)" : "Token missing");
+      setChatStatus(reason2, "bad");
+    } else {
+      setChatStatus("Server offline/stale", "bad");
+    }
   }
 
   async function refreshAll() {
     if (!worldStateUrl) {
-      setOnlineState("offline");
+      if (!maintenance?.enabled) setOnlineState("offline");
       clearLivePanels("Set worldStateUrl in data/server.json.");
       return;
     }
@@ -1047,7 +1138,7 @@
 
       const age = Date.now() - (lastGoodMs || 0);
       if (lastGoodMs && age < 120000) {
-        setOnlineState("stale");
+        if (!maintenance?.enabled) setOnlineState("stale");
         if (chatNote) chatNote.textContent = `Showing last known data (${msAgeLabel(age)}).`;
         if (waystoneNote) waystoneNote.textContent = `Showing last known data (${msAgeLabel(age)}).`;
         if (chatCanSend()) setChatStatus(`Stale (${msAgeLabel(age)})`, "warn");
@@ -1075,7 +1166,7 @@
   function updateLastUpdateAge() {
     if (!lastApplyAt) return;
     const age = Date.now() - lastApplyAt;
-    if (age > 120000) setOnlineState("stale");
+    if (age > 120000 && !maintenance?.enabled) setOnlineState("stale");
   }
 
   function effectiveRefreshSeconds() {
@@ -1110,7 +1201,7 @@
   }
 
   setCountsEverywhere("—", "—");
-  setOnlineState("loading");
+  setOnlineState(maintenance?.enabled ? "maintenance" : "loading");
   remaining = effectiveRefreshSeconds();
   safeSetText(refreshIn, `${remaining}s`);
 

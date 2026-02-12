@@ -1,5 +1,14 @@
 {
   "serverName": "Luna’s Guns & Stuff",
+  
+  "maintenance": {
+    "enabled": true,
+    "title": "Server Updating — Modpack Temporarily Unavailable",
+    "message": "The server is currently being updated and will NOT work with the current modpack until further notice. Please wait for an announcement before trying to join.",
+    "disableJoinButtons": true,
+    "disableWebChat": true
+  },
+  
   "address": "play.mayflowerstudios.net",
   "howToJoinUrl": "server-info.html",
   "discordUrl": "https://discord.com/invite/MutqYAdrwz",
