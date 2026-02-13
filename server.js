@@ -126,23 +126,39 @@
   }
 
   function prettySeason(ws) {
-    // Only show subSeason (it already includes season in the name per your setup)
     const s = ws?.season || {};
-    const sub = s?.subSeason
-      ? titleCaseWords(String(s.subSeason).toLowerCase().replaceAll("_", " "))
-      : "";
-    return sub || "—";
+    const subRaw = s?.subSeason;
+    if (!subRaw) return "—";
+
+    const sub = String(subRaw).toLowerCase();
+    const label = titleCaseWords(sub.replaceAll("_", " "));
+
+    if (sub.includes("spring")) return `🌸 ${label}`;
+    if (sub.includes("summer")) return `🌻 ${label}`;
+    if (sub.includes("autumn") || sub.includes("fall")) return `🍂 ${label}`;
+    if (sub.includes("winter")) return `❄️ ${label}`;
+
+    return `🌿 ${label}`;
   }
 
   function prettyWeather(ws) {
-    // Prefer mood.weather (already friendly), else weather flags
     const moodW = ws?.mood?.weather;
-    if (moodW) return String(moodW);
+    if (moodW) {
+      const w = String(moodW).toLowerCase();
+
+      if (w.includes("thunder")) return "⛈️ Thunder";
+      if (w.includes("rain")) return "🌧️ Rain";
+      if (w.includes("snow")) return "❄️ Snow";
+      if (w.includes("clear")) return "☀️ Clear";
+      if (w.includes("cloud")) return "🌥️ Cloudy";
+
+      return `🌤️ ${titleCaseWords(w)}`;
+    }
 
     const w = ws?.weather || {};
-    if (w?.isThundering) return "Thunder";
-    if (w?.isRaining) return "Rain";
-    return "Clear";
+    if (w?.isThundering) return "⛈️ Thunder";
+    if (w?.isRaining) return "🌧️ Rain";
+    return "☀️ Clear";
   }
 
   function prettyMoon(ws) {
@@ -420,9 +436,9 @@
     const flavor = ws?.mood?.flavor || "—";
 
     safeSetText(worldMoodClock, `🕰️ ${clock}`);
-    safeSetText(worldMoodWeather, `☁️ ${weather}`);
-    safeSetText(worldMoodSeason, `🍃 ${season}`);
-    safeSetText(worldMoodMoon, `🌙 ${moon}`);
+    safeSetText(worldMoodWeather, weather);
+    safeSetText(worldMoodSeason, season);
+    safeSetText(worldMoodMoon, moon);
     safeSetText(worldMoodFooter, flavor);
   }
 
