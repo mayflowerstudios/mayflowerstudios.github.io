@@ -575,10 +575,69 @@
   // Starter Kits
   // ----------------------------
   function parseKitItems(raw) {
-    // Accept a variety of formats, but we mostly just want {count, name}
-    // If it's already an array, keep it. If it's a string (NBT-ish), we can't reliably parse.
+    // If it's already a structured array, use it directly.
     if (Array.isArray(raw)) return raw;
+
+    // If it's the StarterKit "raw" string, parse it into display items.
+    if (typeof raw === "string" && raw.includes("id:")) {
+      return parseStarterKitRaw(raw);
+    }
+
     return [];
+  }
+
+  function parseStarterKitRaw(rawStr) {
+    const s = String(rawStr || "");
+
+    // Collect raw entries then merge duplicates
+    const found = [];
+    const add = (id, count) => {
+      if (!id) return;
+      const c = Number(count);
+      found.push({
+        id,
+        name: id, // your renderer uses name OR id
+        count: Number.isFinite(c) && c > 0 ? c : 1
+      });
+    };
+
+    /*
+      Your raw format looks like:
+
+      'feet' : '{Count:1b,id:"minecraft:leather_boots",tag:{Damage:0}}',
+      0 : '{Count:1b,id:"ae2:guide"}',
+      1 : '{Count:6b,id:"ae2:certus_quartz_crystal"}',
+
+      It's a string containing many:  KEY : '{ ... }'
+
+      We match the '{...}' blob between single quotes, then extract Count + id
+    */
+    const nbtBlobRegex = /:\s*'(\{[^']*\})'/g;
+    let m;
+    while ((m = nbtBlobRegex.exec(s)) !== null) {
+      const blob = m[1]; // "{Count:1b,id:\"...\" ...}"
+
+      // id:"mod:item" or id:\"mod:item\"
+      const idMatch = blob.match(/id\s*:\s*(?:"|\\")([^"\\]+)(?:"|\\")/);
+      if (!idMatch) continue;
+      const id = idMatch[1];
+
+      // Count:12b (optional)
+      const countMatch = blob.match(/Count\s*:\s*(\d+)\s*[bBsS]?\b/);
+      const count = countMatch ? Number(countMatch[1]) : 1;
+
+      add(id, count);
+    }
+
+    // Merge duplicates (same id appears in multiple slots)
+    const merged = new Map();
+    for (const it of found) {
+      const prev = merged.get(it.id);
+      if (prev) prev.count += it.count;
+      else merged.set(it.id, { ...it });
+    }
+
+    return Array.from(merged.values());
   }
 
   function kitCategories(kits) {
@@ -669,18 +728,28 @@
 
   function extractKitsFromWorldstate(ws) {
     // allow worldstate.extra.starterKits, worldstate.starterKits, etc.
-    const raw = ws?.extra?.starterKits ?? ws?.starterKits ?? ws?.kits ?? null;
-    if (!raw) return [];
-    if (!Array.isArray(raw)) return [];
+    const rawList = ws?.extra?.starterKits ?? ws?.starterKits ?? ws?.kits ?? null;
+    if (!Array.isArray(rawList)) return [];
 
-    // If your worldstate kits are missing "items", you can still display name/desc/category
-    return raw.map(k => ({
-      name: k?.name,
-      description: k?.description,
-      active: k?.active,
-      category: k?.category || k?.role || k?.type,
-      items: k?.items || k?.displayItems || []
-    }));
+    return rawList.map(k => {
+      const rawStr = typeof k?.raw === "string" ? k.raw : "";
+
+      // Priority:
+      // 1) items/displayItems if already structured
+      // 2) parse from raw string
+      const items =
+        (Array.isArray(k?.items) && k.items.length) ? k.items :
+        (Array.isArray(k?.displayItems) && k.displayItems.length) ? k.displayItems :
+        (rawStr ? parseKitItems(rawStr) : []);
+
+      return {
+        name: k?.name,
+        description: k?.description,
+        active: k?.active,
+        category: k?.category || k?.role || k?.type,
+        items
+      };
+    });
   }
 
   async function loadKits(config, wsMaybe) {
