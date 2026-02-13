@@ -6,7 +6,15 @@
     "title": "Server Updating",
     "message": "The server is currently being updated and will NOT work with the current modpack until further notice. Please wait for an announcement before trying to join.",
     "disableJoinButtons": true,
-    "disableWebChat": true
+    "disableWebChat": true,
+
+    "maintenanceModpack": {
+      "enabled": true,
+      "label": "🧪 Test Modpack",
+      "note": "This pack is ONLY for testing during maintenance. It may change often.",
+      "curseforgeUrl": "",
+      "directZipUrl": "/downloads/Luna's Guns and Stuff Test-1.0.0.zip"
+    }
   },
   
   "address": "play.mayflowerstudios.net",
@@ -23,7 +31,7 @@
   "bluemapWorldId": "world-mayflower",
   "modpack": {
     "curseforgeUrl": "https://www.curseforge.com/minecraft/modpacks/lunas-guns-and-stuff",
-    "directZipUrl": "",
+    "directZipUrl": "/downloads/Luna's Guns and Stuff-1.3.9.zip",
     "note": "Install via CurseForge for the easiest setup. Direct ZIP will appear here once we host one."
   },
   "links": {

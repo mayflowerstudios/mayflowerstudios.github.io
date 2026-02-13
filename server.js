@@ -1,89 +1,19 @@
-// server.js
-(async function () {
+/* server.js — Mayflower Studios Server Dashboard
+   - Loads data/server.json config
+   - Pulls worldstate + waystones + modlist + kits
+   - Supports maintenance banner + test modpack swapping
+*/
+
+(() => {
+  // ----------------------------
+  // Helpers
+  // ----------------------------
   const el = (id) => document.getElementById(id);
-  const safeSetText = (node, text) => { if (node) node.textContent = text; };
+  const qsa = (sel) => Array.from(document.querySelectorAll(sel));
 
-  const statusDot = el("statusDot");
-  const statusText = el("statusText");
-  const refreshIn = el("refreshIn");
-  const lastUpdate = el("lastUpdate");
-
-  const serverTitle = el("serverTitle");
-  const serverAddress = el("serverAddress");
-  const serverMotd = el("serverMotd");
-
-  const copyIpBtn = el("copyIpBtn");
-  const joinLink = el("joinLink");
-  const discordLink = el("discordLink");
-  const rulesLink = el("rulesLink");
-  const modpackCurseforge = el("modpackCurseforge");
-  const sparkLink = el("sparkLink");
-  const openMapBtn = el("openMapBtn");
-
-  // Maintenance banner
-  const maintenanceBanner = el("maintenanceBanner");
-
-  // Mood UI
-  const worldMoodFooter = el("worldMoodFooter");
-  const worldMoodClock = el("worldMoodClock");
-  const worldMoodWeather = el("worldMoodWeather");
-  const worldMoodSeason = el("worldMoodSeason");
-  const worldMoodMoon = el("worldMoodMoon");
-
-  // Performance UI
-  const tpsLine = el("tpsLine");
-  const msptLine = el("msptLine");
-  const memLine = el("memLine");
-
-  // AE2 UI
-  const ae2Pill = el("ae2Pill");
-  const ae2Online = el("ae2Online");
-  const ae2Offline = el("ae2Offline");
-  const ae2Conflicted = el("ae2Conflicted");
-  const ae2DimNote = el("ae2DimNote");
-
-  const bluemapFrame = el("bluemapFrame");
-  const mapFallback = el("mapFallback");
-
-  const playersOnlineCount = el("playersOnlineCount");
-  const playersMaxCount = el("playersMaxCount");
-  const playersOnlineCountMini = el("playersOnlineCountMini");
-  const playersMaxCountMini = el("playersMaxCountMini");
-  const playersGrid = el("playersGrid");
-  const playersOnlineNote = el("playersOnlineNote");
-
-  const chatList = el("chatList");
-  const chatNote = el("chatNote");
-
-  const chatName = el("chatName");
-  const chatMsg = el("chatMsg");
-  const chatSendBtn = el("chatSendBtn");
-  const chatSendStatus = el("chatSendStatus");
-
-  const waystoneSearch = el("waystoneSearch");
-  const waystoneList = el("waystoneList");
-  const waystoneMeta = el("waystoneMeta");
-  const waystoneNote = el("waystoneNote");
-
-  // Starter kits UI
-  const kitCount = el("kitCount");
-  const kitSearch = el("kitSearch");
-  const kitFilterRow = el("kitFilterRow");
-  const kitList = el("kitList");
-  const kitNote = el("kitNote");
-
-  const modSearch = el("modSearch");
-  const categoryRow = el("categoryRow");
-  const modTbody = el("modTbody");
-  const modCountEl = el("modCount");
-
-  function escapeHtml(str) {
-    return String(str ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
+  function safeSetText(node, text) {
+    if (!node) return;
+    node.textContent = (text === null || text === undefined) ? "—" : String(text);
   }
 
   function withProtocol(url) {
@@ -93,124 +23,39 @@
     return "https://" + u;
   }
 
-  function setOnlineState(state) {
-    if (!statusDot || !statusText) return;
-    statusDot.classList.remove("online", "offline");
-    if (state === "online") {
-      statusDot.classList.add("online");
-      statusText.textContent = "Online";
-    } else if (state === "stale") {
-      statusDot.classList.add("offline");
-      statusText.textContent = "Stale";
-    } else if (state === "maintenance") {
-      statusDot.classList.add("offline");
-      statusText.textContent = "Maintenance";
-    } else if (state === "loading") {
-      statusText.textContent = "Loading…";
-    } else {
-      statusDot.classList.add("offline");
-      statusText.textContent = "Offline";
+  function clamp(n, a, b) {
+    return Math.max(a, Math.min(b, n));
+  }
+
+  function formatBytes(bytes) {
+    const b = Number(bytes);
+    if (!Number.isFinite(b)) return "—";
+    const units = ["B", "KB", "MB", "GB", "TB"];
+    let v = b;
+    let i = 0;
+    while (v >= 1024 && i < units.length - 1) {
+      v /= 1024;
+      i++;
     }
+    return `${v.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
   }
 
-  function setCountsEverywhere(online, max) {
-    const o = (online == null) ? "—" : String(online);
-    const m = (max == null) ? "—" : String(max);
-    if (playersOnlineCount) playersOnlineCount.textContent = o;
-    if (playersMaxCount) playersMaxCount.textContent = m;
-    if (playersOnlineCountMini) playersOnlineCountMini.textContent = o;
-    if (playersMaxCountMini) playersMaxCountMini.textContent = m;
-  }
-
-  function avatarUrl(name) {
-    return `https://mc-heads.net/avatar/${encodeURIComponent(name)}/64`;
-  }
-
-  function prettyToken(v) {
-    if (v == null) return "";
-    const raw = String(v).trim();
-    if (!raw) return "";
-    if (/^[A-Z0-9_]+$/.test(raw)) {
-      return raw.toLowerCase().split("_").filter(Boolean).map(w => w[0].toUpperCase() + w.slice(1)).join(" ");
-    }
-    return raw.replace(/([a-z])([A-Z])/g, "$1 $2");
-  }
-
-  function extractClockFromHeadline(headline) {
-    if (!headline) return "";
-    const m = String(headline).match(/\b(\d{1,2}:\d{2}\s*(?:AM|PM))\b/i);
-    return m ? m[1] : "";
-  }
-
-  function prettyFirstSeasonToken(seasonRaw) {
-    const s = String(seasonRaw || "").trim();
-    if (!s) return "";
-    const first = s.split(/\s+/).filter(Boolean)[0] || "";
-    return prettyToken(first);
-  }
-
-  function moonEmoji(phase) {
-    const p = Number(phase);
-    if (!Number.isFinite(p)) return "🌙";
-    const e = ["🌕","🌖","🌗","🌘","🌑","🌒","🌓","🌔"];
-    return e[p & 7];
-  }
-
-  function moonLabel(phase) {
-    const p = Number(phase);
-    if (!Number.isFinite(p)) return "Moon";
-    const n = [
-      "Full Moon",
-      "Waning Gibbous",
-      "Last Quarter",
-      "Waning Crescent",
-      "New Moon",
-      "Waxing Crescent",
-      "First Quarter",
-      "Waxing Gibbous"
-    ];
-    return n[p & 7];
-  }
-
-  function fmtWeather(w) {
-    if (!w) return "—";
-    if (w.isThundering) return "⛈️ Thunder";
-    if (w.isRaining) return "🌧️ Rain";
-    return "☁️ Clear";
-  }
-
-  function nowLabel() {
-    return new Date().toLocaleTimeString();
-  }
-
-  function msAgeLabel(ms) {
-    if (!Number.isFinite(ms)) return "";
-    const s = Math.max(0, Math.floor(ms / 1000));
+  function formatTimeAgo(epochMs) {
+    const t = Number(epochMs);
+    if (!Number.isFinite(t) || t <= 0) return "—";
+    const delta = Date.now() - t;
+    const s = Math.max(0, Math.floor(delta / 1000));
     if (s < 10) return "just now";
     if (s < 60) return `${s}s ago`;
     const m = Math.floor(s / 60);
     if (m < 60) return `${m}m ago`;
     const h = Math.floor(m / 60);
-    return `${h}h ago`;
+    if (h < 24) return `${h}h ago`;
+    const d = Math.floor(h / 24);
+    return `${d}d ago`;
   }
 
-  function setChatStatus(text, kind = "neutral") {
-    if (!chatSendStatus) return;
-    chatSendStatus.textContent = text;
-    chatSendStatus.classList.remove("good", "bad", "warn");
-    if (kind === "good") chatSendStatus.classList.add("good");
-    if (kind === "bad") chatSendStatus.classList.add("bad");
-    if (kind === "warn") chatSendStatus.classList.add("warn");
-  }
-
-  function setPill(node, text, kind) {
-    if (!node) return;
-    node.textContent = text;
-    node.classList.remove("good", "bad", "warn");
-    if (kind) node.classList.add(kind);
-  }
-
-  async function fetchJson(url, timeoutMs = 5500) {
+  async function fetchJson(url, timeoutMs = 8000) {
     const controller = new AbortController();
     const t = setTimeout(() => controller.abort(), timeoutMs);
     try {
@@ -223,1095 +68,987 @@
     }
   }
 
-  async function fetchJsonPost(url, bodyObj, headers = {}, timeoutMs = 6500) {
-    const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-      const res = await fetch(url, {
-        method: "POST",
-        cache: "no-store",
-        signal: controller.signal,
-        headers: {
-          "Content-Type": "application/json",
-          ...headers
-        },
-        body: JSON.stringify(bodyObj)
-      });
-      const text = await res.text();
-      let json = null;
-      try { json = text ? JSON.parse(text) : null; } catch { }
-      if (!res.ok) {
-        const code = json?.error || `HTTP_${res.status}`;
-        const err = new Error(code);
-        err.status = res.status;
-        err.payload = json;
-        err.raw = text;
-        throw err;
-      }
-      return json;
-    } finally {
-      clearTimeout(t);
-    }
-  }
-
-  async function copyText(txt) {
-    try { await navigator.clipboard.writeText(txt); return true; } catch { return false; }
-  }
-
-  function clampChat(str, max) {
-    const s = String(str ?? "");
-    if (!s) return "";
-    const cleaned = s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim();
-    return cleaned.length > max ? cleaned.slice(0, max) : cleaned;
-  }
-
-  // ---------- Maintenance ----------
-  let maintenance = {
-    enabled: false,
-    title: "",
-    message: "",
-    disableJoinButtons: false,
-    disableWebChat: false
-  };
-
-  function disableButtonLike(node) {
+  function disableButtonLike(node, reason = "Disabled") {
     if (!node) return;
     node.style.pointerEvents = "none";
     node.style.opacity = "0.55";
-    node.style.filter = "grayscale(0.65)";
-    node.style.cursor = "not-allowed";
-    if ("disabled" in node) node.disabled = true;
+    node.style.filter = "grayscale(0.15)";
     node.setAttribute("aria-disabled", "true");
-    node.setAttribute("tabindex", "-1");
+    node.setAttribute("title", reason);
+    if (node.tagName === "BUTTON") node.disabled = true;
   }
 
-  function applyMaintenanceFromCfg(cfg) {
-    maintenance = {
-      enabled: Boolean(cfg?.maintenance?.enabled),
-      title: String(cfg?.maintenance?.title || "").trim(),
-      message: String(cfg?.maintenance?.message || "").trim(),
-      disableJoinButtons: Boolean(cfg?.maintenance?.disableJoinButtons),
-      disableWebChat: Boolean(cfg?.maintenance?.disableWebChat)
-    };
+  function enableButtonLike(node) {
+    if (!node) return;
+    node.style.pointerEvents = "";
+    node.style.opacity = "";
+    node.style.filter = "";
+    node.removeAttribute("aria-disabled");
+    node.removeAttribute("title");
+    if (node.tagName === "BUTTON") node.disabled = false;
+  }
 
-    // Banner
+  function escapeHtml(s) {
+    return String(s ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function normalizeCategory(s) {
+    const v = String(s || "").trim();
+    return v ? v : "Other";
+  }
+
+  // ----------------------------
+  // Elements (server.html IDs)
+  // ----------------------------
+  const maintenanceBanner = el("maintenanceBanner");
+  const serverTitle = el("serverTitle");
+  const serverMotd = el("serverMotd");
+
+  const serverAddress = el("serverAddress");
+  const copyIpBtn = el("copyIpBtn");
+
+  const joinLink = el("joinLink");
+  const rulesLink = el("rulesLink");
+  const discordLink = el("discordLink");
+  const openMapBtn = el("openMapBtn");
+  const sparkLink = el("sparkLink");
+
+  const modpackCurseforge = el("modpackCurseforge");
+  const modpackDirectZip = el("modpackDirectZip"); // <-- keep your edited anchor intact
+  const modpackLabel = el("modpackLabel");
+  const modpackNote = el("modpackNote");
+
+  const statusDot = el("statusDot");
+  const statusText = el("statusText");
+  const lastUpdate = el("lastUpdate");
+  const refreshIn = el("refreshIn");
+  const playersOnlineCountMini = el("playersOnlineCountMini");
+  const playersMaxCountMini = el("playersMaxCountMini");
+
+  const worldMoodClock = el("worldMoodClock");
+  const worldMoodWeather = el("worldMoodWeather");
+  const worldMoodSeason = el("worldMoodSeason");
+  const worldMoodMoon = el("worldMoodMoon");
+  const worldMoodFooter = el("worldMoodFooter");
+
+  const tpsLine = el("tpsLine");
+  const msptLine = el("msptLine");
+  const memLine = el("memLine");
+
+  const ae2Pill = el("ae2Pill");
+  const ae2Online = el("ae2Online");
+  const ae2Offline = el("ae2Offline");
+  const ae2Conflicted = el("ae2Conflicted");
+  const ae2DimNote = el("ae2DimNote");
+
+  const bluemapFrame = el("bluemapFrame");
+  const mapFallback = el("mapFallback");
+
+  const chatList = el("chatList");
+  const chatNote = el("chatNote");
+  const chatName = el("chatName");
+  const chatMsg = el("chatMsg");
+  const chatSendBtn = el("chatSendBtn");
+  const chatSendStatus = el("chatSendStatus");
+
+  const playersOnlineCount = el("playersOnlineCount");
+  const playersMaxCount = el("playersMaxCount");
+  const playersGrid = el("playersGrid");
+  const playersOnlineNote = el("playersOnlineNote");
+
+  const waystoneSearch = el("waystoneSearch");
+  const waystoneMeta = el("waystoneMeta");
+  const waystoneList = el("waystoneList");
+  const waystoneNote = el("waystoneNote");
+
+  const kitCount = el("kitCount");
+  const kitSearch = el("kitSearch");
+  const kitFilterRow = el("kitFilterRow");
+  const kitList = el("kitList");
+  const kitNote = el("kitNote");
+
+  const modCount = el("modCount");
+  const modSearch = el("modSearch");
+  const categoryRow = el("categoryRow");
+  const modTbody = el("modTbody");
+
+  // ----------------------------
+  // State
+  // ----------------------------
+  let cfg = null;
+
+  let refreshSeconds = 10;
+  let chatFastSeconds = 2;
+
+  let refreshTicker = null;
+  let chatTicker = null;
+  let countdownTicker = null;
+
+  let countdown = 0;
+
+  let latestWorldState = null;
+  let latestWaystones = [];
+  let latestMods = [];
+  let latestKits = [];
+
+  let kitCategory = "All";
+  let modCategory = "All";
+
+  let lastChatHash = "";
+  let chatEnabled = true;
+
+  // ----------------------------
+  // Maintenance + Modpack swapping
+  // ----------------------------
+  function applyMaintenanceFromCfg(config) {
+    const maint = config?.maintenance || {};
+    const enabled = Boolean(maint?.enabled);
+
     if (maintenanceBanner) {
-      if (!maintenance.enabled) {
-        maintenanceBanner.style.display = "none";
+      if (enabled) {
+        maintenanceBanner.style.display = "";
+        const title = maint?.title || "Server Maintenance";
+        const msg = maint?.message || "Updates in progress.";
+
+        // Banner markup is fixed in HTML; just update text safely
+        const titleEl = maintenanceBanner.querySelector(".maintenanceText");
+        const subEl = maintenanceBanner.querySelector(".maintenanceSub");
+        if (titleEl) titleEl.textContent = title;
+        if (subEl) subEl.textContent = msg;
       } else {
-        maintenanceBanner.style.display = "flex";
-
-        const titleNode = maintenanceBanner.querySelector(".maintenanceText");
-        const msgNode = maintenanceBanner.querySelector(".maintenanceSub");
-
-        if (titleNode) titleNode.textContent = maintenance.title || "Server Maintenance";
-        if (msgNode) msgNode.textContent = maintenance.message || "Server is being updated. Please check back later.";
+        maintenanceBanner.style.display = "none";
       }
     }
 
-    if (maintenance.enabled) {
-      setOnlineState("maintenance");
-      safeSetText(serverMotd, maintenance.message || "Server is currently being updated.");
+    // If they want to disable join buttons during maintenance, do it,
+    // BUT we will NOT disable modpack buttons anymore (per your request).
+    if (enabled && maint?.disableJoinButtons) {
+      disableButtonLike(joinLink, "Disabled during maintenance");
+      disableButtonLike(copyIpBtn, "Disabled during maintenance");
+    } else {
+      enableButtonLike(joinLink);
+      enableButtonLike(copyIpBtn);
+    }
 
-      if (maintenance.disableJoinButtons) {
-        disableButtonLike(joinLink);
-        disableButtonLike(modpackCurseforge);
-        disableButtonLike(copyIpBtn);
+    // Chat disable
+    chatEnabled = !(enabled && maint?.disableWebChat);
+    if (!chatEnabled) {
+      disableButtonLike(chatSendBtn, "Chat disabled during maintenance");
+      safeSetText(chatSendStatus, "Chat disabled");
+      if (chatNote) chatNote.textContent = "Chat is disabled during maintenance.";
+    } else {
+      enableButtonLike(chatSendBtn);
+      if (chatNote) chatNote.textContent = "Read-only feed from your WorldState mod.";
+    }
+  }
+
+  function setModpackLinks(config) {
+    const maint = config?.maintenance || {};
+    const testPack = maint?.maintenanceModpack;
+
+    const usingTestPack =
+      Boolean(maint?.enabled) &&
+      Boolean(testPack?.enabled) &&
+      (testPack?.curseforgeUrl || testPack?.directZipUrl);
+
+    const chosen = usingTestPack ? testPack : (config?.modpack || {});
+    const label = usingTestPack ? (testPack?.label || "🧪 Test Modpack") : "📦 Main Modpack";
+    const note = String(chosen?.note || config?.modpack?.note || "").trim();
+
+    const cf = String(chosen?.curseforgeUrl || "").trim();
+    const zip = withProtocol(chosen?.directZipUrl || "");
+
+    safeSetText(modpackLabel, label);
+    safeSetText(modpackNote, note || "—");
+
+    if (modpackCurseforge) {
+      if (cf) {
+        modpackCurseforge.href = cf;
+        modpackCurseforge.style.display = "";
+      } else {
+        modpackCurseforge.style.display = "none";
       }
+    }
 
-      // Optional: also disable map button if you want it tied to join disable
-      // if (maintenance.disableJoinButtons) disableButtonLike(openMapBtn);
-
-      if (maintenance.disableWebChat) {
-        disableButtonLike(chatSendBtn);
-        if (chatNote) chatNote.textContent = "Web chat is disabled during maintenance.";
-        setChatStatus("Disabled (maintenance)", "warn");
+    if (modpackDirectZip) {
+      if (zip) {
+        modpackDirectZip.href = zip;
+        modpackDirectZip.style.display = "";
+      } else {
+        modpackDirectZip.style.display = "none";
       }
     }
   }
 
-  // ---------- Players ----------
-  let lastPlayersKey = "";
+  // ----------------------------
+  // Top links + IP
+  // ----------------------------
+  function applyStaticLinks(config) {
+    const address = String(config?.address || "").trim();
+    safeSetText(serverAddress, address || "—");
 
-  function playersKey(list) {
-    if (!Array.isArray(list)) return "";
-    return list.map(p => `${p?.name ?? ""}|${p?.dimension ?? ""}|${p?.activity ?? ""}`).join(";");
-  }
-
-  function renderPlayers(publicPlayers, noteText = "") {
-    if (!playersGrid) return;
-
-    const list = Array.isArray(publicPlayers) ? publicPlayers : [];
-    const key = playersKey(list);
-
-    if (key === lastPlayersKey) {
-      if (playersOnlineNote) playersOnlineNote.textContent = noteText;
-      return;
-    }
-    lastPlayersKey = key;
-
-    playersGrid.innerHTML = "";
-
-    if (!list.length) {
-      if (playersOnlineNote) playersOnlineNote.textContent = noteText || "Nobody online right now.";
-      return;
+    if (copyIpBtn && address) {
+      copyIpBtn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(address);
+          const old = copyIpBtn.textContent;
+          copyIpBtn.textContent = "✅ Copied";
+          setTimeout(() => (copyIpBtn.textContent = old), 1100);
+        } catch {
+          alert("Couldn’t copy automatically.\nCopy this:\n" + address);
+        }
+      }, { once: true });
     }
 
-    const frag = document.createDocumentFragment();
+    if (serverTitle) safeSetText(serverTitle, `🛰️ ${config?.serverName || "Server Dashboard"}`);
 
-    for (const p of list.slice(0, 24)) {
-      const name = p?.name || "Player";
-      const activity = p?.activity ? String(p.activity) : "Exploring…";
-      const dim = p?.dimension ? String(p.dimension).replace("minecraft:", "").replaceAll("_", " ") : "";
-      const sub = [activity, dim].filter(Boolean).join(" • ");
+    if (joinLink) joinLink.href = String(config?.howToJoinUrl || "server-info.html");
+    if (rulesLink) rulesLink.href = String(config?.links?.rulesUrl || "rules.html");
 
-      const card = document.createElement("div");
-      card.className = "pCard";
-
-      const av = document.createElement("div");
-      av.className = "avatar";
-      const img = document.createElement("img");
-      img.alt = name;
-      img.loading = "lazy";
-      img.referrerPolicy = "no-referrer";
-      img.src = avatarUrl(name);
-      av.appendChild(img);
-
-      const meta = document.createElement("div");
-      meta.className = "pMeta";
-      meta.innerHTML = `<div class="pName">${escapeHtml(name)}</div><div class="pSub">${escapeHtml(sub)}</div>`;
-
-      card.appendChild(av);
-      card.appendChild(meta);
-      frag.appendChild(card);
+    if (discordLink) {
+      const d = String(config?.discordUrl || "").trim();
+      if (d) discordLink.href = d;
+    }
+    if (sparkLink) {
+      const s = String(config?.links?.sparkUrl || "").trim();
+      if (s) sparkLink.href = s;
+      else sparkLink.style.display = "none";
     }
 
-    if (list.length > 24) {
-      const more = document.createElement("div");
-      more.className = "pCard";
-      more.innerHTML = `<div class="pMeta"><div class="pName">+${list.length - 24} more</div><div class="pSub">Online</div></div>`;
-      frag.appendChild(more);
+    // Map open button + iframe
+    const mapEmbed = String(config?.mapEmbedUrl || "").trim();
+    if (openMapBtn) {
+      if (mapEmbed) openMapBtn.href = mapEmbed;
+      else openMapBtn.style.display = "none";
     }
 
-    playersGrid.appendChild(frag);
-    if (playersOnlineNote) playersOnlineNote.textContent = noteText;
-  }
-
-  // ---------- Chat ----------
-  let lastChatKey = "";
-
-  function chatKey(lines) {
-    if (!Array.isArray(lines)) return "";
-    const tail = lines.slice(-20);
-    return tail.map(l => `${l?.t ?? l?.ts ?? l?.time ?? ""}|${l?.type ?? ""}|${l?.player ?? l?.name ?? l?.user ?? ""}|${l?.msg ?? l?.message ?? ""}`).join(";");
-  }
-
-  function isNearBottom(node) {
-    if (!node) return true;
-    const threshold = 40;
-    return node.scrollHeight - node.scrollTop - node.clientHeight < threshold;
-  }
-
-  function typeBadge(type) {
-    const t = String(type || "chat").toLowerCase();
-    if (t === "chat") return "";
-    if (t === "advancement") return "🏆 ";
-    if (t === "join") return "🟢 ";
-    if (t === "leave") return "🔴 ";
-    if (t === "death") return "💀 ";
-    if (t === "server") return "🛰️ ";
-    if (t === "info") return "ℹ️ ";
-    if (t === "boss") return "👑 ";
-    return "• ";
-  }
-
-  function defaultNameForType(type) {
-    const t = String(type || "chat").toLowerCase();
-    if (t === "server") return "Server";
-    return "Unknown";
-  }
-
-  function renderChat(lines) {
-    if (!chatList) return;
-
-    const arr = Array.isArray(lines) ? lines : [];
-    const key = chatKey(arr);
-
-    if (key === lastChatKey) return;
-    lastChatKey = key;
-
-    const stickToBottom = isNearBottom(chatList);
-
-    chatList.innerHTML = "";
-
-    if (!arr.length) {
-      const empty = document.createElement("div");
-      empty.className = "chatLine";
-      empty.innerHTML = `<div class="chatTop"><span>No messages yet</span><span>—</span></div>
-                         <div class="chatMsg">It’s quiet… the kind of quiet before someone falls into a ravine.</div>`;
-      chatList.appendChild(empty);
-      return;
+    // BlueMap iframe
+    if (bluemapFrame) {
+      if (mapEmbed) {
+        bluemapFrame.src = mapEmbed;
+        bluemapFrame.addEventListener("error", () => {
+          if (mapFallback) mapFallback.style.display = "";
+        });
+      } else {
+        if (mapFallback) mapFallback.style.display = "";
+      }
     }
 
-    const frag = document.createDocumentFragment();
+    refreshSeconds = clamp(Number(config?.refreshSeconds || 10), 3, 120);
+    chatFastSeconds = clamp(Number(config?.chatFastSeconds || 2), 1, 60);
+  }
 
-    for (const l of arr.slice(-60)) {
-      const type = l?.type ?? "chat";
-      const name =
-        l?.player ??
-        l?.name ??
-        l?.user ??
-        defaultNameForType(type);
-
-      const msg = l?.msg ?? l?.message ?? "";
-      const ts = (l?.t != null) ? Number(l.t)
-        : ((l?.ts != null) ? Number(l.ts)
-          : (l?.time ?? l?.timestamp ?? null));
-
-      const ms = Number.isFinite(ts) ? (ts < 2e10 ? ts * 1000 : ts) : null;
-      const timeLabel = ms ? new Date(ms).toLocaleTimeString() : "";
-      const badge = typeBadge(type);
-
-      const div = document.createElement("div");
-      div.className = "chatLine";
-      div.innerHTML = `
-        <div class="chatTop">
-          <span>${escapeHtml(badge + name)}</span>
-          <span>${escapeHtml(timeLabel)}</span>
-        </div>
-        <div class="chatMsg">${escapeHtml(msg)}</div>
-      `;
-      frag.appendChild(div);
+  // ----------------------------
+  // Worldstate rendering
+  // ----------------------------
+  function setStatus(online, text) {
+    if (statusDot) {
+      statusDot.classList.remove("online", "offline");
+      statusDot.classList.add(online ? "online" : "offline");
     }
-
-    chatList.appendChild(frag);
-    if (stickToBottom) chatList.scrollTop = chatList.scrollHeight;
+    safeSetText(statusText, text || (online ? "Online" : "Offline"));
   }
 
-  // ---------- Waystones ----------
-  let waystones = [];
-  let lastWayKey = "";
+  function renderWorldMood(ws) {
+    // best-effort support for a "mood" object like:
+    // mood: { headline, flavor, timeOfDay, weather, season, moonPhase }
+    const mood = ws?.mood || ws?.world?.mood || null;
 
-  function fmtXYZ(w) {
-    const x = w?.x, y = w?.y, z = w?.z;
-    if ([x, y, z].every(v => Number.isFinite(Number(v)))) return `${Number(x)}, ${Number(y)}, ${Number(z)}`;
-    return "—";
+    // Clock: prefer ws.time / ws.worldTime formatted; fallback to mood.headline split
+    const clock = mood?.clock || ws?.clock || ws?.world?.clock || ws?.timeText || mood?.timeOfDay || "—";
+    const weather = mood?.weather || ws?.weather || ws?.world?.weather || "—";
+    const season = mood?.season || ws?.season || ws?.world?.season || "—";
+    const moon = (Number.isFinite(Number(mood?.moonPhase)) ? `Moon ${mood.moonPhase}` : (mood?.moon || ws?.moon || "—"));
+    const flavor = mood?.flavor || ws?.flavor || ws?.world?.flavor || "—";
+
+    safeSetText(worldMoodClock, `🕰️ ${clock}`);
+    safeSetText(worldMoodWeather, `☁️ ${weather}`);
+    safeSetText(worldMoodSeason, `🍃 ${season}`);
+    safeSetText(worldMoodMoon, `🌙 ${moon}`);
+    safeSetText(worldMoodFooter, flavor);
   }
 
-  function getWayName(w) {
-    return (w?.name ?? w?.label ?? w?.title ?? "").trim() || "Unnamed Waystone";
-  }
+  function renderPerformance(ws) {
+    // Try common fields:
+    const perf = ws?.performance || ws?.server?.performance || ws?.server || ws || {};
+    const tps = perf?.tps ?? perf?.TPS ?? ws?.tps;
+    const mspt = perf?.mspt ?? perf?.MSPT ?? ws?.mspt;
+    const memUsed = perf?.memUsed ?? perf?.memoryUsed ?? perf?.memory?.used ?? ws?.memoryUsed;
+    const memMax = perf?.memMax ?? perf?.memoryMax ?? perf?.memory?.max ?? ws?.memoryMax;
 
-  function matchesWaystone(w, q) {
-    if (!q) return true;
-    const blob = `${getWayName(w)} ${w?.dimension ?? ""} ${fmtXYZ(w)} ${w?.isGlobal ? "global" : ""}`.toLowerCase();
-    return blob.includes(q);
-  }
+    safeSetText(tpsLine, Number.isFinite(Number(tps)) ? Number(tps).toFixed(1) : (tps ?? "—"));
+    safeSetText(msptLine, Number.isFinite(Number(mspt)) ? Number(mspt).toFixed(1) : (mspt ?? "—"));
 
-  function wayKey(list) {
-    if (!Array.isArray(list)) return "";
-    return list.slice(0, 120).map(w => `${getWayName(w)}|${w?.dimension ?? ""}|${w?.x ?? ""},${w?.y ?? ""},${w?.z ?? ""}|${w?.isGlobal ? 1 : 0}`).join(";");
-  }
-
-  function renderWaystones(force = false) {
-    if (!waystoneList) return;
-
-    const q = (waystoneSearch?.value || "").trim().toLowerCase();
-    const filtered = waystones.filter(w => matchesWaystone(w, q));
-
-    const k = `${q}::${wayKey(filtered)}`;
-    if (!force && k === lastWayKey) return;
-    lastWayKey = k;
-
-    waystoneList.innerHTML = "";
-    if (waystoneMeta) {
-      waystoneMeta.textContent = q ? `Showing ${filtered.length} of ${waystones.length}` : `${waystones.length} total`;
+    if (Number.isFinite(Number(memUsed)) && Number.isFinite(Number(memMax))) {
+      memLine.textContent = `${formatBytes(memUsed)} / ${formatBytes(memMax)}`;
+    } else if (memLine) {
+      memLine.textContent = "—";
     }
-
-    if (!filtered.length) {
-      waystoneList.innerHTML =
-        `<div class="wayItem"><div class="wayName">No waystones found.</div><div class="waySub">Try a different search.</div></div>`;
-      return;
-    }
-
-    const frag = document.createDocumentFragment();
-
-    for (const w of filtered.slice(0, 80)) {
-      const name = getWayName(w);
-      const dim = String(w?.dimension || "—").replace("minecraft:", "").replaceAll("_", " ");
-      const xyz = fmtXYZ(w);
-      const global = w?.isGlobal ? " • Global" : "";
-
-      const card = document.createElement("div");
-      card.className = "wayItem";
-      card.innerHTML = `
-        <div>
-          <div class="wayName">${escapeHtml(name)}</div>
-          <div class="waySub">📍 ${escapeHtml(dim)} • ${escapeHtml(xyz)}${escapeHtml(global)}</div>
-        </div>
-        <div class="wayBtns">
-          <button class="btnMini wayCopyName" type="button">📌 Copy name</button>
-          <button class="btnMini wayCopyCoords" type="button">🧭 Copy coords</button>
-        </div>
-      `;
-
-      const btnName = card.querySelector(".wayCopyName");
-      const btnCoords = card.querySelector(".wayCopyCoords");
-
-      btnName?.addEventListener("click", async () => {
-        const ok = await copyText(name);
-        btnName.textContent = ok ? "✅ Copied!" : "Copy failed";
-        setTimeout(() => (btnName.textContent = "📌 Copy name"), 900);
-      });
-
-      btnCoords?.addEventListener("click", async () => {
-        const ok = await copyText(xyz);
-        btnCoords.textContent = ok ? "✅ Copied!" : "Copy failed";
-        setTimeout(() => (btnCoords.textContent = "🧭 Copy coords"), 900);
-      });
-
-      frag.appendChild(card);
-    }
-
-    if (filtered.length > 80) {
-      const more = document.createElement("div");
-      more.className = "wayItem";
-      more.innerHTML = `<div class="wayName">+${filtered.length - 80} more</div><div class="waySub">Refine your search to narrow it down.</div>`;
-      frag.appendChild(more);
-    }
-
-    waystoneList.appendChild(frag);
   }
 
-  if (waystoneSearch) waystoneSearch.addEventListener("input", () => renderWaystones(true));
+  function renderAE2(ws) {
+    // Expecting something like:
+    // ae2: { total: { online, offline, conflicted, unknown }, byDimension:[...] }
+    const ae2 = ws?.ae2 || ws?.extra?.ae2 || null;
 
-  // ---------- AE2 ----------
-  function dimPretty(id){
-    return String(id || "")
-      .replace("minecraft:", "")
-      .replaceAll("_", " ")
-      .replace(/\bthe\s+nether\b/i, "Nether")
-      .replace(/\bthe\s+end\b/i, "The End")
-      .replace(/\boverworld\b/i, "Overworld");
-  }
-
-  function renderAE2(ws){
-    const ae2 = ws?.ae2 || null;
-
-    if (!ae2?.ae2Loaded) {
+    if (!ae2) {
+      if (ae2Pill) ae2Pill.textContent = "🧠 AE2: —";
       safeSetText(ae2Online, "—");
       safeSetText(ae2Offline, "—");
       safeSetText(ae2Conflicted, "—");
-      setPill(ae2Pill, "🧠 AE2: Not available", "bad");
       safeSetText(ae2DimNote, "—");
       return;
     }
 
     const total = ae2.total || {};
-    safeSetText(ae2Online, Number(total.online ?? 0));
-    safeSetText(ae2Offline, Number(total.offline ?? 0));
-    safeSetText(ae2Conflicted, Number(total.conflicted ?? 0));
+    const online = total.online ?? "—";
+    const offline = total.offline ?? "—";
+    const conflicted = total.conflicted ?? "—";
+    const unknown = total.unknown ?? 0;
 
-    const has = Boolean(ae2.hasConflicts);
-    setPill(
-      ae2Pill,
-      has ? "⚠️ AE2: Conflicts detected" : "✅ AE2: Healthy",
-      has ? "warn" : "good"
-    );
+    safeSetText(ae2Online, online);
+    safeSetText(ae2Offline, offline);
+    safeSetText(ae2Conflicted, conflicted);
 
-    const rows = Array.isArray(ae2.byDimension) ? ae2.byDimension : [];
-    if (!rows.length) {
-      safeSetText(ae2DimNote, "No controllers tracked yet (load chunks with controllers).");
-      return;
-    }
+    const ok = (Number(online) > 0) && (Number(unknown) === 0) && (Number(conflicted) === 0);
+    if (ae2Pill) ae2Pill.textContent = `🧠 AE2: ${ok ? "Online" : "Check"}`;
 
-    const parts = rows.map(r => {
-      const d = dimPretty(r?.dimension);
-      const c = r?.controllers || {};
-      const conflict = Boolean(r?.hasConflicts) || (Number(c.conflicted || 0) > 0);
-      const online = Number(c.online || 0);
-      const off = Number(c.offline || 0);
-      const conf = Number(c.conflicted || 0);
-      return `${conflict ? "⚠️" : "•"} ${d}: ${online} on, ${off} off, ${conf} conflict`;
-    });
-
-    safeSetText(ae2DimNote, parts.join("  |  "));
-  }
-
-  // ---------- Starter Kits ----------
-  let starterKits = [];
-  let kitCategory = "All";
-  const KIT_CATS = ["All", "Active", "Inactive"];
-
-  function kitNamePretty(n){
-    const s = String(n || "").trim();
-    if (!s) return "Kit";
-    return s.replaceAll("_"," ").replace(/\s+/g," ").trim();
-  }
-
-  function kitMatches(k, q){
-    if (!q) return true;
-    const blob = `${k?.name||""} ${k?.description||""}`.toLowerCase();
-    return blob.includes(q);
-  }
-
-  function renderKitFilters(){
-    if (!kitFilterRow) return;
-    kitFilterRow.innerHTML = "";
-    const frag = document.createDocumentFragment();
-
-    for (const cat of KIT_CATS){
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "catChip" + (cat === kitCategory ? " active" : "");
-      btn.textContent = cat;
-      btn.addEventListener("click", () => {
-        kitCategory = cat;
-        renderKitFilters();
-        renderKits(true);
+    // Small note by dimension (best effort)
+    const dims = Array.isArray(ae2.byDimension) ? ae2.byDimension : [];
+    if (dims.length) {
+      const parts = dims.slice(0, 3).map(d => {
+        const dim = d.dimension || "unknown";
+        const c = d.controllers || {};
+        return `${dim} (${c.online ?? 0} online, ${c.unknown ?? 0} unknown)`;
       });
-      frag.appendChild(btn);
+      safeSetText(ae2DimNote, parts.join(" • "));
+    } else {
+      safeSetText(ae2DimNote, "—");
     }
-
-    kitFilterRow.appendChild(frag);
   }
 
-  function prettyItemNameFromId(id){
-    const raw = String(id || "").trim();
-    if (!raw) return "Item";
-    const parts = raw.split(":");
-    const name = (parts[1] || parts[0] || raw).replaceAll("_", " ");
-    return name.split(" ").filter(Boolean).map(w => w[0].toUpperCase() + w.slice(1)).join(" ");
-  }
+  function renderPlayers(ws) {
+    // Support fields:
+    // players: { online, max, list:[{name,uuid}] } OR ws.playersOnline etc.
+    const p = ws?.players || ws?.server?.players || ws || {};
+    const online = Number(p?.online ?? ws?.playersOnline ?? ws?.onlinePlayers ?? 0);
+    const max = Number(p?.max ?? ws?.playersMax ?? ws?.maxPlayers ?? 0);
+    const list = Array.isArray(p?.list) ? p.list
+      : Array.isArray(ws?.playerList) ? ws.playerList
+      : Array.isArray(ws?.players) ? ws.players
+      : [];
 
-  function parseItemNbtString(nbtStr){
-    const s = String(nbtStr || "").trim();
-    if (!s) return null;
+    safeSetText(playersOnlineCountMini, Number.isFinite(online) ? online : "—");
+    safeSetText(playersMaxCountMini, Number.isFinite(max) && max > 0 ? max : "—");
 
-    const idMatch = s.match(/id:\s*"(.*?)"/);
-    const id = idMatch ? idMatch[1] : "";
+    safeSetText(playersOnlineCount, Number.isFinite(online) ? online : "—");
+    safeSetText(playersMaxCount, Number.isFinite(max) && max > 0 ? max : "—");
 
-    const cMatch = s.match(/Count:\s*([0-9]+)/);
-    const count = cMatch ? Number(cMatch[1]) : 1;
+    if (!playersGrid) return;
 
-    if (!id) return null;
-    return { id, count };
-  }
+    playersGrid.innerHTML = "";
+    const shown = list.slice(0, 50);
 
-  function parseKitRawToItems(raw){
-    const text = String(raw || "");
-    if (!text) return [];
-
-    const items = [];
-    const lines = text.split("\n");
-
-    for (const line of lines){
-      const l = line.trim();
-      if (!l) continue;
-
-      const m = l.match(/^'?([a-zA-Z0-9_]+)'?\s*:\s*'(.*)'\s*,?\s*$/);
-      if (!m) continue;
-
-      const key = m[1];
-      const val = m[2];
-
-      if (!val || val === "''" || val === "" || val === " ") continue;
-
-      const isArmorOrHand = ["head","chest","legs","feet","offhand"].includes(key);
-      const slotNum = Number(key);
-      const isSlot = Number.isFinite(slotNum) && slotNum >= 0 && slotNum <= 35;
-
-      if (!isArmorOrHand && !isSlot) continue;
-
-      const parsed = parseItemNbtString(val);
-      if (!parsed) continue;
-
-      items.push({ id: parsed.id, count: parsed.count });
-    }
-
-    const map = new Map();
-    for (const it of items){
-      const k = it.id;
-      map.set(k, (map.get(k) || 0) + (Number(it.count) || 1));
-    }
-
-    return Array.from(map.entries())
-      .map(([id, count]) => ({ id, count }))
-      .sort((a, b) => prettyItemNameFromId(a.id).localeCompare(prettyItemNameFromId(b.id)));
-  }
-
-  function renderKits(force=false){
-    if (!kitList) return;
-
-    const q = (kitSearch?.value || "").trim().toLowerCase();
-    let filtered = starterKits.slice();
-
-    if (kitCategory === "Active") filtered = filtered.filter(k => k?.active);
-    if (kitCategory === "Inactive") filtered = filtered.filter(k => !k?.active);
-
-    filtered = filtered.filter(k => kitMatches(k, q));
-
-    kitList.classList.add("kitGrid");
-    kitList.innerHTML = "";
-
-    if (kitCount) {
-      kitCount.textContent = (q || kitCategory !== "All")
-        ? `${filtered.length} of ${starterKits.length}`
-        : `${starterKits.length} kits`;
-    }
-
-    if (!filtered.length){
-      kitList.innerHTML = `<div class="kitCard">
-        <div class="kitName">No kits found.</div>
-        <div class="kitDesc">Try a different search or filter.</div>
-      </div>`;
-      if (kitNote) kitNote.textContent = "";
+    if (!shown.length) {
+      if (playersOnlineNote) playersOnlineNote.textContent = "No players online right now.";
       return;
     }
+    if (playersOnlineNote) playersOnlineNote.textContent = "Online right now:";
 
-    const frag = document.createDocumentFragment();
-
-    for (const k of filtered.slice(0, 60)){
-      const name = kitNamePretty(k?.name);
-      const desc = String(k?.description || "").trim();
-      const active = Boolean(k?.active);
+    for (const pl of shown) {
+      const name = pl?.name || pl?.username || "Player";
+      const uuid = pl?.uuid || pl?.id || "";
 
       const card = document.createElement("div");
-      card.className = "kitCard";
+      card.className = "pCard";
 
-      const head = document.createElement("div");
-      head.className = "kitHead";
-      head.innerHTML = `
-        <div>
-          <div class="kitName">${escapeHtml(name)}</div>
-          ${desc ? `<div class="kitDesc">${escapeHtml(desc)}</div>` : ``}
-        </div>
-        <div>
-          <span class="kitBadge ${active ? "" : "off"}">${active ? "✅ Active" : "⛔ Inactive"}</span>
+      const avatar = document.createElement("div");
+      avatar.className = "avatar";
+      const img = document.createElement("img");
+      // Use Crafatar for avatars if uuid present; fallback to a blank block
+      if (uuid) img.src = `https://crafatar.com/avatars/${encodeURIComponent(uuid)}?size=64&overlay`;
+      img.alt = name;
+      avatar.appendChild(img);
+
+      const meta = document.createElement("div");
+      meta.className = "pMeta";
+      meta.innerHTML = `
+        <div class="pName">${escapeHtml(name)}</div>
+        <div class="pSub">${uuid ? escapeHtml(uuid.slice(0, 8)) : "—"}</div>
+      `;
+
+      card.appendChild(avatar);
+      card.appendChild(meta);
+      playersGrid.appendChild(card);
+    }
+  }
+
+  // ----------------------------
+  // Waystones
+  // ----------------------------
+  function renderWaystones(items) {
+    const list = Array.isArray(items) ? items : [];
+    latestWaystones = list;
+
+    if (waystoneMeta) safeSetText(waystoneMeta, `${list.length} total`);
+    if (!waystoneList) return;
+
+    const query = String(waystoneSearch?.value || "").trim().toLowerCase();
+    const filtered = query
+      ? list.filter(w => String(w?.name || "").toLowerCase().includes(query) || String(w?.dimension || "").toLowerCase().includes(query))
+      : list;
+
+    waystoneList.innerHTML = "";
+
+    if (!filtered.length) {
+      if (waystoneNote) waystoneNote.textContent = query ? "No waystones match your search." : "No waystones found.";
+      return;
+    }
+    if (waystoneNote) waystoneNote.textContent = "";
+
+    for (const w of filtered.slice(0, 200)) {
+      const name = w?.name || "Waystone";
+      const dim = w?.dimension || "unknown";
+      const x = w?.x ?? w?.pos?.x;
+      const y = w?.y ?? w?.pos?.y;
+      const z = w?.z ?? w?.pos?.z;
+
+      const coords = (Number.isFinite(Number(x)) && Number.isFinite(Number(y)) && Number.isFinite(Number(z)))
+        ? `${x} ${y} ${z}`
+        : "";
+
+      const card = document.createElement("div");
+      card.className = "wayItem";
+
+      const sub = coords ? `${dim} • ${coords}` : `${dim}`;
+      card.innerHTML = `
+        <div class="wayName">${escapeHtml(name)}</div>
+        <div class="waySub">${escapeHtml(sub)}</div>
+        <div class="wayBtns">
+          ${coords ? `<button class="btnMini" type="button" data-copy="${escapeHtml(coords)}">📋 Copy Coords</button>` : ``}
         </div>
       `;
 
-      const itemsWrap = document.createElement("div");
-      itemsWrap.className = "kitItems";
-
-      const items = parseKitRawToItems(k?.raw);
-
-      card.appendChild(head);
-
-      if (!items.length){
-        const empty = document.createElement("div");
-        empty.className = "kitItemsEmpty";
-        empty.textContent = "No items found in this kit.";
-        card.appendChild(empty);
-        frag.appendChild(card);
-        continue;
+      const copyBtn = card.querySelector("button[data-copy]");
+      if (copyBtn) {
+        copyBtn.addEventListener("click", async () => {
+          const val = copyBtn.getAttribute("data-copy") || "";
+          try {
+            await navigator.clipboard.writeText(val);
+            const old = copyBtn.textContent;
+            copyBtn.textContent = "✅ Copied";
+            setTimeout(() => (copyBtn.textContent = old), 900);
+          } catch {
+            alert("Copy failed. Coords:\n" + val);
+          }
+        });
       }
 
-      for (const it of items){
-        const chip = document.createElement("div");
-        chip.className = "itemChip";
-        chip.innerHTML = `
-          <span class="count">x${escapeHtml(String(it.count))}</span>
-          <span class="iname">${escapeHtml(prettyItemNameFromId(it.id))}</span>
-        `;
-        itemsWrap.appendChild(chip);
-      }
-
-      card.appendChild(itemsWrap);
-      frag.appendChild(card);
+      waystoneList.appendChild(card);
     }
-
-    if (filtered.length > 60){
-      const more = document.createElement("div");
-      more.className = "kitCard";
-      more.innerHTML = `<div class="kitName">+${filtered.length - 60} more</div>
-                        <div class="kitDesc">Refine your search to narrow it down.</div>`;
-      frag.appendChild(more);
-    }
-
-    kitList.appendChild(frag);
-
-    if (kitNote) kitNote.textContent =
-      "Kits are loaded from the server via WorldState (StarterKit config).";
   }
 
-  if (kitSearch) kitSearch.addEventListener("input", () => renderKits(true));
-  renderKitFilters();
-
-  // ---------- Load config ----------
-  let cfg;
-  try {
-    cfg = await fetchJson("data/server.json", 6000);
-  } catch (e) {
-    console.error("Could not load data/server.json", e);
-    safeSetText(statusText, "Config missing");
-    setOnlineState("offline");
-    return;
-  }
-
-  // Apply maintenance ASAP (so banner/buttons update immediately)
-  applyMaintenanceFromCfg(cfg);
-
-  const serverName = (cfg.serverName || "").trim();
-  const address = (cfg.address || "").trim();
-  const refreshSeconds = Math.max(10, Number(cfg.refreshSeconds || 30));
-
-  const worldStateUrl = (cfg.worldStateUrl || "").trim();
-  const worldApiBase = (cfg.worldApiBase || "").trim().replace(/\/$/, "");
-  const worldStateToken = String(cfg.worldStateToken || "").trim();
-
-  const chatFastSeconds = Math.max(1, Number(cfg.chatFastSeconds || 2));
-
-  if (serverTitle) serverTitle.textContent = serverName ? `🛰️ ${serverName}` : "🛰️ Server Dashboard";
-  safeSetText(serverAddress, address || "—");
-
-  if (joinLink) joinLink.href = cfg.howToJoinUrl || "#";
-  if (discordLink) discordLink.href = cfg.discordUrl || "#";
-  if (rulesLink) rulesLink.href = cfg.links?.rulesUrl || "#";
-  if (sparkLink) sparkLink.href = cfg.links?.sparkUrl || "#";
-  if (modpackCurseforge) modpackCurseforge.href = cfg.modpack?.curseforgeUrl || "#";
-
-  const mapUrl = (window.MAYFLOWER_BLUEMAP_URL || cfg.mapEmbedUrl || "").trim();
-  const fixedMap = withProtocol(mapUrl);
-  if (openMapBtn) openMapBtn.href = fixedMap || "#";
-  if (fixedMap) {
-    if (bluemapFrame) bluemapFrame.src = fixedMap;
-    if (mapFallback) mapFallback.style.display = "none";
-  } else {
-    if (mapFallback) mapFallback.style.display = "block";
-  }
-
-  if (copyIpBtn) {
-    copyIpBtn.addEventListener("click", async () => {
-      if (!address) return alert("Server address isn't set yet (data/server.json).");
-      const ok = await copyText(address);
-      if (ok) {
-        copyIpBtn.textContent = "✅ Copied!";
-        setTimeout(() => (copyIpBtn.textContent = "📋 Copy"), 1200);
-      } else {
-        alert("Couldn’t copy automatically — manually copy:\n" + address);
-      }
-    });
-  }
-
-  const chatPostUrl = worldApiBase ? `${worldApiBase}/api/chat` : "";
-
-  function chatCanSend() {
-    if (maintenance?.enabled && maintenance?.disableWebChat) return false;
-    return Boolean(chatPostUrl) && Boolean(worldStateToken);
-  }
-
-  function initChatComposer() {
-    if (!chatSendBtn || !chatMsg || !chatName) return;
-
-    const savedName = localStorage.getItem("mf_webchat_name");
-    if (savedName && !chatName.value) chatName.value = savedName;
-
-    if (!chatCanSend()) {
-      const reason = (maintenance?.enabled && maintenance?.disableWebChat)
-        ? "Disabled (maintenance)"
-        : (worldStateToken ? "Chat endpoint missing" : "Token missing");
-      setChatStatus(reason, "bad");
-      chatSendBtn.disabled = true;
-      chatSendBtn.style.opacity = ".6";
-      chatSendBtn.style.cursor = "not-allowed";
+  async function loadWaystones(config) {
+    const url = String(config?.waystonesUrl || "").trim();
+    if (!url) {
+      renderWaystones([]);
       return;
     }
-
-    setChatStatus("Ready to send", "good");
-
-    function setSending(on) {
-      chatSendBtn.disabled = on;
-      chatSendBtn.textContent = on ? "Sending…" : "📨 Send";
-    }
-
-    async function doSend() {
-      if (!chatCanSend()) return;
-
-      const name = clampChat(chatName.value, 24) || "Web";
-      const msg = clampChat(chatMsg.value, 200);
-
-      localStorage.setItem("mf_webchat_name", name);
-
-      if (!msg) {
-        setChatStatus("Type a message first", "bad");
-        chatMsg.focus();
-        return;
-      }
-
-      setSending(true);
-      setChatStatus("Sending…", "neutral");
-
-      try {
-        await fetchJsonPost(
-          chatPostUrl,
-          { name, msg },
-          { "X-Worldstate-Token": worldStateToken },
-          7000
-        );
-
-        chatMsg.value = "";
-        setChatStatus("Sent ✔", "good");
-
-        remaining = 1;
-        chatRemaining = 1;
-      } catch (e) {
-        const code = String(e?.message || "send_failed");
-        if (code === "rate_limited" || e?.status === 429) {
-          setChatStatus("Rate limited (wait a sec)", "bad");
-        } else if (code === "forbidden" || e?.status === 403) {
-          setChatStatus("Forbidden (bad token)", "bad");
-        } else if (code === "web_chat_disabled") {
-          setChatStatus("Web chat disabled server-side", "bad");
-        } else {
-          setChatStatus(`Failed: ${code}`, "bad");
-        }
-      } finally {
-        setSending(false);
-      }
-    }
-
-    chatSendBtn.addEventListener("click", doSend);
-    chatMsg.addEventListener("keydown", (ev) => {
-      if (ev.key === "Enter" && !ev.shiftKey) {
-        ev.preventDefault();
-        doSend();
-      }
-    });
-  }
-
-  let lastGoodMs = 0;
-  let backoff = 0;
-  let lastApplyAt = 0;
-
-  async function fetchWorldState() {
-    if (!worldStateUrl) return null;
-    return await fetchJson(worldStateUrl, 5500);
-  }
-
-  function applyWorldState(ws) {
-    // If maintenance is enabled, we still allow data to show (unless you want to hard-stop).
-    // We do NOT override the Maintenance status text.
-    lastGoodMs = Date.now();
-    if (!(maintenance?.enabled)) setOnlineState("online");
-
-    const meta = ws?.meta || {};
-    if (meta.motd && !(maintenance?.enabled)) safeSetText(serverMotd, meta.motd);
-
-    const pubPlayers = Array.isArray(ws?.publicPlayers) ? ws.publicPlayers : [];
-    const online = pubPlayers.length;
-    const max = (meta.maxPlayers != null) ? meta.maxPlayers : null;
-    setCountsEverywhere(online, max);
-
-    const mood = ws?.mood || {};
-    const clock = extractClockFromHeadline(mood.headline) || (ws?.time?.clock ? String(ws.time.clock) : "—");
-    const weather = mood.weather ? String(mood.weather) : (ws?.weather ? fmtWeather(ws.weather).replace(/^.\s*/, "") : "—");
-    const season = mood.season ? prettyFirstSeasonToken(mood.season) : "—";
-
-    const mEmoji = moonEmoji(mood.moonPhase);
-    const mName = moonLabel(mood.moonPhase);
-    const flavor = mood.flavor ? String(mood.flavor) : "—";
-
-    safeSetText(worldMoodClock, clock);
-    safeSetText(worldMoodWeather, weather);
-    safeSetText(worldMoodSeason, season);
-    safeSetText(worldMoodMoon, `${mEmoji} ${mName}`);
-    safeSetText(worldMoodFooter, flavor);
-
-    const perf = ws?.perf || {};
-    safeSetText(tpsLine, Number.isFinite(Number(perf.estTps)) ? Number(perf.estTps).toFixed(1) : "—");
-    safeSetText(msptLine, Number.isFinite(Number(perf.avgMspt)) ? `${Number(perf.avgMspt).toFixed(1)}` : "—");
-    if (Number.isFinite(Number(perf.usedMemMb)) && Number.isFinite(Number(perf.maxMemMb))) {
-      safeSetText(memLine, `${Number(perf.usedMemMb)} / ${Number(perf.maxMemMb)} MB`);
-    } else {
-      safeSetText(memLine, "—");
-    }
-
-    renderPlayers(pubPlayers, pubPlayers.length ? "Live list from WorldState." : "Nobody online right now.");
-
-    waystones = Array.isArray(ws?.waystones) ? ws.waystones : [];
-    if (waystoneNote) {
-      waystoneNote.textContent = waystones.length ? "Waystones loaded from WorldState." : "No waystones found (or none are public).";
-    }
-    renderWaystones(true);
-
-    const chat = Array.isArray(ws?.chat) ? ws.chat : [];
-    renderChat(chat);
-    if (chatNote) chatNote.textContent = chat.length ? "Live feed from WorldState." : "No recent chat messages.";
-
-    renderAE2(ws);
-
-    starterKits = Array.isArray(ws?.starterKits) ? ws.starterKits : [];
-    renderKitFilters();
-    renderKits(true);
-
-    safeSetText(lastUpdate, nowLabel());
-    lastApplyAt = Date.now();
-
-    if (chatCanSend()) setChatStatus("Ready to send", "good");
-    else {
-      const reason = (maintenance?.enabled && maintenance?.disableWebChat)
-        ? "Disabled (maintenance)"
-        : (worldStateToken ? "Token set (endpoint?)" : "Token missing");
-      setChatStatus(reason, chatCanSend() ? "good" : "bad");
-    }
-  }
-
-  async function fetchStatusFallback() {
-    if (!address) return;
-    const statusUrl = `https://api.mcstatus.io/v2/status/java/${encodeURIComponent(address)}`;
     try {
-      const data = await fetchJson(statusUrl, 6500);
-      if (!maintenance?.enabled) setOnlineState(data.online ? "online" : "offline");
-
-      const motd = data?.motd?.clean?.join(" ") || data?.motd?.raw?.join(" ") || "";
-      if (motd && !maintenance?.enabled) safeSetText(serverMotd, motd);
-
-      const online = data?.players?.online ?? null;
-      const max = data?.players?.max ?? null;
-      if (online != null || max != null) setCountsEverywhere(online, max);
-
-      safeSetText(lastUpdate, nowLabel());
-      lastApplyAt = Date.now();
+      const data = await fetchJson(url, 8000);
+      // allow either an array directly, or { waystones:[...] }
+      const items = Array.isArray(data) ? data : (Array.isArray(data?.waystones) ? data.waystones : []);
+      renderWaystones(items);
     } catch (e) {
-      if (!maintenance?.enabled) setOnlineState("offline");
-      console.warn("Fallback status failed:", e);
+      renderWaystones([]);
+      if (waystoneNote) waystoneNote.textContent = "Waystones unavailable right now.";
+      // console.warn(e);
     }
   }
 
-  let remaining = refreshSeconds;
-  let chatRemaining = chatFastSeconds;
+  // ----------------------------
+  // Starter Kits
+  // ----------------------------
+  function parseKitItems(raw) {
+    // Accept a variety of formats, but we mostly just want {count, name}
+    // If it's already an array, keep it. If it's a string (NBT-ish), we can't reliably parse.
+    if (Array.isArray(raw)) return raw;
+    return [];
+  }
 
-  function clearLivePanels(reason) {
-    safeSetText(serverMotd, reason || "WorldState not available.");
+  function kitCategories(kits) {
+    const cats = new Set();
+    for (const k of kits) cats.add(normalizeCategory(k?.category || k?.role || k?.type));
+    return ["All", ...Array.from(cats).sort((a, b) => a.localeCompare(b))];
+  }
 
-    safeSetText(worldMoodClock, "—");
-    safeSetText(worldMoodWeather, "—");
-    safeSetText(worldMoodSeason, "—");
-    safeSetText(worldMoodMoon, "—");
-    safeSetText(worldMoodFooter, "—");
+  function renderKitCategoryChips(kits) {
+    if (!kitFilterRow) return;
+    kitFilterRow.innerHTML = "";
 
-    safeSetText(tpsLine, "—");
-    safeSetText(msptLine, "—");
-    safeSetText(memLine, "—");
-
-    renderPlayers([], reason || "WorldState is not configured.");
-    waystones = [];
-    renderWaystones(true);
-    renderChat([]);
-
-    if (chatNote) chatNote.textContent = "Chat feed unavailable.";
-    if (waystoneNote) waystoneNote.textContent = "Waystones unavailable.";
-
-    renderAE2({ ae2: { ae2Loaded: false } });
-
-    starterKits = [];
-    if (kitList) kitList.innerHTML = "";
-    if (kitCount) kitCount.textContent = "—";
-    if (kitNote) kitNote.textContent = "Starter kits unavailable.";
-
-    if (!chatCanSend()) {
-      const reason2 = (maintenance?.enabled && maintenance?.disableWebChat)
-        ? "Disabled (maintenance)"
-        : (worldStateToken ? "Token set (server offline?)" : "Token missing");
-      setChatStatus(reason2, "bad");
-    } else {
-      setChatStatus("Server offline/stale", "bad");
+    const cats = kitCategories(kits);
+    for (const c of cats) {
+      const chip = document.createElement("button");
+      chip.className = "catChip" + (c === kitCategory ? " active" : "");
+      chip.type = "button";
+      chip.textContent = c;
+      chip.addEventListener("click", () => {
+        kitCategory = c;
+        renderKitCategoryChips(latestKits);
+        renderKits(latestKits);
+      });
+      kitFilterRow.appendChild(chip);
     }
   }
 
-  async function refreshAll() {
-    if (!worldStateUrl) {
-      if (!maintenance?.enabled) setOnlineState("offline");
-      clearLivePanels("Set worldStateUrl in data/server.json.");
+  function renderKits(kits) {
+    const list = Array.isArray(kits) ? kits : [];
+    latestKits = list;
+    safeSetText(kitCount, list.length);
+
+    renderKitCategoryChips(list);
+
+    if (!kitList) return;
+    kitList.innerHTML = "";
+
+    const query = String(kitSearch?.value || "").trim().toLowerCase();
+    const filtered = list.filter(k => {
+      const name = String(k?.name || "").toLowerCase();
+      const desc = String(k?.description || "").toLowerCase();
+      const cat = normalizeCategory(k?.category || k?.role || k?.type).toLowerCase();
+
+      const catOk = (kitCategory === "All") || (normalizeCategory(k?.category || k?.role || k?.type) === kitCategory);
+      const qOk = !query || name.includes(query) || desc.includes(query) || cat.includes(query);
+      return catOk && qOk;
+    });
+
+    if (!filtered.length) {
+      if (kitNote) kitNote.textContent = query ? "No kits match your search." : "No kits found.";
+      return;
+    }
+    if (kitNote) kitNote.textContent = "";
+
+    for (const k of filtered.slice(0, 200)) {
+      const active = (k?.active !== false);
+      const name = k?.name || "Kit";
+      const desc = k?.description || "";
+      const cat = normalizeCategory(k?.category || k?.role || k?.type);
+
+      const items = parseKitItems(k?.items || k?.contents || k?.displayItems);
+      const itemChips = (items && items.length)
+        ? items.slice(0, 10).map(it => {
+            const count = it?.count ?? it?.qty ?? it?.amount ?? 1;
+            const iname = it?.name || it?.id || "item";
+            return `<span class="itemChip"><span class="count">${escapeHtml(count)}</span><span class="iname">${escapeHtml(iname)}</span></span>`;
+          }).join("")
+        : `<div class="kitItemsEmpty">Items not listed.</div>`;
+
+      const card = document.createElement("div");
+      card.className = "kitCard";
+      card.innerHTML = `
+        <div class="kitHead">
+          <div>
+            <div class="kitName">${escapeHtml(name)}</div>
+            <div class="kitDesc">${escapeHtml(desc)}</div>
+          </div>
+          <div class="kitBadge ${active ? "" : "off"}">
+            ${active ? "✅ Active" : "⛔ Off"} • ${escapeHtml(cat)}
+          </div>
+        </div>
+        <div class="kitItems">${itemChips}</div>
+      `;
+
+      kitList.appendChild(card);
+    }
+  }
+
+  function extractKitsFromWorldstate(ws) {
+    // allow worldstate.extra.starterKits, worldstate.starterKits, etc.
+    const raw = ws?.extra?.starterKits ?? ws?.starterKits ?? ws?.kits ?? null;
+    if (!raw) return [];
+    if (!Array.isArray(raw)) return [];
+
+    // If your worldstate kits are missing "items", you can still display name/desc/category
+    return raw.map(k => ({
+      name: k?.name,
+      description: k?.description,
+      active: k?.active,
+      category: k?.category || k?.role || k?.type,
+      items: k?.items || k?.displayItems || []
+    }));
+  }
+
+  async function loadKits(config, wsMaybe) {
+    // Primary: from worldstate (so it reflects server truth)
+    const kitsFromWs = wsMaybe ? extractKitsFromWorldstate(wsMaybe) : [];
+    if (kitsFromWs.length) {
+      renderKits(kitsFromWs);
       return;
     }
 
+    // Fallback: optional static file if you want it
+    // If you don't have this file, it will just fail silently.
     try {
-      const ws = await fetchWorldState();
-      applyWorldState(ws);
-      backoff = 0;
-    } catch (e) {
-      console.warn("WorldState failed:", e);
-
-      backoff = Math.min(60, backoff ? backoff * 2 : 2);
-
-      const age = Date.now() - (lastGoodMs || 0);
-      if (lastGoodMs && age < 120000) {
-        if (!maintenance?.enabled) setOnlineState("stale");
-        if (chatNote) chatNote.textContent = `Showing last known data (${msAgeLabel(age)}).`;
-        if (waystoneNote) waystoneNote.textContent = `Showing last known data (${msAgeLabel(age)}).`;
-        if (chatCanSend()) setChatStatus(`Stale (${msAgeLabel(age)})`, "warn");
-      } else {
-        await fetchStatusFallback();
-        clearLivePanels("WorldState endpoint/CORS/offline.");
-      }
+      const data = await fetchJson("data/starterkits.json", 5000);
+      const kits = Array.isArray(data) ? data : (Array.isArray(data?.starterKits) ? data.starterKits : []);
+      renderKits(kits);
+    } catch {
+      renderKits([]);
     }
   }
 
-  function applyChatOnly(ws) {
-    const chat = Array.isArray(ws?.chat) ? ws.chat : [];
-    renderChat(chat);
-    if (chatNote) chatNote.textContent = chat.length ? "Live feed from WorldState." : "No recent chat messages.";
+  // ----------------------------
+  // Modlist
+  // ----------------------------
+  function modCategories(mods) {
+    const cats = new Set();
+    for (const m of mods) cats.add(normalizeCategory(m?.category));
+    return ["All", ...Array.from(cats).sort((a, b) => a.localeCompare(b))];
   }
 
-  async function refreshChatOnly() {
-    if (!worldStateUrl) return;
-    try {
-      const ws = await fetchWorldState();
-      applyChatOnly(ws);
-    } catch { }
-  }
-
-  function updateLastUpdateAge() {
-    if (!lastApplyAt) return;
-    const age = Date.now() - lastApplyAt;
-    if (age > 120000 && !maintenance?.enabled) setOnlineState("stale");
-  }
-
-  function effectiveRefreshSeconds() {
-    return refreshSeconds + backoff;
-  }
-
-  async function tick() {
-    if (document.hidden) {
-      safeSetText(refreshIn, "paused");
-      updateLastUpdateAge();
-      return;
-    }
-
-    remaining -= 1;
-    if (remaining <= 0) {
-      remaining = effectiveRefreshSeconds();
-      await refreshAll();
-    }
-
-    safeSetText(refreshIn, `${remaining}s`);
-    updateLastUpdateAge();
-  }
-
-  async function chatTick() {
-    if (document.hidden) return;
-
-    chatRemaining -= 1;
-    if (chatRemaining <= 0) {
-      chatRemaining = chatFastSeconds;
-      await refreshChatOnly();
-    }
-  }
-
-  setCountsEverywhere("—", "—");
-  setOnlineState(maintenance?.enabled ? "maintenance" : "loading");
-  remaining = effectiveRefreshSeconds();
-  safeSetText(refreshIn, `${remaining}s`);
-
-  initChatComposer();
-  await refreshAll();
-
-  setInterval(tick, 1000);
-
-  chatRemaining = 1;
-  setInterval(chatTick, 1000);
-
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) {
-      remaining = 1;
-      chatRemaining = 1;
-    }
-  });
-
-  // ---------- Modlist ----------
-  let mods = [];
-  try {
-    const modData = await fetchJson("data/modlist.json", 6000);
-    mods = Array.isArray(modData?.mods) ? modData.mods : [];
-  } catch (e) {
-    console.warn("Could not load data/modlist.json", e);
-  }
-
-  const catSet = new Set(mods.map(m => (m.category || "").trim()).filter(Boolean));
-  const categories = ["All", ...Array.from(catSet).sort((a, b) => a.localeCompare(b))];
-  let activeCategory = "All";
-
-  function renderCategoryButtons() {
+  function renderModCategoryChips(mods) {
     if (!categoryRow) return;
     categoryRow.innerHTML = "";
-    const frag = document.createDocumentFragment();
-    for (const cat of categories) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "catChip" + (cat === activeCategory ? " active" : "");
-      btn.textContent = cat;
-      btn.addEventListener("click", () => {
-        activeCategory = cat;
-        renderCategoryButtons();
-        renderMods();
+
+    const cats = modCategories(mods);
+    for (const c of cats) {
+      const chip = document.createElement("button");
+      chip.className = "catChip" + (c === modCategory ? " active" : "");
+      chip.type = "button";
+      chip.textContent = c;
+      chip.addEventListener("click", () => {
+        modCategory = c;
+        renderModCategoryChips(latestMods);
+        renderMods(latestMods);
       });
-      frag.appendChild(btn);
+      categoryRow.appendChild(chip);
     }
-    categoryRow.appendChild(frag);
   }
 
-  function matches(mod, q) {
-    if (!q) return true;
-    const blob = `${mod.name || ""} ${mod.category || ""} ${mod.side || ""} ${mod.notes || ""}`.toLowerCase();
-    return blob.includes(q);
-  }
+  function renderMods(mods) {
+    const list = Array.isArray(mods) ? mods : [];
+    latestMods = list;
+    safeSetText(modCount, list.length);
 
-  function renderMods() {
-    const q = (modSearch?.value || "").trim().toLowerCase();
-    const filtered = mods.filter(m => {
-      if (activeCategory !== "All" && (m.category || "") !== activeCategory) return false;
-      return matches(m, q);
-    });
-
-    if (modCountEl) {
-      modCountEl.textContent =
-        activeCategory === "All" && !q
-          ? `${filtered.length} mods`
-          : `${filtered.length} of ${mods.length}`;
-    }
+    renderModCategoryChips(list);
 
     if (!modTbody) return;
     modTbody.innerHTML = "";
 
-    const frag = document.createDocumentFragment();
+    const query = String(modSearch?.value || "").trim().toLowerCase();
 
-    for (const m of filtered) {
+    const filtered = list.filter(m => {
+      const name = String(m?.name || "").toLowerCase();
+      const cat = normalizeCategory(m?.category).toLowerCase();
+      const side = String(m?.side || m?.clientServer || "").toLowerCase();
+      const notes = String(m?.notes || m?.note || "").toLowerCase();
+
+      const catOk = (modCategory === "All") || (normalizeCategory(m?.category) === modCategory);
+      const qOk = !query || name.includes(query) || cat.includes(query) || side.includes(query) || notes.includes(query);
+      return catOk && qOk;
+    });
+
+    for (const m of filtered.slice(0, 800)) {
       const tr = document.createElement("tr");
-
-      const tdName = document.createElement("td");
-      tdName.innerHTML = `<strong>${escapeHtml(m.name || "Unnamed")}</strong>`;
-      tr.appendChild(tdName);
-
-      const tdCat = document.createElement("td");
-      tdCat.textContent = m.category || "—";
-      tr.appendChild(tdCat);
-
-      const tdSide = document.createElement("td");
-      tdSide.textContent = m.side || "—";
-      tr.appendChild(tdSide);
-
-      const tdNotes = document.createElement("td");
-      tdNotes.textContent = m.notes || "";
-      tr.appendChild(tdNotes);
-
-      frag.appendChild(tr);
+      tr.innerHTML = `
+        <td><strong>${escapeHtml(m?.name || "—")}</strong></td>
+        <td>${escapeHtml(normalizeCategory(m?.category))}</td>
+        <td>${escapeHtml(m?.side || m?.clientServer || "—")}</td>
+        <td>${escapeHtml(m?.notes || m?.note || "")}</td>
+      `;
+      modTbody.appendChild(tr);
     }
-
-    if (filtered.length === 0) {
-      const tr = document.createElement("tr");
-      const td = document.createElement("td");
-      td.colSpan = 4;
-      td.innerHTML = `<span style="opacity:.78;">No mods matched that search.</span>`;
-      tr.appendChild(td);
-      frag.appendChild(tr);
-    }
-
-    modTbody.appendChild(frag);
   }
 
-  if (modSearch) modSearch.addEventListener("input", renderMods);
-  renderCategoryButtons();
-  renderMods();
+  async function loadMods() {
+    try {
+      const data = await fetchJson("data/modlist.json", 8000);
+      const mods = Array.isArray(data) ? data : (Array.isArray(data?.mods) ? data.mods : []);
+      renderMods(mods);
+    } catch {
+      renderMods([]);
+    }
+  }
+
+  // ----------------------------
+  // Chat
+  // ----------------------------
+  function renderChat(lines) {
+    if (!chatList) return;
+
+    const arr = Array.isArray(lines) ? lines : [];
+    // Create a quick hash so we don’t rerender constantly
+    const hash = JSON.stringify(arr.slice(-30));
+    if (hash === lastChatHash) return;
+    lastChatHash = hash;
+
+    chatList.innerHTML = "";
+    const shown = arr.slice(-120);
+
+    for (const line of shown) {
+      const who = line?.name || line?.author || "Server";
+      const msg = line?.message || line?.msg || line?.text || "";
+      const ts = line?.ts || line?.time || line?.timestamp || null;
+
+      const timeStr = ts ? formatTimeAgo(Number(ts) * (String(ts).length <= 10 ? 1000 : 1)) : "";
+
+      const div = document.createElement("div");
+      div.className = "chatLine";
+      div.innerHTML = `
+        <div class="chatTop">
+          <strong>${escapeHtml(who)}</strong>
+          <span>${escapeHtml(timeStr)}</span>
+        </div>
+        <div class="chatMsg">${escapeHtml(msg)}</div>
+      `;
+      chatList.appendChild(div);
+    }
+
+    // keep scrolled to bottom-ish
+    chatList.scrollTop = chatList.scrollHeight;
+  }
+
+  async function loadChat(config) {
+    if (!chatEnabled) return;
+
+    // Prefer a dedicated endpoint if you have it:
+    // GET {worldApiBase}/chat.json
+    // Fallback: use worldstate.chat if present
+    const base = String(config?.worldApiBase || "").trim();
+    const token = String(config?.worldStateToken || "").trim();
+    const wsUrl = String(config?.worldStateUrl || "").trim();
+
+    // Attempt 1: base/chat.json
+    if (base) {
+      try {
+        const data = await fetchJson(withProtocol(`${base.replace(/\/+$/, "")}/chat.json`), 5000);
+        const lines = Array.isArray(data) ? data : (Array.isArray(data?.lines) ? data.lines : (Array.isArray(data?.chat) ? data.chat : []));
+        renderChat(lines);
+        safeSetText(chatSendStatus, "Connected");
+        chatSendStatus?.classList.remove("bad");
+        chatSendStatus?.classList.add("good");
+        return;
+      } catch {
+        // fall through
+      }
+    }
+
+    // Attempt 2: worldstate chat field
+    if (wsUrl) {
+      try {
+        const ws = await fetchJson(wsUrl, 6000);
+        const lines = ws?.chat || ws?.extra?.chat || [];
+        if (Array.isArray(lines)) renderChat(lines);
+        safeSetText(chatSendStatus, "Connected");
+        chatSendStatus?.classList.remove("bad");
+        chatSendStatus?.classList.add("good");
+        return;
+      } catch {
+        // fall through
+      }
+    }
+
+    safeSetText(chatSendStatus, "Not connected");
+    chatSendStatus?.classList.remove("good");
+    chatSendStatus?.classList.add("bad");
+  }
+
+  async function sendChat(config) {
+    if (!chatEnabled) return;
+
+    const name = String(chatName?.value || "").trim() || "Web";
+    const msg = String(chatMsg?.value || "").trim();
+    if (!msg) return;
+
+    const base = String(config?.worldApiBase || "").trim();
+    const token = String(config?.worldStateToken || "").trim();
+
+    if (!base) {
+      alert("Chat send is not configured (worldApiBase is missing).");
+      return;
+    }
+    if (!token) {
+      alert("Chat send is not configured (worldStateToken is missing).");
+      return;
+    }
+
+    const url = withProtocol(`${base.replace(/\/+$/, "")}/chat/send`);
+
+    disableButtonLike(chatSendBtn, "Sending…");
+    safeSetText(chatSendStatus, "Sending…");
+    chatSendStatus?.classList.remove("bad", "good");
+    chatSendStatus?.classList.add("warn");
+
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Worldstate-Token": token
+        },
+        body: JSON.stringify({ name, message: msg })
+      });
+
+      const text = await res.text();
+      if (!res.ok) throw new Error(text || `HTTP ${res.status}`);
+
+      chatMsg.value = "";
+      safeSetText(chatSendStatus, "Sent!");
+      chatSendStatus?.classList.remove("warn");
+      chatSendStatus?.classList.add("good");
+    } catch (e) {
+      safeSetText(chatSendStatus, "Send failed");
+      chatSendStatus?.classList.remove("warn");
+      chatSendStatus?.classList.add("bad");
+      alert("Chat send failed:\n" + (e?.message || e));
+    } finally {
+      enableButtonLike(chatSendBtn);
+      setTimeout(() => {
+        if (chatEnabled) safeSetText(chatSendStatus, "Connected");
+      }, 1200);
+    }
+  }
+
+  // ----------------------------
+  // Worldstate load
+  // ----------------------------
+  async function loadWorldState(config) {
+    const url = String(config?.worldStateUrl || "").trim();
+    if (!url) throw new Error("worldStateUrl missing");
+
+    const ws = await fetchJson(url, 8000);
+    latestWorldState = ws;
+
+    // online/offline
+    const online =
+      Boolean(ws?.online ?? ws?.server?.online ?? true) &&
+      (ws?.error ? false : true);
+
+    setStatus(online, online ? "Online" : "Offline");
+
+    // last update timestamp
+    // try meta.generatedAt (seconds) first
+    const genSec = ws?.meta?.generatedAt ?? ws?.generatedAt ?? ws?.ts ?? null;
+    if (genSec) {
+      const ms = Number(genSec) * (String(genSec).length <= 10 ? 1000 : 1);
+      safeSetText(lastUpdate, formatTimeAgo(ms));
+    } else {
+      safeSetText(lastUpdate, "—");
+    }
+
+    // motd
+    const motd = ws?.motd || ws?.server?.motd || "";
+    safeSetText(serverMotd, motd || "—");
+
+    renderWorldMood(ws);
+    renderPerformance(ws);
+    renderAE2(ws);
+    renderPlayers(ws);
+
+    // kits often live in worldstate
+    await loadKits(config, ws);
+
+    return ws;
+  }
+
+  // ----------------------------
+  // Refresh loops
+  // ----------------------------
+  function startCountdown() {
+    if (countdownTicker) clearInterval(countdownTicker);
+    countdown = refreshSeconds;
+    safeSetText(refreshIn, `${countdown}s`);
+    countdownTicker = setInterval(() => {
+      countdown = Math.max(0, countdown - 1);
+      safeSetText(refreshIn, `${countdown}s`);
+    }, 1000);
+  }
+
+  async function refreshAll() {
+    if (!cfg) return;
+    try {
+      await loadWorldState(cfg);
+    } catch (e) {
+      setStatus(false, "Offline");
+      safeSetText(lastUpdate, "—");
+      safeSetText(serverMotd, "Worldstate unavailable");
+      // console.warn(e);
+    }
+
+    // waystones + modlist can refresh less frequently, but it’s fine here
+    loadWaystones(cfg);
+    // mods are static file; refresh occasionally but cheap
+    loadMods();
+  }
+
+  function startRefreshLoop() {
+    if (refreshTicker) clearInterval(refreshTicker);
+    startCountdown();
+    refreshAll();
+    refreshTicker = setInterval(() => {
+      countdown = refreshSeconds;
+      refreshAll();
+    }, refreshSeconds * 1000);
+  }
+
+  function startChatLoop() {
+    if (chatTicker) clearInterval(chatTicker);
+    loadChat(cfg);
+    chatTicker = setInterval(() => loadChat(cfg), chatFastSeconds * 1000);
+  }
+
+  // ----------------------------
+  // Search handlers
+  // ----------------------------
+  function wireSearch() {
+    if (waystoneSearch) waystoneSearch.addEventListener("input", () => renderWaystones(latestWaystones));
+    if (kitSearch) kitSearch.addEventListener("input", () => renderKits(latestKits));
+    if (modSearch) modSearch.addEventListener("input", () => renderMods(latestMods));
+  }
+
+  function wireChatSend() {
+    if (!chatSendBtn) return;
+    chatSendBtn.addEventListener("click", () => sendChat(cfg));
+    if (chatMsg) {
+      chatMsg.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendChat(cfg);
+        }
+      });
+    }
+  }
+
+  // ----------------------------
+  // Init
+  // ----------------------------
+  (async function init() {
+    wireSearch();
+    wireChatSend();
+
+    try {
+      cfg = await fetchJson("data/server.json", 8000);
+    } catch (e) {
+      setStatus(false, "Config error");
+      safeSetText(serverMotd, "Could not load data/server.json");
+      if (mapFallback) mapFallback.style.display = "";
+      return;
+    }
+
+    applyStaticLinks(cfg);
+    applyMaintenanceFromCfg(cfg);
+    setModpackLinks(cfg);
+
+    // Initial load
+    await refreshAll();
+
+    // Start loops
+    startRefreshLoop();
+    startChatLoop();
+  })();
 })();
