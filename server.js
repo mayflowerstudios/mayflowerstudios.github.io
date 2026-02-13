@@ -126,12 +126,12 @@
   }
 
   function prettySeason(ws) {
-    // Your JSON: season.season + season.subSeason
+    // Only show subSeason (it already includes season in the name per your setup)
     const s = ws?.season || {};
-    const season = s?.season ? titleCaseWords(String(s.season).toLowerCase().replaceAll("_", " ")) : "";
-    const sub = s?.subSeason ? titleCaseWords(String(s.subSeason).toLowerCase().replaceAll("_", " ")) : "";
-    if (sub && season) return `${sub} • ${season}`;
-    return season || sub || "—";
+    const sub = s?.subSeason
+      ? titleCaseWords(String(s.subSeason).toLowerCase().replaceAll("_", " "))
+      : "";
+    return sub || "—";
   }
 
   function prettyWeather(ws) {
@@ -146,9 +146,24 @@
   }
 
   function prettyMoon(ws) {
-    const mp = ws?.time?.moonPhase ?? ws?.mood?.moonPhase;
-    if (Number.isFinite(Number(mp))) return `Moon ${mp}`;
-    return "—";
+    const mpRaw = ws?.time?.moonPhase ?? ws?.mood?.moonPhase;
+    const mp = Number(mpRaw);
+    if (!Number.isFinite(mp)) return "—";
+
+    // Vanilla moon phases are 0..7
+    const phases = [
+      { emoji: "🌕", name: "Full Moon" },
+      { emoji: "🌖", name: "Waning Gibbous" },
+      { emoji: "🌗", name: "Last Quarter" },
+      { emoji: "🌘", name: "Waning Crescent" },
+      { emoji: "🌑", name: "New Moon" },
+      { emoji: "🌒", name: "Waxing Crescent" },
+      { emoji: "🌓", name: "First Quarter" },
+      { emoji: "🌔", name: "Waxing Gibbous" }
+    ];
+
+    const p = phases[((mp % 8) + 8) % 8];
+    return `${p.emoji} ${p.name}`;
   }
 
   // ----------------------------
@@ -473,7 +488,13 @@
       });
       safeSetText(ae2DimNote, parts.join(" • "));
     } else {
-      safeSetText(ae2DimNote, "—");
+      const totalControllers = online + offline + conflicted + unknown;
+      safeSetText(
+        ae2DimNote,
+        totalControllers === 0
+          ? "No AE2 systems detected in the world right now."
+          : "No dimension breakdown available."
+      );
     }
   }
 
