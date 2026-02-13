@@ -9,7 +9,6 @@
   // Helpers
   // ----------------------------
   const el = (id) => document.getElementById(id);
-  const qsa = (sel) => Array.from(document.querySelectorAll(sel));
 
   function safeSetText(node, text) {
     if (!node) return;
@@ -102,6 +101,56 @@
     return v ? v : "Other";
   }
 
+  function titleCaseWords(s) {
+    return String(s || "")
+      .split(" ")
+      .filter(Boolean)
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+  }
+
+  function prettyId(id) {
+    // minecraft:stone_pickaxe -> Stone Pickaxe
+    const raw = String(id || "");
+    if (!raw) return "Item";
+    const noNs = raw.includes(":") ? raw.split(":")[1] : raw;
+    return titleCaseWords(noNs.replaceAll("_", " ").replaceAll("-", " "));
+  }
+
+  function prettyDimension(dim) {
+    // minecraft:overworld -> Overworld
+    const d = String(dim || "");
+    if (!d) return "Unknown";
+    const noNs = d.includes(":") ? d.split(":")[1] : d;
+    return titleCaseWords(noNs.replaceAll("_", " "));
+  }
+
+  function prettySeason(ws) {
+    // Your JSON: season.season + season.subSeason
+    const s = ws?.season || {};
+    const season = s?.season ? titleCaseWords(String(s.season).toLowerCase().replaceAll("_", " ")) : "";
+    const sub = s?.subSeason ? titleCaseWords(String(s.subSeason).toLowerCase().replaceAll("_", " ")) : "";
+    if (sub && season) return `${sub} • ${season}`;
+    return season || sub || "—";
+  }
+
+  function prettyWeather(ws) {
+    // Prefer mood.weather (already friendly), else weather flags
+    const moodW = ws?.mood?.weather;
+    if (moodW) return String(moodW);
+
+    const w = ws?.weather || {};
+    if (w?.isThundering) return "Thunder";
+    if (w?.isRaining) return "Rain";
+    return "Clear";
+  }
+
+  function prettyMoon(ws) {
+    const mp = ws?.time?.moonPhase ?? ws?.mood?.moonPhase;
+    if (Number.isFinite(Number(mp))) return `Moon ${mp}`;
+    return "—";
+  }
+
   // ----------------------------
   // Elements (server.html IDs)
   // ----------------------------
@@ -119,7 +168,7 @@
   const sparkLink = el("sparkLink");
 
   const modpackCurseforge = el("modpackCurseforge");
-  const modpackDirectZip = el("modpackDirectZip"); // <-- keep your edited anchor intact
+  const modpackDirectZip = el("modpackDirectZip");
   const modpackLabel = el("modpackLabel");
   const modpackNote = el("modpackNote");
 
@@ -215,7 +264,6 @@
         const title = maint?.title || "Server Maintenance";
         const msg = maint?.message || "Updates in progress.";
 
-        // Banner markup is fixed in HTML; just update text safely
         const titleEl = maintenanceBanner.querySelector(".maintenanceText");
         const subEl = maintenanceBanner.querySelector(".maintenanceSub");
         if (titleEl) titleEl.textContent = title;
@@ -225,8 +273,6 @@
       }
     }
 
-    // If they want to disable join buttons during maintenance, do it,
-    // BUT we will NOT disable modpack buttons anymore (per your request).
     if (enabled && maint?.disableJoinButtons) {
       disableButtonLike(joinLink, "Disabled during maintenance");
       disableButtonLike(copyIpBtn, "Disabled during maintenance");
@@ -235,7 +281,6 @@
       enableButtonLike(copyIpBtn);
     }
 
-    // Chat disable
     chatEnabled = !(enabled && maint?.disableWebChat);
     if (!chatEnabled) {
       disableButtonLike(chatSendBtn, "Chat disabled during maintenance");
@@ -320,14 +365,12 @@
       else sparkLink.style.display = "none";
     }
 
-    // Map open button + iframe
     const mapEmbed = String(config?.mapEmbedUrl || "").trim();
     if (openMapBtn) {
       if (mapEmbed) openMapBtn.href = mapEmbed;
       else openMapBtn.style.display = "none";
     }
 
-    // BlueMap iframe
     if (bluemapFrame) {
       if (mapEmbed) {
         bluemapFrame.src = mapEmbed;
@@ -355,16 +398,11 @@
   }
 
   function renderWorldMood(ws) {
-    // best-effort support for a "mood" object like:
-    // mood: { headline, flavor, timeOfDay, weather, season, moonPhase }
-    const mood = ws?.mood || ws?.world?.mood || null;
-
-    // Clock: prefer ws.time / ws.worldTime formatted; fallback to mood.headline split
-    const clock = mood?.clock || ws?.clock || ws?.world?.clock || ws?.timeText || mood?.timeOfDay || "—";
-    const weather = mood?.weather || ws?.weather || ws?.world?.weather || "—";
-    const season = mood?.season || ws?.season || ws?.world?.season || "—";
-    const moon = (Number.isFinite(Number(mood?.moonPhase)) ? `Moon ${mood.moonPhase}` : (mood?.moon || ws?.moon || "—"));
-    const flavor = mood?.flavor || ws?.flavor || ws?.world?.flavor || "—";
+    const clock = ws?.time?.clock || ws?.mood?.timeOfDay || "—";
+    const weather = prettyWeather(ws);
+    const season = prettySeason(ws);
+    const moon = prettyMoon(ws);
+    const flavor = ws?.mood?.flavor || "—";
 
     safeSetText(worldMoodClock, `🕰️ ${clock}`);
     safeSetText(worldMoodWeather, `☁️ ${weather}`);
@@ -374,29 +412,37 @@
   }
 
   function renderPerformance(ws) {
-    // Try common fields:
-    const perf = ws?.performance || ws?.server?.performance || ws?.server || ws || {};
-    const tps = perf?.tps ?? perf?.TPS ?? ws?.tps;
-    const mspt = perf?.mspt ?? perf?.MSPT ?? ws?.mspt;
-    const memUsed = perf?.memUsed ?? perf?.memoryUsed ?? perf?.memory?.used ?? ws?.memoryUsed;
-    const memMax = perf?.memMax ?? perf?.memoryMax ?? perf?.memory?.max ?? ws?.memoryMax;
+    // Your JSON uses ws.perf.*
+    const p = ws?.perf || ws?.performance || ws?.server?.performance || {};
 
-    safeSetText(tpsLine, Number.isFinite(Number(tps)) ? Number(tps).toFixed(1) : (tps ?? "—"));
-    safeSetText(msptLine, Number.isFinite(Number(mspt)) ? Number(mspt).toFixed(1) : (mspt ?? "—"));
+    const tps = p?.estTps ?? p?.tps ?? p?.TPS;
+    const mspt = p?.avgMspt ?? p?.mspt ?? p?.MSPT;
 
-    if (Number.isFinite(Number(memUsed)) && Number.isFinite(Number(memMax))) {
-      memLine.textContent = `${formatBytes(memUsed)} / ${formatBytes(memMax)}`;
-    } else if (memLine) {
-      memLine.textContent = "—";
+    // Your JSON uses MB fields
+    const usedMb = p?.usedMemMb;
+    const maxMb = p?.maxMemMb;
+
+    safeSetText(tpsLine, Number.isFinite(Number(tps)) ? Number(tps).toFixed(1) : "—");
+    safeSetText(msptLine, Number.isFinite(Number(mspt)) ? Number(mspt).toFixed(1) : "—");
+
+    if (Number.isFinite(Number(usedMb)) && Number.isFinite(Number(maxMb))) {
+      memLine.textContent = `${Number(usedMb).toFixed(0)} MB / ${Number(maxMb).toFixed(0)} MB`;
+    } else {
+      // Fallback if a different shape shows up later
+      const memUsed = p?.memUsed ?? p?.memoryUsed ?? p?.memory?.used;
+      const memMax = p?.memMax ?? p?.memoryMax ?? p?.memory?.max;
+      if (Number.isFinite(Number(memUsed)) && Number.isFinite(Number(memMax))) {
+        memLine.textContent = `${formatBytes(memUsed)} / ${formatBytes(memMax)}`;
+      } else {
+        memLine.textContent = "—";
+      }
     }
   }
 
   function renderAE2(ws) {
-    // Expecting something like:
-    // ae2: { total: { online, offline, conflicted, unknown }, byDimension:[...] }
     const ae2 = ws?.ae2 || ws?.extra?.ae2 || null;
 
-    if (!ae2) {
+    if (!ae2 || ae2?.ae2Loaded === false) {
       if (ae2Pill) ae2Pill.textContent = "🧠 AE2: —";
       safeSetText(ae2Online, "—");
       safeSetText(ae2Offline, "—");
@@ -406,25 +452,24 @@
     }
 
     const total = ae2.total || {};
-    const online = total.online ?? "—";
-    const offline = total.offline ?? "—";
-    const conflicted = total.conflicted ?? "—";
-    const unknown = total.unknown ?? 0;
+    const online = Number(total.online ?? 0);
+    const offline = Number(total.offline ?? 0);
+    const conflicted = Number(total.conflicted ?? 0);
+    const unknown = Number(total.unknown ?? 0);
 
     safeSetText(ae2Online, online);
     safeSetText(ae2Offline, offline);
     safeSetText(ae2Conflicted, conflicted);
 
-    const ok = (Number(online) > 0) && (Number(unknown) === 0) && (Number(conflicted) === 0);
-    if (ae2Pill) ae2Pill.textContent = `🧠 AE2: ${ok ? "Online" : "Check"}`;
+    const ok = (unknown === 0) && (conflicted === 0);
+    if (ae2Pill) ae2Pill.textContent = `🧠 AE2: ${ok ? "OK" : "Check"}`;
 
-    // Small note by dimension (best effort)
     const dims = Array.isArray(ae2.byDimension) ? ae2.byDimension : [];
     if (dims.length) {
       const parts = dims.slice(0, 3).map(d => {
-        const dim = d.dimension || "unknown";
+        const dim = prettyDimension(d.dimension || "unknown");
         const c = d.controllers || {};
-        return `${dim} (${c.online ?? 0} online, ${c.unknown ?? 0} unknown)`;
+        return `${dim} (${Number(c.online ?? 0)} online, ${Number(c.unknown ?? 0)} unknown)`;
       });
       safeSetText(ae2DimNote, parts.join(" • "));
     } else {
@@ -433,21 +478,18 @@
   }
 
   function renderPlayers(ws) {
-    // Support fields:
-    // players: { online, max, list:[{name,uuid}] } OR ws.playersOnline etc.
-    const p = ws?.players || ws?.server?.players || ws || {};
-    const online = Number(p?.online ?? ws?.playersOnline ?? ws?.onlinePlayers ?? 0);
-    const max = Number(p?.max ?? ws?.playersMax ?? ws?.maxPlayers ?? 0);
-    const list = Array.isArray(p?.list) ? p.list
-      : Array.isArray(ws?.playerList) ? ws.playerList
-      : Array.isArray(ws?.players) ? ws.players
-      : [];
+    // Your worldstate: players: [] (array of online players)
+    const list = Array.isArray(ws?.players) ? ws.players : [];
+    const online = list.length;
 
-    safeSetText(playersOnlineCountMini, Number.isFinite(online) ? online : "—");
-    safeSetText(playersMaxCountMini, Number.isFinite(max) && max > 0 ? max : "—");
+    // Max is in meta.maxPlayers in your JSON
+    const max = Number(ws?.meta?.maxPlayers ?? 0);
 
-    safeSetText(playersOnlineCount, Number.isFinite(online) ? online : "—");
-    safeSetText(playersMaxCount, Number.isFinite(max) && max > 0 ? max : "—");
+    safeSetText(playersOnlineCountMini, online);
+    safeSetText(playersMaxCountMini, max > 0 ? max : "—");
+
+    safeSetText(playersOnlineCount, online);
+    safeSetText(playersMaxCount, max > 0 ? max : "—");
 
     if (!playersGrid) return;
 
@@ -470,7 +512,6 @@
       const avatar = document.createElement("div");
       avatar.className = "avatar";
       const img = document.createElement("img");
-      // Use Crafatar for avatars if uuid present; fallback to a blank block
       if (uuid) img.src = `https://crafatar.com/avatars/${encodeURIComponent(uuid)}?size=64&overlay`;
       img.alt = name;
       avatar.appendChild(img);
@@ -500,7 +541,9 @@
 
     const query = String(waystoneSearch?.value || "").trim().toLowerCase();
     const filtered = query
-      ? list.filter(w => String(w?.name || "").toLowerCase().includes(query) || String(w?.dimension || "").toLowerCase().includes(query))
+      ? list.filter(w =>
+          String(w?.name || "").toLowerCase().includes(query) ||
+          String(w?.dimension || "").toLowerCase().includes(query))
       : list;
 
     waystoneList.innerHTML = "";
@@ -513,7 +556,7 @@
 
     for (const w of filtered.slice(0, 200)) {
       const name = w?.name || "Waystone";
-      const dim = w?.dimension || "unknown";
+      const dim = prettyDimension(w?.dimension || "unknown");
       const x = w?.x ?? w?.pos?.x;
       const y = w?.y ?? w?.pos?.y;
       const z = w?.z ?? w?.pos?.z;
@@ -554,20 +597,26 @@
   }
 
   async function loadWaystones(config) {
+    // 1) Prefer the waystones embedded in the latest worldstate snapshot
+    if (latestWorldState && Array.isArray(latestWorldState.waystones)) {
+      renderWaystones(latestWorldState.waystones);
+      return;
+    }
+
+    // 2) Fallback: external waystonesUrl if you have one
     const url = String(config?.waystonesUrl || "").trim();
     if (!url) {
       renderWaystones([]);
       return;
     }
+
     try {
       const data = await fetchJson(url, 8000);
-      // allow either an array directly, or { waystones:[...] }
       const items = Array.isArray(data) ? data : (Array.isArray(data?.waystones) ? data.waystones : []);
       renderWaystones(items);
-    } catch (e) {
+    } catch {
       renderWaystones([]);
       if (waystoneNote) waystoneNote.textContent = "Waystones unavailable right now.";
-      // console.warn(e);
     }
   }
 
@@ -575,61 +624,42 @@
   // Starter Kits
   // ----------------------------
   function parseKitItems(raw) {
-    // If it's already a structured array, use it directly.
     if (Array.isArray(raw)) return raw;
-
-    // If it's the StarterKit "raw" string, parse it into display items.
     if (typeof raw === "string" && raw.includes("id:")) {
       return parseStarterKitRaw(raw);
     }
-
     return [];
   }
 
   function parseStarterKitRaw(rawStr) {
     const s = String(rawStr || "");
 
-    // Collect raw entries then merge duplicates
     const found = [];
     const add = (id, count) => {
       if (!id) return;
       const c = Number(count);
       found.push({
         id,
-        name: id, // your renderer uses name OR id
+        name: id,
         count: Number.isFinite(c) && c > 0 ? c : 1
       });
     };
 
-    /*
-      Your raw format looks like:
-
-      'feet' : '{Count:1b,id:"minecraft:leather_boots",tag:{Damage:0}}',
-      0 : '{Count:1b,id:"ae2:guide"}',
-      1 : '{Count:6b,id:"ae2:certus_quartz_crystal"}',
-
-      It's a string containing many:  KEY : '{ ... }'
-
-      We match the '{...}' blob between single quotes, then extract Count + id
-    */
     const nbtBlobRegex = /:\s*'(\{[^']*\})'/g;
     let m;
     while ((m = nbtBlobRegex.exec(s)) !== null) {
-      const blob = m[1]; // "{Count:1b,id:\"...\" ...}"
+      const blob = m[1];
 
-      // id:"mod:item" or id:\"mod:item\"
       const idMatch = blob.match(/id\s*:\s*(?:"|\\")([^"\\]+)(?:"|\\")/);
       if (!idMatch) continue;
       const id = idMatch[1];
 
-      // Count:12b (optional)
       const countMatch = blob.match(/Count\s*:\s*(\d+)\s*[bBsS]?\b/);
       const count = countMatch ? Number(countMatch[1]) : 1;
 
       add(id, count);
     }
 
-    // Merge duplicates (same id appears in multiple slots)
     const merged = new Map();
     for (const it of found) {
       const prev = merged.get(it.id);
@@ -702,8 +732,12 @@
       const itemChips = (items && items.length)
         ? items.slice(0, 10).map(it => {
             const count = it?.count ?? it?.qty ?? it?.amount ?? 1;
-            const iname = it?.name || it?.id || "item";
-            return `<span class="itemChip"><span class="count">${escapeHtml(count)}</span><span class="iname">${escapeHtml(iname)}</span></span>`;
+
+            const inameRaw = it?.name || it?.id || "item";
+            const iname = String(inameRaw).includes(":") ? prettyId(inameRaw) : String(inameRaw);
+            const title = it?.id ? String(it.id) : String(inameRaw);
+
+            return `<span class="itemChip" title="${escapeHtml(title)}"><span class="count">${escapeHtml(count)}</span><span class="iname">${escapeHtml(iname)}</span></span>`;
           }).join("")
         : `<div class="kitItemsEmpty">Items not listed.</div>`;
 
@@ -727,16 +761,12 @@
   }
 
   function extractKitsFromWorldstate(ws) {
-    // allow worldstate.extra.starterKits, worldstate.starterKits, etc.
     const rawList = ws?.extra?.starterKits ?? ws?.starterKits ?? ws?.kits ?? null;
     if (!Array.isArray(rawList)) return [];
 
     return rawList.map(k => {
       const rawStr = typeof k?.raw === "string" ? k.raw : "";
 
-      // Priority:
-      // 1) items/displayItems if already structured
-      // 2) parse from raw string
       const items =
         (Array.isArray(k?.items) && k.items.length) ? k.items :
         (Array.isArray(k?.displayItems) && k.displayItems.length) ? k.displayItems :
@@ -753,15 +783,12 @@
   }
 
   async function loadKits(config, wsMaybe) {
-    // Primary: from worldstate (so it reflects server truth)
     const kitsFromWs = wsMaybe ? extractKitsFromWorldstate(wsMaybe) : [];
     if (kitsFromWs.length) {
       renderKits(kitsFromWs);
       return;
     }
 
-    // Fallback: optional static file if you want it
-    // If you don't have this file, it will just fail silently.
     try {
       const data = await fetchJson("data/starterkits.json", 5000);
       const kits = Array.isArray(data) ? data : (Array.isArray(data?.starterKits) ? data.starterKits : []);
@@ -851,7 +878,6 @@
     if (!chatList) return;
 
     const arr = Array.isArray(lines) ? lines : [];
-    // Create a quick hash so we don’t rerender constantly
     const hash = JSON.stringify(arr.slice(-30));
     if (hash === lastChatHash) return;
     lastChatHash = hash;
@@ -878,28 +904,27 @@
       chatList.appendChild(div);
     }
 
-    // keep scrolled to bottom-ish
     chatList.scrollTop = chatList.scrollHeight;
   }
 
   async function loadChat(config) {
     if (!chatEnabled) return;
 
-    // Prefer a dedicated endpoint if you have it:
-    // GET {worldApiBase}/chat.json
-    // Fallback: use worldstate.chat if present
-    const base = String(config?.worldApiBase || "").trim();
-    const token = String(config?.worldStateToken || "").trim();
+    // Your mod provides:
+    // GET  /api/public/feed   (public chat feed)
+    // GET  /api/chat          (chat feed)
+    const baseRaw = String(config?.worldApiBase || "").trim();
+    const base = baseRaw ? withProtocol(baseRaw.replace(/\/+$/, "")) : "";
     const wsUrl = String(config?.worldStateUrl || "").trim();
 
-    // Attempt 1: base/chat.json
+    // Attempt 1: /api/public/feed
     if (base) {
       try {
-        const data = await fetchJson(withProtocol(`${base.replace(/\/+$/, "")}/chat.json`), 5000);
+        const data = await fetchJson(`${base}/api/public/feed`, 5000);
         const lines = Array.isArray(data) ? data : (Array.isArray(data?.lines) ? data.lines : (Array.isArray(data?.chat) ? data.chat : []));
         renderChat(lines);
         safeSetText(chatSendStatus, "Connected");
-        chatSendStatus?.classList.remove("bad");
+        chatSendStatus?.classList.remove("bad", "warn");
         chatSendStatus?.classList.add("good");
         return;
       } catch {
@@ -907,14 +932,29 @@
       }
     }
 
-    // Attempt 2: worldstate chat field
+    // Attempt 2: /api/chat
+    if (base) {
+      try {
+        const data = await fetchJson(`${base}/api/chat`, 5000);
+        const lines = Array.isArray(data) ? data : (Array.isArray(data?.lines) ? data.lines : (Array.isArray(data?.chat) ? data.chat : []));
+        renderChat(lines);
+        safeSetText(chatSendStatus, "Connected");
+        chatSendStatus?.classList.remove("bad", "warn");
+        chatSendStatus?.classList.add("good");
+        return;
+      } catch {
+        // fall through
+      }
+    }
+
+    // Attempt 3: worldstate includes chat
     if (wsUrl) {
       try {
         const ws = await fetchJson(wsUrl, 6000);
         const lines = ws?.chat || ws?.extra?.chat || [];
         if (Array.isArray(lines)) renderChat(lines);
         safeSetText(chatSendStatus, "Connected");
-        chatSendStatus?.classList.remove("bad");
+        chatSendStatus?.classList.remove("bad", "warn");
         chatSendStatus?.classList.add("good");
         return;
       } catch {
@@ -923,7 +963,7 @@
     }
 
     safeSetText(chatSendStatus, "Not connected");
-    chatSendStatus?.classList.remove("good");
+    chatSendStatus?.classList.remove("good", "warn");
     chatSendStatus?.classList.add("bad");
   }
 
@@ -934,10 +974,10 @@
     const msg = String(chatMsg?.value || "").trim();
     if (!msg) return;
 
-    const base = String(config?.worldApiBase || "").trim();
+    const baseRaw = String(config?.worldApiBase || "").trim();
     const token = String(config?.worldStateToken || "").trim();
 
-    if (!base) {
+    if (!baseRaw) {
       alert("Chat send is not configured (worldApiBase is missing).");
       return;
     }
@@ -946,7 +986,9 @@
       return;
     }
 
-    const url = withProtocol(`${base.replace(/\/+$/, "")}/chat/send`);
+    // Your mod expects: POST /api/chat with {"name":"Web","msg":"hello"}
+    const base = withProtocol(baseRaw.replace(/\/+$/, ""));
+    const url = `${base}/api/chat`;
 
     disableButtonLike(chatSendBtn, "Sending…");
     safeSetText(chatSendStatus, "Sending…");
@@ -960,7 +1002,7 @@
           "Content-Type": "application/json",
           "X-Worldstate-Token": token
         },
-        body: JSON.stringify({ name, message: msg })
+        body: JSON.stringify({ name, msg })
       });
 
       const text = await res.text();
@@ -993,15 +1035,12 @@
     const ws = await fetchJson(url, 8000);
     latestWorldState = ws;
 
-    // online/offline
     const online =
       Boolean(ws?.online ?? ws?.server?.online ?? true) &&
       (ws?.error ? false : true);
 
     setStatus(online, online ? "Online" : "Offline");
 
-    // last update timestamp
-    // try meta.generatedAt (seconds) first
     const genSec = ws?.meta?.generatedAt ?? ws?.generatedAt ?? ws?.ts ?? null;
     if (genSec) {
       const ms = Number(genSec) * (String(genSec).length <= 10 ? 1000 : 1);
@@ -1010,7 +1049,6 @@
       safeSetText(lastUpdate, "—");
     }
 
-    // motd
     const motd = ws?.motd || ws?.server?.motd || "";
     safeSetText(serverMotd, motd || "—");
 
@@ -1019,7 +1057,6 @@
     renderAE2(ws);
     renderPlayers(ws);
 
-    // kits often live in worldstate
     await loadKits(config, ws);
 
     return ws;
@@ -1042,16 +1079,16 @@
     if (!cfg) return;
     try {
       await loadWorldState(cfg);
-    } catch (e) {
+    } catch {
       setStatus(false, "Offline");
       safeSetText(lastUpdate, "—");
       safeSetText(serverMotd, "Worldstate unavailable");
-      // console.warn(e);
     }
 
-    // waystones + modlist can refresh less frequently, but it’s fine here
+    // waystones now prefer embedded worldstate
     loadWaystones(cfg);
-    // mods are static file; refresh occasionally but cheap
+
+    // mods are static file; cheap
     loadMods();
   }
 
@@ -1102,7 +1139,7 @@
 
     try {
       cfg = await fetchJson("data/server.json", 8000);
-    } catch (e) {
+    } catch {
       setStatus(false, "Config error");
       safeSetText(serverMotd, "Could not load data/server.json");
       if (mapFallback) mapFallback.style.display = "";
@@ -1113,10 +1150,8 @@
     applyMaintenanceFromCfg(cfg);
     setModpackLinks(cfg);
 
-    // Initial load
     await refreshAll();
 
-    // Start loops
     startRefreshLoop();
     startChatLoop();
   })();
