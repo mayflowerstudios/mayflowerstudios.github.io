@@ -13,7 +13,7 @@
       "label": "🧪 Test Modpack",
       "note": "This pack is ONLY for testing during maintenance. It may change often.",
       "curseforgeUrl": "",
-      "directZipUrl": "/downloads/Luna's Guns and Stuff Test-1.0.0.zip"
+      "directZipUrl": "/downloads/testpack.zip"
     }
   },
   
@@ -31,7 +31,7 @@
   "bluemapWorldId": "world-mayflower",
   "modpack": {
     "curseforgeUrl": "https://www.curseforge.com/minecraft/modpacks/lunas-guns-and-stuff",
-    "directZipUrl": "/downloads/Luna's Guns and Stuff-1.3.9.zip",
+    "directZipUrl": "/downloads/modpack.zip",
     "note": "Install via CurseForge for the easiest setup. Direct ZIP will appear here once we host one."
   },
   "links": {
