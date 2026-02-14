@@ -923,21 +923,65 @@
     const shown = arr.slice(-120);
 
     for (const line of shown) {
-      const who = line?.name || line?.author || "Server";
-      const msg = line?.message || line?.msg || line?.text || "";
-      const ts = line?.ts || line?.time || line?.timestamp || null;
+      // Your API shape:
+      // { t: 1771101115, type: "join|leave|chat|...", player: "Name", msg: "..." }
+      const type = String(line?.type || "").toLowerCase();
 
-      const timeStr = ts ? formatTimeAgo(Number(ts) * (String(ts).length <= 10 ? 1000 : 1)) : "";
+      const who =
+        line?.player ||
+        line?.name ||
+        line?.author ||
+        "Server";
+
+      const msg =
+        line?.msg ||
+        line?.message ||
+        line?.text ||
+        "";
+
+      const ts =
+        line?.t ||
+        line?.ts ||
+        line?.time ||
+        line?.timestamp ||
+        null;
+
+      const timeStr = ts
+        ? formatTimeAgo(Number(ts) * (String(ts).length <= 10 ? 1000 : 1))
+        : "";
+
+      // Pretty labels for system-ish events
+      let whoLabel = who;
+      let msgLabel = msg;
+
+      if (type === "join") {
+        whoLabel = "🟢 Join";
+        msgLabel = `${who} ${msg || "joined the game"}`;
+      } else if (type === "leave") {
+        whoLabel = "🔴 Leave";
+        msgLabel = `${who} ${msg || "left the game"}`;
+      } else if (type === "death") {
+        whoLabel = "☠️ Death";
+        msgLabel = msg ? `${who} ${msg}` : `${who} died`;
+      } else if (type === "advancement" || type === "adv") {
+        whoLabel = "🏆 Advancement";
+        msgLabel = msg ? `${who} ${msg}` : `${who} made an advancement`;
+      } else if (type && type !== "chat") {
+        // Unknown non-chat event types still get a label, but don't break anything
+        whoLabel = `📣 ${titleCaseWords(type)}`;
+        msgLabel = msg ? `${who}: ${msg}` : `${who}`;
+      }
 
       const div = document.createElement("div");
       div.className = "chatLine";
       div.innerHTML = `
         <div class="chatTop">
-          <strong>${escapeHtml(who)}</strong>
+          <strong>${escapeHtml(whoLabel)}</strong>
           <span>${escapeHtml(timeStr)}</span>
         </div>
-        <div class="chatMsg">${escapeHtml(msg)}</div>
+        <div class="chatMsg">${escapeHtml(msgLabel)}</div>
       `;
+
       chatList.appendChild(div);
     }
 
