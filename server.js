@@ -515,11 +515,11 @@
   }
 
   function renderPlayers(ws) {
-    // Your worldstate: players: [] (array of online players)
+    // In WorldState 1.3.1 public snapshot, ws.players is PublicPlayerInfo[]
+    // In private snapshots, ws.players may contain uuid/x/y/z etc.
     const list = Array.isArray(ws?.players) ? ws.players : [];
     const online = list.length;
 
-    // Max is in meta.maxPlayers in your JSON
     const max = Number(ws?.meta?.maxPlayers ?? 0);
 
     safeSetText(playersOnlineCountMini, online);
@@ -541,23 +541,62 @@
 
     for (const pl of shown) {
       const name = pl?.name || pl?.username || "Player";
-      const uuid = pl?.uuid || pl?.id || "";
+      const uuid = pl?.uuid || pl?.id || ""; // (public snapshot usually has none)
+
+      // Activity fields that ARE present in public snapshot:
+      const activity = String(pl?.activity || "").trim();
+      const dim = String(pl?.dimension || "").trim();
+      const biome = String(pl?.biome || "").trim();
+      const distance = String(pl?.distance || "").trim();
+
+      // If you ever swap to private player info, coords might exist:
+      const x = pl?.x ?? pl?.pos?.x;
+      const y = pl?.y ?? pl?.pos?.y;
+      const z = pl?.z ?? pl?.pos?.z;
+      const coords = (Number.isFinite(Number(x)) && Number.isFinite(Number(y)) && Number.isFinite(Number(z)))
+        ? `${Math.floor(Number(x))} ${Math.floor(Number(y))} ${Math.floor(Number(z))}`
+        : "";
+
+      // Build a nice “doing” line:
+      let doing = activity;
+      if (!doing) {
+        const bits = [];
+        if (dim) bits.push(prettyDimension(dim));
+        if (biome) bits.push(titleCaseWords(biome.replaceAll("_", " ")));
+        if (distance) bits.push(distance);
+        if (coords) bits.push(coords);
+        doing = bits.length ? bits.join(" • ") : "—";
+      }
 
       const card = document.createElement("div");
       card.className = "pCard";
 
       const avatar = document.createElement("div");
       avatar.className = "avatar";
+
       const img = document.createElement("img");
-      if (uuid) img.src = `https://crafatar.com/avatars/${encodeURIComponent(uuid)}?size=64&overlay`;
       img.alt = name;
+
+      // Prefer UUID avatar if present; otherwise use name-based avatar.
+      const urlUuid = uuid
+        ? `https://crafatar.com/avatars/${encodeURIComponent(uuid)}?size=64&overlay`
+        : "";
+      const urlName = `https://minotar.net/avatar/${encodeURIComponent(name)}/64`;
+
+      img.src = urlUuid || urlName;
+
+      // If uuid URL fails (or no skin), fall back to name.
+      img.addEventListener("error", () => {
+        if (img.src !== urlName) img.src = urlName;
+      });
+
       avatar.appendChild(img);
 
       const meta = document.createElement("div");
       meta.className = "pMeta";
       meta.innerHTML = `
         <div class="pName">${escapeHtml(name)}</div>
-        <div class="pSub">${uuid ? escapeHtml(uuid.slice(0, 8)) : "—"}</div>
+        <div class="pSub">${escapeHtml(doing)}</div>
       `;
 
       card.appendChild(avatar);
