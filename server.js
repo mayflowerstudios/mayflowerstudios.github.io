@@ -515,24 +515,10 @@
   }
 
   function renderPlayers(ws) {
-    const priv = Array.isArray(ws?.players) ? ws.players : [];
-    const pub  = Array.isArray(ws?.publicPlayers) ? ws.publicPlayers : [];
+    // Use PUBLIC players because that's where the mod puts "activity"
+    const list = Array.isArray(ws?.publicPlayers) ? ws.publicPlayers : [];
 
-    // If both exist, merge by player name
-    const privByName = new Map(priv.map(p => [String(p?.name || "").toLowerCase(), p]));
-    const merged = [];
-
-    if (pub.length) {
-      for (const p of pub) {
-        const key = String(p?.name || "").toLowerCase();
-        merged.push({ ...p, ...(privByName.get(key) || {}) });
-      }
-    } else {
-      // Fallback: only private list exists
-      merged.push(...priv);
-    }
-
-    const online = merged.length;
+    const online = list.length;
     const max = Number(ws?.meta?.maxPlayers ?? 0);
 
     safeSetText(playersOnlineCountMini, online);
@@ -543,71 +529,32 @@
     if (!playersGrid) return;
     playersGrid.innerHTML = "";
 
-    const shown = merged.slice(0, 50);
-    if (!shown.length) {
+    if (!list.length) {
       if (playersOnlineNote) playersOnlineNote.textContent = "No players online right now.";
       return;
     }
     if (playersOnlineNote) playersOnlineNote.textContent = "Online right now:";
 
-    for (const pl of shown) {
-      const name = pl?.name || pl?.username || "Player";
-      const uuid = pl?.uuid || pl?.id || "";
+    for (const pl of list.slice(0, 50)) {
+      const name = pl?.name || "Player";
 
-      // ✅ This is the mod-driven activity string (PublicPlayerInfo.activity)
-      const activity = String(pl?.activity || "").trim();
+      // mod-driven activity + dimension
+      const activity = String(pl?.activity || "").trim() || "Playing";
+      const dimRaw = String(pl?.dimension || "").trim();
+      const dim = dimRaw ? prettyDimension(dimRaw) : "Unknown";
 
-      const dim = String(pl?.dimension || "").trim();
-      const biome = String(pl?.biome || "").trim();
-      const distance = String(pl?.distance || "").trim();
-
-      // coords exist only in ws.players (private list)
-      const x = pl?.x ?? pl?.pos?.x;
-      const y = pl?.y ?? pl?.pos?.y;
-      const z = pl?.z ?? pl?.pos?.z;
-      const coords =
-        (Number.isFinite(Number(x)) && Number.isFinite(Number(y)) && Number.isFinite(Number(z)))
-          ? `${Math.floor(Number(x))} ${Math.floor(Number(y))} ${Math.floor(Number(z))}`
-          : "";
-
-      // Build “doing” line: prefer mod activity, else fall back nicely
-      let doing = activity;
-      if (!doing) {
-        const bits = [];
-        if (dim) bits.push(prettyDimension(dim));
-        if (biome) bits.push(titleCaseWords(biome.replaceAll("_", " ")));
-        if (distance) bits.push(distance);
-        if (coords) bits.push(coords);
-        doing = bits.length ? bits.join(" • ") : "—";
-      } else {
-        // Optionally include some context with activity
-        const bits = [activity];
-        if (dim) bits.push(prettyDimension(dim));
-        if (biome) bits.push(titleCaseWords(biome.replaceAll("_", " ")));
-        if (coords) bits.push(coords);
-        doing = bits.join(" • ");
-      }
+      const doing = `${activity} • ${dim}`;
 
       const card = document.createElement("div");
       card.className = "pCard";
 
+      // No UUID in publicPlayers, so use name-based head
       const avatar = document.createElement("div");
       avatar.className = "avatar";
 
       const img = document.createElement("img");
       img.alt = name;
-
-      // Prefer UUID-based face; fallback to name-based
-      const urlUuid = uuid
-        ? `https://crafatar.com/avatars/${encodeURIComponent(uuid)}?size=64&overlay`
-        : "";
-      const urlName = `https://minotar.net/avatar/${encodeURIComponent(name)}/64`;
-
-      img.src = urlUuid || urlName;
-      img.addEventListener("error", () => {
-        if (img.src !== urlName) img.src = urlName;
-      });
-
+      img.src = `https://minotar.net/avatar/${encodeURIComponent(name)}/64`;
       avatar.appendChild(img);
 
       const meta = document.createElement("div");
