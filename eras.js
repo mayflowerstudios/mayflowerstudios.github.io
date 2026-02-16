@@ -1,6 +1,7 @@
 /* eras.js — Mayflower Studios Eras page
    - Loads data/server.json config
    - Fetches eras from WorldState (/api/public/eras)
+   - Fetches era unlock index (/api/public/era_players)
    - Renders a clean, player-friendly breakdown (no dev-y metadata)
 */
 (() => {
@@ -16,7 +17,10 @@
   const groupsHost = el("erasGroups");
 
   let ALL = [];
-  let API_URL = null;
+  let API_BASE = null;
+
+  // eraId -> ["PlayerName", ...]
+  let ERA_PLAYERS = {};
 
   function safeText(node, text) {
     if (!node) return;
@@ -60,9 +64,6 @@
   }
 
   function prettyRegistryId(raw) {
-    // minecraft:flint_and_steel -> Flint And Steel
-    // ars_nouveau:scribes_table -> Scribes Table
-    // some_path/thing -> Some Path Thing
     const s = String(raw || "");
     const after = s.includes(":") ? s.split(":").slice(1).join(":") : s;
     const cleaned = after
@@ -168,18 +169,37 @@
 
   function getBlocked(e) {
     const g = e?.gates || {};
-    // "Mods" = namespaces from either blocks or items
     const mods = uniq([...(g.denyNamespaces || []), ...(g.denyItemNamespaces || [])]);
 
-    // "Blocks" = explicit denyBlocks + denyIfPathContains (present as patterns)
     const blocks = uniq([...(g.denyBlocks || [])]);
     const blockPatterns = uniq([...(g.denyIfPathContains || [])]);
 
-    // "Items" = explicit denyItems + denyItemIfPathContains (present as patterns)
     const items = uniq([...(g.denyItems || [])]);
     const itemPatterns = uniq([...(g.denyItemIfPathContains || [])]);
 
     return { mods, blocks, blockPatterns, items, itemPatterns };
+  }
+
+  function playersForEra(eraId) {
+    if (!eraId) return [];
+    const list = ERA_PLAYERS[String(eraId)] || [];
+    return uniq(list).sort((a, b) => String(a).localeCompare(String(b)));
+  }
+
+  function renderUnlockedBy(eraId) {
+    const list = playersForEra(eraId);
+    if (!list.length) return `<div class="emptyNote">No one yet (or not indexed yet).</div>`;
+
+    const LIMIT = 18;
+    const shown = list.slice(0, LIMIT);
+    const rest = list.length - shown.length;
+
+    return `
+      <div class="kv">
+        ${shown.map(n => `<span class="tag">${esc(n)}</span>`).join("")}
+      </div>
+      ${rest > 0 ? `<div class="small" style="margin-top:8px; opacity:.75;">+${rest} more…</div>` : ``}
+    `;
   }
 
   function eraCard(e) {
@@ -196,18 +216,23 @@
     else if (minsReq == null) badges.push(`⏱️ No time gate`);
     else badges.push(`⏱️ ${fmtTime(minsReq)}`);
 
-    // quick count (mods + blocks + items + patterns)
     const blockedCount = b.mods.length + b.blocks.length + b.items.length + b.blockPatterns.length + b.itemPatterns.length;
+
+    const unlockedCount = playersForEra(e.id).length;
 
     return `
       <article class="eraCard" style="${style}">
         <div class="eraHead">
           <div>
-            <h3 class="eraTitle"><span class="eraDot" aria-hidden="true"></span>${esc(title)}</h3>
+            <h3 class="eraTitle">
+              <span class="eraDot" aria-hidden="true"></span>
+              ${esc(title)}
+            </h3>
           </div>
           <div class="eraBadges">
             ${badges.map(b => `<span class="miniPill">${esc(b)}</span>`).join("")}
             <span class="miniPill">🚫 Blocked: ${blockedCount}</span>
+            <span class="miniPill">✅ Unlocked: ${unlockedCount}</span>
           </div>
         </div>
 
@@ -219,8 +244,18 @@
           ${ms.length > 18 ? `<div class="small" style="margin-top:8px; opacity:.75;">+${ms.length - 18} more…</div>` : ``}
         </div>
 
-        <div style="margin-top:12px; border-top:1px solid rgba(255,255,255,.10); padding-top:10px; position:relative; z-index:1;">
+        <details class="eraDetails">
+          <summary>
+            <span>More details</span>
+            <span class="small" style="opacity:.75;">(gates + unlocked by)</span>
+          </summary>
+
           <div class="gatesGrid">
+            <div class="gbox">
+              <h4>Unlocked by</h4>
+              ${renderUnlockedBy(e.id)}
+            </div>
+
             <div class="gbox">
               <h4>Mods blocked</h4>
               ${renderTagsPretty(b.mods, "mod")}
@@ -238,7 +273,7 @@
               ${b.itemPatterns.length ? `<div class="small" style="opacity:.85; margin-top:10px;">Patterns</div>${renderTagsPretty(b.itemPatterns, "contains")}` : ``}
             </div>
           </div>
-        </div>
+        </details>
       </article>
     `;
   }
@@ -301,10 +336,13 @@
     const filtered = !q ? ALL : ALL.filter(e => {
       const ms = (e.milestones || []).map(prettyRegistryId).join(" ");
       const blocked = getBlocked(e);
+      const unlocked = playersForEra(e.id).join(" ");
+
       const blob =
-        `${e.id||""} ${e.title||""} ${ms} ` +
+        `${e.id||""} ${e.title||""} ${ms} ${unlocked} ` +
         `${blocked.mods.join(" ")} ${blocked.blocks.join(" ")} ${blocked.items.join(" ")} ` +
         `${blocked.blockPatterns.join(" ")} ${blocked.itemPatterns.join(" ")}`;
+
       return blob.toLowerCase().includes(q);
     });
 
@@ -332,27 +370,45 @@
     `).join("");
   }
 
+  async function fetchJson(url) {
+    const res = await fetch(url, { cache: "no-store" });
+    const payload = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(`${url} HTTP ${res.status}`);
+    if (!payload) throw new Error(`${url} returned empty JSON`);
+    return payload;
+  }
+
   async function load() {
     clearError();
     if (note) note.textContent = "Loading…";
     if (groupsHost) groupsHost.innerHTML = "";
 
     const cfg = await loadServerConfig();
-    const base = pickWorldApiBase(cfg);
-    API_URL = `${base}/api/public/eras`;
+    API_BASE = pickWorldApiBase(cfg);
+
+    const erasUrl = `${API_BASE}/api/public/eras`;
+    const eraPlayersUrl = `${API_BASE}/api/public/era_players`;
 
     try {
-      const res = await fetch(API_URL, { cache: "no-store" });
-      const payload = await res.json().catch(() => null);
+      // Load both (eraPlayers is optional — page still works without it)
+      const [erasPayload, eraPlayersPayload] = await Promise.all([
+        fetchJson(erasUrl),
+        fetchJson(eraPlayersUrl).catch(() => null)
+      ]);
 
-      if (!res.ok) throw new Error(`WorldState eras API HTTP ${res.status}`);
-      if (!payload) throw new Error("Empty JSON response");
-      if (payload.exists === false) throw new Error("eras.json not found on the server");
+      if (erasPayload.exists === false) throw new Error("eras.json not found on the server");
 
-      safeText(metaUpdated, fmtDate(payload.lastModified || payload.generatedAt));
+      safeText(metaUpdated, fmtDate(erasPayload.lastModified || erasPayload.generatedAt));
 
-      const eras = payload?.data?.eras;
+      const eras = erasPayload?.data?.eras;
       ALL = normalizeList(Array.isArray(eras) ? eras : []);
+
+      // Era players index shape expected:
+      // { byEra: { "artisan": ["Name1","Name2"] ... }, ... }
+      ERA_PLAYERS = {};
+      if (eraPlayersPayload && eraPlayersPayload.byEra && typeof eraPlayersPayload.byEra === "object") {
+        ERA_PLAYERS = eraPlayersPayload.byEra || {};
+      }
 
       applyFilter();
     } catch (e) {
