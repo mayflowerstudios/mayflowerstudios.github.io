@@ -9,7 +9,7 @@
     "disableWebChat": true,
 
     "maintenanceModpack": {
-      "enabled": true,
+      "enabled": false,
       "label": "🧪 Test Modpack",
       "note": "This pack is ONLY for testing during maintenance. It may change often.",
       "curseforgeUrl": "",
