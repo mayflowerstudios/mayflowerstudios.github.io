@@ -388,11 +388,15 @@
       }
     }
 
-    function withProtocol(url) {
+    function resolveUrl(url) {
       const u = String(url || "").trim();
       if (!u) return "";
+
+      // Absolute URLs stay absolute
       if (u.startsWith("http://") || u.startsWith("https://")) return u;
-      return "https://" + u;
+
+      // Resolve relative or root-relative against the current site
+      return new URL(u, window.location.origin).toString();
     }
 
     // Direct ZIP tabs
@@ -423,7 +427,7 @@
         const cfg = await fetchJson("data/server.json", 6000);
 
         const curseforge = String(cfg?.modpack?.curseforgeUrl || "").trim();
-        const directZip = withProtocol(cfg?.modpack?.directZipUrl || "");
+        const directZip = resolveUrl(cfg?.modpack?.directZipUrl || "");
 
         const curseforgeBtn = document.getElementById("curseforgeBtn");
         if (curseforgeBtn && curseforge) curseforgeBtn.href = curseforge;

@@ -18,8 +18,26 @@
   function withProtocol(url) {
     const u = String(url || "").trim();
     if (!u) return "";
+
+    // If it's already absolute (http/https), keep it
     if (u.startsWith("http://") || u.startsWith("https://")) return u;
+
+    // If it's site-relative (/downloads/...), keep it relative
+    if (u.startsWith("/")) return u;
+
+    // Otherwise treat it like a host/path and add https
     return "https://" + u;
+  }
+
+  function resolveUrl(url) {
+    const u = String(url || "").trim();
+    if (!u) return "";
+
+    // Absolute URLs stay absolute
+    if (u.startsWith("http://") || u.startsWith("https://")) return u;
+
+    // Resolve relative or root-relative against the current site
+    return new URL(u, window.location.origin).toString();
   }
 
   function clamp(n, a, b) {
@@ -337,7 +355,7 @@
     const note = String(chosen?.note || config?.modpack?.note || "").trim();
 
     const cf = String(chosen?.curseforgeUrl || "").trim();
-    const zip = withProtocol(chosen?.directZipUrl || "");
+    const zip = resolveUrl(chosen?.directZipUrl || "");
 
     safeSetText(modpackLabel, label);
     safeSetText(modpackNote, note || "—");
