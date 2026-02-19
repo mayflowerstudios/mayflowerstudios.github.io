@@ -126,22 +126,107 @@
       background: rgba(255,255,255,.10);
       margin:18px 0;
     }
+
+    /* -----------------------------------------
+       Ko-fi embed: styled to fit your site
+       (placed at bottom of page)
+       ----------------------------------------- */
+    .kofiWrap{
+      margin-top: 12px;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.03);
+      box-shadow: 0 18px 60px rgba(0,0,0,.25);
+      overflow: hidden;
+      position: relative;
+    }
+    .kofiWrap::before{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        radial-gradient(700px 260px at 10% 0%, rgba(251,113,133,.10), transparent 55%),
+        radial-gradient(600px 240px at 95% 15%, rgba(167,139,250,.08), transparent 55%);
+      pointer-events:none;
+    }
+    .kofiTopRow{
+      position: relative;
+      z-index: 1;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.10);
+      backdrop-filter: blur(6px);
+    }
+    .kofiTopRow .left{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width: 0;
+    }
+    .kofiPill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      font-size: 13px;
+      opacity: .92;
+      white-space: nowrap;
+    }
+    .kofiTopRow .copy{
+      opacity:.78;
+      font-size: 13px;
+      line-height: 1.4;
+      min-width: 0;
+    }
+
+    .kofiFrameShell{
+      position: relative;
+      z-index: 1;
+      padding: 12px;
+    }
+
+    /* The inner shell gives the (mostly light) Ko-fi widget a "window" look */
+    .kofiFrameInner{
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.02);
+    }
+
+    #kofiframe{
+      display:block;
+      width:100%;
+      height: 712px; /* default desktop height */
+      border:none;
+      background: transparent; /* prevents bright inline background */
+    }
+
+    /* On narrow screens Ko-fi often needs a bit more height */
+    @media (max-width: 520px){
+      #kofiframe{ height: 860px; }
+    }
   </style>
 
   <!-- OG:START -->
-<meta name="description" content="A small indie studio building worlds, mods, and bots with heart — designed for cozy communities, long-term adventures, and a little extra magic." />
-<meta property="og:title" content="Mayflower Studios" />
-<meta property="og:description" content="A small indie studio building worlds, mods, and bots with heart — designed for cozy communities, long-term adventures, and a little extra magic." />
-<meta property="og:url" content="https://mayflowerstudios.net/" />
-<meta property="og:type" content="website" />
-<meta property="og:image" content="https://mayflowerstudios.net/assets/og/home.png" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Mayflower Studios" />
-<meta name="twitter:description" content="A small indie studio building worlds, mods, and bots with heart — designed for cozy communities, long-term adventures, and a little extra magic." />
-<meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/home.png" />
-<!-- OG:END -->
+  <meta name="description" content="A small indie studio building worlds, mods, and bots with heart — designed for cozy communities, long-term adventures, and a little extra magic." />
+  <meta property="og:title" content="Mayflower Studios" />
+  <meta property="og:description" content="A small indie studio building worlds, mods, and bots with heart — designed for cozy communities, long-term adventures, and a little extra magic." />
+  <meta property="og:url" content="https://mayflowerstudios.net/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://mayflowerstudios.net/assets/og/home.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Mayflower Studios" />
+  <meta name="twitter:description" content="A small indie studio building worlds, mods, and bots with heart — designed for cozy communities, long-term adventures, and a little extra magic." />
+  <meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/home.png" />
+  <!-- OG:END -->
 </head>
 
 <body data-nav="home">
@@ -307,6 +392,47 @@
         <a class="btn ghost" href="https://discord.gg/MutqYAdrwz" target="_blank" rel="noopener">💬 Discord</a>
         <a class="btn primary" href="projects.html">🚀 Projects</a>
         <a class="btn ghost" href="movienight.html">🍿 Movie Night</a>
+      </div>
+    </section>
+
+    <!-- SUPPORT / KO-FI (moved to bottom) -->
+    <div class="sectionTitle" id="support">
+      <h2>💖 Support Mayflower Studios</h2>
+      <span>Hosting, tools, and cozy polish — fueled by community</span>
+    </div>
+
+    <section class="card">
+      <p class="desc" style="margin-top:0;">
+        If you like what we build — mods, worlds, bots, and community nights —
+        donations help keep everything running and improving. Thank you. 🌿
+      </p>
+
+      <div class="kofiWrap">
+        <div class="kofiTopRow">
+          <div class="left">
+            <span class="kofiPill">☕ Ko-fi</span>
+            <div class="copy">
+              Support the studio directly via our Ko-fi page.
+            </div>
+          </div>
+
+          <a class="btn ghost" href="https://ko-fi.com/mayflowerstudiosteam" target="_blank" rel="noopener">
+            Open in a new tab ↗
+          </a>
+        </div>
+
+        <div class="kofiFrameShell">
+          <div class="kofiFrameInner">
+            <iframe
+              id="kofiframe"
+              src="https://ko-fi.com/mayflowerstudiosteam/?hidefeed=true&widget=true&embed=true&preview=true"
+              title="mayflowerstudiosteam"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              allow="payment"
+            ></iframe>
+          </div>
+        </div>
       </div>
     </section>
 
