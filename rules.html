@@ -423,7 +423,10 @@
         }[m]));
 
         const avatarUrl = (b) => {
-          if (b.uuid) return `https://crafatar.com/avatars/${encodeURIComponent(b.uuid)}?size=96&overlay`;
+          if (b.uuid) {
+            const u = String(b.uuid).replace(/-/g, ''); // Crafatar wants undashed UUID
+            return `https://crafatar.com/avatars/${encodeURIComponent(u)}?size=96&overlay`;
+          }
           return `https://minotar.net/avatar/${encodeURIComponent(b.name || 'Steve')}/96`;
         };
 
