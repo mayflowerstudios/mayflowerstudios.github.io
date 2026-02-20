@@ -6,6 +6,120 @@
   <title>Rules • Mayflower Studios</title>
 
   <link rel="stylesheet" href="style.css" />
+
+  <style>
+    /* ---- Recent Bans (rules page) ---- */
+    .banPanel{
+      margin-top: 12px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(10,10,15,.28);
+      border-radius: 16px;
+      padding: 12px;
+    }
+
+    .banPanelTop{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:10px;
+    }
+
+    .banInput{
+      flex: 1;
+      min-width: 220px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(10,10,15,.35);
+      color: #fff;
+      outline: none;
+    }
+
+    .banInput::placeholder{ color: rgba(255,255,255,.55); }
+
+    .banList{
+      max-height: 320px;          /* scroll height */
+      overflow: auto;
+      padding-right: 6px;         /* room for scrollbar */
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    /* nicer scrollbar (optional) */
+    .banList::-webkit-scrollbar{ width: 10px; }
+    .banList::-webkit-scrollbar-thumb{
+      background: rgba(255,255,255,.12);
+      border-radius: 999px;
+    }
+    .banList::-webkit-scrollbar-track{ background: rgba(255,255,255,.04); }
+
+    .banRow{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(10,10,15,.32);
+      border-radius: 14px;
+      padding: 10px;
+    }
+
+    .banAvatar{
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      flex: 0 0 auto;
+    }
+
+    .banMain{ min-width: 0; flex: 1; }
+
+    .banTopLine{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+    }
+
+    .banName{
+      font-weight: 800;
+      letter-spacing: .2px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      max-width: 60%;
+    }
+
+    .banTime{
+      font-size: 12px;
+      opacity: .75;
+      white-space:nowrap;
+    }
+
+    .banReason{
+      margin-top: 6px;
+      font-size: 13px;
+      opacity: .9;
+      line-height: 1.45;
+    }
+
+    .banTag{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      margin-top: 8px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      opacity: .95;
+    }
+  </style>
+
   <!-- OG:START -->
 <meta name="description" content="Cozy mods, bots, and worlds built with heart — designed for long-term communities." />
 <meta property="og:title" content="Rules • Mayflower Studios" />
@@ -255,6 +369,30 @@
       </div>
     </section>
 
+    <!-- BanGate / Recent Bans -->
+    <section class="card" id="bans">
+      <div class="sectionTitle">
+        <h2>🚫 Recent Bans</h2>
+        <span>Transparency, not drama</span>
+      </div>
+
+      <div class="muted" style="line-height:1.8;">
+        <p style="margin-top:0;">
+          This is a public log of banned Minecraft accounts. Usernames only — no personal info.
+          If you believe something is incorrect, contact staff calmly in Discord.
+        </p>
+      </div>
+
+      <div class="banPanel">
+        <div class="banPanelTop">
+          <input id="banSearch" class="banInput" type="text" placeholder="Search username…" autocomplete="off" />
+          <span id="banMeta" class="small muted">Loading…</span>
+        </div>
+
+        <div id="banList" class="banList" role="list"></div>
+      </div>
+    </section>
+
     <!-- FAQ -->
     <section class="card">
       <div class="sectionTitle">
@@ -270,6 +408,99 @@
         <p style="margin-bottom:0;"><strong>What about explosives?</strong> Use responsibly. No TNT/wither near builds, spawn, or community zones.</p>
       </div>
     </section>
+
+
+    <script>
+      (() => {
+        const list = document.getElementById('banList');
+        const meta = document.getElementById('banMeta');
+        const search = document.getElementById('banSearch');
+
+        if (!list) return;
+
+        const esc = (s) => String(s ?? '').replace(/[&<>"']/g, m => ({
+          '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        }[m]));
+
+        const avatarUrl = (b) => {
+          if (b.uuid) return `https://crafatar.com/avatars/${encodeURIComponent(b.uuid)}?size=96&overlay`;
+          return `https://minotar.net/avatar/${encodeURIComponent(b.name || 'Steve')}/96`;
+        };
+
+        const parseBans = (data) => {
+          // supports either:
+          // A) [ { uuid, name, created, source, expires, reason }, ... ]
+          // B) { bans: [ ... ] }
+          if (Array.isArray(data)) return data;
+          if (data && Array.isArray(data.bans)) return data.bans;
+          return [];
+        };
+
+        const toDateLabel = (created) => {
+          const s = String(created || '').trim();
+          if (!s) return '—';
+          // Your format: "2026-02-20 01:05:27 -0500"
+          // We'll show it as-is (already includes timezone)
+          return s;
+        };
+
+        let bans = [];
+
+        function render() {
+          const q = (search?.value || '').trim().toLowerCase();
+          const filtered = bans.filter(b => String(b.name || '').toLowerCase().includes(q));
+
+          meta.textContent = `Showing ${filtered.length} of ${bans.length}`;
+
+          if (!filtered.length) {
+            list.innerHTML = `<div class="muted small">No banned players match that search.</div>`;
+            return;
+          }
+
+          list.innerHTML = filtered.map(b => {
+            const name = esc(b.name || 'Unknown');
+            const when = esc(toDateLabel(b.created));
+            const reason = esc(b.reason || '—');
+            const source = esc(b.source || '—');
+            const expires = esc(b.expires || '—');
+
+            return `
+              <div class="banRow" role="listitem">
+                <img class="banAvatar" src="${avatarUrl(b)}" alt="${name} avatar" loading="lazy">
+                <div class="banMain">
+                  <div class="banTopLine">
+                    <div class="banName" title="${name}">${name}</div>
+                    <div class="banTime" title="${when}">${when}</div>
+                  </div>
+                  <div class="banReason">${reason}</div>
+                  <div class="banTag">🧾 Source: ${source} • ⏳ Expires: ${expires}</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+
+        async function load() {
+          try {
+            const res = await fetch('/data/bans.json', { cache: 'no-store' });
+            const data = await res.json();
+            bans = parseBans(data);
+
+            // newest first by created string (works for your YYYY-MM-DD HH:mm:ss format)
+            bans.sort((a, b) => String(b.created || '').localeCompare(String(a.created || '')));
+
+            render();
+          } catch (e) {
+            meta.textContent = 'Could not load bans.';
+            list.innerHTML = `<div class="muted small">Ban list failed to load.</div>`;
+            console.warn('bans.json load failed', e);
+          }
+        }
+
+        search?.addEventListener('input', render);
+        load();
+      })();
+    </script>
 
     <script src="shared.js"></script>
     <script src="fireflies.js"></script>
