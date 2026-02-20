@@ -469,7 +469,11 @@
 
             return `
               <div class="banRow" role="listitem">
-                <img class="banAvatar" src="${avatarUrl(b)}" alt="${name} avatar" loading="lazy">
+                <img class="banAvatar"
+                  src="${avatarUrl(b)}"
+                  alt="${name} avatar"
+                  loading="lazy"
+                  onerror="this.onerror=null;this.src='https://minotar.net/avatar/${encodeURIComponent(b.name || 'Steve')}/96';">
                 <div class="banMain">
                   <div class="banTopLine">
                     <div class="banName" title="${name}">${name}</div>
