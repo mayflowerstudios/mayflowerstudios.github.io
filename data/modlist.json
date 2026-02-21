@@ -37,6 +37,12 @@
       "notes": "PassableFoliage-1.20.1-forge-8.2.1.jar"
     },
     {
+      "name": "polymorph-forge",
+      "category": "Client Visuals & Animations",
+      "side": "Both",
+      "notes": "polymorph-forge-0.49.10+1.20.1.jar"
+    },
+    {
       "name": "Visual Workbench",
       "category": "Client Visuals & Animations",
       "side": "Both",
@@ -101,6 +107,12 @@
       "category": "Crafting & Materials",
       "side": "Both",
       "notes": "CHA-S-1.20-forge.jar"
+    },
+    {
+      "name": "charcoaltocoalblock",
+      "category": "Crafting & Materials",
+      "side": "Both",
+      "notes": "charcoaltocoalblock-1.0.0-forge-1.20.1.jar"
     },
     {
       "name": "Chipped Forge",
@@ -191,12 +203,6 @@
       "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "Auto-Repair-Kits-1.20.1-1.0.4.jar"
-    },
-    {
-      "name": "Bakeries",
-      "category": "Gameplay & QoL",
-      "side": "Both",
-      "notes": "bakeries-1.20.1-forge-1.2.5.jar"
     },
     {
       "name": "Blood Bits",
@@ -295,10 +301,40 @@
       "notes": "jei-1.20.1-forge-15.20.0.112.jar"
     },
     {
+      "name": "lootr-forge",
+      "category": "Gameplay & QoL",
+      "side": "Both",
+      "notes": "lootr-forge-1.20-0.7.35.94.jar"
+    },
+    {
+      "name": "movingelevators",
+      "category": "Gameplay & QoL",
+      "side": "Both",
+      "notes": "movingelevators-1.4.12-forge-mc1.20.1.jar"
+    },
+    {
       "name": "Multi Mine",
       "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "multimine-1.20.1.4.jar"
+    },
+    {
+      "name": "MysticalAgradditions",
+      "category": "Gameplay & QoL",
+      "side": "Both",
+      "notes": "MysticalAgradditions-1.20.1-7.0.12.jar"
+    },
+    {
+      "name": "MysticalAgriculture",
+      "category": "Gameplay & QoL",
+      "side": "Both",
+      "notes": "MysticalAgriculture-1.20.1-7.0.23.jar"
+    },
+    {
+      "name": "NaturesCompass",
+      "category": "Gameplay & QoL",
+      "side": "Both",
+      "notes": "NaturesCompass-1.20.1-1.11.2-forge.jar"
     },
     {
       "name": "ParCool!",
@@ -337,12 +373,6 @@
       "notes": "Veinst1.20.1.jar"
     },
     {
-      "name": "Waystones",
-      "category": "Gameplay & QoL",
-      "side": "Both",
-      "notes": "waystones-forge-1.20.1-14.1.18.jar"
-    },
-    {
       "name": "Almanac",
       "category": "Libraries / API",
       "side": "Both",
@@ -367,6 +397,12 @@
       "notes": "balm-forge-1.20.1-7.3.37-all.jar"
     },
     {
+      "name": "Bookshelf-Forge",
+      "category": "Libraries / API",
+      "side": "Both",
+      "notes": "Bookshelf-Forge-1.20.1-20.2.15.jar"
+    },
+    {
       "name": "Cloth Config v10 API",
       "category": "Libraries / API",
       "side": "Both",
@@ -379,16 +415,28 @@
       "notes": "collective-1.20.1-8.13.jar"
     },
     {
-      "name": "Creativecore FORGE V",
+      "name": "CraftTweaker-forge",
       "category": "Libraries / API",
       "side": "Both",
-      "notes": "CreativeCore_FORGE_v2.12.32_mc1.20.1.jar"
+      "notes": "CraftTweaker-forge-1.20.1-14.0.59.jar"
     },
     {
       "name": "Cristellib",
       "category": "Libraries / API",
       "side": "Both",
       "notes": "cristellib-1.1.6-forge.jar"
+    },
+    {
+      "name": "Cucumber",
+      "category": "Libraries / API",
+      "side": "Both",
+      "notes": "Cucumber-1.20.1-7.0.16.jar"
+    },
+    {
+      "name": "cupboard",
+      "category": "Libraries / API",
+      "side": "Both",
+      "notes": "cupboard-1.20.1-3.0.jar"
     },
     {
       "name": "Curios Forge",
@@ -407,6 +455,12 @@
       "category": "Libraries / API",
       "side": "Both",
       "notes": "emotecraft-for-MC1.20.1-2.2.7-b.build.50-forge.jar"
+    },
+    {
+      "name": "GameStages-Forge",
+      "category": "Libraries / API",
+      "side": "Both",
+      "notes": "GameStages-Forge-1.20.1-15.0.2.jar"
     },
     {
       "name": "geckolib-forge",
@@ -505,10 +559,22 @@
       "notes": "quartz-1.20.1-0.2.0-alpha.0.1.jar"
     },
     {
+      "name": "redimstages",
+      "category": "Libraries / API",
+      "side": "Both",
+      "notes": "redimstages-1.0.0.jar"
+    },
+    {
       "name": "Resourceful Lib",
       "category": "Libraries / API",
       "side": "Both",
       "notes": "resourcefullib-forge-1.20.1-2.1.29.jar"
+    },
+    {
+      "name": "rhino-forge",
+      "category": "Libraries / API",
+      "side": "Both",
+      "notes": "rhino-forge-2001.2.3-build.10.jar"
     },
     {
       "name": "SuperMartijn642's Config Library",
@@ -601,12 +667,6 @@
       "notes": "AEAdditions-1.20.1-5.1.1.jar"
     },
     {
-      "name": "Applied Ammo Box",
-      "category": "Storage & Logistics",
-      "side": "Both",
-      "notes": "applied_ammo_box-1.0.2.jar"
-    },
-    {
       "name": "Applied Energistics 2",
       "category": "Storage & Logistics",
       "side": "Both",
@@ -623,6 +683,12 @@
       "category": "Storage & Logistics",
       "side": "Both",
       "notes": "logichest-1.1.2.jar"
+    },
+    {
+      "name": "sophisticatedstorage",
+      "category": "Storage & Logistics",
+      "side": "Both",
+      "notes": "sophisticatedstorage-1.20.1-1.4.25.1488.jar"
     },
     {
       "name": "steelhold",
@@ -763,6 +829,12 @@
       "notes": "guideme-20.1.14.jar"
     },
     {
+      "name": "kubejs-forge",
+      "category": "Utilities & Admin",
+      "side": "Both",
+      "notes": "kubejs-forge-2001.6.5-build.16.jar"
+    },
+    {
       "name": "MmmMmmMmmmmm",
       "category": "Utilities & Admin",
       "side": "Both",
@@ -811,6 +883,12 @@
       "notes": "Continents_1.21.x_v1.1.12.jar"
     },
     {
+      "name": "DungeonsArise",
+      "category": "Worldgen & Structures",
+      "side": "Both",
+      "notes": "DungeonsArise-1.20.x-2.1.58-release.jar"
+    },
+    {
       "name": "FarmersStructures",
       "category": "Worldgen & Structures",
       "side": "Both",
@@ -839,6 +917,12 @@
       "category": "Worldgen & Structures",
       "side": "Both",
       "notes": "tectonic-3.0.17-forge-1.20.1.jar"
+    },
+    {
+      "name": "TerraBlender-forge",
+      "category": "Worldgen & Structures",
+      "side": "Both",
+      "notes": "TerraBlender-forge-1.20.1-3.0.1.10.jar"
     },
     {
       "name": "This Rocks! (Forge)",
@@ -877,130 +961,118 @@
       "notes": "YungsBetterMineshafts-1.20-Forge-4.0.4.jar"
     },
     {
-      "name": "Bookshelf-Forge",
-      "category": "Libraries / API",
+      "name": "applied_ammo_box",
+      "category": "Uncategorized",
       "side": "Both",
-      "notes": "Bookshelf-Forge-1.20.1-20.2.15.jar"
+      "notes": "applied_ammo_box-1.1.0.jar"
     },
     {
-      "name": "charcoaltocoalblock",
-      "category": "Crafting & Materials",
+      "name": "bakeries",
+      "category": "Uncategorized",
       "side": "Both",
-      "notes": "charcoaltocoalblock-1.0.0-forge-1.20.1.jar"
+      "notes": "bakeries-1.20.1-forge-1.2.6.jar"
     },
     {
-      "name": "CraftTweaker-forge",
-      "category": "Libraries / API",
+      "name": "BiomesOPlenty",
+      "category": "Uncategorized",
       "side": "Both",
-      "notes": "CraftTweaker-forge-1.20.1-14.0.59.jar"
+      "notes": "BiomesOPlenty-1.20.1-18.0.0.592.jar"
     },
     {
-      "name": "Cucumber",
-      "category": "Libraries / API",
+      "name": "CoreProtect",
+      "category": "Uncategorized",
       "side": "Both",
-      "notes": "Cucumber-1.20.1-7.0.16.jar"
+      "notes": "CoreProtect-22.2.jar"
     },
     {
-      "name": "cupboard",
-      "category": "Libraries / API",
+      "name": "CreativeCore_FORGE_v2.12.35_mc1.20.1",
+      "category": "Uncategorized",
       "side": "Both",
-      "notes": "cupboard-1.20.1-3.0.jar"
+      "notes": "CreativeCore_FORGE_v2.12.35_mc1.20.1.jar"
     },
     {
-      "name": "DungeonsArise",
-      "category": "Worldgen & Structures",
+      "name": "mcw-bridges",
+      "category": "Uncategorized",
       "side": "Both",
-      "notes": "DungeonsArise-1.20.x-2.1.58-release.jar"
+      "notes": "mcw-bridges-3.1.2-mc1.20.1forge.jar"
     },
     {
-      "name": "GameStages-Forge",
-      "category": "Libraries / API",
+      "name": "mcw-doors",
+      "category": "Uncategorized",
       "side": "Both",
-      "notes": "GameStages-Forge-1.20.1-15.0.2.jar"
+      "notes": "mcw-doors-1.1.5-mc1.20.1forge.jar"
     },
     {
-      "name": "kubejs-forge",
-      "category": "Utilities & Admin",
+      "name": "mcw-furniture",
+      "category": "Uncategorized",
       "side": "Both",
-      "notes": "kubejs-forge-2001.6.5-build.16.jar"
+      "notes": "mcw-furniture-3.4.1-mc1.20.1forge.jar"
     },
     {
-      "name": "lootr-forge",
-      "category": "Gameplay & QoL",
+      "name": "mcw-lights",
+      "category": "Uncategorized",
       "side": "Both",
-      "notes": "lootr-forge-1.20-0.7.35.94.jar"
+      "notes": "mcw-lights-1.1.5-mc1.20.1forge.jar"
     },
     {
-      "name": "movingelevators",
-      "category": "Gameplay & QoL",
+      "name": "mcw-mcwfences",
+      "category": "Uncategorized",
       "side": "Both",
-      "notes": "movingelevators-1.4.12-forge-mc1.20.1.jar"
+      "notes": "mcw-mcwfences-1.2.1-mc1.20.1forge.jar"
     },
     {
-      "name": "MysticalAgradditions",
-      "category": "Gameplay & QoL",
+      "name": "mcw-mcwwindows",
+      "category": "Uncategorized",
       "side": "Both",
-      "notes": "MysticalAgradditions-1.20.1-7.0.12.jar"
+      "notes": "mcw-mcwwindows-2.4.2-mc1.20.1forge.jar"
     },
     {
-      "name": "MysticalAgriculture",
-      "category": "Gameplay & QoL",
+      "name": "mcw-roofs",
+      "category": "Uncategorized",
       "side": "Both",
-      "notes": "MysticalAgriculture-1.20.1-7.0.23.jar"
-    },
-    {
-      "name": "NaturesCompass",
-      "category": "Gameplay & QoL",
-      "side": "Both",
-      "notes": "NaturesCompass-1.20.1-1.11.2-forge.jar"
-    },
-    {
-      "name": "polymorph-forge",
-      "category": "Client Visuals & Animations",
-      "side": "Both",
-      "notes": "polymorph-forge-0.49.10+1.20.1.jar"
-    },
-    {
-      "name": "redimstages",
-      "category": "Libraries / API",
-      "side": "Both",
-      "notes": "redimstages-1.0.0.jar"
-    },
-    {
-      "name": "rhino-forge",
-      "category": "Libraries / API",
-      "side": "Both",
-      "notes": "rhino-forge-2001.2.3-build.10.jar"
+      "notes": "mcw-roofs-2.3.2-mc1.20.1forge.jar"
     },
     {
       "name": "sophisticatedbackpacks",
-      "category": "Storage & Logistics",
+      "category": "Uncategorized",
       "side": "Both",
-      "notes": "sophisticatedbackpacks-1.20.1-3.24.23.1529.jar"
+      "notes": "sophisticatedbackpacks-1.20.1-3.24.24.1538.jar"
     },
     {
       "name": "sophisticatedcore",
-      "category": "Libraries / API",
+      "category": "Uncategorized",
       "side": "Both",
-      "notes": "sophisticatedcore-1.20.1-1.3.3.1482.jar"
+      "notes": "sophisticatedcore-1.20.1-1.3.5.1505.jar"
     },
     {
-      "name": "sophisticatedstorage",
-      "category": "Storage & Logistics",
+      "name": "sparsestructures-forge",
+      "category": "Uncategorized",
       "side": "Both",
-      "notes": "sophisticatedstorage-1.20.1-1.4.25.1488.jar"
+      "notes": "sparsestructures-forge-1.20.1-3.0.jar"
     },
     {
-      "name": "TerraBlender-forge",
-      "category": "Worldgen & Structures",
+      "name": "structure_gel",
+      "category": "Uncategorized",
       "side": "Both",
-      "notes": "TerraBlender-forge-1.20.1-3.0.1.10.jar"
+      "notes": "structure_gel-1.20.1-2.16.2.jar"
+    },
+    {
+      "name": "theoneprobe",
+      "category": "Uncategorized",
+      "side": "Both",
+      "notes": "theoneprobe-1.20.1-10.0.3.jar"
+    },
+    {
+      "name": "waystones-forge",
+      "category": "Uncategorized",
+      "side": "Both",
+      "notes": "waystones-forge-1.20.1-14.1.19.jar"
     },
     {
       "name": "worldstate",
-      "category": "Libraries / API",
+      "category": "Uncategorized",
       "side": "Both",
-      "notes": "worldstate-1.2.1.jar"
+      "notes": "worldstate-1.3.3.jar"
     }
   ]
 }
