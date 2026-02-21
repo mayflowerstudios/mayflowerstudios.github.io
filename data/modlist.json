@@ -962,115 +962,115 @@
     },
     {
       "name": "applied_ammo_box",
-      "category": "Uncategorized",
+      "category": "Combat & Weapons",
       "side": "Both",
       "notes": "applied_ammo_box-1.1.0.jar"
     },
     {
       "name": "bakeries",
-      "category": "Uncategorized",
+      "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "bakeries-1.20.1-forge-1.2.6.jar"
     },
     {
       "name": "BiomesOPlenty",
-      "category": "Uncategorized",
+      "category": "Worldgen & Structures",
       "side": "Both",
       "notes": "BiomesOPlenty-1.20.1-18.0.0.592.jar"
     },
     {
       "name": "CoreProtect",
-      "category": "Uncategorized",
+      "category": "Utilities & Admin",
       "side": "Both",
       "notes": "CoreProtect-22.2.jar"
     },
     {
       "name": "CreativeCore_FORGE_v2.12.35_mc1.20.1",
-      "category": "Uncategorized",
+      "category": "Libraries / API",
       "side": "Both",
       "notes": "CreativeCore_FORGE_v2.12.35_mc1.20.1.jar"
     },
     {
       "name": "mcw-bridges",
-      "category": "Uncategorized",
+      "category": "Crafting & Materials",
       "side": "Both",
       "notes": "mcw-bridges-3.1.2-mc1.20.1forge.jar"
     },
     {
       "name": "mcw-doors",
-      "category": "Uncategorized",
+      "category": "Crafting & Materials",
       "side": "Both",
       "notes": "mcw-doors-1.1.5-mc1.20.1forge.jar"
     },
     {
       "name": "mcw-furniture",
-      "category": "Uncategorized",
+      "category": "Crafting & Materials",
       "side": "Both",
       "notes": "mcw-furniture-3.4.1-mc1.20.1forge.jar"
     },
     {
       "name": "mcw-lights",
-      "category": "Uncategorized",
+      "category": "Crafting & Materials",
       "side": "Both",
       "notes": "mcw-lights-1.1.5-mc1.20.1forge.jar"
     },
     {
       "name": "mcw-mcwfences",
-      "category": "Uncategorized",
+      "category": "Crafting & Materials",
       "side": "Both",
       "notes": "mcw-mcwfences-1.2.1-mc1.20.1forge.jar"
     },
     {
       "name": "mcw-mcwwindows",
-      "category": "Uncategorized",
+      "category": "Crafting & Materials",
       "side": "Both",
       "notes": "mcw-mcwwindows-2.4.2-mc1.20.1forge.jar"
     },
     {
       "name": "mcw-roofs",
-      "category": "Uncategorized",
+      "category": "Crafting & Materials",
       "side": "Both",
       "notes": "mcw-roofs-2.3.2-mc1.20.1forge.jar"
     },
     {
       "name": "sophisticatedbackpacks",
-      "category": "Uncategorized",
+      "category": "Storage & Logistics",
       "side": "Both",
       "notes": "sophisticatedbackpacks-1.20.1-3.24.24.1538.jar"
     },
     {
       "name": "sophisticatedcore",
-      "category": "Uncategorized",
+      "category": "Libraries / API",
       "side": "Both",
       "notes": "sophisticatedcore-1.20.1-1.3.5.1505.jar"
     },
     {
       "name": "sparsestructures-forge",
-      "category": "Uncategorized",
+      "category": "Worldgen & Structures",
       "side": "Both",
       "notes": "sparsestructures-forge-1.20.1-3.0.jar"
     },
     {
       "name": "structure_gel",
-      "category": "Uncategorized",
+      "category": "Worldgen & Structures",
       "side": "Both",
       "notes": "structure_gel-1.20.1-2.16.2.jar"
     },
     {
       "name": "theoneprobe",
-      "category": "Uncategorized",
+      "category": "Client Visuals & Animations",
       "side": "Both",
       "notes": "theoneprobe-1.20.1-10.0.3.jar"
     },
     {
       "name": "waystones-forge",
-      "category": "Uncategorized",
+      "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "waystones-forge-1.20.1-14.1.19.jar"
     },
     {
       "name": "worldstate",
-      "category": "Uncategorized",
+      "category": "Utilities & Admin",
       "side": "Both",
       "notes": "worldstate-1.3.3.jar"
     }
