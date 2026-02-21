@@ -1076,13 +1076,13 @@
     },
     {
       "name": "copperagebackport-forge",
-      "category": "Uncategorized",
+      "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "copperagebackport-forge-1.20.1-0.1.4.jar"
     },
     {
       "name": "wanderingtradermayleave",
-      "category": "Uncategorized",
+      "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "wanderingtradermayleave-1.20.1-1.1.jar"
     }
