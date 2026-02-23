@@ -259,12 +259,6 @@
       "notes": "Auto-Repair-Kits-1.20.1-1.0.4.jar"
     },
     {
-      "name": "bakeries",
-      "category": "Gameplay & QoL",
-      "side": "Both",
-      "notes": "bakeries-1.20.1-forge-1.2.6.jar"
-    },
-    {
       "name": "Blood Bits",
       "category": "Gameplay & QoL",
       "side": "Both",
@@ -287,6 +281,12 @@
       "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "ColdSweat-2.4-b06f.jar"
+    },
+    {
+      "name": "copperagebackport-forge",
+      "category": "Gameplay & QoL",
+      "side": "Both",
+      "notes": "copperagebackport-forge-1.20.1-0.1.4.jar"
     },
     {
       "name": "Corpse",
@@ -341,12 +341,6 @@
       "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "hexerei-0.4.2.3.jar"
-    },
-    {
-      "name": "Horsescanswim",
-      "category": "Gameplay & QoL",
-      "side": "Both",
-      "notes": "horsescanswim-1.0.1.jar"
     },
     {
       "name": "Immersive Armors",
@@ -431,6 +425,12 @@
       "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "Veinst1.20.1.jar"
+    },
+    {
+      "name": "wanderingtradermayleave",
+      "category": "Gameplay & QoL",
+      "side": "Both",
+      "notes": "wanderingtradermayleave-1.20.1-1.1.jar"
     },
     {
       "name": "waystones-forge",
@@ -1075,16 +1075,112 @@
       "notes": "YungsBetterMineshafts-1.20-Forge-4.0.4.jar"
     },
     {
-      "name": "copperagebackport-forge",
-      "category": "Gameplay & QoL",
+      "name": "bakeries",
+      "category": "Crafting & Materials",
       "side": "Both",
-      "notes": "copperagebackport-forge-1.20.1-0.1.4.jar"
+      "notes": "bakeries-1.20.1-forge-1.2.7.jar"
     },
     {
-      "name": "wanderingtradermayleave",
+      "name": "bits_n_bobs",
+      "category": "Tech & Automation",
+      "side": "Both",
+      "notes": "bits_n_bobs-0.0.41.jar"
+    },
+    {
+      "name": "create",
+      "category": "Tech & Automation",
+      "side": "Both",
+      "notes": "create-1.20.1-6.0.8.jar"
+    },
+    {
+      "name": "create_cold_sweat",
+      "category": "Libraries / API",
+      "side": "Both",
+      "notes": "create_cold_sweat-1.1.2.jar"
+    },
+    {
+      "name": "create_pattern_schematics",
+      "category": "Tech & Automation",
+      "side": "Both",
+      "notes": "create_pattern_schematics-1.3.3.jar"
+    },
+    {
+      "name": "create-confectionery1.20.1_v1.1.0",
+      "category": "Tech & Automation",
+      "side": "Both",
+      "notes": "create-confectionery1.20.1_v1.1.0.jar"
+    },
+    {
+      "name": "createaddition",
+      "category": "Tech & Automation",
+      "side": "Both",
+      "notes": "createaddition-1.20.1-1.3.3.jar"
+    },
+    {
+      "name": "createdeco",
+      "category": "Building & Decor",
+      "side": "Both",
+      "notes": "createdeco-2.0.3-1.20.1-forge.jar"
+    },
+    {
+      "name": "createutilities",
+      "category": "Tech & Automation",
+      "side": "Both",
+      "notes": "createutilities-0.3.2+1.20.1.jar"
+    },
+    {
+      "name": "dynamicvillage-v0.4",
+      "category": "Tech & Automation",
+      "side": "Both",
+      "notes": "dynamicvillage-v0.4-1.20.1.jar"
+    },
+    {
+      "name": "eradoors",
+      "category": "Utilities & Admin",
+      "side": "Both",
+      "notes": "eradoors-1.0.0.jar"
+    },
+    {
+      "name": "horseman",
       "category": "Gameplay & QoL",
       "side": "Both",
-      "notes": "wanderingtradermayleave-1.20.1-1.1.jar"
+      "notes": "horseman-1.20.1-1.3.15-forge.jar"
+    },
+    {
+      "name": "interiors",
+      "category": "Tech & Automation",
+      "side": "Both",
+      "notes": "interiors-1.20.1-forge-0.6.0.jar"
+    },
+    {
+      "name": "jeiintegration_1.20.1",
+      "category": "Client Visuals & Animations",
+      "side": "Both",
+      "notes": "jeiintegration_1.20.1-10.0.0.jar"
+    },
+    {
+      "name": "jeimultiblocks",
+      "category": "Client Visuals & Animations",
+      "side": "Both",
+      "notes": "jeimultiblocks-1.20.1-1.0.6.jar"
+    },
+    {
+      "name": "JustEnoughMekanismMultiblocks",
+      "category": "Client Visuals & Animations",
+      "side": "Both",
+      "notes": "JustEnoughMekanismMultiblocks-1.20.1-4.16.jar"
+    },
+    {
+      "name": "JustEnoughProfessions-forge",
+      "category": "Client Visuals & Animations",
+      "side": "Both",
+      "notes": "JustEnoughProfessions-forge-1.20.1-3.0.1.jar"
+    },
+    {
+      "name": "JustEnoughResources",
+      "category": "Client Visuals & Animations",
+      "side": "Both",
+      "notes": "JustEnoughResources-1.20.1-1.4.0.247.jar"
     }
   ]
 }
