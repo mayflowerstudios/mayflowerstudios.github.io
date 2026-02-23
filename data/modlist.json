@@ -1076,109 +1076,109 @@
     },
     {
       "name": "bakeries",
-      "category": "Uncategorized",
+      "category": "Crafting & Materials",
       "side": "Both",
       "notes": "bakeries-1.20.1-forge-1.2.7.jar"
     },
     {
       "name": "bits_n_bobs",
-      "category": "Uncategorized",
+      "category": "Tech & Automation",
       "side": "Both",
       "notes": "bits_n_bobs-0.0.41.jar"
     },
     {
       "name": "create",
-      "category": "Uncategorized",
+      "category": "Tech & Automation",
       "side": "Both",
       "notes": "create-1.20.1-6.0.8.jar"
     },
     {
       "name": "create_cold_sweat",
-      "category": "Uncategorized",
+      "category": "Libraries / API",
       "side": "Both",
       "notes": "create_cold_sweat-1.1.2.jar"
     },
     {
       "name": "create_pattern_schematics",
-      "category": "Uncategorized",
+      "category": "Tech & Automation",
       "side": "Both",
       "notes": "create_pattern_schematics-1.3.3.jar"
     },
     {
       "name": "create-confectionery1.20.1_v1.1.0",
-      "category": "Uncategorized",
+      "category": "Tech & Automation",
       "side": "Both",
       "notes": "create-confectionery1.20.1_v1.1.0.jar"
     },
     {
       "name": "createaddition",
-      "category": "Uncategorized",
+      "category": "Tech & Automation",
       "side": "Both",
       "notes": "createaddition-1.20.1-1.3.3.jar"
     },
     {
       "name": "createdeco",
-      "category": "Uncategorized",
+      "category": "Building & Decor",
       "side": "Both",
       "notes": "createdeco-2.0.3-1.20.1-forge.jar"
     },
     {
       "name": "createutilities",
-      "category": "Uncategorized",
+      "category": "Tech & Automation",
       "side": "Both",
       "notes": "createutilities-0.3.2+1.20.1.jar"
     },
     {
       "name": "dynamicvillage-v0.4",
-      "category": "Uncategorized",
+      "category": "Tech & Automation",
       "side": "Both",
       "notes": "dynamicvillage-v0.4-1.20.1.jar"
     },
     {
       "name": "eradoors",
-      "category": "Uncategorized",
+      "category": "Utilities & Admin",
       "side": "Both",
       "notes": "eradoors-1.0.0.jar"
     },
     {
       "name": "horseman",
-      "category": "Uncategorized",
+      "category": "Gameplay & QoL",
       "side": "Both",
       "notes": "horseman-1.20.1-1.3.15-forge.jar"
     },
     {
       "name": "interiors",
-      "category": "Uncategorized",
+      "category": "Tech & Automation",
       "side": "Both",
       "notes": "interiors-1.20.1-forge-0.6.0.jar"
     },
     {
       "name": "jeiintegration_1.20.1",
-      "category": "Uncategorized",
+      "category": "Client Visuals & Animations",
       "side": "Both",
       "notes": "jeiintegration_1.20.1-10.0.0.jar"
     },
     {
       "name": "jeimultiblocks",
-      "category": "Uncategorized",
+      "category": "Client Visuals & Animations",
       "side": "Both",
       "notes": "jeimultiblocks-1.20.1-1.0.6.jar"
     },
     {
       "name": "JustEnoughMekanismMultiblocks",
-      "category": "Uncategorized",
+      "category": "Client Visuals & Animations",
       "side": "Both",
       "notes": "JustEnoughMekanismMultiblocks-1.20.1-4.16.jar"
     },
     {
       "name": "JustEnoughProfessions-forge",
-      "category": "Uncategorized",
+      "category": "Client Visuals & Animations",
       "side": "Both",
       "notes": "JustEnoughProfessions-forge-1.20.1-3.0.1.jar"
     },
     {
       "name": "JustEnoughResources",
-      "category": "Uncategorized",
+      "category": "Client Visuals & Animations",
       "side": "Both",
       "notes": "JustEnoughResources-1.20.1-1.4.0.247.jar"
     }
