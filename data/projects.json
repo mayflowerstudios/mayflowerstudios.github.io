@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-06T07:00:08.450Z",
+  "generatedAt": "2026-03-13T02:17:58.717Z",
   "mods": [
     {
       "type": "mod",
@@ -95,6 +95,19 @@
     }
   ],
   "bots": [
+    {
+      "type": "bot",
+      "slug": "bloombot",
+      "title": "🌸 BloomBot",
+      "desc": "",
+      "links": [
+        {
+          "label": "📄 Info Page",
+          "href": "/bots/bloombot.html",
+          "class": "button bots"
+        }
+      ]
+    },
     {
       "type": "bot",
       "slug": "echobloom",
