@@ -21,8 +21,8 @@
 
         <p class="muted">
           A cozy all-in-one Discord bot for community servers. BloomBot handles welcome and leave
-          messages, saved-message reaction roles, birthdays, leveling, and achievements with a
-          clean slash-command setup that’s easy for server admins to manage.
+          messages, saved-message reaction roles, birthdays, daily affirmations, leveling, and achievements
+          with a clean slash-command setup that’s easy for server admins to manage.
         </p>
 
         <div class="ctaRow">
@@ -40,6 +40,7 @@
         <div class="tile"><strong>👋 Welcome + Leave</strong><p>Custom join and leave messages with channel controls.</p></div>
         <div class="tile"><strong>🎭 Reaction Roles</strong><p>Attach emoji-role mappings to an existing message.</p></div>
         <div class="tile"><strong>🎂 Birthdays</strong><p>Save birthdays and post automatic birthday messages.</p></div>
+        <div class="tile"><strong>🌸 Daily Affirmations</strong><p>Scheduled positive messages with custom additions.</p></div>
         <div class="tile"><strong>✨ Levels + 🏆 Achievements</strong><p>XP, leaderboards, level-ups, and unlockables.</p></div>
       </div>
     </section>
@@ -53,8 +54,8 @@
     <section class="card">
       <p class="desc">
         <strong>BloomBot</strong> is a public Discord bot focused on practical community features:
-        welcoming new members, handling self-assignable roles, celebrating birthdays, tracking chat XP,
-        and unlocking achievements tied to server activity.
+        welcoming new members, handling self-assignable roles, celebrating birthdays, posting daily affirmations,
+        tracking chat XP, and unlocking achievements tied to server activity.
       </p>
 
       <p class="desc">
@@ -74,6 +75,7 @@
         <li>Custom welcome and leave channels/messages</li>
         <li>Saved-message reaction role panels</li>
         <li>Birthday tracking and automatic birthday posts</li>
+        <li>Daily affirmations with optional custom messages</li>
         <li>XP, level-ups, leaderboards, and achievements</li>
       </ul>
 
@@ -81,7 +83,7 @@
         <strong>Public bot note</strong>
         <p class="muted small" style="margin:6px 0 0;">
           BloomBot is meant to be invited to multiple Discord servers, with each server able to configure
-          its own channels, toggles, and settings.
+          its own channels, toggles, and settings independently.
         </p>
       </div>
     </section>
@@ -127,8 +129,21 @@
         <ul>
           <li>Optional year support when saving a birthday</li>
           <li>Automatic birthday announcement channel</li>
-          <li>Age-aware birthday messages when year is provided</li>
+          <li>Separate message template for birthdays with age</li>
           <li>Timezone used by the bot is America/New_York</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🌸 Daily Affirmations <span class="badge">Cozy</span></h3>
+        <p class="desc">
+          BloomBot can post daily affirmations automatically and also supports custom affirmation lists per server.
+        </p>
+        <ul>
+          <li>Dedicated affirmation channel</li>
+          <li>Set a daily posting time</li>
+          <li>Add, remove, list, or clear custom affirmations</li>
+          <li>Members can also use <code>/affirmation</code> anytime</li>
         </ul>
       </div>
 
@@ -139,7 +154,7 @@
         </p>
         <ul>
           <li>XP earned from normal server messages</li>
-          <li>60-second XP cooldown per member</li>
+          <li>45-second XP cooldown per member</li>
           <li>Random XP gain between 15 and 25</li>
           <li>Custom level-up announcement channel</li>
         </ul>
@@ -165,11 +180,82 @@
         </p>
         <ul>
           <li>Channel selection commands for major systems</li>
-          <li>Toggle commands for welcome, leave, leveling, and achievements</li>
+          <li>Toggle commands for welcome, leave, affirmations, leveling, and achievements</li>
           <li>Manual XP and level adjustment tools</li>
           <li>Saved reaction-role config management</li>
         </ul>
       </div>
+    </section>
+
+    <!-- MESSAGE TAGS -->
+    <div class="sectionTitle">
+      <h2>🏷️ Message Tags</h2>
+      <span>Easy template placeholders for custom messages</span>
+    </div>
+
+    <section class="card">
+      <p class="desc">
+        Some BloomBot messages can be customized with simple tags. When the message sends,
+        BloomBot replaces each tag with the right info automatically.
+      </p>
+
+      <div class="callout" style="margin-top:12px;">
+        <strong>Example</strong>
+        <p class="muted small" style="margin:6px 0 0;">
+          If your welcome message is:<br />
+          <code>Welcome {mention} to {server}! You are member #{membercount} 🌸</code><br /><br />
+          BloomBot might send something like:<br />
+          <code>Welcome @Luna to Cozy Garden! You are member #142 🌸</code>
+        </p>
+      </div>
+
+      <div class="divider" style="margin:14px 0;"></div>
+
+      <h3 style="margin:0 0 8px;">Available Tags</h3>
+      <ul class="muted small" style="margin:0; padding-left:18px;">
+        <li><code>{mention}</code> — mentions the member directly</li>
+        <li><code>{user}</code> — the member’s display name / server nickname</li>
+        <li><code>{username}</code> — the member’s Discord username</li>
+        <li><code>{server}</code> — the server name</li>
+        <li><code>{membercount}</code> — the current member count</li>
+        <li><code>{age}</code> — the person’s birthday age as a number <em>(birthday messages only)</em></li>
+        <li><code>{age_ordinal}</code> — the age written like <code>18th</code>, <code>21st</code>, etc. <em>(birthday age messages only)</em></li>
+      </ul>
+
+      <div class="divider" style="margin:14px 0;"></div>
+
+      <section class="grid2" style="margin:0;">
+        <div>
+          <h3 style="margin:0 0 6px;">👋 Welcome + 🍂 Leave Messages</h3>
+          <p class="muted small" style="margin:0 0 8px;">
+            These support:
+          </p>
+          <p class="muted small" style="margin:0;">
+            <code>{mention}</code>, <code>{user}</code>, <code>{username}</code>,
+            <code>{server}</code>, <code>{membercount}</code>
+          </p>
+        </div>
+
+        <div>
+          <h3 style="margin:0 0 6px;">🎂 Birthday Messages</h3>
+          <p class="muted small" style="margin:0 0 8px;">
+            These support everything above, plus:
+          </p>
+          <p class="muted small" style="margin:0;">
+            <code>{age}</code>, <code>{age_ordinal}</code>
+          </p>
+        </div>
+      </section>
+
+      <div class="divider" style="margin:14px 0;"></div>
+
+      <h3 style="margin:0 0 8px;">Ready-to-Use Examples</h3>
+      <ul class="muted small" style="margin:0; padding-left:18px;">
+        <li><strong>Welcome:</strong> <code>Welcome {mention} to <strong>{server}</strong>! You are member #{membercount} 🌸</code></li>
+        <li><strong>Leave:</strong> <code>{user} has left <strong>{server}</strong>. 🍂</code></li>
+        <li><strong>Birthday:</strong> <code>🎉 Happy Birthday {mention}! Hope you have a lovely day 🌸</code></li>
+        <li><strong>Birthday with age:</strong> <code>🎉 Happy {age_ordinal} Birthday {mention}! Hope you have a lovely day 🌸</code></li>
+      </ul>
     </section>
 
     <!-- HOW TO USE -->
@@ -199,7 +285,7 @@
         <ul>
           <li>Set a welcome channel and/or leave channel</li>
           <li>Customize each message separately</li>
-          <li>Turn either system on or off whenever needed</li>
+          <li>Use the message tags section above to build your templates</li>
         </ul>
       </div>
 
@@ -218,11 +304,12 @@
       <div class="card">
         <h3>4) Enable Community Features</h3>
         <p class="desc">
-          Turn on birthdays, leveling, and achievements for a more lively server.
+          Turn on birthdays, affirmations, leveling, and achievements for a more lively server.
         </p>
         <ul>
-          <li>Choose birthday and level-up announcement channels</li>
+          <li>Choose birthday, affirmation, level-up, and achievement channels</li>
           <li>Let members save their birthdays</li>
+          <li>Set daily affirmation time if you want scheduled posts</li>
           <li>Track levels, XP, and achievement progress automatically</li>
         </ul>
       </div>
@@ -241,6 +328,8 @@
           <li><code>/setbirthday</code> — save your birthday</li>
           <li><code>/mybirthday</code> — view your saved birthday</li>
           <li><code>/removebirthday</code> — remove your saved birthday</li>
+          <li><code>/nextbirthday</code> — see the next upcoming birthday</li>
+          <li><code>/affirmation</code> — get a positive affirmation</li>
           <li><code>/rank</code> — check your level and XP</li>
           <li><code>/leaderboard</code> — view the server XP leaderboard</li>
           <li><code>/achievements</code> — view your achievements or another member’s</li>
@@ -272,19 +361,39 @@
       </div>
 
       <div class="card">
+        <h3>🎂 Birthday Admin Commands <span class="badge">Staff</span></h3>
+        <ul>
+          <li><code>/setbirthdaychannel</code></li>
+          <li><code>/setbirthdaymessage</code></li>
+          <li><code>/setbirthdayagemessage</code></li>
+          <li><code>/viewbirthdaymessage</code></li>
+          <li><code>/viewbirthdayagemessage</code></li>
+          <li><code>/resetbirthdaymessage</code></li>
+          <li><code>/resetbirthdayagemessage</code></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🌸 Affirmation Admin Commands <span class="badge">Staff</span></h3>
+        <ul>
+          <li><code>/setaffirmationchannel</code></li>
+          <li><code>/toggleaffirmations</code></li>
+          <li><code>/setaffirmationtime</code></li>
+          <li><code>/addaffirmations</code></li>
+          <li><code>/removeaffirmation</code></li>
+          <li><code>/clearaffirmations</code></li>
+          <li><code>/listaffirmations</code></li>
+          <li><code>/sendaffirmationnow</code></li>
+        </ul>
+      </div>
+
+      <div class="card">
         <h3>✨ Leveling Admin Commands <span class="badge">Staff</span></h3>
         <ul>
           <li><code>/toggleleveling</code></li>
           <li><code>/setlevelupchannel</code></li>
           <li><code>/givexp</code></li>
           <li><code>/setlevel</code></li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h3>🎂 Birthday Admin Commands <span class="badge">Staff</span></h3>
-        <ul>
-          <li><code>/setbirthdaychannel</code></li>
         </ul>
       </div>
 
@@ -311,7 +420,7 @@
         <li>🗨️ <strong>Getting Chatty</strong> — Send 10 messages in the server</li>
         <li>📣 <strong>Chatterbox</strong> — Send 50 messages in the server</li>
         <li>🦋 <strong>Social Butterfly</strong> — Send 100 messages in the server</li>
-        <li>🔥 <strong>Can't Stop Talking</strong> — Send 200 messages in the server</li>
+        <li>🔥 <strong>Can’t Stop Talking</strong> — Send 200 messages in the server</li>
         <li>✨ <strong>Express Yourself</strong> — React to a message for the first time</li>
         <li>🎉 <strong>Reaction Lover</strong> — React to 10 messages</li>
         <li>🥳 <strong>Hype Machine</strong> — React to 50 messages</li>
@@ -334,8 +443,9 @@
       <div class="callout">
         <strong>Recommended rollout</strong>
         <p class="muted small">
-          Start with welcome/leave and reaction roles first. Then add birthdays, leveling, and achievements
-          once your community is active and you’ve picked the channels you want BloomBot to use.
+          Start with welcome/leave and reaction roles first. Then add birthdays, affirmations,
+          leveling, and achievements once your community is active and you’ve picked the channels
+          you want BloomBot to use.
         </p>
       </div>
 
@@ -348,6 +458,9 @@
 - Make a role-selection message, then use /reactionroles create
 - Add emoji mappings with /reactionroles addreaction
 - Set a birthday channel with /setbirthdaychannel
+- Optional: customize /setbirthdaymessage and /setbirthdayagemessage
+- Set an affirmation channel with /setaffirmationchannel
+- Optional: choose a time with /setaffirmationtime
 - Turn on leveling or choose a level-up channel with /setlevelupchannel
 - Set an achievement channel if you want unlock posts in a specific place</code>
       </div>
