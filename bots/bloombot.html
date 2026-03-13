@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BloomBot • Mayflower Studios</title>
+  <link rel="stylesheet" href="/style.css" />
+  <!-- OG:START -->
+  <!-- OG:END -->
+</head>
+<body data-nav="bots">
+  <div class="wrap">
+
+    <div id="shared-nav"></div>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div>
+        <p class="kicker">Discord Bot (Public • Community Utility)</p>
+        <h1>🌸 BloomBot</h1>
+
+        <p class="muted">
+          A cozy all-in-one Discord bot for community servers. BloomBot handles welcome and leave
+          messages, saved-message reaction roles, birthdays, leveling, and achievements with a
+          clean slash-command setup that’s easy for server admins to manage.
+        </p>
+
+        <div class="ctaRow">
+          <a class="btn invite"
+             href="https://discord.com/oauth2/authorize?client_id=1481502289532555495&permissions=2416036944&integration_type=0&scope=bot+applications.commands"
+             target="_blank" rel="noopener noreferrer">
+            ➕ Invite BloomBot
+          </a>
+
+          <a class="btn bots" href="/bots/foxbot.html">🦊 FoxBot</a>
+          <a class="btn ghost" href="/projects.html">⬅ Back to Projects</a>
+        </div>
+      </div>
+
+      <div class="tileGrid">
+        <div class="tile"><strong>👋 Welcome + Leave</strong><p>Custom join and leave messages with channel controls.</p></div>
+        <div class="tile"><strong>🎭 Reaction Roles</strong><p>Attach emoji-role mappings to an existing message.</p></div>
+        <div class="tile"><strong>🎂 Birthdays</strong><p>Save birthdays and post automatic birthday messages.</p></div>
+        <div class="tile"><strong>✨ Levels + 🏆 Achievements</strong><p>XP, leaderboards, level-ups, and unlockables.</p></div>
+      </div>
+    </section>
+
+    <!-- DESCRIPTION -->
+    <div class="sectionTitle">
+      <h2>📝 Description</h2>
+      <span>What BloomBot actually does</span>
+    </div>
+
+    <section class="card">
+      <p class="desc">
+        <strong>BloomBot</strong> is a public Discord bot focused on practical community features:
+        welcoming new members, handling self-assignable roles, celebrating birthdays, tracking chat XP,
+        and unlocking achievements tied to server activity.
+      </p>
+
+      <p class="desc">
+        It’s built around slash commands and per-server settings, so each community can decide which
+        systems to enable, where announcements should go, and how much automation they want.
+      </p>
+
+      <div class="divider" style="margin:14px 0;"></div>
+
+      <h3 style="margin:0 0 6px;">🌼 Built for Community Servers</h3>
+      <p class="muted small" style="margin:0 0 10px;">
+        BloomBot is a good fit for gaming servers, cozy friend groups, fandom servers, and growing communities
+        that want helpful automation without feeling bloated.
+      </p>
+
+      <ul class="muted small" style="margin:0; padding-left:18px;">
+        <li>Custom welcome and leave channels/messages</li>
+        <li>Saved-message reaction role panels</li>
+        <li>Birthday tracking and automatic birthday posts</li>
+        <li>XP, level-ups, leaderboards, and achievements</li>
+      </ul>
+
+      <div class="callout" style="margin-top:12px;">
+        <strong>Public bot note</strong>
+        <p class="muted small" style="margin:6px 0 0;">
+          BloomBot is meant to be invited to multiple Discord servers, with each server able to configure
+          its own channels, toggles, and settings.
+        </p>
+      </div>
+    </section>
+
+    <!-- CORE SYSTEMS -->
+    <div class="sectionTitle">
+      <h2>⭐ Core Systems</h2>
+      <span>The real BloomBot feature set</span>
+    </div>
+
+    <section class="grid2">
+      <div class="card">
+        <h3>👋 Welcome + Leave Messages <span class="badge">Core</span></h3>
+        <p class="desc">
+          BloomBot can post customizable join and leave messages in channels you choose.
+        </p>
+        <ul>
+          <li>Separate welcome and leave channels</li>
+          <li>Separate welcome and leave messages</li>
+          <li>Enable/disable both systems independently</li>
+          <li>Supports placeholders like <code>{user}</code>, <code>{server}</code>, and <code>{membercount}</code></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🎭 Reaction Roles <span class="badge">Popular</span></h3>
+        <p class="desc">
+          BloomBot uses a saved-message workflow for reaction roles instead of generating a brand-new panel message.
+        </p>
+        <ul>
+          <li>Point BloomBot at an existing message</li>
+          <li>Save it under a panel name</li>
+          <li>Add emoji → role mappings</li>
+          <li>Members gain or lose roles when they add/remove reactions</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🎂 Birthday System <span class="badge">Community</span></h3>
+        <p class="desc">
+          Members can save birthdays, and BloomBot automatically checks for birthdays throughout the day.
+        </p>
+        <ul>
+          <li>Optional year support when saving a birthday</li>
+          <li>Automatic birthday announcement channel</li>
+          <li>Age-aware birthday messages when year is provided</li>
+          <li>Timezone used by the bot is America/New_York</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>✨ Leveling <span class="badge">Progression</span></h3>
+        <p class="desc">
+          Members earn XP by chatting, with built-in cooldown pacing and level-up announcements.
+        </p>
+        <ul>
+          <li>XP earned from normal server messages</li>
+          <li>60-second XP cooldown per member</li>
+          <li>Random XP gain between 15 and 25</li>
+          <li>Custom level-up announcement channel</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🏆 Achievements <span class="badge">Extra</span></h3>
+        <p class="desc">
+          BloomBot includes an achievement system tied to chatting, reactions, joining, birthdays, and leveling.
+        </p>
+        <ul>
+          <li>Automatic unlock announcements</li>
+          <li>Optional achievement images</li>
+          <li>Member achievement view + leaderboard</li>
+          <li>Admin controls for toggling and manually granting achievements</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🛡️ Admin Controls <span class="badge">Staff</span></h3>
+        <p class="desc">
+          Most setup commands are admin-only so server owners can configure BloomBot safely.
+        </p>
+        <ul>
+          <li>Channel selection commands for major systems</li>
+          <li>Toggle commands for welcome, leave, leveling, and achievements</li>
+          <li>Manual XP and level adjustment tools</li>
+          <li>Saved reaction-role config management</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- HOW TO USE -->
+    <div class="sectionTitle">
+      <h2>📘 How to Use</h2>
+      <span>Recommended setup flow</span>
+    </div>
+
+    <section class="grid2">
+      <div class="card">
+        <h3>1) Invite BloomBot</h3>
+        <p class="desc">
+          Add BloomBot to your server with the invite button above.
+        </p>
+        <ul>
+          <li>Choose the server you want to add it to</li>
+          <li>Approve the requested permissions</li>
+          <li>Make sure BloomBot can manage any roles you want it to assign</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>2) Set Welcome + Leave</h3>
+        <p class="desc">
+          Pick channels and customize the messages members will see when people join or leave.
+        </p>
+        <ul>
+          <li>Set a welcome channel and/or leave channel</li>
+          <li>Customize each message separately</li>
+          <li>Turn either system on or off whenever needed</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>3) Build Reaction Role Panels</h3>
+        <p class="desc">
+          Use an existing message as the base, then attach role mappings to it.
+        </p>
+        <ul>
+          <li>Create a saved panel from a message ID</li>
+          <li>Add emoji-to-role mappings</li>
+          <li>Let members self-assign roles by reacting</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>4) Enable Community Features</h3>
+        <p class="desc">
+          Turn on birthdays, leveling, and achievements for a more lively server.
+        </p>
+        <ul>
+          <li>Choose birthday and level-up announcement channels</li>
+          <li>Let members save their birthdays</li>
+          <li>Track levels, XP, and achievement progress automatically</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- COMMAND REFERENCE -->
+    <div class="sectionTitle">
+      <h2>⌨️ Command Reference</h2>
+      <span>Real commands from the current bot files</span>
+    </div>
+
+    <section class="grid2">
+      <div class="card">
+        <h3>👤 Member Commands <span class="badge">Use</span></h3>
+        <ul>
+          <li><code>/setbirthday</code> — save your birthday</li>
+          <li><code>/mybirthday</code> — view your saved birthday</li>
+          <li><code>/removebirthday</code> — remove your saved birthday</li>
+          <li><code>/rank</code> — check your level and XP</li>
+          <li><code>/leaderboard</code> — view the server XP leaderboard</li>
+          <li><code>/achievements</code> — view your achievements or another member’s</li>
+          <li><code>/achievementleaderboard</code> — show top members by unlocked achievements</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🛡️ Welcome + Leave Admin Commands <span class="badge">Staff</span></h3>
+        <ul>
+          <li><code>/setwelcomechannel</code></li>
+          <li><code>/setleavechannel</code></li>
+          <li><code>/setwelcomemessage</code></li>
+          <li><code>/setleavemessage</code></li>
+          <li><code>/togglewelcome</code></li>
+          <li><code>/toggleleave</code></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🎭 Reaction Role Admin Commands <span class="badge">Staff</span></h3>
+        <ul>
+          <li><code>/reactionroles create</code> — save an existing message as a reaction-role panel</li>
+          <li><code>/reactionroles addreaction</code> — add an emoji → role mapping</li>
+          <li><code>/reactionroles remove</code> — remove a mapping</li>
+          <li><code>/reactionroles list</code> — list saved configs</li>
+          <li><code>/reactionroles show</code> — show one panel’s mappings and link</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>✨ Leveling Admin Commands <span class="badge">Staff</span></h3>
+        <ul>
+          <li><code>/toggleleveling</code></li>
+          <li><code>/setlevelupchannel</code></li>
+          <li><code>/givexp</code></li>
+          <li><code>/setlevel</code></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🎂 Birthday Admin Commands <span class="badge">Staff</span></h3>
+        <ul>
+          <li><code>/setbirthdaychannel</code></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🏆 Achievement Admin Commands <span class="badge">Staff</span></h3>
+        <ul>
+          <li><code>/setachievementchannel</code></li>
+          <li><code>/toggleachievements</code></li>
+          <li><code>/giveachievement</code></li>
+          <li><code>/achievementlist</code></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ACHIEVEMENTS -->
+    <div class="sectionTitle">
+      <h2>🏆 Current Achievements</h2>
+      <span>The nine achievements currently defined in the bot</span>
+    </div>
+
+    <section class="card">
+      <ul class="muted small" style="margin:0; padding-left:18px;">
+        <li>💬 <strong>First Words</strong> — Send your first message in the server</li>
+        <li>🗨️ <strong>Getting Chatty</strong> — Send 10 messages in the server</li>
+        <li>📣 <strong>Chatterbox</strong> — Send 50 messages in the server</li>
+        <li>✨ <strong>Express Yourself</strong> — React to a message for the first time</li>
+        <li>🌱 <strong>Level Up!</strong> — Reach Level 1</li>
+        <li>🌟 <strong>On Your Way</strong> — Reach Level 5</li>
+        <li>🏆 <strong>Rising Star</strong> — Reach Level 10</li>
+        <li>🎂 <strong>Cake Day Ready</strong> — Set your birthday with the bot</li>
+        <li>🌸 <strong>Welcome Aboard</strong> — Join the server</li>
+      </ul>
+    </section>
+
+    <!-- SETUP NOTES -->
+    <div class="sectionTitle">
+      <h2>🔧 Setup Notes</h2>
+      <span>Best way to roll BloomBot out</span>
+    </div>
+
+    <section class="card">
+      <div class="callout">
+        <strong>Recommended rollout</strong>
+        <p class="muted small">
+          Start with welcome/leave and reaction roles first. Then add birthdays, leveling, and achievements
+          once your community is active and you’ve picked the channels you want BloomBot to use.
+        </p>
+      </div>
+
+      <div class="codebox">
+        <code>Suggested setup:
+
+- Invite BloomBot to your server
+- Run /setwelcomechannel and /setwelcomemessage
+- Optionally run /setleavechannel and /setleavemessage
+- Make a role-selection message, then use /reactionroles create
+- Add emoji mappings with /reactionroles addreaction
+- Set a birthday channel with /setbirthdaychannel
+- Turn on leveling or choose a level-up channel with /setlevelupchannel
+- Set an achievement channel if you want unlock posts in a specific place</code>
+      </div>
+
+      <div class="btnrow" style="margin-top:12px;">
+        <a class="button bots" href="/bots/foxbot.html">🦊 See FoxBot</a>
+        <a class="button ghost" href="/projects.html">⬅ Back to Projects</a>
+      </div>
+    </section>
+
+    <div id="shared-footer"></div>
+  </div>
+
+  <script src="/shared.js"></script>
+  <script src="/fireflies.js"></script>
+</body>
+</html>
