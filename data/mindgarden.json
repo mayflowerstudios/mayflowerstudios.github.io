@@ -1,0 +1,54 @@
+{
+  "journals": [
+    {
+      "id": "fr9uh64",
+      "date": "2026-03-14",
+      "mood": 2,
+      "emotions": [
+        "Lonely",
+        "Sad"
+      ],
+      "text": "I don't know why I can never get over Hana. I just miss her so much"
+    }
+  ],
+  "meds": [
+    {
+      "id": "0idlwvb",
+      "name": "All The Meds",
+      "dosage": "You know it",
+      "times": [
+        "18:00"
+      ],
+      "notes": ""
+    }
+  ],
+  "medLogs": [
+    {
+      "medId": "0idlwvb",
+      "date": "2026-03-14",
+      "time": "18:05"
+    }
+  ],
+  "friends": [
+    {
+      "name": "Kadence",
+      "relationship": "Friend",
+      "birthday": "June 26",
+      "likes": [
+        "Cozy Games",
+        "Getting her nails done"
+      ],
+      "dislikes": [],
+      "notes": "She's so pretty oh my god!!!!!\n\nI call her Kitten",
+      "id": "njw7ftp"
+    }
+  ],
+  "smsConfig": {
+    "number": "8452816462",
+    "carrier": "Verizon",
+    "emailjsPublicKey": "UB8tT7vUNnAphoRr8",
+    "emailjsServiceId": "service_nxpqz8b",
+    "emailjsTemplateId": "template_t13lrhk",
+    "enabled": true
+  }
+}
