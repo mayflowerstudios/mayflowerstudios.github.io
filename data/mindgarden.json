@@ -13,15 +13,6 @@
   ],
   "meds": [
     {
-      "id": "0idlwvb",
-      "name": "All The Meds",
-      "dosage": "You know it",
-      "times": [
-        "18:00"
-      ],
-      "notes": ""
-    },
-    {
       "id": "w189bmo",
       "name": "Bicalutamide",
       "dosage": "50mg",
