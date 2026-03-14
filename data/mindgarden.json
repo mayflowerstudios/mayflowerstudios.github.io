@@ -20,6 +20,15 @@
         "18:00"
       ],
       "notes": ""
+    },
+    {
+      "id": "w189bmo",
+      "name": "Bicalutamide",
+      "dosage": "50mg",
+      "times": [
+        "18:00"
+      ],
+      "notes": ""
     }
   ],
   "medLogs": [
