@@ -37,6 +37,7 @@
       </div>
 
       <div class="tileGrid">
+        <div class="tile"><strong>🛠️ Interactive Setup</strong><p>One-command wizard to configure every feature with buttons and dropdowns.</p></div>
         <div class="tile"><strong>👋 Welcome + Leave</strong><p>Custom join and leave messages with channel controls.</p></div>
         <div class="tile"><strong>🎭 Reaction Roles</strong><p>Attach emoji-role mappings to an existing message.</p></div>
         <div class="tile"><strong>🎂 Birthdays</strong><p>Save birthdays and post automatic birthday messages.</p></div>
@@ -61,6 +62,7 @@
       <p class="desc">
         It's built around slash commands and per-server settings, so each community can decide which
         systems to enable, where announcements should go, and how much automation they want.
+        The <code>/setup</code> wizard lets admins configure everything from a single interactive panel.
       </p>
 
       <div class="divider" style="margin:14px 0;"></div>
@@ -72,6 +74,7 @@
       </p>
 
       <ul class="muted small" style="margin:0; padding-left:18px;">
+        <li>Interactive setup wizard with buttons and channel dropdowns</li>
         <li>Custom welcome and leave channels/messages</li>
         <li>Saved-message reaction role panels</li>
         <li>Birthday tracking and automatic birthday posts</li>
@@ -95,6 +98,21 @@
     </div>
 
     <section class="grid2">
+      <div class="card">
+        <h3>🛠️ Setup Wizard <span class="badge">New</span></h3>
+        <p class="desc">
+          Run <code>/setup</code> to open an interactive panel that walks you through configuring
+          every BloomBot feature in one place — no need to remember individual commands.
+        </p>
+        <ul>
+          <li>Dashboard overview showing all features and their current status</li>
+          <li>Toggle any feature on or off with a button press</li>
+          <li>Pick channels from native Discord dropdowns — no copy-pasting IDs</li>
+          <li>Set your server timezone from a list of common presets</li>
+          <li>Everything stays in one ephemeral message that updates as you go</li>
+        </ul>
+      </div>
+
       <div class="card">
         <h3>👋 Welcome + Leave Messages <span class="badge">Core</span></h3>
         <p class="desc">
@@ -180,6 +198,7 @@
           Most setup commands are admin-only so server owners can configure BloomBot safely.
         </p>
         <ul>
+          <li>Interactive <code>/setup</code> wizard for one-stop configuration</li>
           <li>Channel selection commands for major systems</li>
           <li>Toggle commands for welcome, leave, birthdays, affirmations, leveling, and achievements</li>
           <li>Manual XP and level adjustment tools</li>
@@ -276,22 +295,27 @@
 
       <div class="divider" style="margin:14px 0;"></div>
 
-      <h3 style="margin:0 0 6px;">Step 2 — Set Your Timezone</h3>
+      <h3 style="margin:0 0 6px;">Step 2 — Run the Setup Wizard</h3>
       <p class="muted small" style="margin:0 0 4px;">
-        This controls when birthday and affirmation posts happen. Do this first so everything else uses the right time.
+        The fastest way to configure BloomBot is the interactive setup wizard. It shows a dashboard
+        of every feature, lets you toggle things on and off, pick channels from dropdowns, and set
+        your timezone — all from one ephemeral message.
       </p>
-      <div class="codebox"><code>/settimezone</code></div>
+      <div class="codebox"><code>/setup</code></div>
+      <p class="muted small" style="margin:4px 0 0;">
+        The wizard covers: welcome messages, leave messages, birthdays, leveling, achievements,
+        daily affirmations, and server timezone. You can click into any module, configure it,
+        and go back to the main menu.
+      </p>
 
       <div class="divider" style="margin:14px 0;"></div>
 
-      <h3 style="margin:0 0 6px;">Step 3 — Welcome + Leave Messages</h3>
+      <h3 style="margin:0 0 6px;">Step 3 — Customize Message Templates</h3>
       <p class="muted small" style="margin:0 0 4px;">
-        Pick a channel for each, then customize the message templates using the tags listed above.
-        You can enable or disable either one independently.
+        The setup wizard handles toggles and channels, but to customize your message templates
+        you'll use the individual commands. Use the tags listed above to personalize them.
       </p>
-      <div class="codebox"><code>/setwelcomechannel #welcome
-/setwelcomemessage Welcome {mention} to {server}! 🌸
-/setleavechannel #general
+      <div class="codebox"><code>/setwelcomemessage Welcome {mention} to {server}! 🌸
 /setleavemessage {user} has left {server}. 🍂</code></div>
 
       <div class="divider" style="margin:14px 0;"></div>
@@ -309,11 +333,11 @@
 
       <h3 style="margin:0 0 6px;">Step 5 — Birthdays</h3>
       <p class="muted small" style="margin:0 0 4px;">
-        Set a channel for birthday posts. Members save their own birthdays, and BloomBot announces
-        them automatically. You can customize the message templates and toggle announcements on/off.
+        If you used the setup wizard, the birthday channel and toggle are already configured.
+        You can optionally customize the birthday message templates:
       </p>
-      <div class="codebox"><code>/setbirthdaychannel #birthdays
-/togglebirthdays enabled:True</code></div>
+      <div class="codebox"><code>/setbirthdaymessage 🎉 Happy Birthday {mention}! 🌸
+/setbirthdayagemessage 🎉 Happy {age_ordinal} Birthday {mention}! 🌸</code></div>
       <p class="muted small" style="margin:4px 0 0;">
         Members use: <code>/setbirthday month:3 day:15</code> (year is optional)
       </p>
@@ -322,32 +346,21 @@
 
       <h3 style="margin:0 0 6px;">Step 6 — Daily Affirmations</h3>
       <p class="muted small" style="margin:0 0 4px;">
-        Pick a channel and time for daily positive messages. You can also add your own custom affirmations.
+        The setup wizard configures the channel and toggle. To fine-tune the posting time
+        or add custom affirmations, use these commands:
       </p>
-      <div class="codebox"><code>/setaffirmationchannel #positivity
-/setaffirmationtime hour:9 minute:0
-/toggleaffirmations enabled:True</code></div>
-
-      <div class="divider" style="margin:14px 0;"></div>
-
-      <h3 style="margin:0 0 6px;">Step 7 — Leveling + Achievements</h3>
-      <p class="muted small" style="margin:0 0 4px;">
-        Turn on XP leveling and achievements. Optionally set channels for level-up and achievement
-        unlock announcements — if you don't, they'll post in the channel where the trigger happened.
-      </p>
-      <div class="codebox"><code>/toggleleveling enabled:True
-/setlevelupchannel #level-ups
-/toggleachievements enabled:True
-/setachievementchannel #achievements</code></div>
+      <div class="codebox"><code>/setaffirmationtime hour:9 minute:0
+/addaffirmations</code></div>
 
       <div class="divider" style="margin:14px 0;"></div>
 
       <div class="callout">
         <strong>💡 Tip</strong>
         <p class="muted small" style="margin:6px 0 0;">
-          You don't have to set up everything at once. Start with welcome/leave and reaction roles,
-          then add birthdays, affirmations, leveling, and achievements once your community is active.
-          Every system can be toggled on or off independently.
+          You don't have to set up everything at once. The <code>/setup</code> wizard lets you
+          come back anytime to toggle features or change channels. Start with welcome/leave and
+          reaction roles, then add birthdays, affirmations, leveling, and achievements once your
+          community is active.
         </p>
       </div>
     </section>
@@ -372,6 +385,18 @@
           <li><code>/achievements</code> — view your achievements or another member's</li>
           <li><code>/achievementleaderboard</code> — show top members by unlocked achievements</li>
         </ul>
+      </div>
+
+      <div class="card">
+        <h3>🛠️ Setup Wizard <span class="badge">Staff</span></h3>
+        <ul>
+          <li><code>/setup</code> — open the interactive setup wizard</li>
+        </ul>
+        <p class="muted small" style="margin:6px 0 0;">
+          The wizard provides an overview dashboard and lets you toggle features, pick channels,
+          and set your timezone using Discord buttons and dropdowns. It covers welcome, leave,
+          birthdays, leveling, achievements, affirmations, and timezone in one place.
+        </p>
       </div>
 
       <div class="card">
@@ -454,6 +479,10 @@
         <ul>
           <li><code>/settimezone</code> — set the server timezone for birthday and affirmation posts</li>
         </ul>
+        <p class="muted small" style="margin:6px 0 0;">
+          You can also set the timezone from the <code>/setup</code> wizard using a dropdown of common presets.
+          Use <code>/settimezone</code> directly if you need an IANA timezone not listed in the wizard.
+        </p>
       </div>
     </section>
 
@@ -490,11 +519,23 @@
 
     <section class="card">
       <div class="callout">
+        <strong>Setup Wizard</strong>
+        <p class="muted small" style="margin:6px 0 0;">
+          Run <code>/setup</code> to open an interactive panel that covers all features. It uses
+          Discord buttons and channel dropdowns so you never need to copy-paste channel IDs.
+          The wizard handles toggles, channels, and timezone — for message templates and reaction
+          roles, use the individual commands listed in the command reference.
+        </p>
+      </div>
+
+      <div class="divider" style="margin:14px 0;"></div>
+
+      <div class="callout">
         <strong>Permissions</strong>
         <p class="muted small" style="margin:6px 0 0;">
           BloomBot needs <strong>Manage Roles</strong> for reaction roles to work. Its bot role must be
           placed <strong>above</strong> any roles you want it to assign in your server's role list.
-          All admin commands require the Administrator permission.
+          All admin commands (including <code>/setup</code>) require the Administrator permission.
         </p>
       </div>
 
@@ -504,8 +545,9 @@
         <strong>Toggles</strong>
         <p class="muted small" style="margin:6px 0 0;">
           Every major system (welcome, leave, birthdays, affirmations, leveling, achievements) can be
-          toggled on or off independently. Turning something off keeps your settings saved — you can
-          turn it back on later without reconfiguring anything.
+          toggled on or off independently — either from <code>/setup</code> or the individual toggle commands.
+          Turning something off keeps your settings saved — you can turn it back on later without
+          reconfiguring anything.
         </p>
       </div>
 
@@ -514,8 +556,9 @@
       <div class="callout">
         <strong>Timezone</strong>
         <p class="muted small" style="margin:6px 0 0;">
-          The server timezone (set with <code>/settimezone</code>) controls when birthday checks
-          and daily affirmation posts happen. It defaults to America/New_York if not set.
+          The server timezone controls when birthday checks and daily affirmation posts happen.
+          Set it from the <code>/setup</code> wizard (common presets) or use <code>/settimezone</code>
+          for any IANA timezone. It defaults to America/New_York if not set.
         </p>
       </div>
 
