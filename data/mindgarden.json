@@ -104,6 +104,17 @@
       "dislikes": [],
       "notes": "She's so pretty oh my god!!!!!\n\nI call her Kitten",
       "id": "njw7ftp"
+    },
+    {
+      "name": "Emily",
+      "relationship": "Friend (Adopted Daughter)",
+      "birthday": "June 7",
+      "likes": [
+        "Country Music"
+      ],
+      "dislikes": [],
+      "notes": "",
+      "id": "9t3hpmy"
     }
   ],
   "smsConfig": {
