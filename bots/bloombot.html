@@ -22,7 +22,7 @@
         <p class="muted">
           A cozy all-in-one Discord bot for community servers. BloomBot handles welcome and leave
           messages, saved-message reaction roles, birthdays, daily affirmations, leveling, and achievements
-          with a clean slash-command setup that’s easy for server admins to manage.
+          with a clean slash-command setup that's easy for server admins to manage.
         </p>
 
         <div class="ctaRow">
@@ -59,7 +59,7 @@
       </p>
 
       <p class="desc">
-        It’s built around slash commands and per-server settings, so each community can decide which
+        It's built around slash commands and per-server settings, so each community can decide which
         systems to enable, where announcements should go, and how much automation they want.
       </p>
 
@@ -130,7 +130,8 @@
           <li>Optional year support when saving a birthday</li>
           <li>Automatic birthday announcement channel</li>
           <li>Separate message template for birthdays with age</li>
-          <li>Timezone used by the bot is America/New_York</li>
+          <li>Enable/disable birthday announcements with a toggle</li>
+          <li>Server timezone setting for accurate date checking</li>
         </ul>
       </div>
 
@@ -180,9 +181,10 @@
         </p>
         <ul>
           <li>Channel selection commands for major systems</li>
-          <li>Toggle commands for welcome, leave, affirmations, leveling, and achievements</li>
+          <li>Toggle commands for welcome, leave, birthdays, affirmations, leveling, and achievements</li>
           <li>Manual XP and level adjustment tools</li>
           <li>Saved reaction-role config management</li>
+          <li>Server timezone setting for birthday and affirmation posts</li>
         </ul>
       </div>
     </section>
@@ -214,11 +216,11 @@
       <h3 style="margin:0 0 8px;">Available Tags</h3>
       <ul class="muted small" style="margin:0; padding-left:18px;">
         <li><code>{mention}</code> — mentions the member directly</li>
-        <li><code>{user}</code> — the member’s display name / server nickname</li>
-        <li><code>{username}</code> — the member’s Discord username</li>
+        <li><code>{user}</code> — the member's display name / server nickname</li>
+        <li><code>{username}</code> — the member's Discord username</li>
         <li><code>{server}</code> — the server name</li>
         <li><code>{membercount}</code> — the current member count</li>
-        <li><code>{age}</code> — the person’s birthday age as a number <em>(birthday messages only)</em></li>
+        <li><code>{age}</code> — the person's birthday age as a number <em>(birthday messages only)</em></li>
         <li><code>{age_ordinal}</code> — the age written like <code>18th</code>, <code>21st</code>, etc. <em>(birthday age messages only)</em></li>
       </ul>
 
@@ -261,64 +263,99 @@
     <!-- HOW TO USE -->
     <div class="sectionTitle">
       <h2>📘 How to Use</h2>
-      <span>Recommended setup flow</span>
+      <span>Step-by-step setup guide</span>
     </div>
 
-    <section class="grid2">
-      <div class="card">
-        <h3>1) Invite BloomBot</h3>
-        <p class="desc">
-          Add BloomBot to your server with the invite button above.
-        </p>
-        <ul>
-          <li>Choose the server you want to add it to</li>
-          <li>Approve the requested permissions</li>
-          <li>Make sure BloomBot can manage any roles you want it to assign</li>
-        </ul>
-      </div>
+    <section class="card">
+      <h3 style="margin:0 0 6px;">Step 1 — Invite BloomBot</h3>
+      <p class="muted small" style="margin:0 0 10px;">
+        Click the <strong>Invite BloomBot</strong> button at the top of this page, choose your server,
+        and approve the permissions. Make sure BloomBot's role is <strong>above</strong> any roles you
+        want it to assign via reaction roles.
+      </p>
 
-      <div class="card">
-        <h3>2) Set Welcome + Leave</h3>
-        <p class="desc">
-          Pick channels and customize the messages members will see when people join or leave.
-        </p>
-        <ul>
-          <li>Set a welcome channel and/or leave channel</li>
-          <li>Customize each message separately</li>
-          <li>Use the message tags section above to build your templates</li>
-        </ul>
-      </div>
+      <div class="divider" style="margin:14px 0;"></div>
 
-      <div class="card">
-        <h3>3) Build Reaction Role Panels</h3>
-        <p class="desc">
-          Use an existing message as the base, then attach role mappings to it.
-        </p>
-        <ul>
-          <li>Create a saved panel from a message ID</li>
-          <li>Add emoji-to-role mappings</li>
-          <li>Let members self-assign roles by reacting</li>
-        </ul>
-      </div>
+      <h3 style="margin:0 0 6px;">Step 2 — Set Your Timezone</h3>
+      <p class="muted small" style="margin:0 0 4px;">
+        This controls when birthday and affirmation posts happen. Do this first so everything else uses the right time.
+      </p>
+      <div class="codebox"><code>/settimezone</code></div>
 
-      <div class="card">
-        <h3>4) Enable Community Features</h3>
-        <p class="desc">
-          Turn on birthdays, affirmations, leveling, and achievements for a more lively server.
+      <div class="divider" style="margin:14px 0;"></div>
+
+      <h3 style="margin:0 0 6px;">Step 3 — Welcome + Leave Messages</h3>
+      <p class="muted small" style="margin:0 0 4px;">
+        Pick a channel for each, then customize the message templates using the tags listed above.
+        You can enable or disable either one independently.
+      </p>
+      <div class="codebox"><code>/setwelcomechannel #welcome
+/setwelcomemessage Welcome {mention} to {server}! 🌸
+/setleavechannel #general
+/setleavemessage {user} has left {server}. 🍂</code></div>
+
+      <div class="divider" style="margin:14px 0;"></div>
+
+      <h3 style="margin:0 0 6px;">Step 4 — Reaction Roles</h3>
+      <p class="muted small" style="margin:0 0 4px;">
+        Post a message in your roles channel first (the message you want members to react to),
+        then save it as a panel and add emoji → role mappings.
+      </p>
+      <div class="codebox"><code>/reactionroles create panel_name:colors message_id:123456789 channel:#roles
+/reactionroles addreaction panel_name:colors emoji:🔴 role:@Red
+/reactionroles addreaction panel_name:colors emoji:🔵 role:@Blue</code></div>
+
+      <div class="divider" style="margin:14px 0;"></div>
+
+      <h3 style="margin:0 0 6px;">Step 5 — Birthdays</h3>
+      <p class="muted small" style="margin:0 0 4px;">
+        Set a channel for birthday posts. Members save their own birthdays, and BloomBot announces
+        them automatically. You can customize the message templates and toggle announcements on/off.
+      </p>
+      <div class="codebox"><code>/setbirthdaychannel #birthdays
+/togglebirthdays enabled:True</code></div>
+      <p class="muted small" style="margin:4px 0 0;">
+        Members use: <code>/setbirthday month:3 day:15</code> (year is optional)
+      </p>
+
+      <div class="divider" style="margin:14px 0;"></div>
+
+      <h3 style="margin:0 0 6px;">Step 6 — Daily Affirmations</h3>
+      <p class="muted small" style="margin:0 0 4px;">
+        Pick a channel and time for daily positive messages. You can also add your own custom affirmations.
+      </p>
+      <div class="codebox"><code>/setaffirmationchannel #positivity
+/setaffirmationtime hour:9 minute:0
+/toggleaffirmations enabled:True</code></div>
+
+      <div class="divider" style="margin:14px 0;"></div>
+
+      <h3 style="margin:0 0 6px;">Step 7 — Leveling + Achievements</h3>
+      <p class="muted small" style="margin:0 0 4px;">
+        Turn on XP leveling and achievements. Optionally set channels for level-up and achievement
+        unlock announcements — if you don't, they'll post in the channel where the trigger happened.
+      </p>
+      <div class="codebox"><code>/toggleleveling enabled:True
+/setlevelupchannel #level-ups
+/toggleachievements enabled:True
+/setachievementchannel #achievements</code></div>
+
+      <div class="divider" style="margin:14px 0;"></div>
+
+      <div class="callout">
+        <strong>💡 Tip</strong>
+        <p class="muted small" style="margin:6px 0 0;">
+          You don't have to set up everything at once. Start with welcome/leave and reaction roles,
+          then add birthdays, affirmations, leveling, and achievements once your community is active.
+          Every system can be toggled on or off independently.
         </p>
-        <ul>
-          <li>Choose birthday, affirmation, level-up, and achievement channels</li>
-          <li>Let members save their birthdays</li>
-          <li>Set daily affirmation time if you want scheduled posts</li>
-          <li>Track levels, XP, and achievement progress automatically</li>
-        </ul>
       </div>
     </section>
 
     <!-- COMMAND REFERENCE -->
     <div class="sectionTitle">
       <h2>⌨️ Command Reference</h2>
-      <span>Real commands from the current bot files</span>
+      <span>Every command in the current version of BloomBot</span>
     </div>
 
     <section class="grid2">
@@ -332,78 +369,90 @@
           <li><code>/affirmation</code> — get a positive affirmation</li>
           <li><code>/rank</code> — check your level and XP</li>
           <li><code>/leaderboard</code> — view the server XP leaderboard</li>
-          <li><code>/achievements</code> — view your achievements or another member’s</li>
+          <li><code>/achievements</code> — view your achievements or another member's</li>
           <li><code>/achievementleaderboard</code> — show top members by unlocked achievements</li>
         </ul>
       </div>
 
       <div class="card">
-        <h3>🛡️ Welcome + Leave Admin Commands <span class="badge">Staff</span></h3>
+        <h3>👋 Welcome + Leave Admin <span class="badge">Staff</span></h3>
         <ul>
-          <li><code>/setwelcomechannel</code></li>
-          <li><code>/setleavechannel</code></li>
-          <li><code>/setwelcomemessage</code></li>
-          <li><code>/setleavemessage</code></li>
-          <li><code>/togglewelcome</code></li>
-          <li><code>/toggleleave</code></li>
+          <li><code>/setwelcomechannel</code> — set the channel for welcome messages</li>
+          <li><code>/setwelcomemessage</code> — set the welcome message template</li>
+          <li><code>/viewwelcomemessage</code> — view the current welcome message settings</li>
+          <li><code>/togglewelcome</code> — turn welcome messages on or off</li>
+          <li><code>/setleavechannel</code> — set the channel for leave messages</li>
+          <li><code>/setleavemessage</code> — set the leave message template</li>
+          <li><code>/viewleavemessage</code> — view the current leave message settings</li>
+          <li><code>/toggleleave</code> — turn leave messages on or off</li>
         </ul>
       </div>
 
       <div class="card">
-        <h3>🎭 Reaction Role Admin Commands <span class="badge">Staff</span></h3>
+        <h3>🎭 Reaction Role Admin <span class="badge">Staff</span></h3>
         <ul>
           <li><code>/reactionroles create</code> — save an existing message as a reaction-role panel</li>
           <li><code>/reactionroles addreaction</code> — add an emoji → role mapping</li>
-          <li><code>/reactionroles remove</code> — remove a mapping</li>
-          <li><code>/reactionroles list</code> — list saved configs</li>
-          <li><code>/reactionroles show</code> — show one panel’s mappings and link</li>
+          <li><code>/reactionroles remove</code> — remove an emoji mapping from a panel</li>
+          <li><code>/reactionroles delete</code> — delete a reaction role panel entirely</li>
+          <li><code>/reactionroles list</code> — list all saved reaction role panels</li>
+          <li><code>/reactionroles show</code> — show one panel's mappings and message link</li>
         </ul>
       </div>
 
       <div class="card">
-        <h3>🎂 Birthday Admin Commands <span class="badge">Staff</span></h3>
+        <h3>🎂 Birthday Admin <span class="badge">Staff</span></h3>
         <ul>
-          <li><code>/setbirthdaychannel</code></li>
-          <li><code>/setbirthdaymessage</code></li>
-          <li><code>/setbirthdayagemessage</code></li>
-          <li><code>/viewbirthdaymessage</code></li>
-          <li><code>/viewbirthdayagemessage</code></li>
-          <li><code>/resetbirthdaymessage</code></li>
-          <li><code>/resetbirthdayagemessage</code></li>
+          <li><code>/setbirthdaychannel</code> — set the channel for birthday announcements</li>
+          <li><code>/togglebirthdays</code> — turn birthday announcements on or off</li>
+          <li><code>/setbirthdaymessage</code> — set the no-age birthday message template</li>
+          <li><code>/setbirthdayagemessage</code> — set the with-age birthday message template</li>
+          <li><code>/viewbirthdaymessage</code> — view the current no-age birthday message</li>
+          <li><code>/viewbirthdayagemessage</code> — view the current with-age birthday message</li>
+          <li><code>/resetbirthdaymessage</code> — reset the no-age message to default</li>
+          <li><code>/resetbirthdayagemessage</code> — reset the with-age message to default</li>
+          <li><code>/birthdaylist</code> — view all saved birthdays in the server</li>
         </ul>
       </div>
 
       <div class="card">
-        <h3>🌸 Affirmation Admin Commands <span class="badge">Staff</span></h3>
+        <h3>🌸 Affirmation Admin <span class="badge">Staff</span></h3>
         <ul>
-          <li><code>/setaffirmationchannel</code></li>
-          <li><code>/toggleaffirmations</code></li>
-          <li><code>/setaffirmationtime</code></li>
-          <li><code>/addaffirmations</code></li>
-          <li><code>/removeaffirmation</code></li>
-          <li><code>/clearaffirmations</code></li>
-          <li><code>/listaffirmations</code></li>
-          <li><code>/sendaffirmationnow</code></li>
+          <li><code>/setaffirmationchannel</code> — set the channel for daily affirmations</li>
+          <li><code>/toggleaffirmations</code> — turn daily affirmations on or off</li>
+          <li><code>/setaffirmationtime</code> — set the daily posting time</li>
+          <li><code>/addaffirmations</code> — add custom affirmations (one per line)</li>
+          <li><code>/removeaffirmation</code> — remove a custom affirmation by number</li>
+          <li><code>/clearaffirmations</code> — remove all custom affirmations</li>
+          <li><code>/listaffirmations</code> — view custom affirmations</li>
+          <li><code>/sendaffirmationnow</code> — post an affirmation immediately</li>
         </ul>
       </div>
 
       <div class="card">
-        <h3>✨ Leveling Admin Commands <span class="badge">Staff</span></h3>
+        <h3>✨ Leveling Admin <span class="badge">Staff</span></h3>
         <ul>
-          <li><code>/toggleleveling</code></li>
-          <li><code>/setlevelupchannel</code></li>
-          <li><code>/givexp</code></li>
-          <li><code>/setlevel</code></li>
+          <li><code>/toggleleveling</code> — turn leveling on or off</li>
+          <li><code>/setlevelupchannel</code> — set the channel for level-up announcements</li>
+          <li><code>/givexp</code> — give XP to a member</li>
+          <li><code>/setlevel</code> — set a member's level directly</li>
         </ul>
       </div>
 
       <div class="card">
-        <h3>🏆 Achievement Admin Commands <span class="badge">Staff</span></h3>
+        <h3>🏆 Achievement Admin <span class="badge">Staff</span></h3>
         <ul>
-          <li><code>/setachievementchannel</code></li>
-          <li><code>/toggleachievements</code></li>
-          <li><code>/giveachievement</code></li>
-          <li><code>/achievementlist</code></li>
+          <li><code>/setachievementchannel</code> — set the channel for achievement unlock messages</li>
+          <li><code>/toggleachievements</code> — turn achievements on or off</li>
+          <li><code>/giveachievement</code> — give a specific achievement to a member</li>
+          <li><code>/achievementlist</code> — list all achievement IDs and names</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🕐 Server Settings <span class="badge">Staff</span></h3>
+        <ul>
+          <li><code>/settimezone</code> — set the server timezone for birthday and affirmation posts</li>
         </ul>
       </div>
     </section>
@@ -420,7 +469,7 @@
         <li>🗨️ <strong>Getting Chatty</strong> — Send 10 messages in the server</li>
         <li>📣 <strong>Chatterbox</strong> — Send 50 messages in the server</li>
         <li>🦋 <strong>Social Butterfly</strong> — Send 100 messages in the server</li>
-        <li>🔥 <strong>Can’t Stop Talking</strong> — Send 200 messages in the server</li>
+        <li>🔥 <strong>Can't Stop Talking</strong> — Send 200 messages in the server</li>
         <li>✨ <strong>Express Yourself</strong> — React to a message for the first time</li>
         <li>🎉 <strong>Reaction Lover</strong> — React to 10 messages</li>
         <li>🥳 <strong>Hype Machine</strong> — React to 50 messages</li>
@@ -436,33 +485,38 @@
     <!-- SETUP NOTES -->
     <div class="sectionTitle">
       <h2>🔧 Setup Notes</h2>
-      <span>Best way to roll BloomBot out</span>
+      <span>Good things to know</span>
     </div>
 
     <section class="card">
       <div class="callout">
-        <strong>Recommended rollout</strong>
-        <p class="muted small">
-          Start with welcome/leave and reaction roles first. Then add birthdays, affirmations,
-          leveling, and achievements once your community is active and you’ve picked the channels
-          you want BloomBot to use.
+        <strong>Permissions</strong>
+        <p class="muted small" style="margin:6px 0 0;">
+          BloomBot needs <strong>Manage Roles</strong> for reaction roles to work. Its bot role must be
+          placed <strong>above</strong> any roles you want it to assign in your server's role list.
+          All admin commands require the Administrator permission.
         </p>
       </div>
 
-      <div class="codebox">
-        <code>Suggested setup:
+      <div class="divider" style="margin:14px 0;"></div>
 
-- Invite BloomBot to your server
-- Run /setwelcomechannel and /setwelcomemessage
-- Optionally run /setleavechannel and /setleavemessage
-- Make a role-selection message, then use /reactionroles create
-- Add emoji mappings with /reactionroles addreaction
-- Set a birthday channel with /setbirthdaychannel
-- Optional: customize /setbirthdaymessage and /setbirthdayagemessage
-- Set an affirmation channel with /setaffirmationchannel
-- Optional: choose a time with /setaffirmationtime
-- Turn on leveling or choose a level-up channel with /setlevelupchannel
-- Set an achievement channel if you want unlock posts in a specific place</code>
+      <div class="callout">
+        <strong>Toggles</strong>
+        <p class="muted small" style="margin:6px 0 0;">
+          Every major system (welcome, leave, birthdays, affirmations, leveling, achievements) can be
+          toggled on or off independently. Turning something off keeps your settings saved — you can
+          turn it back on later without reconfiguring anything.
+        </p>
+      </div>
+
+      <div class="divider" style="margin:14px 0;"></div>
+
+      <div class="callout">
+        <strong>Timezone</strong>
+        <p class="muted small" style="margin:6px 0 0;">
+          The server timezone (set with <code>/settimezone</code>) controls when birthday checks
+          and daily affirmation posts happen. It defaults to America/New_York if not set.
+        </p>
       </div>
 
       <div class="btnrow" style="margin-top:12px;">
