@@ -21,8 +21,8 @@
 
         <p class="muted">
           A cozy all-in-one Discord bot for community servers. BloomBot handles welcome and leave
-          messages, saved-message reaction roles, birthdays, daily affirmations, leveling, and achievements
-          with a clean slash-command setup that's easy for server admins to manage.
+          messages, saved-message reaction roles, birthdays, daily affirmations, Twitch stream announcements,
+          leveling, and achievements with a clean slash-command setup that's easy for server admins to manage.
         </p>
 
         <div class="ctaRow">
@@ -42,6 +42,7 @@
         <div class="tile"><strong>🎭 Reaction Roles</strong><p>Attach emoji-role mappings to an existing message.</p></div>
         <div class="tile"><strong>🎂 Birthdays</strong><p>Save birthdays and post automatic birthday messages.</p></div>
         <div class="tile"><strong>🌸 Daily Affirmations</strong><p>Scheduled positive messages with custom additions.</p></div>
+        <div class="tile"><strong>🎬 Twitch Alerts</strong><p>Separate go-live announcements for your stream and friends' streams.</p></div>
         <div class="tile"><strong>✨ Levels + 🏆 Achievements</strong><p>XP, leaderboards, level-ups, and unlockables.</p></div>
       </div>
     </section>
@@ -56,7 +57,7 @@
       <p class="desc">
         <strong>BloomBot</strong> is a public Discord bot focused on practical community features:
         welcoming new members, handling self-assignable roles, celebrating birthdays, posting daily affirmations,
-        tracking chat XP, and unlocking achievements tied to server activity.
+        announcing Twitch streams, tracking chat XP, and unlocking achievements tied to server activity.
       </p>
 
       <p class="desc">
@@ -79,6 +80,7 @@
         <li>Saved-message reaction role panels</li>
         <li>Birthday tracking and automatic birthday posts</li>
         <li>Daily affirmations with optional custom messages</li>
+        <li>Twitch stream announcements for the server owner and friends — in separate channels</li>
         <li>XP, level-ups, leaderboards, and achievements</li>
       </ul>
 
@@ -167,6 +169,23 @@
       </div>
 
       <div class="card">
+        <h3>🎬 Twitch Stream Announcements <span class="badge">New</span></h3>
+        <p class="desc">
+          BloomBot can announce when the server owner or friends go live on Twitch — each in their own channel
+          so you can keep your stream separate from friends' streams.
+        </p>
+        <ul>
+          <li>Owner stream announcements in a dedicated channel</li>
+          <li>Friends' stream announcements in a separate channel</li>
+          <li>Add and remove friends from the tracking list anytime</li>
+          <li>Customizable announcement messages with <code>{streamer}</code>, <code>{title}</code>, <code>{game}</code>, and more</li>
+          <li>Stream thumbnails included automatically</li>
+          <li>Only announces once per live session — no spam</li>
+          <li>Toggle the whole system on or off</li>
+        </ul>
+      </div>
+
+      <div class="card">
         <h3>✨ Leveling <span class="badge">Progression</span></h3>
         <p class="desc">
           Members earn XP by chatting, with built-in cooldown pacing and level-up announcements.
@@ -200,7 +219,7 @@
         <ul>
           <li>Interactive <code>/setup</code> wizard for one-stop configuration</li>
           <li>Channel selection commands for major systems</li>
-          <li>Toggle commands for welcome, leave, birthdays, affirmations, leveling, and achievements</li>
+          <li>Toggle commands for welcome, leave, birthdays, affirmations, Twitch, leveling, and achievements</li>
           <li>Manual XP and level adjustment tools</li>
           <li>Saved reaction-role config management</li>
           <li>Server timezone setting for birthday and affirmation posts</li>
@@ -270,12 +289,28 @@
 
       <div class="divider" style="margin:14px 0;"></div>
 
+      <h3 style="margin:0 0 8px;">🎬 Twitch Announcement Tags</h3>
+      <p class="muted small" style="margin:0 0 8px;">
+        Twitch stream announcements use their own set of tags:
+      </p>
+      <ul class="muted small" style="margin:0; padding-left:18px;">
+        <li><code>{streamer}</code> — the Twitch display name</li>
+        <li><code>{title}</code> — the stream title</li>
+        <li><code>{game}</code> — the game or category being streamed</li>
+        <li><code>{url}</code> — the full Twitch URL</li>
+        <li><code>{viewers}</code> — the current viewer count</li>
+      </ul>
+
+      <div class="divider" style="margin:14px 0;"></div>
+
       <h3 style="margin:0 0 8px;">Ready-to-Use Examples</h3>
       <ul class="muted small" style="margin:0; padding-left:18px;">
         <li><strong>Welcome:</strong> <code>Welcome {mention} to <strong>{server}</strong>! You are member #{membercount} 🌸</code></li>
         <li><strong>Leave:</strong> <code>{user} has left <strong>{server}</strong>. 🍂</code></li>
         <li><strong>Birthday:</strong> <code>🎉 Happy Birthday {mention}! Hope you have a lovely day 🌸</code></li>
         <li><strong>Birthday with age:</strong> <code>🎉 Happy {age_ordinal} Birthday {mention}! Hope you have a lovely day 🌸</code></li>
+        <li><strong>Twitch (owner):</strong> <code>🎬 {streamer} is live! Playing {game} — {url}</code></li>
+        <li><strong>Twitch (friend):</strong> <code>📺 {streamer} just went live playing {game}! {url}</code></li>
       </ul>
     </section>
 
@@ -304,8 +339,8 @@
       <div class="codebox"><code>/setup</code></div>
       <p class="muted small" style="margin:4px 0 0;">
         The wizard covers: welcome messages, leave messages, birthdays, leveling, achievements,
-        daily affirmations, and server timezone. You can click into any module, configure it,
-        and go back to the main menu.
+        daily affirmations, Twitch stream announcements, and server timezone. You can click into
+        any module, configure it, and go back to the main menu.
       </p>
 
       <div class="divider" style="margin:14px 0;"></div>
@@ -354,13 +389,29 @@
 
       <div class="divider" style="margin:14px 0;"></div>
 
+      <h3 style="margin:0 0 6px;">Step 7 — Twitch Stream Announcements</h3>
+      <p class="muted small" style="margin:0 0 4px;">
+        The setup wizard lets you set channels and toggle Twitch on or off. To configure the
+        usernames and customize announcements, use the slash commands:
+      </p>
+      <div class="codebox"><code>/settwitchowner username:YourTwitchName
+/settwitchownerchannel channel:#my-stream
+/addtwitchfriend username:FriendName
+/settwitchfriendschannel channel:#friends-live</code></div>
+      <p class="muted small" style="margin:4px 0 0;">
+        Optionally customize the announcement messages with <code>/settwitchownermessage</code>
+        and <code>/settwitchfriendsmessage</code> using the Twitch tags listed above.
+      </p>
+
+      <div class="divider" style="margin:14px 0;"></div>
+
       <div class="callout">
         <strong>💡 Tip</strong>
         <p class="muted small" style="margin:6px 0 0;">
           You don't have to set up everything at once. The <code>/setup</code> wizard lets you
           come back anytime to toggle features or change channels. Start with welcome/leave and
-          reaction roles, then add birthdays, affirmations, leveling, and achievements once your
-          community is active.
+          reaction roles, then add birthdays, affirmations, Twitch alerts, leveling, and achievements
+          once your community is active.
         </p>
       </div>
     </section>
@@ -395,7 +446,7 @@
         <p class="muted small" style="margin:6px 0 0;">
           The wizard provides an overview dashboard and lets you toggle features, pick channels,
           and set your timezone using Discord buttons and dropdowns. It covers welcome, leave,
-          birthdays, leveling, achievements, affirmations, and timezone in one place.
+          birthdays, leveling, achievements, affirmations, Twitch, and timezone in one place.
         </p>
       </div>
 
@@ -452,6 +503,38 @@
           <li><code>/listaffirmations</code> — view custom affirmations</li>
           <li><code>/sendaffirmationnow</code> — post an affirmation immediately</li>
         </ul>
+      </div>
+
+      <div class="card">
+        <h3>🎬 Twitch Admin · Owner Stream <span class="badge">Staff</span></h3>
+        <ul>
+          <li><code>/settwitchowner</code> — set the Twitch username for the server owner's stream</li>
+          <li><code>/settwitchownerchannel</code> — set the channel for owner stream announcements</li>
+          <li><code>/settwitchownermessage</code> — customize the owner stream announcement message</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>📺 Twitch Admin · Friends' Streams <span class="badge">Staff</span></h3>
+        <ul>
+          <li><code>/addtwitchfriend</code> — add a friend's Twitch username to the tracking list</li>
+          <li><code>/removetwitchfriend</code> — remove a friend from the tracking list</li>
+          <li><code>/listtwitchfriends</code> — view all tracked friends' Twitch usernames</li>
+          <li><code>/settwitchfriendschannel</code> — set the channel for friends' stream announcements</li>
+          <li><code>/settwitchfriendsmessage</code> — customize the friends stream announcement message</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🎬 Twitch Admin · General <span class="badge">Staff</span></h3>
+        <ul>
+          <li><code>/toggletwitch</code> — turn Twitch stream announcements on or off</li>
+          <li><code>/twitchstatus</code> — view the current Twitch announcement configuration</li>
+        </ul>
+        <p class="muted small" style="margin:6px 0 0;">
+          The Twitch toggle controls both owner and friends' announcements together.
+          Channels and usernames stay saved when the feature is turned off.
+        </p>
       </div>
 
       <div class="card">
@@ -523,8 +606,8 @@
         <p class="muted small" style="margin:6px 0 0;">
           Run <code>/setup</code> to open an interactive panel that covers all features. It uses
           Discord buttons and channel dropdowns so you never need to copy-paste channel IDs.
-          The wizard handles toggles, channels, and timezone — for message templates and reaction
-          roles, use the individual commands listed in the command reference.
+          The wizard handles toggles, channels, and timezone — for message templates, Twitch usernames,
+          and reaction roles, use the individual commands listed in the command reference.
         </p>
       </div>
 
@@ -544,7 +627,7 @@
       <div class="callout">
         <strong>Toggles</strong>
         <p class="muted small" style="margin:6px 0 0;">
-          Every major system (welcome, leave, birthdays, affirmations, leveling, achievements) can be
+          Every major system (welcome, leave, birthdays, affirmations, Twitch, leveling, achievements) can be
           toggled on or off independently — either from <code>/setup</code> or the individual toggle commands.
           Turning something off keeps your settings saved — you can turn it back on later without
           reconfiguring anything.
