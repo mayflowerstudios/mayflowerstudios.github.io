@@ -21,8 +21,8 @@
 
         <p class="muted">
           A cozy all-in-one Discord bot for community servers. BloomBot handles welcome and leave
-          messages, saved-message reaction roles, birthdays, daily affirmations, Twitch stream announcements,
-          leveling, and achievements with a clean slash-command setup that's easy for server admins to manage.
+          messages, reaction roles, birthdays, daily affirmations, Twitch stream announcements,
+          leveling, and achievements — all configurable through a single interactive setup wizard.
         </p>
 
         <div class="ctaRow">
@@ -39,381 +39,197 @@
       </div>
 
       <div class="tileGrid">
-        <div class="tile"><strong>🛠️ Interactive Setup</strong><p>One-command wizard to configure every feature with buttons and dropdowns.</p></div>
-        <div class="tile"><strong>👋 Welcome + Leave</strong><p>Custom join and leave messages with channel controls.</p></div>
-        <div class="tile"><strong>🎭 Reaction Roles</strong><p>Attach emoji-role mappings to an existing message.</p></div>
-        <div class="tile"><strong>🎂 Birthdays</strong><p>Save birthdays and post automatic birthday messages.</p></div>
-        <div class="tile"><strong>🌸 Daily Affirmations</strong><p>Scheduled positive messages with custom additions.</p></div>
-        <div class="tile"><strong>🎬 Twitch Alerts</strong><p>Separate go-live announcements for your stream and friends' streams.</p></div>
+        <div class="tile"><strong>🛠️ Interactive Setup</strong><p>One-command wizard to configure every feature.</p></div>
+        <div class="tile"><strong>🎭 Reaction Roles</strong><p>Emoji-role mappings on any existing message.</p></div>
+        <div class="tile"><strong>🎬 Twitch Alerts</strong><p>Go-live announcements for your stream and friends.</p></div>
         <div class="tile"><strong>✨ Levels + 🏆 Achievements</strong><p>XP, leaderboards, level-ups, and unlockables.</p></div>
-      </div>
-    </section>
-
-    <!-- DESCRIPTION -->
-    <div class="sectionTitle">
-      <h2>📝 Description</h2>
-      <span>What BloomBot actually does</span>
-    </div>
-
-    <section class="card">
-      <p class="desc">
-        <strong>BloomBot</strong> is a public Discord bot focused on practical community features:
-        welcoming new members, handling self-assignable roles, celebrating birthdays, posting daily affirmations,
-        announcing Twitch streams, tracking chat XP, and unlocking achievements tied to server activity.
-      </p>
-
-      <p class="desc">
-        It's built around slash commands and per-server settings, so each community can decide which
-        systems to enable, where announcements should go, and how much automation they want.
-        The <code>/setup</code> wizard lets admins configure everything from a single interactive panel.
-      </p>
-
-      <div class="divider" style="margin:14px 0;"></div>
-
-      <h3 style="margin:0 0 6px;">🌼 Built for Community Servers</h3>
-      <p class="muted small" style="margin:0 0 10px;">
-        BloomBot is a good fit for gaming servers, cozy friend groups, fandom servers, and growing communities
-        that want helpful automation without feeling bloated.
-      </p>
-
-      <ul class="muted small" style="margin:0; padding-left:18px;">
-        <li>Interactive setup wizard with buttons and channel dropdowns</li>
-        <li>Custom welcome and leave channels/messages</li>
-        <li>Saved-message reaction role panels</li>
-        <li>Birthday tracking and automatic birthday posts</li>
-        <li>Daily affirmations with optional custom messages</li>
-        <li>Twitch stream announcements for the server owner and friends — in separate channels</li>
-        <li>XP, level-ups, leaderboards, and achievements</li>
-      </ul>
-
-      <div class="callout" style="margin-top:12px;">
-        <strong>Public bot note</strong>
-        <p class="muted small" style="margin:6px 0 0;">
-          BloomBot is meant to be invited to multiple Discord servers, with each server able to configure
-          its own channels, toggles, and settings independently.
-        </p>
       </div>
     </section>
 
     <!-- CORE SYSTEMS -->
     <div class="sectionTitle">
       <h2>⭐ Core Systems</h2>
-      <span>The real BloomBot feature set</span>
+      <span>Everything BloomBot can do</span>
     </div>
 
     <section class="grid2">
       <div class="card">
         <h3>🛠️ Setup Wizard <span class="badge">New</span></h3>
         <p class="desc">
-          Run <code>/setup</code> to open an interactive panel that walks you through configuring
-          every BloomBot feature in one place — no need to remember individual commands.
+          Run <code>/setup</code> to open an interactive panel that walks through every feature
+          in one place. Toggle systems on/off, pick channels from native dropdowns, and set your
+          timezone — all from a single ephemeral message that updates as you go.
         </p>
-        <ul>
-          <li>Dashboard overview showing all features and their current status</li>
-          <li>Toggle any feature on or off with a button press</li>
-          <li>Pick channels from native Discord dropdowns — no copy-pasting IDs</li>
-          <li>Set your server timezone from a list of common presets</li>
-          <li>Everything stays in one ephemeral message that updates as you go</li>
-        </ul>
       </div>
 
       <div class="card">
         <h3>👋 Welcome + Leave Messages <span class="badge">Core</span></h3>
         <p class="desc">
-          BloomBot can post customizable join and leave messages in channels you choose.
+          Post customizable join and leave messages in channels you choose.
+          Separate channels, separate templates, and independent toggles for each.
+          Supports placeholders like <code>{user}</code>, <code>{server}</code>, and <code>{membercount}</code>.
         </p>
-        <ul>
-          <li>Separate welcome and leave channels</li>
-          <li>Separate welcome and leave messages</li>
-          <li>Enable/disable both systems independently</li>
-          <li>Supports placeholders like <code>{user}</code>, <code>{server}</code>, and <code>{membercount}</code></li>
-        </ul>
       </div>
 
       <div class="card">
         <h3>🎭 Reaction Roles <span class="badge">Popular</span></h3>
         <p class="desc">
-          BloomBot uses a saved-message workflow for reaction roles instead of generating a brand-new panel message.
+          Point BloomBot at any existing message, save it as a panel, and add emoji → role mappings.
+          Members gain or lose roles by adding/removing reactions. No bot-generated panel message needed.
         </p>
-        <ul>
-          <li>Point BloomBot at an existing message</li>
-          <li>Save it under a panel name</li>
-          <li>Add emoji → role mappings</li>
-          <li>Members gain or lose roles when they add/remove reactions</li>
-        </ul>
       </div>
 
       <div class="card">
         <h3>🎂 Birthday System <span class="badge">Community</span></h3>
         <p class="desc">
-          Members can save birthdays, and BloomBot automatically checks for birthdays throughout the day.
+          Members save their birthdays and BloomBot automatically posts announcements throughout the day.
+          Optional year support for age display, customizable message templates, and timezone-aware checking.
         </p>
-        <ul>
-          <li>Optional year support when saving a birthday</li>
-          <li>Automatic birthday announcement channel</li>
-          <li>Separate message template for birthdays with age</li>
-          <li>Enable/disable birthday announcements with a toggle</li>
-          <li>Server timezone setting for accurate date checking</li>
-        </ul>
       </div>
 
       <div class="card">
         <h3>🌸 Daily Affirmations <span class="badge">Cozy</span></h3>
         <p class="desc">
-          BloomBot can post daily affirmations automatically and also supports custom affirmation lists per server.
+          Automatic daily affirmation posts at a time you set. Add custom affirmations per server,
+          or let members use <code>/affirmation</code> anytime for an on-demand boost.
         </p>
-        <ul>
-          <li>Dedicated affirmation channel</li>
-          <li>Set a daily posting time</li>
-          <li>Add, remove, list, or clear custom affirmations</li>
-          <li>Members can also use <code>/affirmation</code> anytime</li>
-        </ul>
       </div>
 
       <div class="card">
         <h3>🎬 Twitch Stream Announcements <span class="badge">New</span></h3>
         <p class="desc">
-          BloomBot can announce when the server owner or friends go live on Twitch — each in their own channel
-          so you can keep your stream separate from friends' streams.
+          Announce when the server owner or friends go live on Twitch — each in separate channels.
+          Customizable messages with <code>{streamer}</code>, <code>{title}</code>, <code>{game}</code>, and more.
+          Stream thumbnails included automatically, and only announces once per live session.
         </p>
-        <ul>
-          <li>Owner stream announcements in a dedicated channel</li>
-          <li>Friends' stream announcements in a separate channel</li>
-          <li>Add and remove friends from the tracking list anytime</li>
-          <li>Customizable announcement messages with <code>{streamer}</code>, <code>{title}</code>, <code>{game}</code>, and more</li>
-          <li>Stream thumbnails included automatically</li>
-          <li>Only announces once per live session — no spam</li>
-          <li>Toggle the whole system on or off</li>
-        </ul>
       </div>
 
       <div class="card">
         <h3>✨ Leveling <span class="badge">Progression</span></h3>
         <p class="desc">
-          Members earn XP by chatting, with built-in cooldown pacing and level-up announcements.
+          Members earn 15–25 XP per message (45-second cooldown) with level-up announcements
+          in a channel you choose. Admins can manually give XP or set levels directly.
         </p>
-        <ul>
-          <li>XP earned from normal server messages</li>
-          <li>45-second XP cooldown per member</li>
-          <li>Random XP gain between 15 and 25</li>
-          <li>Custom level-up announcement channel</li>
-        </ul>
       </div>
 
       <div class="card">
         <h3>🏆 Achievements <span class="badge">Extra</span></h3>
         <p class="desc">
-          BloomBot includes an achievement system tied to chatting, reactions, joining, birthdays, and leveling.
+          14 built-in achievements tied to chatting, reactions, leveling, birthdays, and joining.
+          Automatic unlock announcements, optional images, member views, and a leaderboard.
         </p>
-        <ul>
-          <li>Automatic unlock announcements</li>
-          <li>Optional achievement images</li>
-          <li>Member achievement view + leaderboard</li>
-          <li>Admin controls for toggling and manually granting achievements</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h3>🛡️ Admin Controls <span class="badge">Staff</span></h3>
-        <p class="desc">
-          Most setup commands are admin-only so server owners can configure BloomBot safely.
-        </p>
-        <ul>
-          <li>Interactive <code>/setup</code> wizard for one-stop configuration</li>
-          <li>Channel selection commands for major systems</li>
-          <li>Toggle commands for welcome, leave, birthdays, affirmations, Twitch, leveling, and achievements</li>
-          <li>Manual XP and level adjustment tools</li>
-          <li>Saved reaction-role config management</li>
-          <li>Server timezone setting for birthday and affirmation posts</li>
-        </ul>
       </div>
     </section>
 
     <!-- MESSAGE TAGS -->
     <div class="sectionTitle">
       <h2>🏷️ Message Tags</h2>
-      <span>Easy template placeholders for custom messages</span>
+      <span>Template placeholders for custom messages</span>
     </div>
 
     <section class="card">
       <p class="desc">
-        Some BloomBot messages can be customized with simple tags. When the message sends,
-        BloomBot replaces each tag with the right info automatically.
+        BloomBot messages can be customized with simple tags that get replaced automatically when sent.
       </p>
 
       <div class="callout" style="margin-top:12px;">
         <strong>Example</strong>
         <p class="muted small" style="margin:6px 0 0;">
-          If your welcome message is:<br />
-          <code>Welcome {mention} to {server}! You are member #{membercount} 🌸</code><br /><br />
-          BloomBot might send something like:<br />
-          <code>Welcome @Luna to Cozy Garden! You are member #142 🌸</code>
+          <code>Welcome {mention} to {server}! You are member #{membercount} 🌸</code><br />
+          → <code>Welcome @Luna to Cozy Garden! You are member #142 🌸</code>
         </p>
       </div>
 
       <div class="divider" style="margin:14px 0;"></div>
 
-      <h3 style="margin:0 0 8px;">Available Tags</h3>
-      <ul class="muted small" style="margin:0; padding-left:18px;">
-        <li><code>{mention}</code> — mentions the member directly</li>
-        <li><code>{user}</code> — the member's display name / server nickname</li>
-        <li><code>{username}</code> — the member's Discord username</li>
-        <li><code>{server}</code> — the server name</li>
-        <li><code>{membercount}</code> — the current member count</li>
-        <li><code>{age}</code> — the person's birthday age as a number <em>(birthday messages only)</em></li>
-        <li><code>{age_ordinal}</code> — the age written like <code>18th</code>, <code>21st</code>, etc. <em>(birthday age messages only)</em></li>
-      </ul>
-
-      <div class="divider" style="margin:14px 0;"></div>
-
       <section class="grid2" style="margin:0;">
         <div>
-          <h3 style="margin:0 0 6px;">👋 Welcome + 🍂 Leave Messages</h3>
-          <p class="muted small" style="margin:0 0 8px;">
-            These support:
-          </p>
-          <p class="muted small" style="margin:0;">
-            <code>{mention}</code>, <code>{user}</code>, <code>{username}</code>,
-            <code>{server}</code>, <code>{membercount}</code>
+          <h3 style="margin:0 0 6px;">👋 Welcome, 🍂 Leave &amp; 🎂 Birthday Tags</h3>
+          <p class="muted small" style="margin:0 0 4px;">
+            <code>{mention}</code> — mentions the member directly<br />
+            <code>{user}</code> — display name / server nickname<br />
+            <code>{username}</code> — Discord username<br />
+            <code>{server}</code> — server name<br />
+            <code>{membercount}</code> — current member count<br />
+            <code>{age}</code> — birthday age as a number <em>(birthday only)</em><br />
+            <code>{age_ordinal}</code> — age like <code>18th</code>, <code>21st</code> <em>(birthday only)</em>
           </p>
         </div>
 
         <div>
-          <h3 style="margin:0 0 6px;">🎂 Birthday Messages</h3>
-          <p class="muted small" style="margin:0 0 8px;">
-            These support everything above, plus:
-          </p>
-          <p class="muted small" style="margin:0;">
-            <code>{age}</code>, <code>{age_ordinal}</code>
+          <h3 style="margin:0 0 6px;">🎬 Twitch Announcement Tags</h3>
+          <p class="muted small" style="margin:0 0 4px;">
+            <code>{streamer}</code> — Twitch display name<br />
+            <code>{title}</code> — stream title<br />
+            <code>{game}</code> — game or category<br />
+            <code>{url}</code> — full Twitch URL<br />
+            <code>{viewers}</code> — current viewer count
           </p>
         </div>
       </section>
-
-      <div class="divider" style="margin:14px 0;"></div>
-
-      <h3 style="margin:0 0 8px;">🎬 Twitch Announcement Tags</h3>
-      <p class="muted small" style="margin:0 0 8px;">
-        Twitch stream announcements use their own set of tags:
-      </p>
-      <ul class="muted small" style="margin:0; padding-left:18px;">
-        <li><code>{streamer}</code> — the Twitch display name</li>
-        <li><code>{title}</code> — the stream title</li>
-        <li><code>{game}</code> — the game or category being streamed</li>
-        <li><code>{url}</code> — the full Twitch URL</li>
-        <li><code>{viewers}</code> — the current viewer count</li>
-      </ul>
-
-      <div class="divider" style="margin:14px 0;"></div>
-
-      <h3 style="margin:0 0 8px;">Ready-to-Use Examples</h3>
-      <ul class="muted small" style="margin:0; padding-left:18px;">
-        <li><strong>Welcome:</strong> <code>Welcome {mention} to <strong>{server}</strong>! You are member #{membercount} 🌸</code></li>
-        <li><strong>Leave:</strong> <code>{user} has left <strong>{server}</strong>. 🍂</code></li>
-        <li><strong>Birthday:</strong> <code>🎉 Happy Birthday {mention}! Hope you have a lovely day 🌸</code></li>
-        <li><strong>Birthday with age:</strong> <code>🎉 Happy {age_ordinal} Birthday {mention}! Hope you have a lovely day 🌸</code></li>
-        <li><strong>Twitch (owner):</strong> <code>🎬 {streamer} is live! Playing {game} — {url}</code></li>
-        <li><strong>Twitch (friend):</strong> <code>📺 {streamer} just went live playing {game}! {url}</code></li>
-      </ul>
     </section>
 
     <!-- HOW TO USE -->
     <div class="sectionTitle">
-      <h2>📘 How to Use</h2>
-      <span>Step-by-step setup guide</span>
+      <h2>📘 Getting Started</h2>
+      <span>Up and running in minutes</span>
     </div>
 
     <section class="card">
-      <h3 style="margin:0 0 6px;">Step 1 — Invite BloomBot</h3>
+      <h3 style="margin:0 0 6px;">1 — Invite BloomBot</h3>
       <p class="muted small" style="margin:0 0 10px;">
-        Click the <strong>Invite BloomBot</strong> button at the top of this page, choose your server,
-        and approve the permissions. Make sure BloomBot's role is <strong>above</strong> any roles you
-        want it to assign via reaction roles.
+        Click <strong>Invite BloomBot</strong> at the top of this page and approve the permissions.
+        Make sure BloomBot's role is <strong>above</strong> any roles you want it to assign.
       </p>
 
       <div class="divider" style="margin:14px 0;"></div>
 
-      <h3 style="margin:0 0 6px;">Step 2 — Run the Setup Wizard</h3>
-      <p class="muted small" style="margin:0 0 4px;">
-        The fastest way to configure BloomBot is the interactive setup wizard. It shows a dashboard
-        of every feature, lets you toggle things on and off, pick channels from dropdowns, and set
-        your timezone — all from one ephemeral message.
-      </p>
+      <h3 style="margin:0 0 6px;">2 — Run the Setup Wizard</h3>
       <div class="codebox"><code>/setup</code></div>
-      <p class="muted small" style="margin:4px 0 0;">
-        The wizard covers: welcome messages, leave messages, birthdays, leveling, achievements,
-        daily affirmations, Twitch stream announcements, and server timezone. You can click into
-        any module, configure it, and go back to the main menu.
+      <p class="muted small" style="margin:4px 0 10px;">
+        The wizard covers every feature: welcome, leave, birthdays, leveling, achievements,
+        affirmations, Twitch, and timezone. Toggle things on/off, pick channels from dropdowns,
+        and configure everything from one interactive panel.
       </p>
 
       <div class="divider" style="margin:14px 0;"></div>
 
-      <h3 style="margin:0 0 6px;">Step 3 — Customize Message Templates</h3>
+      <h3 style="margin:0 0 6px;">3 — Customize Message Templates</h3>
       <p class="muted small" style="margin:0 0 4px;">
-        The setup wizard handles toggles and channels, but to customize your message templates
-        you'll use the individual commands. Use the tags listed above to personalize them.
+        The wizard handles toggles and channels. For message templates, use the individual commands:
       </p>
       <div class="codebox"><code>/setwelcomemessage Welcome {mention} to {server}! 🌸
-/setleavemessage {user} has left {server}. 🍂</code></div>
+/setleavemessage {user} has left {server}. 🍂
+/setbirthdaymessage 🎉 Happy Birthday {mention}! 🌸</code></div>
 
       <div class="divider" style="margin:14px 0;"></div>
 
-      <h3 style="margin:0 0 6px;">Step 4 — Reaction Roles</h3>
+      <h3 style="margin:0 0 6px;">4 — Set Up Reaction Roles</h3>
       <p class="muted small" style="margin:0 0 4px;">
-        Post a message in your roles channel first (the message you want members to react to),
-        then save it as a panel and add emoji → role mappings.
+        Post a message in your roles channel first, then save it as a panel and add mappings:
       </p>
       <div class="codebox"><code>/reactionroles create panel_name:colors message_id:123456789 channel:#roles
-/reactionroles addreaction panel_name:colors emoji:🔴 role:@Red
-/reactionroles addreaction panel_name:colors emoji:🔵 role:@Blue</code></div>
+/reactionroles addreaction panel_name:colors emoji:🔴 role:@Red</code></div>
 
       <div class="divider" style="margin:14px 0;"></div>
 
-      <h3 style="margin:0 0 6px;">Step 5 — Birthdays</h3>
+      <h3 style="margin:0 0 6px;">5 — Configure Twitch Alerts</h3>
       <p class="muted small" style="margin:0 0 4px;">
-        If you used the setup wizard, the birthday channel and toggle are already configured.
-        You can optionally customize the birthday message templates:
-      </p>
-      <div class="codebox"><code>/setbirthdaymessage 🎉 Happy Birthday {mention}! 🌸
-/setbirthdayagemessage 🎉 Happy {age_ordinal} Birthday {mention}! 🌸</code></div>
-      <p class="muted small" style="margin:4px 0 0;">
-        Members use: <code>/setbirthday month:3 day:15</code> (year is optional)
-      </p>
-
-      <div class="divider" style="margin:14px 0;"></div>
-
-      <h3 style="margin:0 0 6px;">Step 6 — Daily Affirmations</h3>
-      <p class="muted small" style="margin:0 0 4px;">
-        The setup wizard configures the channel and toggle. To fine-tune the posting time
-        or add custom affirmations, use these commands:
-      </p>
-      <div class="codebox"><code>/setaffirmationtime hour:9 minute:0
-/addaffirmations</code></div>
-
-      <div class="divider" style="margin:14px 0;"></div>
-
-      <h3 style="margin:0 0 6px;">Step 7 — Twitch Stream Announcements</h3>
-      <p class="muted small" style="margin:0 0 4px;">
-        The setup wizard lets you set channels and toggle Twitch on or off. To configure the
-        usernames and customize announcements, use the slash commands:
+        Toggle Twitch on in the wizard, then set usernames and channels:
       </p>
       <div class="codebox"><code>/settwitchowner username:YourTwitchName
 /settwitchownerchannel channel:#my-stream
 /addtwitchfriend username:FriendName
 /settwitchfriendschannel channel:#friends-live</code></div>
-      <p class="muted small" style="margin:4px 0 0;">
-        Optionally customize the announcement messages with <code>/settwitchownermessage</code>
-        and <code>/settwitchfriendsmessage</code> using the Twitch tags listed above.
-      </p>
 
       <div class="divider" style="margin:14px 0;"></div>
 
       <div class="callout">
         <strong>💡 Tip</strong>
         <p class="muted small" style="margin:6px 0 0;">
-          You don't have to set up everything at once. The <code>/setup</code> wizard lets you
-          come back anytime to toggle features or change channels. Start with welcome/leave and
-          reaction roles, then add birthdays, affirmations, Twitch alerts, leveling, and achievements
-          once your community is active.
+          You don't have to set up everything at once. Start with welcome/leave and reaction roles,
+          then add more features as your community grows. The <code>/setup</code> wizard is always
+          available to toggle things on or change channels later.
         </p>
       </div>
     </section>
@@ -421,12 +237,12 @@
     <!-- COMMAND REFERENCE -->
     <div class="sectionTitle">
       <h2>⌨️ Command Reference</h2>
-      <span>Every command in the current version of BloomBot</span>
+      <span>Click any section to expand</span>
     </div>
 
-    <section class="grid2">
-      <div class="card">
-        <h3>👤 Member Commands <span class="badge">Use</span></h3>
+    <section class="card commandRef">
+      <details>
+        <summary>👤 Member Commands</summary>
         <ul>
           <li><code>/setbirthday</code> — save your birthday</li>
           <li><code>/mybirthday</code> — view your saved birthday</li>
@@ -435,192 +251,212 @@
           <li><code>/affirmation</code> — get a positive affirmation</li>
           <li><code>/rank</code> — check your level and XP</li>
           <li><code>/leaderboard</code> — view the server XP leaderboard</li>
-          <li><code>/achievements</code> — view your achievements or another member's</li>
-          <li><code>/achievementleaderboard</code> — show top members by unlocked achievements</li>
+          <li><code>/achievements</code> — view your or another member's achievements</li>
+          <li><code>/achievementleaderboard</code> — top members by achievements</li>
         </ul>
-      </div>
+      </details>
 
-      <div class="card">
-        <h3>🛠️ Setup Wizard <span class="badge">Staff</span></h3>
+      <div class="divider" style="margin:0;"></div>
+
+      <details>
+        <summary>🛠️ Setup &amp; Server Settings</summary>
         <ul>
           <li><code>/setup</code> — open the interactive setup wizard</li>
+          <li><code>/settimezone</code> — set server timezone (IANA format)</li>
         </ul>
-        <p class="muted small" style="margin:6px 0 0;">
-          The wizard provides an overview dashboard and lets you toggle features, pick channels,
-          and set your timezone using Discord buttons and dropdowns. It covers welcome, leave,
-          birthdays, leveling, achievements, affirmations, Twitch, and timezone in one place.
-        </p>
-      </div>
+      </details>
 
-      <div class="card">
-        <h3>👋 Welcome + Leave Admin <span class="badge">Staff</span></h3>
+      <div class="divider" style="margin:0;"></div>
+
+      <details>
+        <summary>👋 Welcome + Leave</summary>
         <ul>
-          <li><code>/setwelcomechannel</code> — set the channel for welcome messages</li>
+          <li><code>/setwelcomechannel</code> — set the welcome channel</li>
           <li><code>/setwelcomemessage</code> — set the welcome message template</li>
-          <li><code>/viewwelcomemessage</code> — view the current welcome message settings</li>
+          <li><code>/viewwelcomemessage</code> — view current welcome message</li>
           <li><code>/togglewelcome</code> — turn welcome messages on or off</li>
-          <li><code>/setleavechannel</code> — set the channel for leave messages</li>
+          <li><code>/setleavechannel</code> — set the leave channel</li>
           <li><code>/setleavemessage</code> — set the leave message template</li>
-          <li><code>/viewleavemessage</code> — view the current leave message settings</li>
+          <li><code>/viewleavemessage</code> — view current leave message</li>
           <li><code>/toggleleave</code> — turn leave messages on or off</li>
         </ul>
-      </div>
+      </details>
 
-      <div class="card">
-        <h3>🎭 Reaction Role Admin <span class="badge">Staff</span></h3>
+      <div class="divider" style="margin:0;"></div>
+
+      <details>
+        <summary>🎭 Reaction Roles</summary>
         <ul>
-          <li><code>/reactionroles create</code> — save an existing message as a reaction-role panel</li>
+          <li><code>/reactionroles create</code> — save an existing message as a panel</li>
           <li><code>/reactionroles addreaction</code> — add an emoji → role mapping</li>
-          <li><code>/reactionroles remove</code> — remove an emoji mapping from a panel</li>
-          <li><code>/reactionroles delete</code> — delete a reaction role panel entirely</li>
-          <li><code>/reactionroles list</code> — list all saved reaction role panels</li>
-          <li><code>/reactionroles show</code> — show one panel's mappings and message link</li>
+          <li><code>/reactionroles remove</code> — remove a mapping from a panel</li>
+          <li><code>/reactionroles delete</code> — delete a panel entirely</li>
+          <li><code>/reactionroles list</code> — list all saved panels</li>
+          <li><code>/reactionroles show</code> — show a panel's mappings and link</li>
         </ul>
-      </div>
+      </details>
 
-      <div class="card">
-        <h3>🎂 Birthday Admin <span class="badge">Staff</span></h3>
+      <div class="divider" style="margin:0;"></div>
+
+      <details>
+        <summary>🎂 Birthdays</summary>
         <ul>
-          <li><code>/setbirthdaychannel</code> — set the channel for birthday announcements</li>
+          <li><code>/setbirthdaychannel</code> — set the birthday announcement channel</li>
           <li><code>/togglebirthdays</code> — turn birthday announcements on or off</li>
-          <li><code>/setbirthdaymessage</code> — set the no-age birthday message template</li>
-          <li><code>/setbirthdayagemessage</code> — set the with-age birthday message template</li>
-          <li><code>/viewbirthdaymessage</code> — view the current no-age birthday message</li>
-          <li><code>/viewbirthdayagemessage</code> — view the current with-age birthday message</li>
-          <li><code>/resetbirthdaymessage</code> — reset the no-age message to default</li>
-          <li><code>/resetbirthdayagemessage</code> — reset the with-age message to default</li>
+          <li><code>/setbirthdaymessage</code> — set the no-age birthday template</li>
+          <li><code>/setbirthdayagemessage</code> — set the with-age birthday template</li>
+          <li><code>/viewbirthdaymessage</code> — view current no-age message</li>
+          <li><code>/viewbirthdayagemessage</code> — view current with-age message</li>
+          <li><code>/resetbirthdaymessage</code> — reset no-age message to default</li>
+          <li><code>/resetbirthdayagemessage</code> — reset with-age message to default</li>
           <li><code>/birthdaylist</code> — view all saved birthdays in the server</li>
         </ul>
-      </div>
+      </details>
 
-      <div class="card">
-        <h3>🌸 Affirmation Admin <span class="badge">Staff</span></h3>
+      <div class="divider" style="margin:0;"></div>
+
+      <details>
+        <summary>🌸 Affirmations</summary>
         <ul>
-          <li><code>/setaffirmationchannel</code> — set the channel for daily affirmations</li>
+          <li><code>/setaffirmationchannel</code> — set the daily affirmation channel</li>
           <li><code>/toggleaffirmations</code> — turn daily affirmations on or off</li>
           <li><code>/setaffirmationtime</code> — set the daily posting time</li>
           <li><code>/addaffirmations</code> — add custom affirmations (one per line)</li>
           <li><code>/removeaffirmation</code> — remove a custom affirmation by number</li>
           <li><code>/clearaffirmations</code> — remove all custom affirmations</li>
-          <li><code>/listaffirmations</code> — view custom affirmations</li>
+          <li><code>/listaffirmations</code> — view your custom affirmations</li>
           <li><code>/sendaffirmationnow</code> — post an affirmation immediately</li>
         </ul>
-      </div>
+      </details>
 
-      <div class="card">
-        <h3>🎬 Twitch Admin · Owner Stream <span class="badge">Staff</span></h3>
+      <div class="divider" style="margin:0;"></div>
+
+      <details>
+        <summary>🎬 Twitch</summary>
         <ul>
-          <li><code>/settwitchowner</code> — set the Twitch username for the server owner's stream</li>
-          <li><code>/settwitchownerchannel</code> — set the channel for owner stream announcements</li>
-          <li><code>/settwitchownermessage</code> — customize the owner stream announcement message</li>
+          <li><code>/toggletwitch</code> — turn Twitch announcements on or off</li>
+          <li><code>/twitchstatus</code> — view current Twitch configuration</li>
+          <li><code>/settwitchowner</code> — set the owner's Twitch username</li>
+          <li><code>/settwitchownerchannel</code> — set the owner announcement channel</li>
+          <li><code>/settwitchownermessage</code> — customize the owner announcement</li>
+          <li><code>/addtwitchfriend</code> — add a friend's Twitch username</li>
+          <li><code>/removetwitchfriend</code> — remove a friend from the list</li>
+          <li><code>/listtwitchfriends</code> — view all tracked friends</li>
+          <li><code>/settwitchfriendschannel</code> — set the friends announcement channel</li>
+          <li><code>/settwitchfriendsmessage</code> — customize the friends announcement</li>
         </ul>
-      </div>
+      </details>
 
-      <div class="card">
-        <h3>📺 Twitch Admin · Friends' Streams <span class="badge">Staff</span></h3>
-        <ul>
-          <li><code>/addtwitchfriend</code> — add a friend's Twitch username to the tracking list</li>
-          <li><code>/removetwitchfriend</code> — remove a friend from the tracking list</li>
-          <li><code>/listtwitchfriends</code> — view all tracked friends' Twitch usernames</li>
-          <li><code>/settwitchfriendschannel</code> — set the channel for friends' stream announcements</li>
-          <li><code>/settwitchfriendsmessage</code> — customize the friends stream announcement message</li>
-        </ul>
-      </div>
+      <div class="divider" style="margin:0;"></div>
 
-      <div class="card">
-        <h3>🎬 Twitch Admin · General <span class="badge">Staff</span></h3>
-        <ul>
-          <li><code>/toggletwitch</code> — turn Twitch stream announcements on or off</li>
-          <li><code>/twitchstatus</code> — view the current Twitch announcement configuration</li>
-        </ul>
-        <p class="muted small" style="margin:6px 0 0;">
-          The Twitch toggle controls both owner and friends' announcements together.
-          Channels and usernames stay saved when the feature is turned off.
-        </p>
-      </div>
-
-      <div class="card">
-        <h3>✨ Leveling Admin <span class="badge">Staff</span></h3>
+      <details>
+        <summary>✨ Leveling + 🏆 Achievements</summary>
         <ul>
           <li><code>/toggleleveling</code> — turn leveling on or off</li>
-          <li><code>/setlevelupchannel</code> — set the channel for level-up announcements</li>
+          <li><code>/setlevelupchannel</code> — set the level-up announcement channel</li>
           <li><code>/givexp</code> — give XP to a member</li>
           <li><code>/setlevel</code> — set a member's level directly</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h3>🏆 Achievement Admin <span class="badge">Staff</span></h3>
-        <ul>
-          <li><code>/setachievementchannel</code> — set the channel for achievement unlock messages</li>
           <li><code>/toggleachievements</code> — turn achievements on or off</li>
-          <li><code>/giveachievement</code> — give a specific achievement to a member</li>
+          <li><code>/setachievementchannel</code> — set the achievement announcement channel</li>
+          <li><code>/giveachievement</code> — give an achievement to a member</li>
           <li><code>/achievementlist</code> — list all achievement IDs and names</li>
         </ul>
-      </div>
-
-      <div class="card">
-        <h3>🕐 Server Settings <span class="badge">Staff</span></h3>
-        <ul>
-          <li><code>/settimezone</code> — set the server timezone for birthday and affirmation posts</li>
-        </ul>
-        <p class="muted small" style="margin:6px 0 0;">
-          You can also set the timezone from the <code>/setup</code> wizard using a dropdown of common presets.
-          Use <code>/settimezone</code> directly if you need an IANA timezone not listed in the wizard.
-        </p>
-      </div>
+      </details>
     </section>
+
+    <style>
+      .commandRef details { padding: 10px 0; }
+      .commandRef details[open] { padding-bottom: 4px; }
+      .commandRef summary {
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1.05em;
+        padding: 4px 0;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .commandRef summary::-webkit-details-marker { display: none; }
+      .commandRef summary::after {
+        content: '▸';
+        margin-left: auto;
+        transition: transform 0.2s ease;
+        opacity: 0.4;
+      }
+      .commandRef details[open] > summary::after {
+        transform: rotate(90deg);
+      }
+      .commandRef details ul {
+        margin: 8px 0 0;
+        padding-left: 18px;
+      }
+      .commandRef details li {
+        padding: 3px 0;
+        font-size: 0.92em;
+      }
+    </style>
 
     <!-- ACHIEVEMENTS -->
     <div class="sectionTitle">
-      <h2>🏆 Current Achievements</h2>
-      <span>The fourteen achievements currently defined in the bot</span>
+      <h2>🏆 Achievements</h2>
+      <span>14 achievements currently in the bot</span>
     </div>
 
     <section class="card">
-      <ul class="muted small" style="margin:0; padding-left:18px;">
-        <li>💬 <strong>First Words</strong> — Send your first message in the server</li>
-        <li>🗨️ <strong>Getting Chatty</strong> — Send 10 messages in the server</li>
-        <li>📣 <strong>Chatterbox</strong> — Send 50 messages in the server</li>
-        <li>🦋 <strong>Social Butterfly</strong> — Send 100 messages in the server</li>
-        <li>🔥 <strong>Can't Stop Talking</strong> — Send 200 messages in the server</li>
-        <li>✨ <strong>Express Yourself</strong> — React to a message for the first time</li>
-        <li>🎉 <strong>Reaction Lover</strong> — React to 10 messages</li>
-        <li>🥳 <strong>Hype Machine</strong> — React to 50 messages</li>
-        <li>🌱 <strong>Level Up!</strong> — Reach Level 1</li>
-        <li>🌟 <strong>On Your Way</strong> — Reach Level 5</li>
-        <li>🏆 <strong>Rising Star</strong> — Reach Level 10</li>
-        <li>💎 <strong>Seasoned Member</strong> — Reach Level 20</li>
-        <li>🎂 <strong>Cake Day Ready</strong> — Set your birthday with the bot</li>
-        <li>🌸 <strong>Welcome Aboard</strong> — Join the server</li>
-      </ul>
+      <section class="grid2" style="margin:0;">
+        <div>
+          <h3 style="margin:0 0 6px;">💬 Chat Milestones</h3>
+          <ul class="muted small" style="margin:0; padding-left:18px;">
+            <li><strong>First Words</strong> — Send your first message</li>
+            <li><strong>Getting Chatty</strong> — Send 10 messages</li>
+            <li><strong>Chatterbox</strong> — Send 50 messages</li>
+            <li><strong>Social Butterfly</strong> — Send 100 messages</li>
+            <li><strong>Can't Stop Talking</strong> — Send 200 messages</li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 style="margin:0 0 6px;">🎉 Reactions</h3>
+          <ul class="muted small" style="margin:0; padding-left:18px;">
+            <li><strong>Express Yourself</strong> — React to a message</li>
+            <li><strong>Reaction Lover</strong> — React to 10 messages</li>
+            <li><strong>Hype Machine</strong> — React to 50 messages</li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 style="margin:0 0 6px;">✨ Leveling</h3>
+          <ul class="muted small" style="margin:0; padding-left:18px;">
+            <li><strong>Level Up!</strong> — Reach Level 1</li>
+            <li><strong>On Your Way</strong> — Reach Level 5</li>
+            <li><strong>Rising Star</strong> — Reach Level 10</li>
+            <li><strong>Seasoned Member</strong> — Reach Level 20</li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 style="margin:0 0 6px;">🌸 Other</h3>
+          <ul class="muted small" style="margin:0; padding-left:18px;">
+            <li><strong>Cake Day Ready</strong> — Set your birthday</li>
+            <li><strong>Welcome Aboard</strong> — Join the server</li>
+          </ul>
+        </div>
+      </section>
     </section>
 
     <!-- SETUP NOTES -->
     <div class="sectionTitle">
-      <h2>🔧 Setup Notes</h2>
-      <span>Good things to know</span>
+      <h2>🔧 Good to Know</h2>
+      <span>Permissions, toggles, and timezone</span>
     </div>
 
     <section class="card">
       <div class="callout">
-        <strong>Setup Wizard</strong>
-        <p class="muted small" style="margin:6px 0 0;">
-          Run <code>/setup</code> to open an interactive panel that covers all features. It uses
-          Discord buttons and channel dropdowns so you never need to copy-paste channel IDs.
-          The wizard handles toggles, channels, and timezone — for message templates, Twitch usernames,
-          and reaction roles, use the individual commands listed in the command reference.
-        </p>
-      </div>
-
-      <div class="divider" style="margin:14px 0;"></div>
-
-      <div class="callout">
         <strong>Permissions</strong>
         <p class="muted small" style="margin:6px 0 0;">
-          BloomBot needs <strong>Manage Roles</strong> for reaction roles to work. Its bot role must be
-          placed <strong>above</strong> any roles you want it to assign in your server's role list.
-          All admin commands (including <code>/setup</code>) require the Administrator permission.
+          BloomBot needs <strong>Manage Roles</strong> for reaction roles. Its bot role must be
+          <strong>above</strong> any roles you want it to assign. All admin commands require Administrator.
         </p>
       </div>
 
@@ -629,10 +465,8 @@
       <div class="callout">
         <strong>Toggles</strong>
         <p class="muted small" style="margin:6px 0 0;">
-          Every major system (welcome, leave, birthdays, affirmations, Twitch, leveling, achievements) can be
-          toggled on or off independently — either from <code>/setup</code> or the individual toggle commands.
-          Turning something off keeps your settings saved — you can turn it back on later without
-          reconfiguring anything.
+          Every system can be toggled on or off independently. Turning something off keeps your
+          settings saved — turn it back on later without reconfiguring.
         </p>
       </div>
 
@@ -641,9 +475,9 @@
       <div class="callout">
         <strong>Timezone</strong>
         <p class="muted small" style="margin:6px 0 0;">
-          The server timezone controls when birthday checks and daily affirmation posts happen.
-          Set it from the <code>/setup</code> wizard (common presets) or use <code>/settimezone</code>
-          for any IANA timezone. It defaults to America/New_York if not set.
+          The server timezone controls birthday checks and affirmation posts.
+          Set it from <code>/setup</code> or use <code>/settimezone</code> for any IANA timezone.
+          Defaults to America/New_York.
         </p>
       </div>
 
