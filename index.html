@@ -7,312 +7,327 @@
   <link rel="stylesheet" href="style.css" />
 
   <style>
-    /* Home-only additions (keeps your existing site style) */
-    .homeHeroGrid{
-      display:grid;
-      grid-template-columns: 1.15fr .85fr;
-      gap:18px;
-      align-items:stretch;
-    }
-    @media (max-width:980px){ .homeHeroGrid{grid-template-columns:1fr} }
-
-    .heroCard{
-      border-radius: 22px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.04);
-      box-shadow: 0 18px 60px rgba(0,0,0,.45);
-      overflow:hidden;
-      position:relative;
-    }
-    .heroCard::before{
-      content:"";
-      position:absolute; inset:0;
-      background:
-        radial-gradient(900px 380px at 20% 0%, rgba(251,113,133,.10), transparent 60%),
-        radial-gradient(700px 320px at 90% 10%, rgba(167,139,250,.08), transparent 55%),
-        radial-gradient(700px 320px at 50% 115%, rgba(34,197,94,.06), transparent 60%);
-      pointer-events:none;
-    }
-    .heroCard .inner{position:relative; z-index:1; padding:22px}
-
-    .homeKicker{
-      display:inline-flex;
-      gap:10px;
-      align-items:center;
-      padding:7px 12px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.05);
-      backdrop-filter: blur(6px);
-      font-size:13px;
-      opacity:.92;
-    }
-    .homeTitle{
-      margin:12px 0 8px;
-      font-size:48px;
-      letter-spacing:.2px;
-      line-height:1.05;
-    }
-    @media (max-width:520px){ .homeTitle{font-size:40px} }
-
-    .homeSub{
-      margin:0;
-      opacity:.78;
-      line-height:1.65;
-      max-width:70ch;
-    }
-
-    .ctaRow{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:14px;
-      align-items:center;
-    }
-
-    .tileGrid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
-      margin-top:18px;
-    }
-    @media (max-width:520px){ .tileGrid{grid-template-columns:1fr} }
-
-    .tile{
-      border-radius:18px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.035);
-      padding:14px;
-      backdrop-filter: blur(6px);
-    }
-    .tile strong{display:block; margin:0 0 6px}
-    .tile p{margin:0; opacity:.78; line-height:1.55}
-
-    .spotlightStack{
-      display:grid;
-      gap:12px;
-      height:100%;
-    }
-
-    .spotlight{
-      border-radius:22px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.035);
-      box-shadow: 0 18px 60px rgba(0,0,0,.35);
-      padding:18px;
-    }
-    .spotlight h3{
-      margin:0 0 8px;
-      font-size:18px;
-      letter-spacing:.2px;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      justify-content:space-between;
-      flex-wrap:wrap;
-    }
-    .spotlight .desc{margin:0; opacity:.78; line-height:1.6}
-    .spotlight .btnrow{margin-top:12px; display:flex; gap:10px; flex-wrap:wrap}
-
-    .miniRow{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:10px;
-    }
-
-    .dividerLine{
-      height:1px;
-      background: rgba(255,255,255,.10);
-      margin:18px 0;
-    }
-
-    /* -----------------------------------------
-       Ko-fi embed: styled to fit your site
-       (placed at bottom of page)
-       ----------------------------------------- */
-    .kofiWrap{
-      margin-top: 12px;
-      border-radius: 22px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.03);
-      box-shadow: 0 18px 60px rgba(0,0,0,.25);
+    /* ── Home-only styles ── */
+    .home-hero {
+      padding: 40px 32px;
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: var(--shadow-lg);
+      position: relative;
       overflow: hidden;
-      position: relative;
     }
-    .kofiWrap::before{
-      content:"";
-      position:absolute; inset:0;
+    .home-hero::before {
+      content: "";
+      position: absolute; inset: 0;
       background:
-        radial-gradient(700px 260px at 10% 0%, rgba(251,113,133,.10), transparent 55%),
-        radial-gradient(600px 240px at 95% 15%, rgba(167,139,250,.08), transparent 55%);
-      pointer-events:none;
+        radial-gradient(ellipse 600px 350px at 10% 0%, rgba(167,139,250,.10), transparent),
+        radial-gradient(ellipse 500px 300px at 90% 10%, rgba(244,114,182,.08), transparent),
+        radial-gradient(ellipse 500px 300px at 50% 100%, rgba(52,211,153,.05), transparent);
+      pointer-events: none;
     }
-    .kofiTopRow{
-      position: relative;
-      z-index: 1;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:14px 16px;
-      border-bottom: 1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.10);
-      backdrop-filter: blur(6px);
-    }
-    .kofiTopRow .left{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      min-width: 0;
-    }
-    .kofiPill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:6px 10px;
+    .home-hero > * { position: relative; z-index: 1; }
+
+    .hero-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.05);
-      font-size: 13px;
-      opacity: .92;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      font-size: 12px;
+      color: var(--text-secondary);
+      letter-spacing: .4px;
+      margin-bottom: 16px;
+    }
+    .hero-label .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 8px rgba(52,211,153,.4);
+    }
+
+    .home-hero h1 {
+      font-size: clamp(36px, 5vw, 56px);
+      line-height: 1.08;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--text) 40%, var(--rose) 80%, var(--violet));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      color: var(--text-secondary);
+      font-size: 16px;
+      line-height: 1.7;
+      max-width: 60ch;
+    }
+    .hero-sub strong { color: var(--text); font-weight: 600; }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 28px;
+    }
+    @media (max-width: 760px) { .hero-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 420px) { .hero-grid { grid-template-columns: 1fr; } }
+
+    .hero-stat {
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      background: rgba(0,0,0,.12);
+      padding: 16px;
+      transition: border-color var(--t-fast) var(--ease);
+    }
+    .hero-stat:hover { border-color: var(--border-hover); }
+    .hero-stat .icon { font-size: 20px; margin-bottom: 8px; }
+    .hero-stat .label {
+      font-family: var(--font-body);
+      font-weight: 600; font-size: 13px;
+      margin-bottom: 3px;
+    }
+    .hero-stat .sub { font-size: 12px; color: var(--text-dim); line-height: 1.45; }
+
+    /* ── Spotlight Row ── */
+    .spotlight-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 760px) { .spotlight-row { grid-template-columns: 1fr; } }
+
+    .spotlight {
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 22px;
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: var(--shadow-sm);
+      transition: border-color var(--t-med) var(--ease), box-shadow var(--t-med) var(--ease);
+    }
+    .spotlight:hover { border-color: var(--border-hover); box-shadow: var(--shadow-md); }
+    .spotlight-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .spotlight-header h3 { font-size: 18px; }
+    .spotlight .desc { font-size: 14px; margin-bottom: 14px; }
+
+    /* ── Quick nav ── */
+    .quick-nav {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 760px) { .quick-nav { grid-template-columns: 1fr; } }
+
+    /* ── About ── */
+    .about-card {
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 28px;
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+    .about-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--rose), var(--violet), transparent);
+      opacity: .4;
+    }
+
+    .philosophy-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 18px;
+    }
+    @media (max-width: 560px) { .philosophy-grid { grid-template-columns: 1fr; } }
+
+    .phil-item {
+      display: flex; gap: 10px;
+      align-items: flex-start;
+      padding: 12px;
+      border-radius: var(--r-sm);
+      background: rgba(0,0,0,.1);
+      border: 1px solid var(--border);
+    }
+    .phil-item .phil-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .phil-item .phil-text strong {
+      display: block;
+      font-family: var(--font-body);
+      font-size: 13px; font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .phil-item .phil-text span { font-size: 12.5px; color: var(--text-dim); line-height: 1.5; }
+
+    /* ── Support / Ko-fi ── */
+    .support-card {
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 24px;
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: var(--shadow-sm);
+    }
+    .kofi-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 16px;
+      margin-top: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      background: rgba(0,0,0,.12);
+      flex-wrap: wrap;
+    }
+    .kofi-bar .left { display: flex; align-items: center; gap: 10px; }
+    .kofi-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      font-size: 12px;
+      color: var(--text-secondary);
       white-space: nowrap;
     }
-    .kofiTopRow .copy{
-      opacity:.78;
-      font-size: 13px;
-      line-height: 1.4;
-      min-width: 0;
-    }
-
-    .kofiFrameShell{
-      position: relative;
-      z-index: 1;
-      padding: 12px;
-    }
-
-    /* The inner shell gives the (mostly light) Ko-fi widget a "window" look */
-    .kofiFrameInner{
-      border-radius: 18px;
+    .kofi-bar .copy { color: var(--text-dim); font-size: 13px; }
+    .kofi-embed {
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
       overflow: hidden;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.02);
+      background: rgba(0,0,0,.08);
     }
-
-    #kofiframe{
-      display:block;
-      width:100%;
-      height: 712px; /* default desktop height */
-      border:none;
-      background: transparent; /* prevents bright inline background */
-    }
-
-    /* On narrow screens Ko-fi often needs a bit more height */
-    @media (max-width: 520px){
-      #kofiframe{ height: 860px; }
-    }
+    #kofiframe { display: block; width: 100%; height: 712px; border: none; background: transparent; }
+    @media (max-width: 520px) { #kofiframe { height: 860px; } }
   </style>
 
   <!-- OG:START -->
-<meta name="description" content="A small indie studio building worlds, mods, and bots with heart — designed for cozy communities, long-term adventures, and a little extra magic." />
-<meta property="og:title" content="Mayflower Studios" />
-<meta property="og:description" content="A small indie studio building worlds, mods, and bots with heart — designed for cozy communities, long-term adventures, and a little extra magic." />
-<meta property="og:url" content="https://mayflowerstudios.net/" />
-<meta property="og:type" content="website" />
-<meta property="og:image" content="https://mayflowerstudios.net/assets/og/home.png" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Mayflower Studios" />
-<meta name="twitter:description" content="A small indie studio building worlds, mods, and bots with heart — designed for cozy communities, long-term adventures, and a little extra magic." />
-<meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/home.png" />
-<!-- OG:END -->
+  <meta name="description" content="A small indie studio building worlds, mods, and bots with heart — designed for cozy communities, long-term adventures, and a little extra magic." />
+  <meta property="og:title" content="Mayflower Studios" />
+  <meta property="og:description" content="A small indie studio building worlds, mods, and bots with heart — designed for cozy communities, long-term adventures, and a little extra magic." />
+  <meta property="og:url" content="https://mayflowerstudios.net/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://mayflowerstudios.net/assets/og/home.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Mayflower Studios" />
+  <meta name="twitter:description" content="A small indie studio building worlds, mods, and bots with heart — designed for cozy communities, long-term adventures, and a little extra magic." />
+  <meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/home.png" />
+  <!-- OG:END -->
 </head>
 
 <body data-nav="home">
   <div class="wrap">
     <div id="shared-nav"></div>
 
-    <!-- HERO -->
-    <section class="homeHeroGrid">
-      <!-- Main hero card -->
-      <div class="heroCard">
-        <div class="inner">
-          <div class="homeKicker">Clean builds • Cozy polish • Real-server ready</div>
-          <h1 class="homeTitle">🌿 Mayflower Studios</h1>
-          <p class="homeSub">
-            A small indie studio building <strong>worlds</strong>, <strong>mods</strong>, and <strong>bots</strong> with heart —
-            designed for cozy communities, long-term adventures, and a little extra magic.
-          </p>
-
-          <div class="ctaRow">
-            <a class="btn primary" href="projects.html">🚀 Explore Projects</a>
-            <a class="btn ghost" href="lore.html">📜 EchoBloom Lore</a>
-            <a class="btn ghost" href="movienight.html">🍿 Movie Night</a>
-          </div>
-
-          <div class="tileGrid">
-            <div class="tile">
-              <strong>🧱 Minecraft Mods</strong>
-              <p>Server-ready mechanics with clean UI and configurable balance.</p>
-            </div>
-            <div class="tile">
-              <strong>🤖 Discord Bots</strong>
-              <p>Companions, progression, and lore systems built for long-term servers.</p>
-            </div>
-            <div class="tile">
-              <strong>⚙️ Real-World Reliability</strong>
-              <p>Predictable behavior, tidy edge cases, and maintainable code.</p>
-            </div>
-            <div class="tile">
-              <strong>🌸 Cozy Polish</strong>
-              <p>Whimsical flavor, minimal clutter, and interfaces that make sense.</p>
-            </div>
-          </div>
-        </div>
+    <!-- ═══════ HERO ═══════ -->
+    <section class="home-hero">
+      <div class="hero-label">
+        <span class="dot"></span>
+        Clean builds · Cozy polish · Real-server ready
       </div>
 
-      <!-- Spotlight stack -->
-      <div class="spotlightStack">
-        <div class="spotlight">
-          <h3>
-            <span>🍿 Mayflower Movie Night</span>
-            <span class="badge">Theater</span>
-          </h3>
-          <p class="desc">
-            SyncPlay watch parties in our Jellyfin theater. Join as <strong>Guest</strong> — no password —
-            and hop into the group when we start.
-          </p>
-          <div class="btnrow">
-            <a class="button mods" href="movienight.html">✨ Open Movie Night</a>
-            <a class="button ghost" href="https://jellyfin.mayflowerstudios.net:8443" target="_blank" rel="noopener">▶ Open Jellyfin</a>
-          </div>
-        </div>
+      <h1>Mayflower Studios</h1>
 
-        <div class="spotlight">
-          <h3>
-            <span>🌎 Minecraft Server</span>
-            <span class="badge">Live World</span>
-          </h3>
-          <p class="desc">
-            Join info, modpack download, rules, and the live map — all in one place.
-          </p>
-          <div class="btnrow">
-            <a class="button mods" href="server.html">🛰️ Server Page</a>
-            <a class="button ghost" href="rules.html">📜 Rules</a>
-            <a class="button ghost" href="https://map.mayflowerstudios.net:8445" target="_blank" rel="noopener">🗺️ Map</a>
-          </div>
+      <p class="hero-sub">
+        A small indie studio building <strong>worlds</strong>, <strong>mods</strong>, and <strong>bots</strong> with heart —
+        designed for cozy communities, long-term adventures, and a little extra magic.
+      </p>
+
+      <div class="ctaRow">
+        <a class="btn primary" href="projects.html">Explore Projects</a>
+        <a class="btn ghost" href="lore.html">EchoBloom Lore</a>
+        <a class="btn ghost" href="movienight.html">Movie Night</a>
+      </div>
+
+      <div class="hero-grid">
+        <div class="hero-stat">
+          <div class="icon">🧱</div>
+          <div class="label">Minecraft Mods</div>
+          <div class="sub">Server-ready mechanics with clean UI</div>
+        </div>
+        <div class="hero-stat">
+          <div class="icon">🤖</div>
+          <div class="label">Discord Bots</div>
+          <div class="sub">Progression &amp; lore for long-term servers</div>
+        </div>
+        <div class="hero-stat">
+          <div class="icon">⚙️</div>
+          <div class="label">Reliable Code</div>
+          <div class="sub">Predictable behavior, tidy edge cases</div>
+        </div>
+        <div class="hero-stat">
+          <div class="icon">🌸</div>
+          <div class="label">Cozy Polish</div>
+          <div class="sub">Whimsical flavor, minimal clutter</div>
         </div>
       </div>
     </section>
 
-    <!-- START HERE -->
+    <!-- ═══════ SPOTLIGHTS ═══════ -->
+    <div class="spotlight-row">
+      <div class="spotlight">
+        <div class="spotlight-header">
+          <h3>🍿 Movie Night</h3>
+          <span class="badge">Theater</span>
+        </div>
+        <p class="desc">
+          SyncPlay watch parties in our Jellyfin theater. Join as <strong>Guest</strong> — no password —
+          and hop into the group when we start.
+        </p>
+        <div class="btnrow">
+          <a class="button mods" href="movienight.html">Open Movie Night</a>
+          <a class="button ghost" href="https://jellyfin.mayflowerstudios.net:8443" target="_blank" rel="noopener">Open Jellyfin</a>
+        </div>
+      </div>
+
+      <div class="spotlight">
+        <div class="spotlight-header">
+          <h3>🌎 Minecraft Server</h3>
+          <span class="badge">Live World</span>
+        </div>
+        <p class="desc">
+          Join info, modpack download, rules, and the live map — all in one place.
+        </p>
+        <div class="btnrow">
+          <a class="button mods" href="server.html">Server Page</a>
+          <a class="button ghost" href="rules.html">Rules</a>
+          <a class="button ghost" href="https://map.mayflowerstudios.net:8445" target="_blank" rel="noopener">Live Map</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ START HERE ═══════ -->
     <div class="sectionTitle" id="portal">
-      <h2>🧭 Start Here</h2>
+      <h2>Start Here</h2>
       <span>Pick a path — projects, world, or lore</span>
     </div>
 
-    <section class="grid2">
+    <div class="quick-nav">
       <div class="card">
         <h3>🚀 Projects <span class="badge">Studio Hub</span></h3>
         <p class="desc">
@@ -320,9 +335,9 @@
           with clean pages, changelogs, and links.
         </p>
         <div class="btnrow">
-          <a class="button mods" href="projects.html">🧰 View All Projects</a>
-          <a class="button ghost" href="projects.html#mods">🧱 Minecraft Mods</a>
-          <a class="button ghost" href="projects.html#bots">🤖 Discord Bots</a>
+          <a class="button mods" href="projects.html">View All Projects</a>
+          <a class="button ghost" href="projects.html#mods">Mods</a>
+          <a class="button ghost" href="projects.html#bots">Bots</a>
         </div>
       </div>
 
@@ -333,106 +348,118 @@
           a cozy myth that grows over time.
         </p>
         <div class="btnrow">
-          <a class="button bots" href="lore.html">📜 Read the Lore</a>
-          <a class="button ghost" href="lore.html#realms">🌿 Realms</a>
-          <a class="button ghost" href="lore.html#events">✨ Events</a>
-          <a class="button ghost" href="calendar.html">🗓️ Event Calendar</a>
+          <a class="button bots" href="lore.html">Read the Lore</a>
+          <a class="button ghost" href="lore.html#realms">Realms</a>
+          <a class="button ghost" href="calendar.html">Calendar</a>
         </div>
       </div>
-    </section>
 
-    <section class="grid2">
       <div class="card">
-        <h3>🌸 Featured Spotlight <span class="badge">Current Build</span></h3>
+        <h3>🌸 Current Focus <span class="badge">Active Build</span></h3>
         <p class="desc">
-          Right now, our main focus is expanding Steelhold and LogiChest into the most survival-friendly
-          security + logistics system possible — polished, reliable, and built for real servers.
+          Expanding Steelhold and LogiChest into the most survival-friendly
+          security + logistics system possible.
         </p>
         <div class="btnrow">
-          <a class="button mods" href="mods/steelhold.html">🔐 Steelhold</a>
-          <a class="button ghost" href="mods/logichest.html">🧠 LogiChest</a>
+          <a class="button mods" href="mods/steelhold.html">Steelhold</a>
+          <a class="button ghost" href="mods/logichest.html">LogiChest</a>
         </div>
       </div>
 
       <div class="card">
-        <h3>💫 Community Nights <span class="badge">Cozy Events</span></h3>
+        <h3>💫 Community Nights <span class="badge">Events</span></h3>
         <p class="desc">
           Movie nights, seasonal events, and little surprise moments that make the server feel alive.
-          Drop in any time.
         </p>
         <div class="btnrow">
-          <a class="button mods" href="movienight.html">🍿 Movie Night</a>
-          <a class="button ghost" href="https://discord.gg/MutqYAdrwz" target="_blank" rel="noopener">💬 Discord</a>
+          <a class="button mods" href="movienight.html">Movie Night</a>
+          <a class="button ghost" href="https://discord.gg/MutqYAdrwz" target="_blank" rel="noopener">Discord</a>
         </div>
       </div>
-    </section>
+    </div>
 
-    <!-- ABOUT -->
+    <!-- ═══════ ABOUT ═══════ -->
     <div class="sectionTitle" id="about">
-      <h2>🌿 About Mayflower Studios</h2>
+      <h2>About Mayflower Studios</h2>
       <span>How we build</span>
     </div>
 
-    <section class="card">
-      <p class="muted">
+    <section class="about-card">
+      <p class="desc" style="margin-bottom:0">
         Mayflower Studios is an independent development studio creating imaginative projects across games,
         mods, interactive tools, and community-driven experiences.
-        We care about polish, reliability, and building things people genuinely enjoy — not just things that technically function.
-        <br><br>
-
-        Our philosophy is simple:
-        <br>
-        • <strong>Meaningful experiences</strong> (projects with charm and purpose) <br>
-        • <strong>Clean, thoughtful design</strong> (systems that feel good to use) <br>
-        • <strong>Long-term creativity</strong> (worlds, stories, and tools that grow over time) <br>
-        • <strong>Community-first development</strong> (built for players, creators, and shared spaces)
+        We care about polish, reliability, and building things people genuinely enjoy.
       </p>
 
+      <div class="philosophy-grid">
+        <div class="phil-item">
+          <span class="phil-icon">✨</span>
+          <div class="phil-text">
+            <strong>Meaningful Experiences</strong>
+            <span>Projects with charm and purpose</span>
+          </div>
+        </div>
+        <div class="phil-item">
+          <span class="phil-icon">🎨</span>
+          <div class="phil-text">
+            <strong>Clean, Thoughtful Design</strong>
+            <span>Systems that feel good to use</span>
+          </div>
+        </div>
+        <div class="phil-item">
+          <span class="phil-icon">🌱</span>
+          <div class="phil-text">
+            <strong>Long-term Creativity</strong>
+            <span>Worlds, stories, and tools that grow</span>
+          </div>
+        </div>
+        <div class="phil-item">
+          <span class="phil-icon">🤝</span>
+          <div class="phil-text">
+            <strong>Community-first</strong>
+            <span>Built for players and shared spaces</span>
+          </div>
+        </div>
+      </div>
+
       <div class="ctaRow">
-        <a class="btn ghost" href="https://discord.gg/MutqYAdrwz" target="_blank" rel="noopener">💬 Discord</a>
-        <a class="btn primary" href="projects.html">🚀 Projects</a>
-        <a class="btn ghost" href="movienight.html">🍿 Movie Night</a>
+        <a class="btn primary" href="projects.html">Projects</a>
+        <a class="btn ghost" href="https://discord.gg/MutqYAdrwz" target="_blank" rel="noopener">Discord</a>
+        <a class="btn ghost" href="movienight.html">Movie Night</a>
       </div>
     </section>
 
-    <!-- SUPPORT / KO-FI (moved to bottom) -->
+    <!-- ═══════ SUPPORT ═══════ -->
     <div class="sectionTitle" id="support">
-      <h2>💖 Support Mayflower Studios</h2>
+      <h2>Support the Studio</h2>
       <span>Hosting, tools, and cozy polish — fueled by community</span>
     </div>
 
-    <section class="card">
-      <p class="desc" style="margin-top:0;">
+    <section class="support-card">
+      <p class="desc" style="margin-bottom:0">
         If you like what we build — mods, worlds, bots, and community nights —
-        donations help keep everything running and improving. Thank you. 🌿
+        donations help keep everything running and improving. Thank you.
       </p>
 
-      <div class="kofiWrap">
-        <div class="kofiTopRow">
-          <div class="left">
-            <span class="kofiPill">☕ Ko-fi</span>
-            <div class="copy">
-              Support the studio directly via our Ko-fi page.
-            </div>
-          </div>
-
-          <a class="btn ghost" href="https://ko-fi.com/mayflowerstudiosteam" target="_blank" rel="noopener">
-            Open in a new tab ↗
-          </a>
+      <div class="kofi-bar">
+        <div class="left">
+          <span class="kofi-pill">☕ Ko-fi</span>
+          <span class="copy">Support the studio directly</span>
         </div>
+        <a class="btn ghost" href="https://ko-fi.com/mayflowerstudiosteam" target="_blank" rel="noopener" style="margin:0">
+          Open in new tab ↗
+        </a>
+      </div>
 
-        <div class="kofiFrameShell">
-          <div class="kofiFrameInner">
-            <iframe
-              id="kofiframe"
-              src="https://ko-fi.com/mayflowerstudiosteam/?hidefeed=true&widget=true&embed=true&preview=true"
-              title="mayflowerstudiosteam"
-              loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade"
-              allow="payment"
-            ></iframe>
-          </div>
-        </div>
+      <div class="kofi-embed">
+        <iframe
+          id="kofiframe"
+          src="https://ko-fi.com/mayflowerstudiosteam/?hidefeed=true&widget=true&embed=true&preview=true"
+          title="mayflowerstudiosteam"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allow="payment"
+        ></iframe>
       </div>
     </section>
 
