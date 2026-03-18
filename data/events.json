@@ -1,54 +1,47 @@
 [
   {
-    "id": "blooming-grove",
+    "id": "season-spring",
     "realm": "grove",
-    "title": "The Blooming Grove",
-    "tagline": "Spring growth quests + rare drops",
+    "title": "Season of Growth",
+    "tagline": "The Grove awakens. Life stirs beneath the soil.",
     "repeat": "yearly",
     "start": { "month": 3, "day": 1 },
-    "end":   { "month": 3, "day": 21 },
-    "location": "Grove",
-    "description": "Event item drops with random events for the Grove of Growth."
+    "end":   { "month": 5, "day": 31 },
+    "location": "Grove of Growth",
+    "description": "Spring is the Grove's season. Exclusive seasonal items drop during this window: Seedling Crown, Dewdrop Charm, and the legendary Spring Blossom. Seasonal quests rotate alongside daily and weekly quests."
   },
   {
-    "id": "cinder-festival",
+    "id": "season-summer",
     "realm": "ember",
-    "title": "The Cinder Festival",
+    "title": "Season of Flame",
+    "tagline": "The Ember Circle blazes. Passion runs unchecked.",
     "repeat": "yearly",
     "start": { "month": 6, "day": 1 },
-    "end":   { "month": 6, "day": 21 },
+    "end":   { "month": 8, "day": 31 },
     "location": "Ember Circle",
-    "description": "Event item drops with random events for the Ember Circle."
+    "description": "Summer is the Ember Circle's season. Exclusive seasonal items drop during this window: Sunforge Shard, Inferno Ash, and the legendary Solar Heart. Seasonal quests rotate alongside daily and weekly quests."
   },
   {
-    "id": "reflections-deep",
+    "id": "season-autumn",
     "realm": "mirror",
-    "title": "Reflections of the Deep",
+    "title": "Season of Reflection",
+    "tagline": "The Mirror Lake deepens. Truths surface in stillness.",
     "repeat": "yearly",
     "start": { "month": 9, "day": 1 },
-    "end":   { "month": 9, "day": 21 },
+    "end":   { "month": 11, "day": 30 },
     "location": "Mirror Lake",
-    "description": "Event item drops with random events for the Mirror Lake."
+    "description": "Autumn is the Mirror Lake's season. Exclusive seasonal items drop during this window: Amber Leaf, Fog Crystal, and the legendary Harvest Mirror. Seasonal quests rotate alongside daily and weekly quests."
   },
   {
-    "id": "night-root-star",
+    "id": "season-winter",
     "realm": "moon",
-    "title": "Night of Root & Star",
+    "title": "Season of Dreams",
+    "tagline": "The Moonroot Tree slumbers. Wisdom grows in darkness.",
     "repeat": "yearly",
     "start": { "month": 12, "day": 1 },
-    "end":   { "month": 12, "day": 21 },
+    "end":   { "month": 2, "day": 28 },
     "location": "Moonroot Tree",
-    "description": "Event item drops with random events for the Moonroot Tree."
-  },
-  {
-    "id": "convergence",
-    "realm": "server",
-    "title": "The Convergence",
-    "repeat": "yearly",
-    "start": { "month": 12, "day": 22 },
-    "end":   { "month": 12, "day": 31 },
-    "location": "Everywhere",
-    "description": "Realm offerings and random events for all the realms."
+    "description": "Winter is the Moonroot Tree's season. Exclusive seasonal items drop during this window: Frost Whisper, Starfall Dust, and the legendary Dreamweave Shard. Seasonal quests rotate alongside daily and weekly quests."
   },
   {
     "id": "lunas-birthday",
