@@ -18,11 +18,6 @@ jobs:
 
       - name: Check and send reminders
         env:
-          EMAILJS_PUBLIC_KEY: ${{ secrets.EMAILJS_PUBLIC_KEY }}
-          EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
-          EMAILJS_TEMPLATE_ID: ${{ secrets.EMAILJS_TEMPLATE_ID }}
-          SMS_NUMBER: ${{ secrets.SMS_NUMBER }}
-          SMS_CARRIER: ${{ secrets.SMS_CARRIER }}
           MG_ENCRYPTION_PASSPHRASE: ${{ secrets.MG_ENCRYPTION_PASSPHRASE }}
           SITE_URL: ${{ secrets.SITE_URL }}
           # Timezone offset from UTC in hours (e.g., -5 for EST, -4 for EDT)

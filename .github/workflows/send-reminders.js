@@ -1,19 +1,18 @@
 /**
  * send-reminders.js
- * 
+ *
  * Runs in GitHub Actions on a 5-minute cron schedule.
  * Reads data/mindgarden.json from the repo, checks which meds are due
  * and not yet taken, then sends SMS via the EmailJS REST API.
  *
+ * SMS config (phone number, carrier, EmailJS keys) is read from the
+ * smsConfig object inside mindgarden.json — set it up via the admin
+ * page's "Text Setup" panel so you don't need separate GitHub Secrets.
+ *
  * Required GitHub Secrets:
- *   EMAILJS_PUBLIC_KEY   – your EmailJS public key
- *   EMAILJS_SERVICE_ID   – your EmailJS service ID
- *   EMAILJS_TEMPLATE_ID  – your EmailJS template ID
- *   SMS_NUMBER           – 10-digit phone number (e.g., 5551234567)
- *   SMS_CARRIER          – carrier name exactly as listed below
- *   TZ_OFFSET            – hour offset from UTC (e.g., -5 for EST, -4 for EDT)
- *   SITE_URL             – (optional) base URL of your mind garden site for confirm links
- *   MG_ENCRYPTION_PASSPHRASE – (optional) if your data is encrypted
+ *   MG_ENCRYPTION_PASSPHRASE – (required if your data is encrypted)
+ *   TZ_OFFSET                – hour offset from UTC (e.g., -5 for EST, -4 for EDT)
+ *   SITE_URL                 – (optional) base URL of your mind garden site for confirm links
  */
 
 const fs = require("fs");
@@ -37,27 +36,25 @@ const CARRIERS = {
   "Cricket":           "sms.cricketwireless.net",
 };
 
-// ── Config from environment ──
+// ── Config from environment (only non-SMS stuff now) ──
 const {
-  EMAILJS_PUBLIC_KEY,
-  EMAILJS_SERVICE_ID,
-  EMAILJS_TEMPLATE_ID,
-  SMS_NUMBER,
-  SMS_CARRIER,
   MG_ENCRYPTION_PASSPHRASE,
   SITE_URL,
   TZ_OFFSET,
 } = process.env;
 
-function getGatewayEmail() {
-  const domain = CARRIERS[SMS_CARRIER];
+function getGatewayEmail(smsConfig) {
+  const carrier = smsConfig.carrier || "";
+  const number = smsConfig.number || "";
+
+  const domain = CARRIERS[carrier];
   if (!domain) {
-    console.error(`[SMS] Unknown carrier: "${SMS_CARRIER}". Known carriers: ${Object.keys(CARRIERS).join(", ")}`);
+    console.error(`[SMS] Unknown carrier: "${carrier}". Known carriers: ${Object.keys(CARRIERS).join(", ")}`);
     return null;
   }
-  const digits = (SMS_NUMBER || "").replace(/\D/g, "").slice(-10);
+  const digits = number.replace(/\D/g, "").slice(-10);
   if (digits.length !== 10) {
-    console.error(`[SMS] Invalid phone number: "${SMS_NUMBER}"`);
+    console.error(`[SMS] Invalid phone number: "${number}"`);
     return null;
   }
   return `${digits}@${domain}`;
@@ -70,7 +67,7 @@ async function deriveKey(passphrase, salt) {
     "raw", enc.encode(passphrase), "PBKDF2", false, ["deriveKey"]
   );
   return crypto.subtle.deriveKey(
-    { name: "PBKDF2", salt, iterations: 100000, hash: "SHA-256" },
+    { name: "PBKDF2", salt, iterations: 310000, hash: "SHA-256" },
     keyMaterial,
     { name: "AES-GCM", length: 256 },
     false,
@@ -89,11 +86,11 @@ async function decryptData(b64, passphrase) {
 }
 
 // ── EmailJS REST API ──
-async function sendViaEmailJS(templateParams) {
+async function sendViaEmailJS(smsConfig, templateParams) {
   const body = JSON.stringify({
-    service_id: EMAILJS_SERVICE_ID,
-    template_id: EMAILJS_TEMPLATE_ID,
-    user_id: EMAILJS_PUBLIC_KEY,
+    service_id: smsConfig.emailjsServiceId,
+    template_id: smsConfig.emailjsTemplateId,
+    user_id: smsConfig.emailjsPublicKey,
     template_params: templateParams,
   });
 
@@ -112,15 +109,6 @@ async function sendViaEmailJS(templateParams) {
 
 // ── Main ──
 async function main() {
-  // Validate config
-  if (!EMAILJS_PUBLIC_KEY || !EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID) {
-    console.log("[SMS] Missing EmailJS secrets — skipping.");
-    return;
-  }
-
-  const gateway = getGatewayEmail();
-  if (!gateway) return;
-
   // Read the data file from the repo
   const rawFile = fs.readFileSync("data/mindgarden.json", "utf8");
   let fileData;
@@ -152,10 +140,19 @@ async function main() {
   const { meds = [], medLogs = [], reminders = [], smsConfig = {} } = data;
 
   // Check if SMS is enabled in the app config
-  if (smsConfig.enabled === false) {
+  if (!smsConfig.enabled) {
     console.log("[SMS] SMS is disabled in Mind Garden settings — skipping.");
     return;
   }
+
+  // Validate SMS config from the data file
+  if (!smsConfig.emailjsPublicKey || !smsConfig.emailjsServiceId || !smsConfig.emailjsTemplateId) {
+    console.log("[SMS] Missing EmailJS config in smsConfig — set it up in the admin Text Setup panel.");
+    return;
+  }
+
+  const gateway = getGatewayEmail(smsConfig);
+  if (!gateway) return;
 
   // Get current time in the user's timezone
   const offset = parseFloat(TZ_OFFSET || "-5"); // default EST
@@ -221,7 +218,7 @@ async function main() {
 
   // Send
   try {
-    await sendViaEmailJS({
+    await sendViaEmailJS(smsConfig, {
       to_email: gateway,
       med_name: dueMeds.map(m => m.name).join(", "),
       med_dosage: dueMeds.map(m => m.dosage || "").join(", "),
