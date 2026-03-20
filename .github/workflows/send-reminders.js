@@ -7,23 +7,23 @@
  *
  * SMS config (phone number, carrier, EmailJS keys) is read from the
  * smsConfig object inside mindgarden.json — set it up via the admin
- * page's "Text Setup" panel so you don't need separate GitHub Secrets.
+ * page's "Text Setup" panel instead of GitHub Secrets.
  *
- * To avoid duplicate texts, the script writes a `smsSentLog` array back
- * into the data file after each successful send. Each entry records the
- * reminder ID + date, so the same reminder only fires once per day even
- * if GitHub Actions runs the cron late or multiple times.
+ * Dedup: writes to a SEPARATE file (data/sms-sent.json) so we never
+ * touch mindgarden.json and can't race with the admin page.
  *
  * Required GitHub Secrets:
  *   MG_ENCRYPTION_PASSPHRASE – (required if your data is encrypted)
  *   TZ_OFFSET                – hour offset from UTC (e.g., -5 for EST, -4 for EDT)
- *   SITE_URL                 – (optional) base URL of your mind garden site for confirm links
- *   GH_PAT                   – a GitHub personal access token with repo write access
- *                               (needed to push the dedup log back to the repo)
+ *   SITE_URL                 – (optional) base URL of your mind garden site
  */
 
 const fs = require("fs");
-const crypto = require("crypto");
+const nodeCrypto = require("crypto");
+
+// Node's require("crypto") has .subtle but NOT .getRandomValues.
+// For getRandomValues we need globalThis.crypto (Web Crypto API).
+const webcrypto = globalThis.crypto || nodeCrypto.webcrypto;
 
 // ── Carrier gateways (must match mind-garden.html) ──
 const CARRIERS = {
@@ -48,17 +48,18 @@ const {
   MG_ENCRYPTION_PASSPHRASE,
   SITE_URL,
   TZ_OFFSET,
-  GH_PAT,
-  GITHUB_REPOSITORY, // automatically set by GitHub Actions: "owner/repo"
+  GITHUB_REPOSITORY, // auto-set by GitHub Actions: "owner/repo"
 } = process.env;
+
+// Prefer GH_PAT if set, else GITHUB_TOKEN (auto-injected by Actions)
+const GH_TOKEN = process.env.GH_PAT || process.env.GITHUB_TOKEN;
 
 function getGatewayEmail(smsConfig) {
   const carrier = smsConfig.carrier || "";
   const number = smsConfig.number || "";
-
   const domain = CARRIERS[carrier];
   if (!domain) {
-    console.error(`[SMS] Unknown carrier: "${carrier}". Known carriers: ${Object.keys(CARRIERS).join(", ")}`);
+    console.error(`[SMS] Unknown carrier: "${carrier}". Known: ${Object.keys(CARRIERS).join(", ")}`);
     return null;
   }
   const digits = number.replace(/\D/g, "").slice(-10);
@@ -69,18 +70,18 @@ function getGatewayEmail(smsConfig) {
   return `${digits}@${domain}`;
 }
 
-// ── AES-256-GCM encryption/decryption (matches mind-garden.html) ──
-async function deriveKey(passphrase, salt, usages) {
+// ── AES-256-GCM decryption (matches mind-garden.html @ 310k iterations) ──
+async function deriveKey(passphrase, salt) {
   const enc = new TextEncoder();
-  const keyMaterial = await crypto.subtle.importKey(
+  const keyMaterial = await webcrypto.subtle.importKey(
     "raw", enc.encode(passphrase), "PBKDF2", false, ["deriveKey"]
   );
-  return crypto.subtle.deriveKey(
+  return webcrypto.subtle.deriveKey(
     { name: "PBKDF2", salt, iterations: 310000, hash: "SHA-256" },
     keyMaterial,
     { name: "AES-GCM", length: 256 },
     false,
-    usages
+    ["decrypt"]
   );
 }
 
@@ -89,22 +90,9 @@ async function decryptData(b64, passphrase) {
   const salt = buf.slice(0, 16);
   const iv = buf.slice(16, 28);
   const ct = buf.slice(28);
-  const key = await deriveKey(passphrase, salt, ["decrypt"]);
-  const dec = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ct);
+  const key = await deriveKey(passphrase, salt);
+  const dec = await webcrypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ct);
   return new TextDecoder().decode(dec);
-}
-
-async function encryptData(plaintext, passphrase) {
-  const enc = new TextEncoder();
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const key = await deriveKey(passphrase, salt, ["encrypt"]);
-  const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(plaintext));
-  const buf = new Uint8Array(salt.length + iv.length + ct.byteLength);
-  buf.set(salt, 0);
-  buf.set(iv, salt.length);
-  buf.set(new Uint8Array(ct), salt.length + iv.length);
-  return Buffer.from(buf).toString("base64");
 }
 
 // ── EmailJS REST API ──
@@ -115,13 +103,11 @@ async function sendViaEmailJS(smsConfig, templateParams) {
     user_id: smsConfig.emailjsPublicKey,
     template_params: templateParams,
   });
-
   const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body,
   });
-
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`EmailJS ${res.status}: ${text}`);
@@ -129,50 +115,85 @@ async function sendViaEmailJS(smsConfig, templateParams) {
   return true;
 }
 
-// ── GitHub API: write file back to repo (for dedup log) ──
-async function getFileSha(repo, path, token) {
-  const res = await fetch(
-    `https://api.github.com/repos/${repo}/contents/${path}`,
-    { headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" } }
-  );
-  if (!res.ok) return null;
-  const json = await res.json();
-  return json.sha;
+// ── GitHub API helpers (for the dedup file only) ──
+const GH_API = "https://api.github.com";
+const DEDUP_PATH = "data/sms-sent.json";
+
+function ghHeaders() {
+  return {
+    Authorization: `Bearer ${GH_TOKEN}`,
+    Accept: "application/vnd.github+json",
+    "Content-Type": "application/json",
+  };
 }
 
-async function writeFileToRepo(repo, path, content, message, token) {
-  const sha = await getFileSha(repo, path, token);
+async function readDedupFile() {
+  // Try local checkout first (faster, no API call)
+  try {
+    const raw = fs.readFileSync(DEDUP_PATH, "utf8");
+    return JSON.parse(raw);
+  } catch {
+    // File doesn't exist yet — that's fine, first run
+    return { sentToday: [], date: "" };
+  }
+}
+
+async function writeDedupFile(dedupData) {
+  if (!GH_TOKEN || !GITHUB_REPOSITORY) {
+    console.warn("[SMS] ⚠ No token/repo — can't write dedup file. May get duplicate texts.");
+    return;
+  }
+
+  const content = JSON.stringify(dedupData, null, 2);
+  const b64 = Buffer.from(content, "utf8").toString("base64");
+
+  // Get current SHA (if file exists)
+  let sha = null;
+  try {
+    const res = await fetch(
+      `${GH_API}/repos/${GITHUB_REPOSITORY}/contents/${DEDUP_PATH}`,
+      { headers: ghHeaders() }
+    );
+    if (res.ok) {
+      const json = await res.json();
+      sha = json.sha;
+    }
+  } catch {}
+
   const body = {
-    message,
-    content: Buffer.from(content, "utf8").toString("base64"),
+    message: "[bot] update sms dedup log",
+    content: b64,
     branch: "main",
   };
   if (sha) body.sha = sha;
 
-  const res = await fetch(
-    `https://api.github.com/repos/${repo}/contents/${path}`,
-    {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/vnd.github+json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
+  try {
+    const res = await fetch(
+      `${GH_API}/repos/${GITHUB_REPOSITORY}/contents/${DEDUP_PATH}`,
+      { method: "PUT", headers: ghHeaders(), body: JSON.stringify(body) }
+    );
+    if (!res.ok) {
+      const text = await res.text();
+      console.warn(`[SMS] ⚠ Dedup write failed: ${res.status} ${text}`);
+    } else {
+      console.log("[SMS] ✅ Dedup log updated.");
     }
-  );
-  if (!res.ok) {
-    const text = await res.text();
-    console.warn(`[SMS] Failed to write dedup log back to repo: ${res.status} ${text}`);
-    return false;
+  } catch (err) {
+    console.warn("[SMS] ⚠ Dedup write error:", err.message);
   }
-  return true;
 }
 
 // ── Main ──
 async function main() {
-  // Read the data file from the repo
-  const rawFile = fs.readFileSync("data/mindgarden.json", "utf8");
+  // 1. Read mindgarden.json
+  let rawFile;
+  try {
+    rawFile = fs.readFileSync("data/mindgarden.json", "utf8");
+  } catch (e) {
+    console.error("[SMS] Can't read data/mindgarden.json:", e.message);
+    return;
+  }
+
   let fileData;
   try {
     fileData = JSON.parse(rawFile);
@@ -181,11 +202,9 @@ async function main() {
     return;
   }
 
-  const isEncrypted = !!fileData.encrypted;
-
-  // Handle encryption
+  // 2. Decrypt if needed
   let data;
-  if (isEncrypted) {
+  if (fileData.encrypted) {
     if (!MG_ENCRYPTION_PASSPHRASE) {
       console.log("[SMS] Data is encrypted but MG_ENCRYPTION_PASSPHRASE not set — skipping.");
       return;
@@ -202,59 +221,54 @@ async function main() {
   }
 
   const { meds = [], medLogs = [], reminders = [], smsConfig = {} } = data;
-  // smsSentLog tracks which reminders have already fired today: [{ remId, date }]
-  let smsSentLog = data.smsSentLog || [];
 
-  // Check if SMS is enabled in the app config
+  // 3. Validate SMS config
   if (!smsConfig.enabled) {
     console.log("[SMS] SMS is disabled in Mind Garden settings — skipping.");
     return;
   }
-
-  // Validate SMS config from the data file
   if (!smsConfig.emailjsPublicKey || !smsConfig.emailjsServiceId || !smsConfig.emailjsTemplateId) {
-    console.log("[SMS] Missing EmailJS config in smsConfig — set it up in the admin Text Setup panel.");
+    console.log("[SMS] Missing EmailJS config in smsConfig — configure in admin Text Setup.");
     return;
   }
-
   const gateway = getGatewayEmail(smsConfig);
   if (!gateway) return;
 
-  // Get current time in the user's timezone
-  const offset = parseFloat(TZ_OFFSET || "-5"); // default EST
+  // 4. Compute local time
+  const offset = parseFloat(TZ_OFFSET || "-5");
   const now = new Date(Date.now() + offset * 3600000);
   const nowHours = now.getUTCHours();
   const nowMins = now.getUTCMinutes();
   const nowTotalMins = nowHours * 60 + nowMins;
   const todayStr = now.toISOString().split("T")[0];
 
-  console.log(`[SMS] Checking reminders at ${String(nowHours).padStart(2,"0")}:${String(nowMins).padStart(2,"0")} (UTC${offset >= 0 ? "+" : ""}${offset}) — ${todayStr}`);
+  console.log(`[SMS] ${String(nowHours).padStart(2,"0")}:${String(nowMins).padStart(2,"0")} (UTC${offset >= 0 ? "+" : ""}${offset}) — ${todayStr}`);
 
-  // Purge old sent-log entries (keep only today's)
-  smsSentLog = smsSentLog.filter(e => e.date === todayStr);
+  // 5. Load dedup log (separate file, never touches mindgarden.json)
+  let dedup = await readDedupFile();
+  // Reset if it's a new day
+  if (dedup.date !== todayStr) {
+    dedup = { sentToday: [], date: todayStr };
+  }
+  const alreadySent = new Set(dedup.sentToday);
 
-  // Find which meds are taken today
+  // 6. Find meds taken today
   const takenToday = new Set(
     medLogs.filter(l => l.date === todayStr).map(l => l.medId)
   );
 
-  // Build set of already-sent reminder IDs today
-  const alreadySent = new Set(smsSentLog.map(e => e.remId));
-
-  // Collect due (untaken) meds from enabled reminders whose time has passed today.
-  // No tight window — if it's past the reminder time and the med isn't taken
-  // and we haven't already texted for this reminder today, fire it.
+  // 7. Collect due reminders
   const dueMedIds = new Set();
   const firedRemIds = [];
 
   for (const rem of reminders) {
     if (!rem.enabled) continue;
-    if (alreadySent.has(rem.id)) continue; // already texted for this one today
+    if (alreadySent.has(rem.id)) continue;
 
     const [rh, rm] = rem.time.split(":").map(Number);
     const remMins = rh * 60 + rm;
 
-    // Only fire if the reminder time has passed (with 2 min grace for clock skew)
+    // Fire if reminder time has passed (2-min grace for clock skew)
     if (nowTotalMins < remMins - 2) continue;
 
     let hasUntaken = false;
@@ -264,9 +278,7 @@ async function main() {
         hasUntaken = true;
       }
     }
-    if (hasUntaken) {
-      firedRemIds.push(rem.id);
-    }
+    if (hasUntaken) firedRemIds.push(rem.id);
   }
 
   const dueMeds = [...dueMedIds]
@@ -280,23 +292,22 @@ async function main() {
 
   console.log(`[SMS] ${dueMeds.length} med(s) due: ${dueMeds.map(m => m.name).join(", ")}`);
 
-  // Build message
+  // 8. Build message
   const baseUrl = SITE_URL || "";
   let message;
-
   if (dueMeds.length === 1) {
     const med = dueMeds[0];
-    const takeLink = baseUrl && med.id ? `${baseUrl}#take=${med.id}` : "";
-    message = `Time to take ${med.name} (${med.dosage || "no dosage"})${takeLink ? "\nTap to confirm: " + takeLink : ""}`;
+    const link = baseUrl && med.id ? `${baseUrl}#take=${med.id}` : "";
+    message = `Time to take ${med.name} (${med.dosage || "no dosage"})${link ? "\nTap to confirm: " + link : ""}`;
   } else {
     const lines = dueMeds.map(m => {
-      const takeLink = baseUrl && m.id ? `${baseUrl}#take=${m.id}` : "";
-      return `• ${m.name} (${m.dosage || "no dosage"})${takeLink ? "\n  Confirm: " + takeLink : ""}`;
+      const link = baseUrl && m.id ? `${baseUrl}#take=${m.id}` : "";
+      return `• ${m.name} (${m.dosage || "no dosage"})${link ? "\n  Confirm: " + link : ""}`;
     });
     message = `💊 Time to take your meds:\n${lines.join("\n")}`;
   }
 
-  // Send
+  // 9. Send
   try {
     await sendViaEmailJS(smsConfig, {
       to_email: gateway,
@@ -304,36 +315,17 @@ async function main() {
       med_dosage: dueMeds.map(m => m.dosage || "").join(", "),
       message,
     });
-    console.log(`[SMS] ✅ Reminder sent to ${gateway}`);
+    console.log(`[SMS] ✅ Sent to ${gateway}`);
   } catch (err) {
     console.error(`[SMS] ❌ Failed:`, err.message);
     process.exit(1);
   }
 
-  // Record which reminders we just sent, so we don't text again today
+  // 10. Update dedup log (separate file — no risk to mindgarden.json)
   for (const remId of firedRemIds) {
-    smsSentLog.push({ remId, date: todayStr });
+    dedup.sentToday.push(remId);
   }
-
-  // Write the updated sent log back to the repo
-  data.smsSentLog = smsSentLog;
-
-  const token = GH_PAT || process.env.GITHUB_TOKEN;
-  const repo = GITHUB_REPOSITORY;
-  if (token && repo) {
-    let contentText;
-    if (isEncrypted) {
-      const raw = JSON.stringify(data, null, 2);
-      const encrypted = await encryptData(raw, MG_ENCRYPTION_PASSPHRASE);
-      contentText = JSON.stringify({ encrypted: true, v: 1, data: encrypted });
-    } else {
-      contentText = JSON.stringify(data, null, 2);
-    }
-    await writeFileToRepo(repo, "data/mindgarden.json", contentText, `SMS sent ${todayStr}`, token);
-    console.log("[SMS] ✅ Dedup log written back to repo.");
-  } else {
-    console.warn("[SMS] ⚠ No GH_PAT or GITHUB_TOKEN — can't write dedup log. You may get duplicate texts.");
-  }
+  await writeDedupFile(dedup);
 }
 
 main();

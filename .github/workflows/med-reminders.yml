@@ -28,5 +28,5 @@ jobs:
           # Uses the automatic GITHUB_TOKEN for writing the dedup log.
           # If your repo restricts GITHUB_TOKEN permissions, set a GH_PAT secret instead.
           GH_PAT: ${{ secrets.GH_PAT }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: node .github/workflows/send-reminders.js
