@@ -318,6 +318,126 @@
       padding: 1px 3px;
     }
 
+    /* ── Movie Player ── */
+    .player-card {
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      background: var(--glass);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      position: relative;
+    }
+    .player-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--honey), var(--amber), transparent);
+      opacity: .5;
+    }
+    .player-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 28px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .player-header h2 {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .player-header .meta {
+      display: flex; gap: 12px;
+      font-size: 12px; color: var(--text-dim);
+    }
+    .player-body {
+      padding: 0;
+      position: relative;
+      background: #000;
+    }
+    .player-body video {
+      display: block;
+      width: 100%;
+      max-height: 70vh;
+      background: #000;
+      outline: none;
+    }
+    .player-fallback {
+      display: none;
+      padding: 48px 24px;
+      text-align: center;
+    }
+    .player-fallback .icon { font-size: 44px; margin-bottom: 14px; display: block; }
+    .player-fallback h3 {
+      font-family: var(--font-display);
+      font-size: 18px;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .player-fallback p {
+      color: var(--text-dim);
+      font-size: 13px;
+      max-width: 50ch;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .player-fallback code {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 6px 14px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--amber);
+    }
+    .player-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 28px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .player-info .detail {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+    .player-info .detail span { display: flex; align-items: center; gap: 5px; }
+    .pip-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-family: var(--font-body);
+      cursor: pointer;
+      transition: all var(--t-fast) var(--ease);
+    }
+    .pip-btn:hover {
+      border-color: var(--border-hover);
+      background: rgba(255,255,255,.08);
+      color: var(--text);
+    }
+
+    @media (max-width: 600px) {
+      .player-header, .player-info { padding-left: 16px; padding-right: 16px; }
+    }
+
     /* ── Footer ── */
     .footer {
       text-align: center;
@@ -391,6 +511,55 @@
         <div class="stat"><strong>2007</strong> Release</div>
         <div class="stat"><strong>95</strong> min Runtime</div>
         <div class="stat"><strong>🔎</strong> Searchable</div>
+      </div>
+    </section>
+
+    <!-- ═══════ MOVIE PLAYER ═══════ -->
+    <section class="player-card">
+      <div class="player-header">
+        <h2>🎬 Watch the Movie</h2>
+        <div class="meta">
+          <span>2007</span>
+          <span>·</span>
+          <span>DreamWorks Animation</span>
+        </div>
+      </div>
+
+      <div class="player-body">
+        <!--
+          ╔══════════════════════════════════════════════════════════╗
+          ║  Place your movie file in /assets/ and update the      ║
+          ║  src below. Supported formats: .mp4, .webm, .mkv      ║
+          ║  Example: assets/beemovie.mp4                          ║
+          ╚══════════════════════════════════════════════════════════╝
+        -->
+        <video
+          id="bee-player"
+          controls
+          preload="metadata"
+          poster=""
+        >
+          <source src="assets/beemovie.mp4"  type="video/mp4">
+          <source src="assets/beemovie.webm" type="video/webm">
+        </video>
+
+        <div class="player-fallback" id="player-fallback">
+          <span class="icon">🍿</span>
+          <h3>Movie file not found</h3>
+          <p>Drop your copy of the movie into the assets folder and make sure the filename matches:</p>
+          <code>assets/beemovie.mp4</code>
+        </div>
+      </div>
+
+      <div class="player-info">
+        <div class="detail">
+          <span>🐝 Bee Movie</span>
+          <span>·</span>
+          <span>95 min</span>
+          <span>·</span>
+          <span>PG</span>
+        </div>
+        <button class="pip-btn" id="pip-btn" title="Picture-in-Picture">⧉ PiP</button>
       </div>
     </section>
 
@@ -1877,6 +2046,48 @@ I had virtually no rehearsal for that.`;
     scriptBody.addEventListener('scroll', function() {
       backTop.classList.toggle('visible', scriptBody.scrollTop > 400);
     });
+
+    /* ── Movie Player ── */
+    (function() {
+      const video = document.getElementById('bee-player');
+      const fallback = document.getElementById('player-fallback');
+      const pipBtn = document.getElementById('pip-btn');
+
+      // Show fallback if video can't load
+      video.addEventListener('error', function() {
+        video.style.display = 'none';
+        fallback.style.display = 'block';
+      });
+      // Also catch source errors
+      video.querySelectorAll('source').forEach((src, i, all) => {
+        src.addEventListener('error', function() {
+          // Only show fallback if ALL sources fail
+          const allFailed = [...all].every(s => s.error || !video.canPlayType(s.type));
+          if (i === all.length - 1 || allFailed) {
+            video.style.display = 'none';
+            fallback.style.display = 'block';
+          }
+        });
+      });
+
+      // Picture-in-Picture
+      pipBtn.addEventListener('click', async function() {
+        try {
+          if (document.pictureInPictureElement) {
+            await document.exitPictureInPicture();
+          } else if (video.readyState > 0) {
+            await video.requestPictureInPicture();
+          }
+        } catch (e) {
+          console.warn('PiP not supported:', e);
+        }
+      });
+
+      // Hide PiP button if not supported
+      if (!document.pictureInPictureEnabled) {
+        pipBtn.style.display = 'none';
+      }
+    })();
   </script>
 </body>
 </html>
