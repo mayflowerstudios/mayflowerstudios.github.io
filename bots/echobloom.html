@@ -20,8 +20,9 @@
         <h1>🌙 EchoBloom</h1>
         <p class="muted">
           A realm-based living world bot built specifically for our server. Choose a realm, earn XP through
-          conversation, discover items and lore fragments, complete quests, and compete in realm-vs-realm
-          battles — with seasonal content and story progression that grows over time.
+          conversation and voice chat, discover items and lore fragments, complete quests, craft powerful artifacts,
+          raid rival realms, and compete in realm-vs-realm battles — with seasonal content, story waves,
+          and a Convergence system that grows the world over time.
         </p>
         <div class="ctaRow">
           <a class="btn bots" href="/bots/foxbot.html">🦊 FoxBot</a>
@@ -31,9 +32,9 @@
 
       <div class="tileGrid">
         <div class="tile"><strong>🌿 Realms</strong><p>Join via reactions, earn XP, climb ranks, grow your realm.</p></div>
-        <div class="tile"><strong>🎒 Items & Lore</strong><p>Discover items, collect fragments, unlock your realm's story.</p></div>
-        <div class="tile"><strong>⚔️ Battles & Events</strong><p>Riddle battles, reaction races, item hunts, realm raids.</p></div>
-        <div class="tile"><strong>🌸 Seasons</strong><p>Realm-tied seasons with exclusive drops and themed quests.</p></div>
+        <div class="tile"><strong>🎒 Items & Crafting</strong><p>Discover items, craft artifacts, collect fragments, unlock your realm's story.</p></div>
+        <div class="tile"><strong>⚔️ Battles & Raids</strong><p>Riddle battles, reaction races, item hunts, word scrambles, XP frenzies, and realm raids.</p></div>
+        <div class="tile"><strong>🌀 Waves & Seasons</strong><p>Multi-wave lore progression with Convergence resets and seasonal exclusives.</p></div>
       </div>
     </section>
 
@@ -46,14 +47,15 @@
     <section class="card">
       <p class="desc">
         <strong>EchoBloom</strong> is our private "living world" bot. Members choose one of four realms and then
-        build progress through daily conversation: every message earns XP for both you and your realm,
+        build progress through daily conversation and voice chat: every message earns XP for both you and your realm,
         items drop randomly, lore fragments surface from the noise, and realm events can trigger at any moment.
       </p>
 
       <p class="desc">
         It's designed to feel like an RPG layer on top of chat — not a grindy spreadsheet.
-        Progress happens naturally through conversation, with quests, seasonal content,
-        and competitive events adding texture over time.
+        Progress happens naturally through conversation, with quests, crafting, raids, seasonal content,
+        and competitive events adding texture over time. A wave system means the story keeps growing:
+        when all realms complete a wave's lore, a Convergence event fires and the next chapter begins.
       </p>
 
       <div class="divider" style="margin:14px 0;"></div>
@@ -96,6 +98,37 @@
           <li>Three rank milestones at Level 1, 10, and 25</li>
           <li>Realm-wide and individual leaderboards</li>
           <li>XP cooldown (60s) prevents spam — paces naturally</li>
+          <li>XP per message: 5–25 (15 base ± 10 variance)</li>
+          <li>Level caps scale per wave (base: 50 member / 30 realm)</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🎙️ Voice XP <span class="badge">Core</span></h3>
+        <p class="desc">
+          Earn XP just by hanging out in voice channels. No commands needed — just be present
+          with at least one other person.
+        </p>
+        <ul>
+          <li>5 XP per tick (every 5 minutes) while in voice</li>
+          <li>Minimum 2 non-bot members required in the channel</li>
+          <li>AFK channel and self-deafened users are excluded</li>
+          <li>Streak and item XP buffs apply to voice XP too</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🔥 Streak System <span class="badge">Core</span></h3>
+        <p class="desc">
+          Stay active daily and earn escalating XP bonuses. Streaks reward consistency
+          without punishing breaks too harshly.
+        </p>
+        <ul>
+          <li>7 days → 3% XP bonus</li>
+          <li>14 days → 6% XP bonus</li>
+          <li>21 days → 9% XP bonus</li>
+          <li>28 days → 12% XP bonus (cap)</li>
+          <li>Check your streak anytime with <code>/streak</code></li>
         </ul>
       </div>
 
@@ -107,24 +140,58 @@
         </p>
         <ul>
           <li>Universal items any realm can find</li>
-          <li>Realm-specific items unique to each path</li>
-          <li>Rarity tiers: Common, Uncommon, Rare, Legendary</li>
+          <li>Realm-specific items unique to each path (6 per realm)</li>
+          <li>Rarity tiers: Common (2.5%), Uncommon (1.2%), Rare (0.4%), Legendary (0.08%)</li>
+          <li>Usable items with active effects (XP buffs, reveals, etc.)</li>
           <li>Gift items between realms or trade across borders</li>
           <li>Full item activity log for transparency</li>
         </ul>
       </div>
 
       <div class="card">
+        <h3>🔨 Crafting <span class="badge">New</span></h3>
+        <p class="desc">
+          Combine common and uncommon materials from your realm's inventory into powerful
+          usable items. Each realm has its own recipes plus universal ones.
+        </p>
+        <ul>
+          <li>View available recipes with <code>/recipes</code></li>
+          <li>Craft items with <code>/craft</code></li>
+          <li>Realm members get an objection window before crafting completes</li>
+          <li>Universal recipes: Realm Compass, Void Lantern, Worldseed</li>
+          <li>Realm recipes: rare + legendary items from common/uncommon materials</li>
+        </ul>
+      </div>
+
+      <div class="card">
         <h3>⚔️ Realm Battles <span class="badge">Event</span></h3>
         <p class="desc">
-          Events trigger randomly from messages (2% chance, 4hr cooldown) or can be started by admins.
-          Three battle types keep things fresh.
+          Events trigger randomly from messages (5% chance, 1hr cooldown) or can be started by admins.
+          Six battle types keep things fresh.
         </p>
         <ul>
           <li>⚡ <strong>Riddle Battles</strong> — first correct answer wins XP for their realm</li>
           <li>🏃 <strong>Reaction Races</strong> — fastest finger on the right emoji wins</li>
           <li>🔎 <strong>Item Hunts</strong> — first realm to find a target item claims the prize</li>
-          <li>Event history tracks wins across all realms</li>
+          <li>🔤 <strong>Word Scrambles</strong> — unscramble a word with a hint for realm XP</li>
+          <li>🔥 <strong>XP Frenzies</strong> — 10-minute 2x XP window, winning realm gets bonus</li>
+          <li>🔗 <strong>Emoji Chains</strong> — react in the correct sequence of 5 emojis</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🏴 Realm Raids <span class="badge">PvP</span></h3>
+        <p class="desc">
+          Launch a raid against another realm to steal their items. Power is based on
+          participant levels, reaction count, and a dash of randomness.
+        </p>
+        <ul>
+          <li>Start a raid with <code>/raid</code></li>
+          <li>Both sides rally members via reactions</li>
+          <li>Power = (avg level × 1.5) + (participants × 1.0) + random factor</li>
+          <li>Winners steal 3 items from the defending realm</li>
+          <li>2-hour cooldown between raids</li>
+          <li>XP rewards for both sides (400 win / 100 lose)</li>
         </ul>
       </div>
 
@@ -135,8 +202,8 @@
         </p>
         <ul>
           <li>Message count targets (e.g. "Send 50 messages today")</li>
-          <li>XP milestones (e.g. "Earn 3,000 XP this week")</li>
-          <li>Item collection goals (e.g. "Find 10 items this week")</li>
+          <li>XP milestones (e.g. "Earn 500 XP today")</li>
+          <li>Item collection goals (e.g. "Find 2 items today")</li>
           <li>Seasonal quests during active seasons</li>
           <li>Progress tracked automatically from normal chatting</li>
         </ul>
@@ -145,7 +212,7 @@
 
     <!-- LORE & SEASONS -->
     <div class="sectionTitle">
-      <h2>📜 Lore & Seasons</h2>
+      <h2>📜 Lore, Waves & Seasons</h2>
       <span>The world that grows with you</span>
     </div>
 
@@ -156,11 +223,27 @@
           Each realm has its own Book of Lore — a persistent page that updates live as new content is discovered.
         </p>
         <ul>
-          <li>5 chapters per realm, unlocking at realm levels 3, 7, 12, 18, 25</li>
-          <li>3 lore fragments per realm (uncommon / rare / legendary drops)</li>
+          <li>5 chapters per realm per wave, unlocking at realm level milestones</li>
+          <li>3 lore fragments per realm per wave (uncommon / rare / legendary drops)</li>
+          <li>Fragment drop rate: 1% per XP-eligible message</li>
           <li>Each realm has its own dedicated lore channel</li>
           <li>Lore pages auto-update when chapters unlock or fragments are found</li>
-          <li>Full narrative written for all four realms</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🌀 Wave System <span class="badge">Progression</span></h3>
+        <p class="desc">
+          Lore is organized into waves — each wave is a full set of chapters and fragments for every realm.
+          When all realms complete a wave, the Convergence fires.
+        </p>
+        <ul>
+          <li>Wave 1: <strong>Origins</strong> — "Where it all began."</li>
+          <li>Wave 2: <strong>Echoes</strong> — "What the past left behind."</li>
+          <li>Convergence resets realm progress and begins the next wave</li>
+          <li>Lore from past waves is preserved in wave history</li>
+          <li>Level caps increase with each wave (+50 member / +10 realm)</li>
+          <li>Track progress with <code>/wave</code> and <code>/wave-history</code></li>
         </ul>
       </div>
 
@@ -176,6 +259,21 @@
           <li>❄️ Winter (Dec–Feb) — Moonroot Tree</li>
           <li>3 exclusive seasonal items per season (only drop during that window)</li>
           <li>Seasonal quests with bonus XP rewards</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🔮 Seasonal Fusion <span class="badge">Endgame</span></h3>
+        <p class="desc">
+          Collect all 3 seasonal items during a season to forge a powerful fused artifact
+          with game-changing effects.
+        </p>
+        <ul>
+          <li>🌱 <strong>Verdant Heart</strong> — 3x XP for 1 hour + 1,000 bonus XP</li>
+          <li>☀️ <strong>Eternal Ember</strong> — steal 2 items from each rival + 1,500 XP</li>
+          <li>🍂 <strong>Veil of Echoes</strong> — copy 2 items from each rival + 2x drops for 1 hour</li>
+          <li>❄️ <strong>Moonbound Relic</strong> — +500 XP to all realms, +2,000 to yours</li>
+          <li>Forge with <code>/forge</code> during the active season</li>
         </ul>
       </div>
     </section>
@@ -203,9 +301,10 @@
         <p class="desc">Just talk. Every message earns XP, drops items, and advances quests.</p>
         <ul>
           <li>XP earned for you and your realm (5–25 per message)</li>
+          <li>Voice chat earns XP too (5 per 5-min tick)</li>
           <li>Items drop randomly as you chat</li>
-          <li>Lore fragments surface from conversation</li>
-          <li>Quests track automatically in the background</li>
+          <li>Lore fragments surface from conversation (1% chance)</li>
+          <li>Quests and streaks track automatically in the background</li>
         </ul>
       </div>
 
@@ -215,17 +314,25 @@
         <ul>
           <li><code>/realm</code> — your level, XP, rank, and progress bar</li>
           <li><code>/level</code> — detailed stats (yours or another user's)</li>
+          <li><code>/streak</code> — your daily streak and XP bonus</li>
           <li><code>/realms</code> — all realms with levels and member counts</li>
           <li><code>/leaderboard</code> — top members in a realm</li>
+          <li><code>/wave</code> — current wave progress across all realms</li>
         </ul>
       </div>
 
       <div class="card">
         <h3>4) Engage with Systems</h3>
-        <p class="desc">Items, quests, lore, events, and seasons all layer on top of chat.</p>
+        <p class="desc">Items, crafting, raids, quests, lore, events, and seasons all layer on top of chat.</p>
         <ul>
           <li><code>/inventory</code> — view your realm's shared stash</li>
+          <li><code>/item-info</code> — see what an item does</li>
+          <li><code>/use</code> — activate a usable item</li>
+          <li><code>/buffs</code> — view active realm XP buffs</li>
+          <li><code>/recipes</code> and <code>/craft</code> — crafting system</li>
           <li><code>/gift</code> and <code>/trade</code> — move items between realms</li>
+          <li><code>/raid</code> — attack another realm for their items</li>
+          <li><code>/forge</code> — fuse seasonal items into artifacts</li>
           <li><code>/quests</code> — view active daily/weekly/seasonal quests</li>
           <li><code>/lore</code> — view your realm's story progress</li>
           <li><code>/season</code> — current season info and exclusive content</li>
@@ -245,18 +352,28 @@
         <ul>
           <li><code>/realm</code> — your realm, level, XP, rank, progress</li>
           <li><code>/level</code> — detailed level card (self or @user)</li>
+          <li><code>/streak</code> — daily activity streak and XP bonus</li>
           <li><code>/realms</code> — all realms overview with levels</li>
           <li><code>/leaderboard</code> — top members in a realm</li>
           <li><code>/inventory</code> — realm's item stash</li>
+          <li><code>/item-info</code> — see details and effects of an item</li>
+          <li><code>/use</code> — activate a usable item</li>
+          <li><code>/buffs</code> — view active realm XP buffs</li>
           <li><code>/gift</code> — send items to another realm</li>
           <li><code>/trade</code> — swap items between realms</li>
           <li><code>/item-log</code> — recent item activity</li>
+          <li><code>/recipes</code> — view crafting recipes for your realm</li>
+          <li><code>/craft</code> — craft a usable item from materials</li>
+          <li><code>/raid</code> — launch a raid against another realm</li>
+          <li><code>/forge</code> — fuse seasonal items into a powerful artifact</li>
           <li><code>/quests</code> — active quests and progress</li>
           <li><code>/lore</code> — realm lore overview + link to Book of Lore</li>
           <li><code>/lore-read</code> — read a specific unlocked chapter</li>
           <li><code>/fragments</code> — collected lore fragments</li>
           <li><code>/season</code> — current season, items, and quests</li>
           <li><code>/event-history</code> — recent battle results</li>
+          <li><code>/wave</code> — current wave progress</li>
+          <li><code>/wave-history</code> — past completed waves</li>
         </ul>
       </div>
 
@@ -267,9 +384,25 @@
           <li><code>/setup-realms</code> — post realm selection message + add reactions</li>
           <li><code>/setup-lore</code> — post a realm's Book of Lore page</li>
           <li><code>/setup-all-lore</code> — post all 4 lore pages at once</li>
+          <li><code>/setup-events</code> — post persistent event status embed</li>
           <li><code>/start-event</code> — manually trigger a battle event</li>
           <li><code>/end-event</code> — force end the current event</li>
+          <li><code>/refresh-status</code> — force refresh the dashboard embed</li>
           <li><code>/refresh-quests</code> — force rotate quests now</li>
+          <li><code>/sync-levels</code> — recalculate all levels from XP</li>
+          <li><code>/reset-realms</code> — reset all realm XP, levels, items, lore, quests</li>
+          <li><code>/admin-convergence</code> — trigger the Convergence event now</li>
+          <li><code>/force-convergence</code> — force trigger Convergence</li>
+          <li><code>/admin-set-xp</code> — set a member's XP</li>
+          <li><code>/admin-set-level</code> — set a member's level</li>
+          <li><code>/admin-add-xp</code> — add XP to a member</li>
+          <li><code>/admin-set-realm-xp</code> — set a realm's XP</li>
+          <li><code>/admin-set-realm-level</code> — set a realm's level</li>
+          <li><code>/admin-add-realm-xp</code> — add XP to a realm</li>
+          <li><code>/admin-give-item</code> — give an item to a realm</li>
+          <li><code>/admin-remove-item</code> — remove an item from a realm</li>
+          <li><code>/admin-clear-inventory</code> — wipe a realm's entire inventory</li>
+          <li><code>/admin-overview</code> — full admin overview of all realms</li>
         </ul>
       </div>
     </section>
@@ -286,6 +419,7 @@
         <p class="muted small">
           Enable realms first. Once people are chatting and earning XP, the items, quests, events, lore,
           and seasons all layer in naturally. No need to introduce everything at once.
+          Crafting, raids, and seasonal fusion add depth for established communities.
         </p>
       </div>
 
@@ -297,14 +431,17 @@
 4. Run /setup-realms in your realm-select channel
 5. Create lore channels (one per realm) and run /setup-lore
 6. Set your events channel ID in config
-7. Restart — quests auto-rotate, events trigger from chat
-8. Run /season to verify seasonal content is active</code>
+7. Run /setup-events to post the persistent dashboard
+8. Restart — quests auto-rotate, events trigger from chat
+9. Run /season to verify seasonal content is active
+10. Run /wave to check lore wave status</code>
       </div>
 
       <div class="callout" style="margin-top:12px;">
         <strong>Everything is in one file</strong>
         <p class="muted small" style="margin:6px 0 0;">
-          All IDs, realm definitions, items, quests, lore chapters, seasonal content, riddles, and drop rates
+          All IDs, realm definitions, items, crafting recipes, quests, lore waves, seasonal content,
+          riddles, word scrambles, emoji chains, and drop rates
           live in <code>config/config.py</code>. One file to rule them all.
         </p>
       </div>

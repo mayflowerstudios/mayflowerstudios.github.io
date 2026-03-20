@@ -19,8 +19,9 @@
         <p class="kicker">Discord Bot (Private)</p>
         <h1>🦊 FoxBot</h1>
         <p class="muted">
-          FoxBot is our cozy, lore-friendly helper for <strong>Luna’s Magical Forest</strong> — built for day-to-day server life:
-          fun commands, birthdays, reaction roles, private AI chats, and safety-minded moderation.
+          FoxBot is our cozy, lore-friendly helper for <strong>Luna's Magical Forest</strong> — built for day-to-day server life:
+          fun commands, birthdays, holiday announcements, reaction roles, a channel directory, private AI chats, news recaps, and safety-minded moderation.
+          Her personality is <strong>Kiko</strong>, a whimsical fennec fox spirit living in an enchanted forest.
         </p>
 
         <div class="ctaRow">
@@ -32,7 +33,7 @@
         <div class="callout" style="margin-top:14px;">
           <strong>Private bot notice</strong>
           <p class="muted small" style="margin:6px 0 0;">
-            FoxBot is <strong>not</strong> a public bot and isn’t meant to be invited to other servers. This page is just an
+            FoxBot is <strong>not</strong> a public bot and isn't meant to be invited to other servers. This page is just an
             internal guide for our community.
           </p>
         </div>
@@ -41,19 +42,19 @@
       <div class="tileGrid">
         <div class="tile">
           <strong>🌸 Cozy AI Replies</strong>
-          <p>FoxBot replies when mentioned — plus private “fox-chat” rooms and DMs.</p>
+          <p>Kiko replies when mentioned — plus private "fox-chat" rooms and DMs.</p>
         </div>
         <div class="tile">
-          <strong>🎂 Birthdays</strong>
-          <p>Self-service birthday saving + daily announcements.</p>
+          <strong>🎂 Birthdays & Holidays</strong>
+          <p>Self-service birthdays + automated holiday announcements.</p>
         </div>
         <div class="tile">
           <strong>🛡️ Moderation</strong>
           <p>Safety-minded filtering with probation + escalation logic.</p>
         </div>
         <div class="tile">
-          <strong>🎭 Roles & Reactions</strong>
-          <p>Simple reaction-role binding tools for server setup.</p>
+          <strong>🎭 Roles & Directory</strong>
+          <p>Reaction-role bindings and a channel directory system.</p>
         </div>
       </div>
     </section>
@@ -61,34 +62,35 @@
     <!-- DESCRIPTION -->
     <div class="sectionTitle">
       <h2>📝 About FoxBot</h2>
-      <span>What it is (and what it isn’t)</span>
+      <span>What it is (and what it isn't)</span>
     </div>
 
     <section class="card">
       <p class="desc">
-        <strong>FoxBot</strong> is a custom Discord bot built specifically for <strong>Luna’s Magical Forest</strong>.
-        It mixes practical server utilities (reaction roles, announcements, cleanup tools) with fun, cozy interactions
-        (tone-based replies, fox facts/jokes/quotes, and cute “news recaps”).
+        <strong>FoxBot</strong> (personality: <strong>Kiko</strong>) is a custom Discord bot built specifically for <strong>Luna's Magical Forest</strong>.
+        It mixes practical server utilities (reaction roles, announcements, cleanup tools, channel directory) with fun, cozy interactions
+        (tone-based replies, fox facts/jokes/quotes, cute "news recaps" in multiple styles, and automated holiday announcements).
       </p>
 
       <p class="desc">
         Under the hood, FoxBot also includes:
         <strong>DM token limiting</strong> (to keep AI usage controlled), <strong>memory tools</strong> (opt-in style storage + cleanup),
-        and <strong>automated moderation checks</strong> for new/untrusted members.
+        <strong>automated moderation checks</strong> for new/untrusted members, and a <strong>channel directory</strong> so Kiko can
+        direct people to the right place.
       </p>
 
       <div class="divider" style="margin:14px 0;"></div>
 
-      <h3 style="margin:0 0 6px;">🦊 When does FoxBot respond?</h3>
+      <h3 style="margin:0 0 6px;">🦊 When does Kiko respond?</h3>
       <p class="desc" style="margin-top:0;">
-        In normal server channels, FoxBot responds <strong>only when mentioned</strong>. In DMs and FoxBot private chatrooms,
-        it responds like a direct conversation.
+        In normal server channels, Kiko responds <strong>only when mentioned</strong>. In DMs and FoxBot private chatrooms,
+        she responds like a direct conversation.
       </p>
 
       <div class="callout" style="margin-top:12px;">
         <strong>Why it works this way</strong>
         <p class="muted small" style="margin:6px 0 0;">
-          Keeps the server readable, prevents accidental spam, and makes “talking to FoxBot” intentional.
+          Keeps the server readable, prevents accidental spam, and makes "talking to Kiko" intentional.
         </p>
       </div>
     </section>
@@ -103,11 +105,12 @@
       <div class="card">
         <h3>🌸 AI Chat + Tone Profiles <span class="badge">Core</span></h3>
         <p class="desc">
-          FoxBot can rewrite/answer in different styles, per-user. Set your preferred vibe once and it sticks.
+          Kiko can rewrite/answer in different styles, per-user. Set your preferred vibe once and it sticks.
         </p>
         <ul>
           <li>Per-user tone preference (saved)</li>
-          <li>Whimsical-by-default, with many optional tones</li>
+          <li>Whimsical-by-default, with 25 optional tones</li>
+          <li>Tones include: cute, serious, funny, calm, mysterious, poetic, spooky, nerdy, valleygirl, romantic, chaotic, sarcastic, shy, royal, lazy, bubbly, goth, sleepy, pirate, southern, robotic, grumpy, cottagecore, anime</li>
           <li>Private chat options (DMs + private rooms)</li>
         </ul>
       </div>
@@ -121,18 +124,34 @@
           <li>Probation-based thresholds</li>
           <li>Escalation for repeat issues (strike window)</li>
           <li>Bypass for mods + trusted/long-tenure members</li>
+          <li>Flagged messages sent to a dedicated mod channel</li>
+          <li>Configurable bypass channels</li>
         </ul>
       </div>
 
       <div class="card">
         <h3>🎂 Birthdays <span class="badge">Community</span></h3>
         <p class="desc">
-          Members can save birthdays themselves, and FoxBot announces them automatically each day.
+          Members can save birthdays themselves, and Kiko announces them automatically each day.
         </p>
         <ul>
           <li>Save/update/remove birthday (MM/DD)</li>
           <li>Daily birthday announcement loop</li>
-          <li>“Next birthday” helper</li>
+          <li>"Next birthday" helper</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🎄 Holiday Announcements <span class="badge">Auto</span></h3>
+        <p class="desc">
+          Kiko automatically posts AI-generated holiday announcements for major holidays
+          throughout the year — cozy woodland vibes included.
+        </p>
+        <ul>
+          <li>Covers New Year's, Valentine's, Easter, Earth Day, Mother's/Father's Day, Halloween, Thanksgiving, Christmas, and more</li>
+          <li>AI-generated messages with cozy forest personality</li>
+          <li>Posts daily at scheduled time (8 AM ET)</li>
+          <li>Tracks which holidays have already been announced</li>
         </ul>
       </div>
 
@@ -147,22 +166,37 @@
           <li>Stored config so it persists across restarts</li>
         </ul>
       </div>
+
+      <div class="card">
+        <h3>📋 Channel Directory <span class="badge">Navigation</span></h3>
+        <p class="desc">
+          Mods can teach Kiko what each channel is for, so she can help direct members
+          to the right place.
+        </p>
+        <ul>
+          <li>Set channel descriptions with <code>/setchannel</code></li>
+          <li>Remove entries with <code>/removechannel</code></li>
+          <li>Anyone can view the directory with <code>/channels</code></li>
+          <li>Kiko uses the directory to guide people in conversation</li>
+          <li>Mod-only channels are hidden from regular users</li>
+        </ul>
+      </div>
     </section>
 
     <!-- HOW TO USE -->
     <div class="sectionTitle" id="howto">
       <h2>📘 How to Use</h2>
-      <span>Practical “what do I do?” guide</span>
+      <span>Practical "what do I do?" guide</span>
     </div>
 
     <section class="grid2">
       <div class="card">
-        <h3>1) Talk to FoxBot in chat</h3>
-        <p class="desc">In server channels, FoxBot replies when you mention it.</p>
+        <h3>1) Talk to Kiko in chat</h3>
+        <p class="desc">In server channels, Kiko replies when you mention her.</p>
         <ul>
           <li>Mention FoxBot in your message</li>
-          <li>Ask a question or request a rewrite (“foxify this”)</li>
-          <li>FoxBot replies as a direct message reply in-thread</li>
+          <li>Ask a question or request a rewrite ("foxify this")</li>
+          <li>Kiko replies as a direct message reply in-thread</li>
         </ul>
         <div class="codebox" style="margin-top:10px;">
           <code>Example:
@@ -172,9 +206,9 @@
 
       <div class="card">
         <h3>2) Use private chatrooms (mods)</h3>
-        <p class="desc">Create a private text channel for 1-on-1 conversations with FoxBot.</p>
+        <p class="desc">Create a private text channel for 1-on-1 conversations with Kiko.</p>
         <ul>
-          <li>Mods can create a private “fox-chat-…” room</li>
+          <li>Mods can create a private "fox-chat-…" room</li>
           <li>Only you + FoxBot can read it</li>
           <li>Delete it when done</li>
         </ul>
@@ -188,7 +222,7 @@
         <h3>3) DMs (token-limited)</h3>
         <p class="desc">DM chats are allowed, but have a monthly token cap to prevent runaway usage.</p>
         <ul>
-          <li>If you hit the monthly cap, FoxBot will tell you</li>
+          <li>If you hit the monthly cap, Kiko will tell you</li>
           <li>You can check remaining DM tokens anytime</li>
           <li>Server chat remains available even if DM tokens run out</li>
         </ul>
@@ -199,9 +233,9 @@
 
       <div class="card">
         <h3>4) Set your tone</h3>
-        <p class="desc">Make FoxBot respond in your preferred vibe.</p>
+        <p class="desc">Make Kiko respond in your preferred vibe.</p>
         <ul>
-          <li>Choose a tone once (saved)</li>
+          <li>Choose from 25 tones (saved per-user)</li>
           <li>Check your current tone</li>
           <li>Reset back to default (whimsical)</li>
         </ul>
@@ -211,12 +245,39 @@
 /resettone</code>
         </div>
       </div>
+
+      <div class="card">
+        <h3>5) News Recaps</h3>
+        <p class="desc">Ask Kiko for a fun recap of what's been happening in any channel.</p>
+        <ul>
+          <li>Choose a timeframe: last 30 min, 1 hour, 3 hours, or today</li>
+          <li>Pick a vibe: News Anchor, Gossip Column, Sports Commentary, Nature Documentary, or Drama Recap</li>
+          <li>Kiko reads the chat log and generates an entertaining summary</li>
+        </ul>
+        <div class="codebox" style="margin-top:10px;">
+          <code>/newsrecap timeframe:Today vibe:Gossip Column</code>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>6) Channel Directory</h3>
+        <p class="desc">Find the right channel for any topic.</p>
+        <ul>
+          <li>Mods teach Kiko about channels with <code>/setchannel</code></li>
+          <li>Anyone can view the full directory with <code>/channels</code></li>
+          <li>Kiko uses this knowledge in conversation to guide people</li>
+        </ul>
+        <div class="codebox" style="margin-top:10px;">
+          <code>/channels
+/setchannel #art-gallery Share your art and creative works</code>
+        </div>
+      </div>
     </section>
 
     <!-- COMMANDS -->
     <div class="sectionTitle" id="commands">
       <h2>📚 Command Reference</h2>
-      <span>What’s available in this bot build</span>
+      <span>What's available in this bot build</span>
     </div>
 
     <section class="grid2">
@@ -250,7 +311,7 @@
 
       <div class="card">
         <h3>🧠 Memory</h3>
-        <p class="desc">See/forget what FoxBot has saved. Mods can view/forget others.</p>
+        <p class="desc">See/forget what Kiko has saved. Mods can view/forget others.</p>
         <div class="codebox" style="margin-top:10px;">
           <code>/memory
 /forget
@@ -275,9 +336,10 @@
         <div class="codebox" style="margin-top:10px;">
           <code>/joined
 /tokens
-/newsrecap
+/newsrecap (timeframe + vibe options)
 /privatechat (manage channels)
 /endprivatechat
+/channels (view channel directory)
 /shutdown (owner-only)</code>
         </div>
       </div>
@@ -292,6 +354,8 @@
 /say
 /repeat
 /stealemoji
+/setchannel (channel directory)
+/removechannel (channel directory)
 /restart (admin-only)</code>
         </div>
       </div>
@@ -330,7 +394,7 @@
       <div class="callout" style="margin-top:12px;">
         <strong>Tip</strong>
         <p class="muted small" style="margin:6px 0 0;">
-          If you want this page to be “always accurate”, swap the screenshots for real captures of your server,
+          If you want this page to be "always accurate", swap the screenshots for real captures of your server,
           and update the captions to match your current channels.
         </p>
       </div>
@@ -339,15 +403,16 @@
     <!-- NOTES -->
     <div class="sectionTitle">
       <h2>🔧 Notes for Our Server</h2>
-      <span>How we keep FoxBot fun + controlled</span>
+      <span>How we keep Kiko fun + controlled</span>
     </div>
 
     <section class="card">
       <div class="callout">
         <strong>Behavior rules (by design)</strong>
         <p class="muted small" style="margin:6px 0 0;">
-          FoxBot responds in server channels only when mentioned, but allows deeper chatting in DMs / private fox-chat rooms.
+          Kiko responds in server channels only when mentioned, but allows deeper chatting in DMs / private fox-chat rooms.
           Moderation checks are stricter for newer members and relax over time.
+          Holiday announcements post automatically at 8 AM ET on recognized holidays.
         </p>
       </div>
 
@@ -357,7 +422,9 @@
 - Use /privatechat for focused help without cluttering channels
 - Keep DM usage limited (token cap) to avoid runaway AI spend
 - Use reaction roles for clean onboarding + self-serve access
-- Use /newsrecap for fun “what did I miss?” moments</code>
+- Use /newsrecap for fun "what did I miss?" moments
+- Set up /setchannel for all key channels so Kiko can guide people
+- Holiday announcements are automatic — no setup needed</code>
       </div>
 
       <div class="btnrow" style="margin-top:12px;">
