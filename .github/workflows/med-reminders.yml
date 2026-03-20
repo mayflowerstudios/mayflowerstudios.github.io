@@ -6,6 +6,9 @@ on:
     - cron: '*/5 * * * *'
   workflow_dispatch: # Allow manual trigger for testing
 
+permissions:
+  contents: write  # needed to write the dedup log back to the repo
+
 jobs:
   check-reminders:
     runs-on: ubuntu-latest
@@ -22,4 +25,8 @@ jobs:
           SITE_URL: ${{ secrets.SITE_URL }}
           # Timezone offset from UTC in hours (e.g., -5 for EST, -4 for EDT)
           TZ_OFFSET: ${{ secrets.TZ_OFFSET }}
+          # Uses the automatic GITHUB_TOKEN for writing the dedup log.
+          # If your repo restricts GITHUB_TOKEN permissions, set a GH_PAT secret instead.
+          GH_PAT: ${{ secrets.GH_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node .github/workflows/send-reminders.js

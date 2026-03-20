@@ -9,10 +9,17 @@
  * smsConfig object inside mindgarden.json — set it up via the admin
  * page's "Text Setup" panel so you don't need separate GitHub Secrets.
  *
+ * To avoid duplicate texts, the script writes a `smsSentLog` array back
+ * into the data file after each successful send. Each entry records the
+ * reminder ID + date, so the same reminder only fires once per day even
+ * if GitHub Actions runs the cron late or multiple times.
+ *
  * Required GitHub Secrets:
  *   MG_ENCRYPTION_PASSPHRASE – (required if your data is encrypted)
  *   TZ_OFFSET                – hour offset from UTC (e.g., -5 for EST, -4 for EDT)
  *   SITE_URL                 – (optional) base URL of your mind garden site for confirm links
+ *   GH_PAT                   – a GitHub personal access token with repo write access
+ *                               (needed to push the dedup log back to the repo)
  */
 
 const fs = require("fs");
@@ -36,11 +43,13 @@ const CARRIERS = {
   "Cricket":           "sms.cricketwireless.net",
 };
 
-// ── Config from environment (only non-SMS stuff now) ──
+// ── Config from environment ──
 const {
   MG_ENCRYPTION_PASSPHRASE,
   SITE_URL,
   TZ_OFFSET,
+  GH_PAT,
+  GITHUB_REPOSITORY, // automatically set by GitHub Actions: "owner/repo"
 } = process.env;
 
 function getGatewayEmail(smsConfig) {
@@ -60,8 +69,8 @@ function getGatewayEmail(smsConfig) {
   return `${digits}@${domain}`;
 }
 
-// ── AES-256-GCM decryption (matches mind-garden.html) ──
-async function deriveKey(passphrase, salt) {
+// ── AES-256-GCM encryption/decryption (matches mind-garden.html) ──
+async function deriveKey(passphrase, salt, usages) {
   const enc = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey(
     "raw", enc.encode(passphrase), "PBKDF2", false, ["deriveKey"]
@@ -71,7 +80,7 @@ async function deriveKey(passphrase, salt) {
     keyMaterial,
     { name: "AES-GCM", length: 256 },
     false,
-    ["decrypt"]
+    usages
   );
 }
 
@@ -80,9 +89,22 @@ async function decryptData(b64, passphrase) {
   const salt = buf.slice(0, 16);
   const iv = buf.slice(16, 28);
   const ct = buf.slice(28);
-  const key = await deriveKey(passphrase, salt);
+  const key = await deriveKey(passphrase, salt, ["decrypt"]);
   const dec = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ct);
   return new TextDecoder().decode(dec);
+}
+
+async function encryptData(plaintext, passphrase) {
+  const enc = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(passphrase, salt, ["encrypt"]);
+  const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(plaintext));
+  const buf = new Uint8Array(salt.length + iv.length + ct.byteLength);
+  buf.set(salt, 0);
+  buf.set(iv, salt.length);
+  buf.set(new Uint8Array(ct), salt.length + iv.length);
+  return Buffer.from(buf).toString("base64");
 }
 
 // ── EmailJS REST API ──
@@ -107,6 +129,46 @@ async function sendViaEmailJS(smsConfig, templateParams) {
   return true;
 }
 
+// ── GitHub API: write file back to repo (for dedup log) ──
+async function getFileSha(repo, path, token) {
+  const res = await fetch(
+    `https://api.github.com/repos/${repo}/contents/${path}`,
+    { headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" } }
+  );
+  if (!res.ok) return null;
+  const json = await res.json();
+  return json.sha;
+}
+
+async function writeFileToRepo(repo, path, content, message, token) {
+  const sha = await getFileSha(repo, path, token);
+  const body = {
+    message,
+    content: Buffer.from(content, "utf8").toString("base64"),
+    branch: "main",
+  };
+  if (sha) body.sha = sha;
+
+  const res = await fetch(
+    `https://api.github.com/repos/${repo}/contents/${path}`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github+json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    }
+  );
+  if (!res.ok) {
+    const text = await res.text();
+    console.warn(`[SMS] Failed to write dedup log back to repo: ${res.status} ${text}`);
+    return false;
+  }
+  return true;
+}
+
 // ── Main ──
 async function main() {
   // Read the data file from the repo
@@ -119,9 +181,11 @@ async function main() {
     return;
   }
 
+  const isEncrypted = !!fileData.encrypted;
+
   // Handle encryption
   let data;
-  if (fileData.encrypted) {
+  if (isEncrypted) {
     if (!MG_ENCRYPTION_PASSPHRASE) {
       console.log("[SMS] Data is encrypted but MG_ENCRYPTION_PASSPHRASE not set — skipping.");
       return;
@@ -138,6 +202,8 @@ async function main() {
   }
 
   const { meds = [], medLogs = [], reminders = [], smsConfig = {} } = data;
+  // smsSentLog tracks which reminders have already fired today: [{ remId, date }]
+  let smsSentLog = data.smsSentLog || [];
 
   // Check if SMS is enabled in the app config
   if (!smsConfig.enabled) {
@@ -164,28 +230,42 @@ async function main() {
 
   console.log(`[SMS] Checking reminders at ${String(nowHours).padStart(2,"0")}:${String(nowMins).padStart(2,"0")} (UTC${offset >= 0 ? "+" : ""}${offset}) — ${todayStr}`);
 
+  // Purge old sent-log entries (keep only today's)
+  smsSentLog = smsSentLog.filter(e => e.date === todayStr);
+
   // Find which meds are taken today
   const takenToday = new Set(
     medLogs.filter(l => l.date === todayStr).map(l => l.medId)
   );
 
-  // Collect due (untaken) meds from enabled reminders whose time has passed
-  // Only fire if we're within 5 minutes of the reminder time (the cron window)
+  // Build set of already-sent reminder IDs today
+  const alreadySent = new Set(smsSentLog.map(e => e.remId));
+
+  // Collect due (untaken) meds from enabled reminders whose time has passed today.
+  // No tight window — if it's past the reminder time and the med isn't taken
+  // and we haven't already texted for this reminder today, fire it.
   const dueMedIds = new Set();
+  const firedRemIds = [];
 
   for (const rem of reminders) {
     if (!rem.enabled) continue;
+    if (alreadySent.has(rem.id)) continue; // already texted for this one today
+
     const [rh, rm] = rem.time.split(":").map(Number);
     const remMins = rh * 60 + rm;
 
-    // Fire if current time is 0–4 minutes past the reminder time
-    const diff = nowTotalMins - remMins;
-    if (diff < 0 || diff > 4) continue;
+    // Only fire if the reminder time has passed (with 2 min grace for clock skew)
+    if (nowTotalMins < remMins - 2) continue;
 
+    let hasUntaken = false;
     for (const medId of rem.medIds) {
       if (!takenToday.has(medId)) {
         dueMedIds.add(medId);
+        hasUntaken = true;
       }
+    }
+    if (hasUntaken) {
+      firedRemIds.push(rem.id);
     }
   }
 
@@ -228,6 +308,31 @@ async function main() {
   } catch (err) {
     console.error(`[SMS] ❌ Failed:`, err.message);
     process.exit(1);
+  }
+
+  // Record which reminders we just sent, so we don't text again today
+  for (const remId of firedRemIds) {
+    smsSentLog.push({ remId, date: todayStr });
+  }
+
+  // Write the updated sent log back to the repo
+  data.smsSentLog = smsSentLog;
+
+  const token = GH_PAT || process.env.GITHUB_TOKEN;
+  const repo = GITHUB_REPOSITORY;
+  if (token && repo) {
+    let contentText;
+    if (isEncrypted) {
+      const raw = JSON.stringify(data, null, 2);
+      const encrypted = await encryptData(raw, MG_ENCRYPTION_PASSPHRASE);
+      contentText = JSON.stringify({ encrypted: true, v: 1, data: encrypted });
+    } else {
+      contentText = JSON.stringify(data, null, 2);
+    }
+    await writeFileToRepo(repo, "data/mindgarden.json", contentText, `SMS sent ${todayStr}`, token);
+    console.log("[SMS] ✅ Dedup log written back to repo.");
+  } else {
+    console.warn("[SMS] ⚠ No GH_PAT or GITHUB_TOKEN — can't write dedup log. You may get duplicate texts.");
   }
 }
 
