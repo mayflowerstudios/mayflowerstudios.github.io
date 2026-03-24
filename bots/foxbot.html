@@ -20,7 +20,8 @@
         <h1>🦊 FoxBot</h1>
         <p class="muted">
           FoxBot is our cozy, lore-friendly helper for <strong>Luna's Magical Forest</strong> — built for day-to-day server life:
-          fun commands, birthdays, holiday announcements, reaction roles, a channel directory, private AI chats, news recaps, and safety-minded moderation.
+          fun commands, birthdays, holiday announcements, reaction roles, a channel directory, private AI chats, news recaps, safety-minded moderation,
+          real-world weather &amp; time, a self-building lore system, topic controls, and sleep scheduling.
           Her personality is <strong>Kiko</strong>, a whimsical fennec fox spirit living in an enchanted forest.
         </p>
 
@@ -56,6 +57,22 @@
           <strong>🎭 Roles & Directory</strong>
           <p>Reaction-role bindings and a channel directory system.</p>
         </div>
+        <div class="tile">
+          <strong>📜 Living Lore</strong>
+          <p>Kiko builds her own lore over time — browseable, mod-curated, and always in character.</p>
+        </div>
+        <div class="tile">
+          <strong>🌤️ Weather & Time</strong>
+          <p>Real-world weather lookups and time checks, delivered in Kiko's voice.</p>
+        </div>
+        <div class="tile">
+          <strong>🚫 Topic Controls</strong>
+          <p>Mods can ban specific topics so Kiko gracefully deflects them.</p>
+        </div>
+        <div class="tile">
+          <strong>😴 Sleep Mode</strong>
+          <p>Put Kiko to sleep or set quiet-hour schedules to pause responses.</p>
+        </div>
       </div>
     </section>
 
@@ -75,8 +92,10 @@
       <p class="desc">
         Under the hood, FoxBot also includes:
         <strong>DM token limiting</strong> (to keep AI usage controlled), <strong>memory tools</strong> (opt-in style storage + cleanup),
-        <strong>automated moderation checks</strong> for new/untrusted members, and a <strong>channel directory</strong> so Kiko can
-        direct people to the right place.
+        <strong>automated moderation checks</strong> for new/untrusted members, a <strong>channel directory</strong> so Kiko can
+        direct people to the right place, a <strong>self-building lore system</strong> that grows through conversation,
+        <strong>real-world weather &amp; time awareness</strong>, <strong>topic banning</strong> so mods can keep certain subjects off-limits,
+        and a <strong>sleep mode</strong> with configurable quiet hours.
       </p>
 
       <div class="divider" style="margin:14px 0;"></div>
@@ -181,7 +200,59 @@
           <li>Mod-only channels are hidden from regular users</li>
         </ul>
       </div>
-    </section>
+
+      <div class="card">
+        <h3>📜 Living Lore System <span class="badge">New</span></h3>
+        <p class="desc">
+          Kiko builds her own lore organically through conversation — a growing story about who she is, what she thinks, and what's happened in the forest.
+        </p>
+        <ul>
+          <li>Auto-built lore across 7 categories: World, Backstory, Opinions, Relationships, Events, Habits, Secrets</li>
+          <li>Browse with <code>/lore</code> (filter by category) or <code>/foxlore</code> for a random entry</li>
+          <li>Mods can view raw entries, pin important ones, delete bad ones, and run AI cleanup</li>
+          <li>Cleanup detects conflicts, duplicates, vague entries, and noise automatically</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🌤️ Weather & Time <span class="badge">New</span></h3>
+        <p class="desc">
+          Kiko can check real-world weather and tell you the time — all delivered in her in-character Kiko voice.
+        </p>
+        <ul>
+          <li>Live weather via <code>/weather [location]</code> — includes temp, feels-like, wind, humidity</li>
+          <li>Current time + season via <code>/time</code></li>
+          <li>Kiko is also passively aware of the time/season in her AI responses</li>
+          <li>Weather results are cached for 10 minutes to stay snappy</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🚫 Topic Banning <span class="badge">New</span></h3>
+        <p class="desc">
+          Mods can tell Kiko to gracefully deflect specific subjects — great for keeping the server vibe consistent.
+        </p>
+        <ul>
+          <li>Ban any topic with an optional internal mod note</li>
+          <li>Kiko naturally deflects (not hard-blocks) the topic in conversation</li>
+          <li>Duplicate topics are caught before adding</li>
+          <li>Anyone can see banned topics; only mods/admins can change them</li>
+          <li><code>/bantopic</code>, <code>/unbantopic</code>, <code>/listtopics</code>, <code>/cleartopics</code></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>😴 Sleep Mode <span class="badge">New</span></h3>
+        <p class="desc">
+          Mods can put Kiko to sleep when the server needs quiet — manually or on a scheduled basis.
+        </p>
+        <ul>
+          <li>Manual sleep/wake with <code>/sleep</code> and <code>/wake</code></li>
+          <li>Check current status with <code>/sleepstatus</code></li>
+          <li>Set quiet-hour windows with <code>/sleepschedule</code></li>
+          <li>Kiko stays politely silent while asleep — no dropped messages, just no responses</li>
+        </ul>
+      </div>
 
     <!-- HOW TO USE -->
     <div class="sectionTitle" id="howto">
@@ -272,6 +343,63 @@
 /setchannel #art-gallery Share your art and creative works</code>
         </div>
       </div>
+
+      <div class="card">
+        <h3>7) Check the weather or time</h3>
+        <p class="desc">Ask Kiko for real-world weather or the current time — she'll answer in character.</p>
+        <ul>
+          <li>Check weather for any city (defaults to New York)</li>
+          <li>Get the current time + season from Kiko</li>
+        </ul>
+        <div class="codebox" style="margin-top:10px;">
+          <code>/weather location:Tokyo
+/time</code>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>8) Browse Kiko's lore</h3>
+        <p class="desc">Kiko builds her own backstory over time through conversations. You can browse it or hear a random entry.</p>
+        <ul>
+          <li>Browse lore by category (World, Backstory, Opinions, etc.)</li>
+          <li>Hear a random lore tidbit from Kiko</li>
+          <li>Mods can view raw entries, pin them, or run AI cleanup</li>
+        </ul>
+        <div class="codebox" style="margin-top:10px;">
+          <code>/lore category:Backstory
+/foxlore</code>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>9) Topic controls (mods)</h3>
+        <p class="desc">Keep certain subjects out of Kiko's conversations — she'll gracefully deflect without hard-blocking.</p>
+        <ul>
+          <li>Ban a topic with an optional mod-only note</li>
+          <li>View or remove banned topics anytime</li>
+        </ul>
+        <div class="codebox" style="margin-top:10px;">
+          <code>/bantopic topic:politics note:keep the server chill
+/listtopics
+/unbantopic topic_id:3</code>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>10) Sleep mode (mods)</h3>
+        <p class="desc">Pause Kiko's responses during quiet hours or when the server needs a break.</p>
+        <ul>
+          <li>Put Kiko to sleep or wake her manually</li>
+          <li>Set recurring quiet-hour windows with a schedule</li>
+          <li>Check sleep status at any time</li>
+        </ul>
+        <div class="codebox" style="margin-top:10px;">
+          <code>/sleep
+/wake
+/sleepschedule
+/sleepstatus</code>
+        </div>
+      </div>
     </section>
 
     <!-- COMMANDS -->
@@ -293,7 +421,9 @@
 /foxquote
 /fox (generates a cute fox image)
 /coinflip
-/roll</code>
+/roll
+/foxriddle
+/8ball</code>
         </div>
       </div>
 
@@ -359,7 +489,50 @@
 /restart (admin-only)</code>
         </div>
       </div>
-    </section>
+
+      <div class="card">
+        <h3>📜 Lore</h3>
+        <p class="desc">Browse and manage Kiko's self-built character lore.</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>/lore [category]
+/foxlore
+/loreraw [category] (mod)
+/cleanuplore (mod)
+/pinlore lore_id pin (mod)
+/deletelore lore_id (mod)</code>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🌤️ Weather & Time</h3>
+        <p class="desc">Real-world weather and time, delivered in Kiko's voice.</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>/weather [location]
+/time</code>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🚫 Topic Controls</h3>
+        <p class="desc">Manage what subjects Kiko will avoid in conversation.</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>/bantopic topic [note] (mod)
+/unbantopic topic_id (mod)
+/listtopics
+/cleartopics (admin)</code>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>😴 Sleep Mode</h3>
+        <p class="desc">Pause or schedule Kiko's responses for quiet hours.</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>/sleep (mod)
+/wake (mod)
+/sleepstatus
+/sleepschedule (mod)</code>
+        </div>
+      </div>
 
     <!-- MEDIA -->
     <div class="sectionTitle">
