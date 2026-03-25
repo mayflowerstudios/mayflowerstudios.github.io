@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-24T23:18:18.092Z",
+  "generatedAt": "2026-03-25T06:11:17.134Z",
   "mods": [
     {
       "type": "mod",
@@ -105,6 +105,24 @@
           "label": "📄 Info Page",
           "href": "/bots/bloombot.html",
           "class": "button bots"
+        }
+      ]
+    },
+    {
+      "type": "bot",
+      "slug": "echobloom-classes",
+      "title": "⚔️ Classes",
+      "desc": "",
+      "links": [
+        {
+          "label": "📄 Info Page",
+          "href": "/bots/echobloom-classes.html",
+          "class": "button bots"
+        },
+        {
+          "label": "📜 Lore Page",
+          "href": "/lore.html",
+          "class": "button ghost"
         }
       ]
     },
