@@ -19,13 +19,14 @@
         <p class="kicker">Discord Bot (Private • Server-Only)</p>
         <h1>🌙 EchoBloom</h1>
         <p class="muted">
-          A realm-based living world bot built specifically for our server. Choose a realm, pick a class,
+          A realm-based living world bot built for our server. Choose a realm, pick a class,
           earn XP through conversation and voice chat, discover items and lore fragments, complete quests,
           craft powerful artifacts, run solo dungeon adventures, fight server-wide bosses, raid rival realms,
           and compete in realm-vs-realm battles — with seasonal content, story waves, prestige progression,
           and a Convergence system that grows the world over time.
         </p>
         <div class="ctaRow">
+          <a class="btn bots" href="/bots/echobloom-classes.html">⚔️ Class Guide</a>
           <a class="btn bots" href="/bots/foxbot.html">🦊 FoxBot</a>
           <a class="btn ghost" href="/projects.html">⬅ Back to Projects</a>
         </div>
@@ -41,8 +42,27 @@
       </div>
     </section>
 
-    <!-- DESCRIPTION -->
+    <!-- QUICK NAV -->
     <div class="sectionTitle">
+      <h2>🗂️ On This Page</h2>
+      <span>Jump to a section</span>
+    </div>
+
+    <section class="card">
+      <div class="tileGrid" style="grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px;">
+        <a class="tile" href="#description" style="text-decoration:none;">📝 Description</a>
+        <a class="tile" href="#core-systems" style="text-decoration:none;">⭐ Core Systems</a>
+        <a class="tile" href="#classes" style="text-decoration:none;">⚔️ Classes</a>
+        <a class="tile" href="#adventures" style="text-decoration:none;">🗺️ Adventures</a>
+        <a class="tile" href="#lore" style="text-decoration:none;">📜 Lore & Seasons</a>
+        <a class="tile" href="#how-to-use" style="text-decoration:none;">📘 How to Use</a>
+        <a class="tile" href="#commands" style="text-decoration:none;">⌨️ Commands</a>
+        <a class="tile" href="#setup" style="text-decoration:none;">🔧 Setup</a>
+      </div>
+    </section>
+
+    <!-- DESCRIPTION -->
+    <div class="sectionTitle" id="description">
       <h2>📝 Description</h2>
       <span>What EchoBloom is (in our server)</span>
     </div>
@@ -75,10 +95,10 @@
         Realm identity is a real system: roles, XP tracking, shared inventory, collective lore, and seasonal themes.
       </p>
       <ul class="muted small" style="margin:0; padding-left:18px;">
-        <li>🌿 The Grove of Growth — <em>Earth · Renewal · Spring</em></li>
-        <li>🔥 The Ember Circle — <em>Fire · Transformation · Summer</em></li>
-        <li>💧 The Mirror Lake — <em>Water · Reflection · Autumn</em></li>
-        <li>🌙 The Moonroot Tree — <em>Spirit · Mystery · Winter</em></li>
+        <li>🌿 <strong>The Grove of Growth</strong> — <em>Earth · Renewal · Spring</em></li>
+        <li>🔥 <strong>The Ember Circle</strong> — <em>Fire · Transformation · Summer</em></li>
+        <li>💧 <strong>The Mirror Lake</strong> — <em>Water · Reflection · Autumn</em></li>
+        <li>🌙 <strong>The Moonroot Tree</strong> — <em>Spirit · Mystery · Winter</em></li>
       </ul>
 
       <div class="callout" style="margin-top:12px;">
@@ -90,7 +110,7 @@
     </section>
 
     <!-- CORE SYSTEMS -->
-    <div class="sectionTitle">
+    <div class="sectionTitle" id="core-systems">
       <h2>⭐ Core Systems</h2>
       <span>What makes EchoBloom EchoBloom</span>
     </div>
@@ -135,10 +155,10 @@
           without punishing breaks too harshly.
         </p>
         <ul>
-          <li>7 days → 3% XP bonus</li>
-          <li>14 days → 6% XP bonus</li>
-          <li>21 days → 9% XP bonus</li>
-          <li>28 days → 12% XP bonus (cap)</li>
+          <li>7 days → +3% XP bonus</li>
+          <li>14 days → +6% XP bonus</li>
+          <li>21 days → +9% XP bonus</li>
+          <li>28 days → +12% XP bonus (cap)</li>
           <li>Sentinel's Rally, Wanderer's Road Rhythm, and Trickster's Lucky Escape add further streak bonuses</li>
           <li>Check your streak anytime with <code>/streak</code></li>
         </ul>
@@ -152,13 +172,17 @@
         </p>
         <ul>
           <li>Pick once per Wave with <code>/class pick</code></li>
-          <li>Three skills unlock at levels 5, 15, and 30</li>
+          <li>Three skills unlock at member levels 5, 15, and 30</li>
           <li>Class level (1–10) earned through adventures and boss fights</li>
           <li>Stats (Power, Wisdom, Agility, Vitality, Fortune) scale with class level</li>
           <li>Prestige at Class Lv 10 → pick a new class, keep permanent stat bonuses</li>
           <li>Play all 8 classes to earn 🏆 Class Master status</li>
           <li>View your profile with <code>/character</code></li>
         </ul>
+        <div class="callout" style="margin-top:8px;">
+          <a href="/bots/echobloom-classes.html" style="font-weight:600;">⚔️ Full Class Guide →</a>
+          <p class="muted small" style="margin:4px 0 0;">All 8 classes, skill breakdowns, stat comparisons, prestige strategy, and build recommendations.</p>
+        </div>
       </div>
 
       <div class="card">
@@ -236,7 +260,7 @@
           <li>🏃 <strong>Reaction Races</strong> — fastest finger on the right emoji wins</li>
           <li>🔎 <strong>Item Hunts</strong> — first realm to find a target item claims the prize</li>
           <li>🔤 <strong>Word Scrambles</strong> — unscramble a word with a hint for realm XP</li>
-          <li>🔥 <strong>XP Frenzies</strong> — 10-minute 2x XP window, winning realm gets bonus</li>
+          <li>🔥 <strong>XP Frenzies</strong> — 10-minute 2× XP window, winning realm gets bonus</li>
           <li>🔗 <strong>Emoji Chains</strong> — react in the correct sequence of 5 emojis</li>
         </ul>
       </div>
@@ -273,8 +297,8 @@
       </div>
     </section>
 
-    <!-- CLASSES -->
-    <div class="sectionTitle">
+    <!-- CLASSES OVERVIEW -->
+    <div class="sectionTitle" id="classes">
       <h2>⚔️ Classes</h2>
       <span>Eight archetypes — choose wisely, prestige strategically</span>
     </div>
@@ -291,286 +315,31 @@
       <div class="callout" style="margin-bottom:16px;">
         <strong>Class Level vs. Member Level</strong>
         <p class="muted small" style="margin:6px 0 0;">
-          <strong>Member level</strong> comes from chatting and earns realm XP. It unlocks class skills at
-          levels 5, 15, and 30. <strong>Class level</strong> (1–10) is earned separately through
-          <code>/adventure</code> and boss fights — it scales your stats (Power, Wisdom, Agility, Vitality,
-          Fortune) and determines which adventure zones you can enter.
+          <strong>Member level</strong> comes from chatting — it unlocks class skills at levels 5, 15, and 30.
+          <strong>Class level</strong> (1–10) is earned separately through <code>/adventure</code> and boss fights —
+          it scales your stats and determines which adventure zones you can enter.
         </p>
       </div>
-    </section>
 
-    <section class="grid2">
-
-      <!-- Sentinel -->
-      <div class="card">
-        <h3>🛡️ Sentinel <span class="badge">Tank / Realm</span></h3>
-        <p class="desc">
-          Steadfast protectors who pour their energy into their community. Sentinels grow slowly but
-          compound their effort into massive realm gains over time.
-        </p>
-        <p class="muted small" style="margin:0 0 8px;"><em>"Stand firm. Every message is a stone in the wall."</em></p>
-        <ul>
-          <li><strong>Stat focus:</strong> Vitality › Power › Wisdom › Agility › Fortune</li>
-          <li>✦ <strong>Passive — Bulwark:</strong> Realm XP contribution +8%</li>
-          <li>Lv 5 · ⚡ <strong>Rally:</strong> Daily streak XP bonus +10%</li>
-          <li>Lv 15 · 🔩 <strong>Iron Will:</strong> Item drop rate +10%</li>
-          <li>Lv 30 · 🏰 <strong>Bastion:</strong> Realm XP contribution doubled (stacks with passive)</li>
-        </ul>
-        <div class="callout" style="margin-top:8px;">
-          <p class="muted small" style="margin:0;">
-            Best for: members who want to be the backbone of their realm's leaderboard. At Lv 30 with
-            Bastion active, Sentinels contribute more realm XP per message than any other class.
-          </p>
-        </div>
+      <!-- Class quick-glance grid -->
+      <div class="tileGrid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:8px; margin-bottom:16px;">
+        <div class="tile"><strong>🛡️ Sentinel</strong><p class="muted small" style="margin:4px 0 0;">Tank · Realm backbone. Highest realm XP contribution.</p></div>
+        <div class="tile"><strong>⚔️ Striker</strong><p class="muted small" style="margin:4px 0 0;">Combat · Events. Best event XP + raid damage.</p></div>
+        <div class="tile"><strong>📖 Scholar</strong><p class="muted small" style="margin:4px 0 0;">Lore · Crafting · Voice. Top lore finder.</p></div>
+        <div class="tile"><strong>🎲 Wanderer</strong><p class="muted small" style="margin:4px 0 0;">All-round. Broad XP + item drop boost.</p></div>
+        <div class="tile"><strong>🔥 Invoker</strong><p class="muted small" style="margin:4px 0 0;">Glass cannon. Highest combined event XP.</p></div>
+        <div class="tile"><strong>🌿 Warden</strong><p class="muted small" style="margin:4px 0 0;">Voice · Endurance. Stacks highest VC XP.</p></div>
+        <div class="tile"><strong>🎭 Trickster</strong><p class="muted small" style="margin:4px 0 0;">Items · Speed. +55% item drop rate at cap.</p></div>
+        <div class="tile"><strong>🔮 Oracle</strong><p class="muted small" style="margin:4px 0 0;">Lore · Crafting · Endgame. Best lore completionist.</p></div>
       </div>
 
-      <!-- Striker -->
-      <div class="card">
-        <h3>⚔️ Striker <span class="badge">Combat / Events</span></h3>
-        <p class="desc">
-          Fighters who live for conflict and spectacle. Strikers turn every event and raid into an
-          opportunity to deal massive damage and claim outsized rewards.
-        </p>
-        <p class="muted small" style="margin:0 0 8px;"><em>"Hit hard. Hit first. Hit again."</em></p>
-        <ul>
-          <li><strong>Stat focus:</strong> Power › Agility › Fortune › Wisdom › Vitality</li>
-          <li>✦ <strong>Passive — Battle Lust:</strong> XP gained during events +10%</li>
-          <li>Lv 5 · 🗡️ <strong>Battle Charge:</strong> Raid damage contribution +15%</li>
-          <li>Lv 15 · 💥 <strong>Momentum:</strong> Message XP +8%</li>
-          <li>Lv 30 · 🌪️ <strong>Rampage:</strong> Event XP +25% and raid damage +25% (stacks)</li>
-        </ul>
-        <div class="callout" style="margin-top:8px;">
-          <p class="muted small" style="margin:0;">
-            Best for: active event participants and raid enthusiasts. At Lv 30, Strikers have the highest
-            total event XP and raid power multipliers in the game.
-          </p>
-        </div>
-      </div>
-
-      <!-- Scholar -->
-      <div class="card">
-        <h3>📖 Scholar <span class="badge">Lore / Crafting / Voice</span></h3>
-        <p class="desc">
-          Devoted students of hidden knowledge. Scholars uncover lore others never find, master the
-          art of crafting, and earn deep rewards for voice presence.
-        </p>
-        <p class="muted small" style="margin:0 0 8px;"><em>"Every fragment of truth is worth a thousand blades."</em></p>
-        <ul>
-          <li><strong>Stat focus:</strong> Wisdom › Fortune › Agility › Vitality › Power</li>
-          <li>✦ <strong>Passive — Keen Mind:</strong> Lore fragment drop chance +12%</li>
-          <li>Lv 5 · ⚗️ <strong>Studied Hand:</strong> Crafting success rate +10%</li>
-          <li>Lv 15 · 🎙️ <strong>Deep Focus:</strong> Voice channel XP +15%</li>
-          <li>Lv 30 · 🗺️ <strong>Grand Archive:</strong> Lore fragments doubled (stacks with passive)</li>
-        </ul>
-        <div class="callout" style="margin-top:8px;">
-          <p class="muted small" style="margin:0;">
-            Best for: lore hunters and voice regulars. The go-to class for unlocking your realm's story
-            chapters faster than anyone else.
-          </p>
-        </div>
-      </div>
-
-      <!-- Wanderer -->
-      <div class="card">
-        <h3>🎲 Wanderer <span class="badge">All-Round / Drops</span></h3>
-        <p class="desc">
-          Drifters led by instinct and luck. Wanderers stumble across items others walk past, earn bonus
-          XP on everything, and reward consistent daily activity.
-        </p>
-        <p class="muted small" style="margin:0 0 8px;"><em>"Fortune favours those who keep moving."</em></p>
-        <ul>
-          <li><strong>Stat focus:</strong> Fortune › Agility › Wisdom › Power › Vitality</li>
-          <li>✦ <strong>Passive — Wanderlust:</strong> All XP gained +5%</li>
-          <li>Lv 5 · 🍀 <strong>Lucky Eye:</strong> Item drop rate +15%</li>
-          <li>Lv 15 · 🌄 <strong>Road Rhythm:</strong> Daily streak XP bonus +10%</li>
-          <li>Lv 30 · 🌠 <strong>Windfall:</strong> All XP +10% and item drop rate +20% (stacks)</li>
-        </ul>
-        <div class="callout" style="margin-top:8px;">
-          <p class="muted small" style="margin:0;">
-            Best for: consistent daily chatters who want a broad boost across everything rather than
-            specialising. Excellent starter class and a strong prestige target.
-          </p>
-        </div>
-      </div>
-
-      <!-- Invoker -->
-      <div class="card">
-        <h3>🔥 Invoker <span class="badge">Offense / Events</span></h3>
-        <p class="desc">
-          Channellers of raw elemental force. Invokers sacrifice survivability for unmatched offensive
-          output — they burn bright, hit first, and hit hardest.
-        </p>
-        <p class="muted small" style="margin:0 0 8px;"><em>"The flame doesn't ask permission."</em></p>
-        <ul>
-          <li><strong>Stat focus:</strong> Power › Agility › Fortune › Wisdom › Vitality</li>
-          <li>✦ <strong>Passive — Blazing Presence:</strong> XP gained during events +12%</li>
-          <li>Lv 5 · 🌋 <strong>Blazing Trail:</strong> Event XP +12%</li>
-          <li>Lv 15 · 💢 <strong>Battle Fury:</strong> Raid damage contribution +20%</li>
-          <li>Lv 30 · ☄️ <strong>Conflagration:</strong> Event XP +20% and all XP +8% (stacks)</li>
-        </ul>
-        <div class="callout" style="margin-top:8px;">
-          <p class="muted small" style="margin:0;">
-            Best for: event-heavy players who also want raid power. Glass cannon — lowest Vitality in
-            the game, but the highest combined event XP potential with all skills unlocked.
-          </p>
-        </div>
-      </div>
-
-      <!-- Warden -->
-      <div class="card">
-        <h3>🌿 Warden <span class="badge">Voice / Endurance</span></h3>
-        <p class="desc">
-          Guardians of the natural order. Wardens are the toughest fighters on the field — they outlast
-          everything through sheer endurance and rally the group around them.
-        </p>
-        <p class="muted small" style="margin:0 0 8px;"><em>"The forest does not hurry, yet everything is accomplished."</em></p>
-        <ul>
-          <li><strong>Stat focus:</strong> Vitality › Wisdom › Power › Agility › Fortune</li>
-          <li>✦ <strong>Passive — Deep Roots:</strong> Voice channel XP +12%</li>
-          <li>Lv 5 · 🌱 <strong>Ancient Bond:</strong> Voice channel XP +12%</li>
-          <li>Lv 15 · 🌳 <strong>Grove's Blessing:</strong> Realm XP contribution +10%</li>
-          <li>Lv 30 · 🍃 <strong>Overgrowth:</strong> Voice XP +18% and lore fragment drops +20% (stacks)</li>
-        </ul>
-        <div class="callout" style="margin-top:8px;">
-          <p class="muted small" style="margin:0;">
-            Best for: voice chat regulars. Wardens stack the highest VC XP of any class with passive
-            + Ancient Bond + Overgrowth active simultaneously.
-          </p>
-        </div>
-      </div>
-
-      <!-- Trickster -->
-      <div class="card">
-        <h3>🎭 Trickster <span class="badge">Items / Speed</span></h3>
-        <p class="desc">
-          Masters of misdirection who win through speed, feints, and outrageous luck. Tricksters hoard
-          items others never notice and thrive when the odds say they shouldn't.
-        </p>
-        <p class="muted small" style="margin:0 0 8px;"><em>"If they see it coming, you're doing it wrong."</em></p>
-        <ul>
-          <li><strong>Stat focus:</strong> Agility › Fortune › Power › Wisdom › Vitality</li>
-          <li>✦ <strong>Passive — Light Fingers:</strong> Item drop rate +15%</li>
-          <li>Lv 5 · 🃏 <strong>Five-Finger Discount:</strong> Item drop rate +18%</li>
-          <li>Lv 15 · 🌀 <strong>Lucky Escape:</strong> Daily streak XP bonus +12%</li>
-          <li>Lv 30 · 🎪 <strong>Con Artist:</strong> Item drop rate +22% and all XP +7% (stacks)</li>
-        </ul>
-        <div class="callout" style="margin-top:8px;">
-          <p class="muted small" style="margin:0;">
-            Best for: inventory builders. At Lv 30, Tricksters stack the highest total item drop rate
-            of any class (passive + Five-Finger Discount + Con Artist = +55% combined).
-          </p>
-        </div>
-      </div>
-
-      <!-- Oracle -->
-      <div class="card">
-        <h3>🔮 Oracle <span class="badge">Lore / Crafting / Endgame</span></h3>
-        <p class="desc">
-          Seers who channel the flow of fate itself. Oracles accumulate knowledge faster than any other
-          class, master the arcane arts of crafting, and bend fortune to their will.
-        </p>
-        <p class="muted small" style="margin:0 0 8px;"><em>"I didn't predict the future. I shaped it."</em></p>
-        <ul>
-          <li><strong>Stat focus:</strong> Wisdom › Fortune › Agility › Power · Vitality</li>
-          <li>✦ <strong>Passive — Third Eye:</strong> Lore fragment drop chance +15%</li>
-          <li>Lv 5 · 🌠 <strong>Clarity:</strong> Lore fragment drops +15%</li>
-          <li>Lv 15 · ✨ <strong>Cosmic Insight:</strong> All XP gained +8%</li>
-          <li>Lv 30 · 🌌 <strong>Omniscience:</strong> Lore fragments +30% and crafting success +15% (stacks)</li>
-        </ul>
-        <div class="callout" style="margin-top:8px;">
-          <p class="muted small" style="margin:0;">
-            Best for: dedicated lore completionists and crafters. The Oracle/Scholar combination
-            is the fastest possible path to unlocking all five lore chapters in a wave.
-          </p>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- CLASS STATS & PRESTIGE -->
-    <div class="sectionTitle">
-      <h2>📈 Stats, Class Levels & Prestige</h2>
-      <span>How class progression works under the hood</span>
-    </div>
-
-    <section class="grid2">
-      <div class="card">
-        <h3>📊 The Five Stats</h3>
-        <p class="desc">
-          Each class has five stats that grow with your Class Level (1–10). These matter
-          in adventures and boss fights — they're not cosmetic.
-        </p>
-        <ul>
-          <li>⚔️ <strong>Power</strong> — damage dealt in adventures and boss fights</li>
-          <li>📖 <strong>Wisdom</strong> — bonus XP from adventures + a pre-combat heal</li>
-          <li>🏃 <strong>Agility</strong> — crit chance, dodge chance, first-strike probability</li>
-          <li>🛡️ <strong>Vitality</strong> — your HP pool for solo dungeons and boss endurance</li>
-          <li>🍀 <strong>Fortune</strong> — loot drops and bonus XP from adventure outcomes</li>
-        </ul>
-        <div class="callout" style="margin-top:8px;">
-          <p class="muted small" style="margin:0;">
-            Stats start at their base value at Class Lv 1 and grow every level. Use
-            <code>/class stats</code> to see your current values and what they mean for your next run.
-          </p>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>⭐ Prestige System</h3>
-        <p class="desc">
-          Reach Class Level 10 and you unlock the ability to prestige — reset your class level,
-          pick a new class, and carry a permanent stat bonus forward.
-        </p>
-        <ul>
-          <li>Prestige with <code>/class prestige</code> (available at Class Lv 10)</li>
-          <li>Choose any class except the one you're leaving</li>
-          <li><strong>Prestige bonus:</strong> +30% of your old class's max stats permanently</li>
-          <li>Prestige bonuses stack — each prestige adds another 30% of that class's max stats</li>
-          <li>Your prestige history is shown on your <code>/character</code> profile</li>
-          <li>Prestige count is visible as a ⭐ badge on your character embed</li>
-        </ul>
-        <div class="callout" style="margin-top:8px;">
-          <p class="muted small" style="margin:0;">
-            <strong>Strategy tip:</strong> Prestige order matters. Prestige from high-Power classes
-            (Invoker, Striker) early to build a combat foundation, then settle into utility classes
-            for the end of the wave.
-          </p>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>🏆 Class Mastery</h3>
-        <p class="desc">
-          Play every class at least once — through the current class plus your full prestige history —
-          to earn the 🏆 <strong>Class Master</strong> badge on your profile.
-        </p>
-        <ul>
-          <li>All 8 classes must appear in your class + prestige history</li>
-          <li>The badge appears automatically on your <code>/character</code> embed</li>
-          <li>Class Mastery resets with each Wave (prestige history carries forward in wave history)</li>
-          <li>The fastest path requires at least 7 prestiges within a single wave</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h3>🔓 Skill Unlock Reference</h3>
-        <p class="desc">
-          Skills unlock based on <strong>member level</strong>, not class level.
-          Plan your chat activity around these breakpoints.
-        </p>
-        <ul>
-          <li><strong>Level 5</strong> — Skill 1 (early passive modifier) unlocks for all classes</li>
-          <li><strong>Level 15</strong> — Skill 2 (secondary specialisation) unlocks for all classes</li>
-          <li><strong>Level 30</strong> — Skill 3 (signature power spike) unlocks for all classes</li>
-          <li>Use <code>/class skills</code> to see your current unlocked skills and what's next</li>
-          <li>Use <code>/class info</code> for a full breakdown of every skill in any class</li>
-          <li>Active bonuses from all unlocked skills are shown on <code>/character</code></li>
-        </ul>
+      <div class="btnrow">
+        <a class="button bots" href="/bots/echobloom-classes.html">⚔️ Full Class Guide — Skills, Stats & Prestige →</a>
       </div>
     </section>
 
     <!-- ADVENTURES -->
-    <div class="sectionTitle">
+    <div class="sectionTitle" id="adventures">
       <h2>🗺️ Adventures & Boss Fights</h2>
       <span>Solo dungeons, group boss fights, and class leveling</span>
     </div>
@@ -584,10 +353,10 @@
         </p>
         <ul>
           <li><strong>30-minute cooldown</strong> between runs</li>
-          <li>Pick your move each round — you have <strong>12 seconds</strong> before it auto-resolves</li>
+          <li>Pick your move each round — <strong>12 seconds</strong> before it auto-resolves</li>
           <li>Max 8 rounds per solo fight before the dungeon collapses</li>
-          <li>Combat uses your class's Power, Agility, Vitality, Wisdom, and Fortune stats</li>
-          <li>Random special events can occur before combat: Shrines (restore HP), Ambushes (enemy gets first strike), Traps, and Treasure Rooms (skip combat for guaranteed loot)</li>
+          <li>Combat uses Power, Agility, Vitality, Wisdom, and Fortune stats</li>
+          <li>Random events before combat: Shrines (restore HP), Ambushes (enemy first strike), Traps, Treasure Rooms (skip combat for guaranteed loot)</li>
           <li>Earn class XP on any outcome; more on a full clear</li>
         </ul>
       </div>
@@ -595,18 +364,17 @@
       <div class="card">
         <h3>🌍 Adventure Zones</h3>
         <p class="desc">
-          Eight zones in ascending difficulty. Higher zones need higher class level and pay out more
-          class XP and better item drop odds.
+          Eight zones in ascending difficulty. Higher zones need higher class level and pay out more XP and better drops.
         </p>
         <ul>
-          <li>🌲 <strong>The Whispering Woods</strong> — Class Lv 1 · +40 XP · +20% item chance</li>
-          <li>💀 <strong>The Sunken Catacombs</strong> — Class Lv 2 · +60 XP · +25% item chance</li>
-          <li>⛰️ <strong>The Shattered Peaks</strong> — Class Lv 3 · +80 XP · +30% item chance</li>
-          <li>🌋 <strong>The Smoldering Ashlands</strong> — Class Lv 5 · +110 XP · +35% item chance</li>
-          <li>🌊 <strong>The Abyssal Depths</strong> — Class Lv 6 · +140 XP · +40% item chance</li>
-          <li>🔮 <strong>The Fracture Nexus</strong> — Class Lv 7 · +175 XP · +50% item chance</li>
-          <li>❄️ <strong>The Glacial Tomb</strong> — Class Lv 9 · +200 XP · +55% item chance</li>
-          <li>🌌 <strong>The Void Between Stars</strong> — Class Lv 10 · +250 XP · +65% item chance</li>
+          <li>🌲 <strong>The Whispering Woods</strong> — Cl. Lv 1 · +40 XP · +20% item chance</li>
+          <li>💀 <strong>The Sunken Catacombs</strong> — Cl. Lv 2 · +60 XP · +25% item chance</li>
+          <li>⛰️ <strong>The Shattered Peaks</strong> — Cl. Lv 3 · +80 XP · +30% item chance</li>
+          <li>🌋 <strong>The Smoldering Ashlands</strong> — Cl. Lv 5 · +110 XP · +35% item chance</li>
+          <li>🌊 <strong>The Abyssal Depths</strong> — Cl. Lv 6 · +140 XP · +40% item chance</li>
+          <li>🔮 <strong>The Fracture Nexus</strong> — Cl. Lv 7 · +175 XP · +50% item chance</li>
+          <li>❄️ <strong>The Glacial Tomb</strong> — Cl. Lv 9 · +200 XP · +55% item chance</li>
+          <li>🌌 <strong>The Void Between Stars</strong> — Cl. Lv 10 · +250 XP · +65% item chance</li>
         </ul>
       </div>
 
@@ -621,10 +389,9 @@
           <li><strong>15 seconds</strong> per round for participants to pick an action</li>
           <li><strong>10-second pause</strong> between rounds to see results</li>
           <li>Runs up to <strong>30 rounds</strong> before the boss escapes</li>
-          <li>A damage leaderboard is shown when the boss falls</li>
-          <li>All participants earn class XP on defeat, scaled to the boss's difficulty</li>
-          <li>Check current boss: <code>/boss status</code></li>
-          <li>Admin spawn: <code>/boss spawn</code></li>
+          <li>Damage leaderboard shown when the boss falls</li>
+          <li>All participants earn class XP on defeat, scaled to boss difficulty</li>
+          <li>Check current boss: <code>/boss status</code> · Admin spawn: <code>/boss spawn</code></li>
         </ul>
       </div>
 
@@ -646,7 +413,7 @@
     </section>
 
     <!-- LORE & SEASONS -->
-    <div class="sectionTitle">
+    <div class="sectionTitle" id="lore">
       <h2>📜 Lore, Waves & Seasons</h2>
       <span>The world that grows with you</span>
     </div>
@@ -705,9 +472,9 @@
           with game-changing effects.
         </p>
         <ul>
-          <li>🌱 <strong>Verdant Heart</strong> — 3x XP for 1 hour + 1,000 bonus XP</li>
+          <li>🌱 <strong>Verdant Heart</strong> — 3× XP for 1 hour + 1,000 bonus XP</li>
           <li>☀️ <strong>Eternal Ember</strong> — steal 2 items from each rival + 1,500 XP</li>
-          <li>🍂 <strong>Veil of Echoes</strong> — copy 2 items from each rival + 2x drops for 1 hour</li>
+          <li>🍂 <strong>Veil of Echoes</strong> — copy 2 items from each rival + 2× drops for 1 hour</li>
           <li>❄️ <strong>Moonbound Relic</strong> — +500 XP to all realms, +2,000 to yours</li>
           <li>Forge with <code>/forge</code> during the active season</li>
         </ul>
@@ -715,7 +482,7 @@
     </section>
 
     <!-- HOW TO USE -->
-    <div class="sectionTitle">
+    <div class="sectionTitle" id="how-to-use">
       <h2>📘 How to Use</h2>
       <span>Quick gameplay flow</span>
     </div>
@@ -741,6 +508,7 @@
           <li>Your passive activates instantly — no level required</li>
           <li>Skills unlock automatically at member levels 5, 15, and 30</li>
           <li>Check your profile anytime with <code>/character</code></li>
+          <li><a href="/bots/echobloom-classes.html">Full Class Guide →</a></li>
         </ul>
       </div>
 
@@ -750,7 +518,7 @@
         <ul>
           <li>XP earned for you and your realm (5–25 per message, modified by class)</li>
           <li>Voice chat earns XP too (5 per 5-min tick, boosted by Scholar / Warden)</li>
-          <li>Items drop randomly as you chat (drop rate boosted by Wanderer / Trickster)</li>
+          <li>Items drop randomly as you chat (boost by Wanderer / Trickster)</li>
           <li>Lore fragments surface from conversation (1% chance, boosted by Scholar / Oracle / Warden)</li>
           <li>Quests and streaks track automatically in the background</li>
         </ul>
@@ -772,7 +540,7 @@
         <h3>5) Track Progress</h3>
         <p class="desc">Check your realm, your rank, and how your realm stacks up.</p>
         <ul>
-          <li><code>/character</code> — your full profile: level, class, stats, skills, active bonuses</li>
+          <li><code>/character</code> — full profile: level, class, stats, skills, active bonuses</li>
           <li><code>/realm</code> — your level, XP, rank, and progress bar</li>
           <li><code>/level</code> — detailed stats (yours or another user's)</li>
           <li><code>/streak</code> — your daily streak and XP bonus</li>
@@ -799,8 +567,8 @@
       </div>
     </section>
 
-    <!-- COMMAND QUICK REFERENCE -->
-    <div class="sectionTitle">
+    <!-- COMMAND REFERENCE -->
+    <div class="sectionTitle" id="commands">
       <h2>⌨️ Command Reference</h2>
       <span>All commands (player + admin)</span>
     </div>
@@ -902,7 +670,7 @@
     </section>
 
     <!-- SETUP NOTES -->
-    <div class="sectionTitle">
+    <div class="sectionTitle" id="setup">
       <h2>🔧 Setup Notes</h2>
       <span>Start clean, keep it readable</span>
     </div>
@@ -944,6 +712,7 @@
       </div>
 
       <div class="btnrow" style="margin-top:12px;">
+        <a class="button bots" href="/bots/echobloom-classes.html">⚔️ Class Guide</a>
         <a class="button bots" href="/bots/foxbot.html">🦊 See FoxBot</a>
         <a class="button ghost" href="/projects.html">⬅ Back to Projects</a>
       </div>

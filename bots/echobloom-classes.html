@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EchoBloom Classes • Mayflower Studios</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body data-nav="bots">
+  <div class="wrap">
+
+    <div id="shared-nav"></div>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div>
+        <p class="kicker">EchoBloom · Class Guide</p>
+        <h1>⚔️ Classes</h1>
+        <p class="muted">
+          Eight archetypes. One pick per Wave. Each class reshapes how you earn XP, find items, fight in
+          dungeons, and contribute to your realm. Choose strategically — or prestige through all eight to
+          earn the 🏆 Class Master title.
+        </p>
+        <div class="ctaRow">
+          <a class="btn bots" href="/bots/echobloom.html">🌙 EchoBloom Overview</a>
+          <a class="btn ghost" href="/projects.html">⬅ Back to Projects</a>
+        </div>
+      </div>
+
+      <div class="tileGrid">
+        <div class="tile"><strong>🛡️ Sentinel</strong><p>Tank / Realm XP</p></div>
+        <div class="tile"><strong>⚔️ Striker</strong><p>Combat / Events</p></div>
+        <div class="tile"><strong>📖 Scholar</strong><p>Lore / Crafting / Voice</p></div>
+        <div class="tile"><strong>🎲 Wanderer</strong><p>All-Round / Drops</p></div>
+        <div class="tile"><strong>🔥 Invoker</strong><p>Offense / Events</p></div>
+        <div class="tile"><strong>🌿 Warden</strong><p>Voice / Endurance</p></div>
+        <div class="tile"><strong>🎭 Trickster</strong><p>Items / Speed</p></div>
+        <div class="tile"><strong>🔮 Oracle</strong><p>Lore / Crafting / Endgame</p></div>
+      </div>
+    </section>
+
+    <!-- HOW CLASSES WORK -->
+    <div class="sectionTitle">
+      <h2>📐 How Classes Work</h2>
+      <span>The fundamentals before you commit</span>
+    </div>
+
+    <section class="grid2">
+      <div class="card">
+        <h3>🔑 The Basics</h3>
+        <ul>
+          <li>Pick once per Wave with <code>/class pick</code> — no switching mid-wave</li>
+          <li>Classes are <strong>universal</strong> — any realm can pick any class</li>
+          <li>Your passive bonus activates <strong>the moment you pick</strong>, no level required</li>
+          <li>Use <code>/class info</code> to compare all 8 before committing</li>
+          <li>View your active bonuses anytime with <code>/character</code></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>📊 Two XP Tracks</h3>
+        <ul>
+          <li><strong>Member Level</strong> — earned by chatting. Unlocks class skills at levels 5, 15, and 30</li>
+          <li><strong>Class Level (1–10)</strong> — earned only through <code>/adventure</code> and boss fights</li>
+          <li>Class level scales your five combat stats (Power, Wisdom, Agility, Vitality, Fortune)</li>
+          <li>Class level determines which adventure zones you can enter</li>
+          <li>Member level and class level are completely separate — advancing one does not affect the other</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>⭐ Prestige</h3>
+        <ul>
+          <li>Reach <strong>Class Level 10</strong> and run <code>/class prestige</code></li>
+          <li>Choose any class except the one you're leaving</li>
+          <li>Carry a permanent <strong>+30% of your old class's max stats</strong> as a bonus</li>
+          <li>Prestige bonuses stack — each one adds another layer permanently</li>
+          <li>Your prestige count appears as a ⭐ badge on <code>/character</code></li>
+          <li><strong>Strategy:</strong> prestige from high-Power classes (Invoker, Striker) early to build a combat foundation</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🏆 Class Mastery</h3>
+        <ul>
+          <li>Play <strong>all 8 classes</strong> — your current class + full prestige history — to earn 🏆 Class Master</li>
+          <li>The badge appears automatically on <code>/character</code></li>
+          <li>Requires at least <strong>7 prestiges</strong> in a single wave (minimum path)</li>
+          <li>Class Mastery resets with each Wave, but prestige history carries into wave history</li>
+          <li>Check your prestige history at any time on your character profile</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- THE FIVE STATS -->
+    <div class="sectionTitle">
+      <h2>📊 The Five Stats</h2>
+      <span>What they do in adventures and boss fights</span>
+    </div>
+
+    <section class="card">
+      <p class="desc">
+        Stats start at their base value at Class Level 1 and grow every level up to Class Level 10.
+        They're not cosmetic — they directly affect combat outcomes in solo adventures and server boss fights.
+        Use <code>/class stats</code> to see your current values.
+      </p>
+      <div class="grid2" style="margin-top:12px; gap:8px;">
+        <div class="callout">
+          <strong>⚔️ Power</strong>
+          <p class="muted small" style="margin:4px 0 0;">Damage dealt each round in adventures and boss fights. The primary offensive stat. High Power classes: Invoker, Striker.</p>
+        </div>
+        <div class="callout">
+          <strong>📖 Wisdom</strong>
+          <p class="muted small" style="margin:4px 0 0;">Grants a pre-combat heal before each adventure run and boosts bonus XP earned from adventure outcomes. High Wisdom: Scholar, Oracle.</p>
+        </div>
+        <div class="callout">
+          <strong>🏃 Agility</strong>
+          <p class="muted small" style="margin:4px 0 0;">Determines crit chance, dodge chance, and first-strike probability. High Agility: Trickster, Wanderer, Invoker.</p>
+        </div>
+        <div class="callout">
+          <strong>🛡️ Vitality</strong>
+          <p class="muted small" style="margin:4px 0 0;">Your HP pool for solo dungeons and how long you can contribute in boss fights. High Vitality: Sentinel, Warden.</p>
+        </div>
+        <div class="callout">
+          <strong>🍀 Fortune</strong>
+          <p class="muted small" style="margin:4px 0 0;">Loot drop chance and bonus XP from adventure outcomes. High Fortune: Wanderer, Oracle, Trickster.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SKILL UNLOCK REFERENCE -->
+    <div class="sectionTitle">
+      <h2>🔓 Skill Unlock Reference</h2>
+      <span>Skills unlock from <em>member</em> level, not class level</span>
+    </div>
+
+    <section class="card">
+      <div class="callout" style="margin-bottom:12px;">
+        <strong>Remember</strong>
+        <p class="muted small" style="margin:6px 0 0;">
+          Skills unlock based on your <strong>member level</strong> (from chatting), not your class level (from adventures).
+          Plan your chat activity around these breakpoints. Check your current unlocked skills with <code>/class skills</code>.
+        </p>
+      </div>
+      <ul>
+        <li><strong>Level 5</strong> — Skill 1 unlocks for all classes (early passive modifier)</li>
+        <li><strong>Level 15</strong> — Skill 2 unlocks for all classes (secondary specialisation)</li>
+        <li><strong>Level 30</strong> — Skill 3 unlocks for all classes (signature power spike)</li>
+      </ul>
+      <p class="desc muted small" style="margin-top:8px;">
+        All active bonuses from your unlocked skills are visible on <code>/character</code>. Use <code>/class info</code>
+        for a full breakdown of every skill in any class.
+      </p>
+    </section>
+
+    <!-- CLASS CARDS -->
+    <div class="sectionTitle">
+      <h2>⚔️ The Eight Classes</h2>
+      <span>Full breakdown — passives, skills, stats, best-for</span>
+    </div>
+
+    <section class="grid2">
+
+      <!-- Sentinel -->
+      <div class="card">
+        <h3>🛡️ Sentinel <span class="badge">Tank / Realm</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>"Stand firm. Every message is a stone in the wall."</em></p>
+        <p class="desc">
+          Steadfast protectors who pour their energy into their community. Sentinels grow slowly but
+          compound their effort into massive realm gains over time. At Level 30, no class contributes
+          more realm XP per message.
+        </p>
+
+        <div class="divider" style="margin:10px 0;"></div>
+        <p class="muted small" style="margin:0 0 6px;"><strong>Stat Priority</strong></p>
+        <p class="muted small" style="margin:0 0 10px;">Vitality › Power › Wisdom › Agility › Fortune</p>
+
+        <p class="muted small" style="margin:0 0 6px;"><strong>Skills</strong></p>
+        <ul>
+          <li>✦ <strong>Passive — Bulwark:</strong> Realm XP contribution +8%</li>
+          <li>Lv 5 · ⚡ <strong>Rally:</strong> Daily streak XP bonus +10%</li>
+          <li>Lv 15 · 🔩 <strong>Iron Will:</strong> Item drop rate +10%</li>
+          <li>Lv 30 · 🏰 <strong>Bastion:</strong> Realm XP contribution doubled (stacks with passive)</li>
+        </ul>
+
+        <div class="callout" style="margin-top:10px;">
+          <strong>Best for</strong>
+          <p class="muted small" style="margin:4px 0 0;">
+            Members who want to be the backbone of their realm's leaderboard. Bastion at Lv 30 stacks
+            with Bulwark for the highest realm XP per message of any class. Pairs well with a prestige
+            from Wanderer for the all-XP boost carry-over.
+          </p>
+        </div>
+      </div>
+
+      <!-- Striker -->
+      <div class="card">
+        <h3>⚔️ Striker <span class="badge">Combat / Events</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>"Hit hard. Hit first. Hit again."</em></p>
+        <p class="desc">
+          Fighters who live for conflict and spectacle. Strikers turn every event and raid into an
+          opportunity to deal massive damage and claim outsized rewards.
+        </p>
+
+        <div class="divider" style="margin:10px 0;"></div>
+        <p class="muted small" style="margin:0 0 6px;"><strong>Stat Priority</strong></p>
+        <p class="muted small" style="margin:0 0 10px;">Power › Agility › Fortune › Wisdom › Vitality</p>
+
+        <p class="muted small" style="margin:0 0 6px;"><strong>Skills</strong></p>
+        <ul>
+          <li>✦ <strong>Passive — Battle Lust:</strong> XP gained during events +10%</li>
+          <li>Lv 5 · 🗡️ <strong>Battle Charge:</strong> Raid damage contribution +15%</li>
+          <li>Lv 15 · 💥 <strong>Momentum:</strong> Message XP +8%</li>
+          <li>Lv 30 · 🌪️ <strong>Rampage:</strong> Event XP +25% and raid damage +25% (stacks)</li>
+        </ul>
+
+        <div class="callout" style="margin-top:10px;">
+          <strong>Best for</strong>
+          <p class="muted small" style="margin:4px 0 0;">
+            Active event participants and raid enthusiasts. At Lv 30, Strikers have the highest
+            total event XP and raid power multipliers in the game. Strong prestige target — Power
+            carry-over is valuable for all combat builds.
+          </p>
+        </div>
+      </div>
+
+      <!-- Scholar -->
+      <div class="card">
+        <h3>📖 Scholar <span class="badge">Lore / Crafting / Voice</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>"Every fragment of truth is worth a thousand blades."</em></p>
+        <p class="desc">
+          Devoted students of hidden knowledge. Scholars uncover lore others never find, master the
+          art of crafting, and earn deep rewards for voice presence.
+        </p>
+
+        <div class="divider" style="margin:10px 0;"></div>
+        <p class="muted small" style="margin:0 0 6px;"><strong>Stat Priority</strong></p>
+        <p class="muted small" style="margin:0 0 10px;">Wisdom › Fortune › Agility › Vitality › Power</p>
+
+        <p class="muted small" style="margin:0 0 6px;"><strong>Skills</strong></p>
+        <ul>
+          <li>✦ <strong>Passive — Keen Mind:</strong> Lore fragment drop chance +12%</li>
+          <li>Lv 5 · ⚗️ <strong>Studied Hand:</strong> Crafting success rate +10%</li>
+          <li>Lv 15 · 🎙️ <strong>Deep Focus:</strong> Voice channel XP +15%</li>
+          <li>Lv 30 · 🗺️ <strong>Grand Archive:</strong> Lore fragments doubled (stacks with passive)</li>
+        </ul>
+
+        <div class="callout" style="margin-top:10px;">
+          <strong>Best for</strong>
+          <p class="muted small" style="margin:4px 0 0;">
+            Lore hunters and voice regulars. The Scholar/Oracle combo is the fastest possible path
+            to unlocking all five lore chapters in a wave. Deep Focus stacks with Warden's Ancient Bond
+            for voice XP if you carry it over from prestige.
+          </p>
+        </div>
+      </div>
+
+      <!-- Wanderer -->
+      <div class="card">
+        <h3>🎲 Wanderer <span class="badge">All-Round / Drops</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>"Fortune favours those who keep moving."</em></p>
+        <p class="desc">
+          Drifters led by instinct and luck. Wanderers stumble across items others walk past, earn bonus
+          XP on everything, and reward consistent daily activity.
+        </p>
+
+        <div class="divider" style="margin:10px 0;"></div>
+        <p class="muted small" style="margin:0 0 6px;"><strong>Stat Priority</strong></p>
+        <p class="muted small" style="margin:0 0 10px;">Fortune › Agility › Wisdom › Power › Vitality</p>
+
+        <p class="muted small" style="margin:0 0 6px;"><strong>Skills</strong></p>
+        <ul>
+          <li>✦ <strong>Passive — Wanderlust:</strong> All XP gained +5%</li>
+          <li>Lv 5 · 🍀 <strong>Lucky Eye:</strong> Item drop rate +15%</li>
+          <li>Lv 15 · 🌄 <strong>Road Rhythm:</strong> Daily streak XP bonus +10%</li>
+          <li>Lv 30 · 🌠 <strong>Windfall:</strong> All XP +10% and item drop rate +20% (stacks)</li>
+        </ul>
+
+        <div class="callout" style="margin-top:10px;">
+          <strong>Best for</strong>
+          <p class="muted small" style="margin:4px 0 0;">
+            Consistent daily chatters who want a broad boost across everything rather than specialising.
+            Excellent first class and a strong prestige target — the Fortune stat carry-over benefits
+            nearly every subsequent class.
+          </p>
+        </div>
+      </div>
+
+      <!-- Invoker -->
+      <div class="card">
+        <h3>🔥 Invoker <span class="badge">Offense / Events</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>"The flame doesn't ask permission."</em></p>
+        <p class="desc">
+          Channellers of raw elemental force. Invokers sacrifice survivability for unmatched offensive
+          output — they burn bright, hit first, and hit hardest. Lowest Vitality in the game.
+        </p>
+
+        <div class="divider" style="margin:10px 0;"></div>
+        <p class="muted small" style="margin:0 0 6px;"><strong>Stat Priority</strong></p>
+        <p class="muted small" style="margin:0 0 10px;">Power › Agility › Fortune › Wisdom › Vitality</p>
+
+        <p class="muted small" style="margin:0 0 6px;"><strong>Skills</strong></p>
+        <ul>
+          <li>✦ <strong>Passive — Blazing Presence:</strong> XP gained during events +12%</li>
+          <li>Lv 5 · 🌋 <strong>Blazing Trail:</strong> Event XP +12%</li>
+          <li>Lv 15 · 💢 <strong>Battle Fury:</strong> Raid damage contribution +20%</li>
+          <li>Lv 30 · ☄️ <strong>Conflagration:</strong> Event XP +20% and all XP +8% (stacks)</li>
+        </ul>
+
+        <div class="callout" style="margin-top:10px;">
+          <strong>Best for</strong>
+          <p class="muted small" style="margin:4px 0 0;">
+            Event-heavy players who also want raid power. Glass cannon — the highest combined event XP
+            potential with all skills unlocked, but fragile in long dungeon runs. Prestige from Invoker
+            early to bank the Power carry-over for future combat builds.
+          </p>
+        </div>
+      </div>
+
+      <!-- Warden -->
+      <div class="card">
+        <h3>🌿 Warden <span class="badge">Voice / Endurance</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>"The forest does not hurry, yet everything is accomplished."</em></p>
+        <p class="desc">
+          Guardians of the natural order. Wardens are the toughest fighters on the field — they outlast
+          everything through sheer endurance and rally the group around them in voice.
+        </p>
+
+        <div class="divider" style="margin:10px 0;"></div>
+        <p class="muted small" style="margin:0 0 6px;"><strong>Stat Priority</strong></p>
+        <p class="muted small" style="margin:0 0 10px;">Vitality › Wisdom › Power › Agility › Fortune</p>
+
+        <p class="muted small" style="margin:0 0 6px;"><strong>Skills</strong></p>
+        <ul>
+          <li>✦ <strong>Passive — Deep Roots:</strong> Voice channel XP +12%</li>
+          <li>Lv 5 · 🌱 <strong>Ancient Bond:</strong> Voice channel XP +12%</li>
+          <li>Lv 15 · 🌳 <strong>Grove's Blessing:</strong> Realm XP contribution +10%</li>
+          <li>Lv 30 · 🍃 <strong>Overgrowth:</strong> Voice XP +18% and lore fragment drops +20% (stacks)</li>
+        </ul>
+
+        <div class="callout" style="margin-top:10px;">
+          <strong>Best for</strong>
+          <p class="muted small" style="margin:4px 0 0;">
+            Voice chat regulars. Passive + Ancient Bond + Overgrowth stacks to the highest voice XP of
+            any class (+42% combined). Also the best tank for solo dungeons thanks to high Vitality.
+            Pairs with Scholar for the best lore-hunting voice build.
+          </p>
+        </div>
+      </div>
+
+      <!-- Trickster -->
+      <div class="card">
+        <h3>🎭 Trickster <span class="badge">Items / Speed</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>"If they see it coming, you're doing it wrong."</em></p>
+        <p class="desc">
+          Masters of misdirection who win through speed, feints, and outrageous luck. Tricksters hoard
+          items others never notice and thrive when the odds say they shouldn't.
+        </p>
+
+        <div class="divider" style="margin:10px 0;"></div>
+        <p class="muted small" style="margin:0 0 6px;"><strong>Stat Priority</strong></p>
+        <p class="muted small" style="margin:0 0 10px;">Agility › Fortune › Power › Wisdom › Vitality</p>
+
+        <p class="muted small" style="margin:0 0 6px;"><strong>Skills</strong></p>
+        <ul>
+          <li>✦ <strong>Passive — Light Fingers:</strong> Item drop rate +15%</li>
+          <li>Lv 5 · 🃏 <strong>Five-Finger Discount:</strong> Item drop rate +18%</li>
+          <li>Lv 15 · 🌀 <strong>Lucky Escape:</strong> Daily streak XP bonus +12%</li>
+          <li>Lv 30 · 🎪 <strong>Con Artist:</strong> Item drop rate +22% and all XP +7% (stacks)</li>
+        </ul>
+
+        <div class="callout" style="margin-top:10px;">
+          <strong>Best for</strong>
+          <p class="muted small" style="margin:4px 0 0;">
+            Inventory builders. At Lv 30, Tricksters stack the highest total item drop rate of any
+            class: Passive + Five-Finger Discount + Con Artist = <strong>+55% combined</strong>.
+            High Agility also translates to the best crit/dodge rates in dungeons.
+          </p>
+        </div>
+      </div>
+
+      <!-- Oracle -->
+      <div class="card">
+        <h3>🔮 Oracle <span class="badge">Lore / Crafting / Endgame</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>"I didn't predict the future. I shaped it."</em></p>
+        <p class="desc">
+          Seers who channel the flow of fate itself. Oracles accumulate knowledge faster than any other
+          class, master the arcane arts of crafting, and bend fortune to their will. The endgame class
+          for dedicated completionists.
+        </p>
+
+        <div class="divider" style="margin:10px 0;"></div>
+        <p class="muted small" style="margin:0 0 6px;"><strong>Stat Priority</strong></p>
+        <p class="muted small" style="margin:0 0 10px;">Wisdom › Fortune › Agility › Power › Vitality</p>
+
+        <p class="muted small" style="margin:0 0 6px;"><strong>Skills</strong></p>
+        <ul>
+          <li>✦ <strong>Passive — Third Eye:</strong> Lore fragment drop chance +15%</li>
+          <li>Lv 5 · 🌠 <strong>Clarity:</strong> Lore fragment drops +15%</li>
+          <li>Lv 15 · ✨ <strong>Cosmic Insight:</strong> All XP gained +8%</li>
+          <li>Lv 30 · 🌌 <strong>Omniscience:</strong> Lore fragments +30% and crafting success +15% (stacks)</li>
+        </ul>
+
+        <div class="callout" style="margin-top:10px;">
+          <strong>Best for</strong>
+          <p class="muted small" style="margin:4px 0 0;">
+            Dedicated lore completionists and crafters. The Oracle/Scholar combination is the fastest
+            possible path to unlocking all five lore chapters in a wave. Omniscience at Lv 30 also
+            makes Oracle the best crafting class in the game.
+          </p>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- COMPARISON TABLE -->
+    <div class="sectionTitle">
+      <h2>📋 Class Comparison</h2>
+      <span>All eight classes side by side</span>
+    </div>
+
+    <section class="card" style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; font-size:0.82rem; min-width:600px;">
+        <thead>
+          <tr style="border-bottom:2px solid var(--border, #333);">
+            <th style="text-align:left; padding:8px 10px;">Class</th>
+            <th style="text-align:left; padding:8px 10px;">Focus</th>
+            <th style="text-align:left; padding:8px 10px;">Top Stat</th>
+            <th style="text-align:left; padding:8px 10px;">Passive</th>
+            <th style="text-align:left; padding:8px 10px;">Lv 30 Power Spike</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--border, #2a2a2a);">
+            <td style="padding:8px 10px;">🛡️ <strong>Sentinel</strong></td>
+            <td style="padding:8px 10px;">Realm XP</td>
+            <td style="padding:8px 10px;">Vitality</td>
+            <td style="padding:8px 10px;">Realm XP +8%</td>
+            <td style="padding:8px 10px;">Realm XP doubled</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border, #2a2a2a);">
+            <td style="padding:8px 10px;">⚔️ <strong>Striker</strong></td>
+            <td style="padding:8px 10px;">Events / Raids</td>
+            <td style="padding:8px 10px;">Power</td>
+            <td style="padding:8px 10px;">Event XP +10%</td>
+            <td style="padding:8px 10px;">Event XP +25% · Raid dmg +25%</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border, #2a2a2a);">
+            <td style="padding:8px 10px;">📖 <strong>Scholar</strong></td>
+            <td style="padding:8px 10px;">Lore / Voice</td>
+            <td style="padding:8px 10px;">Wisdom</td>
+            <td style="padding:8px 10px;">Lore frag +12%</td>
+            <td style="padding:8px 10px;">Lore fragments doubled</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border, #2a2a2a);">
+            <td style="padding:8px 10px;">🎲 <strong>Wanderer</strong></td>
+            <td style="padding:8px 10px;">All-Round</td>
+            <td style="padding:8px 10px;">Fortune</td>
+            <td style="padding:8px 10px;">All XP +5%</td>
+            <td style="padding:8px 10px;">All XP +10% · Item drop +20%</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border, #2a2a2a);">
+            <td style="padding:8px 10px;">🔥 <strong>Invoker</strong></td>
+            <td style="padding:8px 10px;">Events (glass cannon)</td>
+            <td style="padding:8px 10px;">Power</td>
+            <td style="padding:8px 10px;">Event XP +12%</td>
+            <td style="padding:8px 10px;">Event XP +20% · All XP +8%</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border, #2a2a2a);">
+            <td style="padding:8px 10px;">🌿 <strong>Warden</strong></td>
+            <td style="padding:8px 10px;">Voice / Tank</td>
+            <td style="padding:8px 10px;">Vitality</td>
+            <td style="padding:8px 10px;">Voice XP +12%</td>
+            <td style="padding:8px 10px;">Voice XP +18% · Lore frag +20%</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border, #2a2a2a);">
+            <td style="padding:8px 10px;">🎭 <strong>Trickster</strong></td>
+            <td style="padding:8px 10px;">Items / Speed</td>
+            <td style="padding:8px 10px;">Agility</td>
+            <td style="padding:8px 10px;">Item drop +15%</td>
+            <td style="padding:8px 10px;">Item drop +22% · All XP +7%</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 10px;">🔮 <strong>Oracle</strong></td>
+            <td style="padding:8px 10px;">Lore / Crafting</td>
+            <td style="padding:8px 10px;">Wisdom</td>
+            <td style="padding:8px 10px;">Lore frag +15%</td>
+            <td style="padding:8px 10px;">Lore frag +30% · Craft success +15%</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- PRESTIGE STRATEGY -->
+    <div class="sectionTitle">
+      <h2>⭐ Prestige Strategy</h2>
+      <span>How to chain prestiges effectively</span>
+    </div>
+
+    <section class="grid2">
+      <div class="card">
+        <h3>🗡️ Combat-First Path</h3>
+        <p class="desc">Optimise for adventures and boss fights. Bank Power and Agility early for snowballing combat stats.</p>
+        <ul>
+          <li><strong>Start:</strong> Invoker (Power + Agility base)</li>
+          <li><strong>Prestige 1 →</strong> Striker (stack Power, gain Raid bonuses)</li>
+          <li><strong>Prestige 2 →</strong> Wanderer (Fortune carry-over buffs loot while leveling)</li>
+          <li><strong>Prestige 3 →</strong> Warden (high Vitality makes late dungeons sustainable)</li>
+          <li>Continue through remaining classes — your stacked Power from early prestiges makes all zones cleaner</li>
+        </ul>
+        <div class="callout" style="margin-top:8px;">
+          <p class="muted small" style="margin:0;">Best for players focused on fast adventure clears and competitive boss damage.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>📖 Lore-First Path</h3>
+        <p class="desc">Unlock all realm lore chapters as fast as possible. Stack Wisdom and Fortune early.</p>
+        <ul>
+          <li><strong>Start:</strong> Oracle (highest lore fragment rate: +15% passive)</li>
+          <li><strong>Prestige 1 →</strong> Scholar (Keen Mind stacks with Oracle's banked Fortune)</li>
+          <li><strong>Prestige 2 →</strong> Warden (Overgrowth adds +20% lore frags plus voice synergy)</li>
+          <li><strong>Prestige 3 →</strong> Wanderer (broad buffs for the middle game)</li>
+          <li>Finish with combat-oriented classes once lore is unlocked</li>
+        </ul>
+        <div class="callout" style="margin-top:8px;">
+          <p class="muted small" style="margin:0;">Best for dedicated lore completionists who want all chapters unlocked early in a wave.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🎒 Item Hoarder Path</h3>
+        <p class="desc">Maximise realm inventory and item drop rates throughout the wave.</p>
+        <ul>
+          <li><strong>Start:</strong> Trickster (+15% passive drop rate immediately)</li>
+          <li><strong>Prestige 1 →</strong> Wanderer (Lucky Eye + Windfall stacks with Trickster Fortune carry)</li>
+          <li><strong>Prestige 2 →</strong> Sentinel (Iron Will keeps drop rate up while building realm XP)</li>
+          <li><strong>Prestige 3 →</strong> Scholar (Studied Hand ensures crafting uses your stash well)</li>
+        </ul>
+        <div class="callout" style="margin-top:8px;">
+          <p class="muted small" style="margin:0;">Best for players focused on building the richest realm inventory and powering the crafting system.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🏆 Class Master Path</h3>
+        <p class="desc">Complete all 8 classes in a single wave. Speed is everything — minimise time per prestige.</p>
+        <ul>
+          <li>You need <strong>7 prestiges</strong> minimum, each requiring Class Level 10</li>
+          <li>Pick high-adventure-clear-speed classes first: Striker, Invoker (high Power = faster clears)</li>
+          <li>Save high-Vitality classes (Warden, Sentinel) for later — they're safer as your dungeon zones increase</li>
+          <li>Run adventures on cooldown every 30 minutes — this is the only way to level your class</li>
+          <li>Boss fights award flat class XP to all participants — always join active bosses</li>
+        </ul>
+        <div class="callout" style="margin-top:8px;">
+          <p class="muted small" style="margin:0;">The full prestige chain is a wave-long commitment. The Class Master badge resets each wave — the grind is intentional.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMMANDS -->
+    <div class="sectionTitle">
+      <h2>⌨️ Class Commands</h2>
+      <span>Everything you need in one place</span>
+    </div>
+
+    <section class="card">
+      <div class="grid2" style="gap:8px;">
+        <ul style="margin:0;">
+          <li><code>/class pick</code> — choose your class for this Wave</li>
+          <li><code>/class info</code> — full class guide with all stats and skills</li>
+          <li><code>/class skills</code> — your unlocked skills and what's next</li>
+          <li><code>/class stats</code> — detailed stat sheet for your current class</li>
+          <li><code>/class prestige</code> — prestige at Class Lv 10 into a new class</li>
+        </ul>
+        <ul style="margin:0;">
+          <li><code>/character</code> — full profile: level, class, stats, skills, bonuses</li>
+          <li><code>/adventure</code> — run a solo dungeon to earn class XP</li>
+          <li><code>/boss status</code> — check current server boss HP and standings</li>
+          <li><code>/streak</code> — daily activity streak and XP bonus</li>
+        </ul>
+      </div>
+      <div class="btnrow" style="margin-top:16px;">
+        <a class="button bots" href="/bots/echobloom.html">🌙 Back to EchoBloom Overview</a>
+        <a class="button ghost" href="/projects.html">⬅ Back to Projects</a>
+      </div>
+    </section>
+
+    <div id="shared-footer"></div>
+  </div>
+
+  <script src="/shared.js"></script>
+  <script src="/fireflies.js"></script>
+</body>
+</html>
