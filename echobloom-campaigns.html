@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EchoBloom Campaign Guide • Mayflower Studios</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body data-nav="bots">
+  <div class="wrap">
+
+    <div id="shared-nav"></div>
+
+    <!-- HERO -->
+    <section class="hero">
+      <div>
+        <p class="kicker">EchoBloom · Campaign Authoring</p>
+        <h1>📜 Campaigns</h1>
+        <p class="muted">
+          Drop a <code>.json</code> file into <code>data/campaigns/</code>. The bot re-scans on every
+          <code>/campaign start</code> — no restart, no code changes needed. Everything else is writing
+          the JSON correctly.
+        </p>
+        <div class="ctaRow">
+          <a class="btn bots" href="/bots/echobloom.html">🌙 EchoBloom Overview</a>
+          <a class="btn bots" href="/echobloom-classes.html">⚔️ Class Guide</a>
+          <a class="btn ghost" href="/projects.html">⬅ Back to Projects</a>
+        </div>
+      </div>
+
+      <div class="tileGrid">
+        <div class="tile"><strong>📖 story</strong><p>Narration + party voting</p></div>
+        <div class="tile"><strong>🎁 item</strong><p>Treasure rooms + bonuses</p></div>
+        <div class="tile"><strong>⚔️ combat</strong><p>Monster fights</p></div>
+        <div class="tile"><strong>💀 boss</strong><p>Phased final battle</p></div>
+        <div class="tile"><strong>🏁 ending</strong><p>Win or lose terminal</p></div>
+        <div class="tile"><strong>✨ XP</strong><p>Damage-scaled rewards</p></div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <div class="sectionTitle">
+      <h2>⚙️ How It Works</h2>
+      <span>The fundamentals before you build</span>
+    </div>
+
+    <section class="grid2">
+      <div class="card">
+        <h3>🗺️ Scene Graph</h3>
+        <p class="desc">
+          A campaign is a directed graph of scenes. Each scene has a type, some text, and either a
+          single <code>next</code> pointer or branching <code>choices</code>. The engine walks from
+          scene to scene until it hits an <code>ending</code> scene.
+        </p>
+        <ul>
+          <li>Drop a <code>.json</code> in <code>data/campaigns/</code> — no restart needed</li>
+          <li>Bot re-scans on every <code>/campaign start</code></li>
+          <li>Party assembles publicly, then plays in a private channel</li>
+          <li>Story scenes show a live vote display — majority wins</li>
+          <li>Combat uses the exact same engine as group adventures</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>💾 Persistent State</h3>
+        <p class="desc">
+          Everything carries forward for the full run. Decisions early in the campaign have real
+          consequences at the boss.
+        </p>
+        <ul>
+          <li>HP damage from fights carries into the next scene</li>
+          <li>Ability cooldowns persist across all combat scenes</li>
+          <li>Party buffs (War Cry etc.) carry round-to-round</li>
+          <li>Items found stack their bonuses for the rest of the run</li>
+          <li>XP bonuses from items multiply the final reward</li>
+        </ul>
+        <div class="callout" style="margin-top:10px;">
+          <strong>Vote timeout</strong>
+          <p class="muted small" style="margin:6px 0 0;">
+            Story choices have 90 seconds. If time runs out, the leading choice wins — or
+            the first choice if nobody voted.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- OUTER ENVELOPE -->
+    <div class="sectionTitle">
+      <h2>📋 The Outer Envelope</h2>
+      <span>Every campaign file starts with this header</span>
+    </div>
+
+    <section class="card">
+      <div class="codebox">
+        <code>{
+  "id": "my_campaign",
+  "title": "My Campaign Title",
+  "emoji": "⚔️",
+  "description": "One or two sentences shown in /campaign list.",
+  "lore": "The longer flavour text shown when the party assembles. Use \\n\\n for paragraph breaks.",
+  "min_party": 2,
+  "max_party": 6,
+  "join_window": 90,
+  "color": 8356863,
+  "start_scene": "first_scene_id",
+  "scenes": { ... }
+}</code>
+      </div>
+
+      <div class="grid2" style="margin-top:16px; gap:12px;">
+        <div>
+          <ul>
+            <li><code>id</code> — unique, <code>snake_case</code>. Defaults to filename stem if omitted.</li>
+            <li><code>title</code> — shown in menus and the private channel name.</li>
+            <li><code>emoji</code> — single emoji shown in the campaign picker.</li>
+            <li><code>description</code> — short blurb, ≤90 chars for best display in the dropdown.</li>
+            <li><code>lore</code> — shown in the party assembly embed. Can be long.</li>
+          </ul>
+        </div>
+        <div>
+          <ul>
+            <li><code>min_party</code> — minimum party size (default: 2). Start Now button enforces this.</li>
+            <li><code>max_party</code> — maximum party size (default: 6).</li>
+            <li><code>join_window</code> — seconds the join post stays open (default: 90).</li>
+            <li><code>color</code> — decimal embed color. Convert hex: <code>0x7B2FBE</code> → <code>8069054</code>.</li>
+            <li><code>start_scene</code> — the <code>id</code> of the first scene to run.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCENE TYPES -->
+    <div class="sectionTitle">
+      <h2>🎬 Scene Types</h2>
+      <span>All scenes live in the <code>"scenes"</code> object, keyed by their ID</span>
+    </div>
+
+    <!-- story -->
+    <section class="card">
+      <h3>📖 story <span class="badge">Narration & Choices</span></h3>
+      <p class="desc">
+        The workhorse. Shows text and optionally presents up to 4 buttons the party votes on.
+        If you omit <code>choices</code>, use <code>"next"</code> and the scene advances automatically after 4 seconds.
+      </p>
+
+      <div class="grid2" style="gap:12px;">
+        <div>
+          <p class="muted small" style="margin-bottom:6px;"><strong>With choices (party vote)</strong></p>
+          <div class="codebox">
+            <code>"my_scene": {
+  "type": "story",
+  "title": "The Cracked Gate",
+  "text": "The ruins loom...",
+  "choices": [
+    {
+      "id": "scene_a",
+      "label": "Take the main corridor",
+      "emoji": "🚪",
+      "hint": "Straightforward but exposed"
+    },
+    {
+      "id": "scene_b",
+      "label": "Slip through the gap",
+      "emoji": "🕯️",
+      "hint": "That torch is a clue"
+    }
+  ]
+}</code>
+          </div>
+        </div>
+        <div>
+          <p class="muted small" style="margin-bottom:6px;"><strong>Auto-advance (no vote)</strong></p>
+          <div class="codebox">
+            <code>"cutscene": {
+  "type": "story",
+  "title": "A Beat of Silence",
+  "text": "The door closes.",
+  "next": "next_scene_id"
+}</code>
+          </div>
+
+          <div class="callout" style="margin-top:12px;">
+            <strong>Choice fields</strong>
+            <ul class="small" style="margin-top:6px;">
+              <li><code>id</code> — scene to go to if this wins. <strong>Required.</strong></li>
+              <li><code>label</code> — button text, ~40 chars max. <strong>Required.</strong></li>
+              <li><code>emoji</code> — button emoji. Optional.</li>
+              <li><code>hint</code> — italic sub-text in the embed. Telegraph tone, not outcome.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- item -->
+    <section class="card">
+      <h3>🎁 item <span class="badge">Treasure Rooms</span></h3>
+      <p class="desc">
+        Shows a found item with flavour text and immediately applies its mechanical bonuses to every party member.
+        Always has exactly one <code>"next"</code> — no branching.
+      </p>
+
+      <div class="grid2" style="gap:12px;">
+        <div class="codebox">
+          <code>"treasure_room": {
+  "type": "item",
+  "title": "The Scholar's Satchel",
+  "text": "Inside: a vial of antitoxin...",
+  "item": {
+    "name": "Scholar's Satchel",
+    "emoji": "🎒",
+    "description": "Grants +10% max HP for this run.",
+    "rarity": "uncommon",
+    "party_hp_bonus": 10
+  },
+  "next": "next_scene_id"
+}</code>
+        </div>
+
+        <div>
+          <p class="muted small" style="margin-bottom:8px;"><strong>Item bonus fields</strong></p>
+          <ul>
+            <li><code>party_hp_bonus</code> — % max HP increase for the whole campaign. Also heals each member for the amount gained. <strong>Only works in <code>item</code> scenes</strong> — ignored on combat loot.</li>
+            <li><code>first_round_bonus</code> — % damage boost on round 1 of the boss fight only. Stacks across items.</li>
+            <li><code>xp_bonus_percent</code> — multiplies final XP by <code>(1 + value/100)</code>. Stacks additively.</li>
+          </ul>
+
+          <p class="muted small" style="margin-top:12px; margin-bottom:4px;"><strong>Rarity → embed color</strong></p>
+          <ul>
+            <li>common → grey · uncommon → green · rare → blue</li>
+            <li>epic → purple · legendary → gold</li>
+            <li>Items with no bonus fields are still shown in the ending summary.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- combat -->
+    <section class="card">
+      <h3>⚔️ combat <span class="badge">Monster Fights</span></h3>
+      <p class="desc">
+        Runs the full group combat engine. HP, cooldowns, and party buffs carry into the next scene.
+        Both <code>on_win</code> and <code>on_lose</code> are required.
+      </p>
+
+      <div class="grid2" style="gap:12px;">
+        <div class="codebox">
+          <code>"encounter": {
+  "type": "combat",
+  "title": "Animated Sentinels",
+  "text": "The hall shakes...",
+  "monster": {
+    "name": "Stone Sentinel",
+    "emoji": "🗿",
+    "hp": 90,
+    "attack": 14,
+    "speed": 5,
+    "armor": 3
+  },
+  "max_rounds": 8,
+  "loot": {
+    "name": "Sentinel Core",
+    "emoji": "💎",
+    "description": "A curiosity.",
+    "rarity": "rare"
+  },
+  "on_win": "hall_vault",
+  "on_lose": "party_retreat"
+}</code>
+        </div>
+
+        <div>
+          <p class="muted small" style="margin-bottom:8px;"><strong>Monster fields</strong></p>
+          <ul>
+            <li><code>hp</code> — base HP (1-person). <strong>Auto-scales:</strong> each extra member adds 70%. A 4-person party fights <code>hp × 3.1</code>.</li>
+            <li><code>attack</code> — base attack power (same formula as group adventures).</li>
+            <li><code>speed</code> — dodge/hit chance. Higher = harder to hit.</li>
+            <li><code>armor</code> — flat damage reduction per hit.</li>
+            <li><code>max_rounds</code> — monster "retreats" at this round (counts as a win).</li>
+            <li><code>loot</code> — optional item shown after winning. Display-only — HP bonuses on loot are silently ignored.</li>
+          </ul>
+
+          <p class="muted small" style="margin-top:12px; margin-bottom:4px;"><strong>Difficulty guidelines</strong></p>
+          <ul>
+            <li>Light — HP 60–80 · Attack 10–13 · Speed 5–8 · Armor 0–2 · Max 6–7</li>
+            <li>Standard — HP 80–120 · Attack 13–18 · Speed 6–10 · Armor 2–4 · Max 8–9</li>
+            <li>Heavy — HP 120–180 · Attack 18–22 · Speed 8–12 · Armor 3–6 · Max 10–12</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- boss -->
+    <section class="card">
+      <h3>💀 boss <span class="badge">Final Battle</span></h3>
+      <p class="desc">
+        The climactic fight. Scaling HP, multiple attack phases, and an enrage timer. Uses the same engine
+        as raid bosses. Both <code>on_win</code> and <code>on_lose</code> are required.
+      </p>
+
+      <div class="grid2" style="gap:12px;">
+        <div class="codebox">
+          <code>"final_fight": {
+  "type": "boss",
+  "title": "The Ruinlord Awakened",
+  "text": "The ritual circle blazes...",
+  "boss": {
+    "name": "Ruinlord Vex",
+    "emoji": "💀",
+    "description": "An ancient sorcerer...",
+    "hp": 500,
+    "hp_per_fighter": 80,
+    "attack": 22,
+    "speed": 9,
+    "color": 4980762,
+    "enrage_round": 12,
+    "phases": [
+      {
+        "threshold": 0.65,
+        "name": "Unbound",
+        "emoji": "⚡",
+        "msg": "The seals tear free!",
+        "attack_mult": 1.25
+      },
+      {
+        "threshold": 0.30,
+        "name": "Ascendant",
+        "emoji": "💢",
+        "msg": "Vex dissolves into energy!",
+        "attack_mult": 1.6
+      }
+    ]
+  },
+  "on_win": "victory",
+  "on_lose": "defeat"
+}</code>
+        </div>
+
+        <div>
+          <p class="muted small" style="margin-bottom:8px;"><strong>Boss fields</strong></p>
+          <ul>
+            <li><code>hp</code> — base HP at minimum party size (2 players).</li>
+            <li><code>hp_per_fighter</code> — added per member beyond the first. 4-person: <code>hp + hp_per_fighter × 3</code>.</li>
+            <li><code>attack</code> — base attack power.</li>
+            <li><code>speed</code> — affects dodge/hit.</li>
+            <li><code>color</code> — decimal embed color. Make it distinct from campaign color.</li>
+            <li><code>enrage_round</code> — attacks become overwhelming from this round onward.</li>
+            <li><code>phases</code> — array ordered <strong>highest threshold first</strong>. Omit or set <code>[]</code> for flat stats.</li>
+          </ul>
+
+          <p class="muted small" style="margin-top:12px; margin-bottom:4px;"><strong>Phase fields</strong></p>
+          <ul>
+            <li><code>threshold</code> — triggers when <code>boss_hp / boss_max_hp</code> drops below this.</li>
+            <li><code>name</code> — phase name in the round header.</li>
+            <li><code>msg</code> — narration in the phase shift announcement.</li>
+            <li><code>attack_mult</code> — multiplies base attack. <code>1.3</code> = 30% stronger.</li>
+          </ul>
+
+          <p class="muted small" style="margin-top:12px; margin-bottom:4px;"><strong>Difficulty guidelines</strong></p>
+          <ul>
+            <li>Short — Base HP 300–400 · HP/Fighter 50–70 · Attack 18–22 · Enrage 10–12</li>
+            <li>Medium — Base HP 450–600 · HP/Fighter 70–90 · Attack 22–26 · Enrage 12–14</li>
+            <li>Long — Base HP 600–800 · HP/Fighter 85–110 · Attack 25–30 · Enrage 14–16</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ending -->
+    <section class="card">
+      <h3>🏁 ending <span class="badge">Terminal Scene</span></h3>
+      <p class="desc">
+        Ends the campaign. <code>outcome</code> controls embed color and emoji — gold for win, dark for lose.
+        The ending embed automatically lists all items found during the run.
+      </p>
+
+      <div class="grid2" style="gap:12px;">
+        <div>
+          <p class="muted small" style="margin-bottom:6px;"><strong>Win</strong></p>
+          <div class="codebox">
+            <code>"victory": {
+  "type": "ending",
+  "outcome": "win",
+  "title": "The Ruins Fall Silent",
+  "text": "The Ruinlord dissolves...",
+  "xp_reward": 250
+}</code>
+          </div>
+        </div>
+        <div>
+          <p class="muted small" style="margin-bottom:6px;"><strong>Lose</strong></p>
+          <div class="codebox">
+            <code>"defeat": {
+  "type": "ending",
+  "outcome": "lose",
+  "title": "Consumed by the Dark",
+  "text": "The Ruinlord stands over you..."
+}</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout" style="margin-top:14px;">
+        <strong>xp_reward — don't skip this</strong>
+        <p class="muted small" style="margin:6px 0 0;">
+          The boss scene reads <code>xp_reward</code> from your win ending to calculate rewards. If it's
+          missing, the boss awards 0 XP to everyone. Always set it on your win ending.
+          Suggested values: Short (2–3 fights) 120–180 · Medium (3–5) 200–280 · Long (5+) 300–400.
+        </p>
+      </div>
+    </section>
+
+    <!-- XP -->
+    <div class="sectionTitle">
+      <h2>✨ XP: How It's Calculated</h2>
+      <span>The boss scene handles this automatically from your win ending</span>
+    </div>
+
+    <section class="card">
+      <div class="grid2" style="gap:12px;">
+        <div>
+          <h3>The Formula</h3>
+          <ol style="padding-left:20px; color: var(--text-secondary); line-height:2;">
+            <li>Finds the <code>"win"</code> ending and reads its <code>xp_reward</code>.</li>
+            <li>Each member's share scales by damage dealt:<br>
+                <code>base × (0.6 + 0.4 × damage_share)</code></li>
+            <li>KO'd players receive <strong>40%</strong> of their calculated share.</li>
+            <li>The whole pool is multiplied by any <code>xp_bonus_percent</code> accumulated from items.</li>
+          </ol>
+        </div>
+        <div>
+          <h3>Scaling Reference</h3>
+          <div class="codebox">
+            <code>Monster HP:
+  hp × (1 + 0.70 × (party_size − 1))
+
+Boss HP:
+  hp + hp_per_fighter × (party_size − 1)
+
+Phase trigger:
+  boss_hp / boss_max_hp &lt; threshold
+  → phases ordered highest first
+
+XP per player:
+  base × (0.6 + 0.4 × dmg_share)
+       × (1 + xp_bonus_pct / 100)
+  KO'd players receive 40%</code>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STRUCTURE -->
+    <div class="sectionTitle">
+      <h2>🗺️ Structuring Your Campaign</h2>
+      <span>Practical patterns for building the scene graph</span>
+    </div>
+
+    <section class="card">
+      <p class="muted small" style="margin-bottom:8px;"><strong>Minimum viable campaign</strong></p>
+      <div class="codebox" style="margin-bottom:16px;">
+        <code>start (story) → fight (combat) → boss_intro (story) → boss (boss) → victory (ending)
+                                                                             ↘ defeat (ending)</code>
+      </div>
+
+      <p class="muted small" style="margin-bottom:8px;"><strong>Recommended long campaign structure</strong></p>
+      <div class="codebox" style="margin-bottom:16px;">
+        <code>                    ┌─ path_a (story) ─┐
+start (story) ──────┤                  ├─ mid_fight (combat) ─ treasure (item) ─┐
+                    └─ path_b (story) ─┘                                        │
+                                                                                 ▼
+                    ┌─ choice_x ─ fight_x (combat) ─────────────────────────────┤
+convergence ────────┤                                                            │
+(story)             └─ choice_y (story) ──────────────────────────────────────  │
+                                                                                 ▼
+                                                                         boss_intro (story)
+                                                                                 │
+                                                                          boss (boss)
+                                                                          │       │
+                                                                       win ●     ● lose</code>
+      </div>
+    </section>
+
+    <section class="grid2">
+      <div class="card">
+        <h3>✅ Do This</h3>
+        <ul>
+          <li><strong>Converge paths before the boss.</strong> Merge branches at a central scene, then one boss. Two separate bosses doubles your writing work.</li>
+          <li><strong>Put item scenes after hard fights.</strong> Natural reward cadence — the HP bonus helps with what's coming.</li>
+          <li><strong>Give every path something.</strong> If path A has a treasure room, give path B intel, a shortcut, or a cosmetic item. Players notice.</li>
+          <li><strong>Have at least 2 lose endings.</strong> One for early failures, one for the boss — different text for each.</li>
+          <li><strong>Write lose endings that gesture forward.</strong> The best ones acknowledge what comes next rather than dead-ending narratively.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>❌ Avoid This</h3>
+        <ul>
+          <li><strong>Missing scene IDs.</strong> If <code>on_win</code>, <code>on_lose</code>, <code>next</code>, or a choice <code>id</code> references a scene that doesn't exist, the engine sends an error embed and ends the campaign immediately.</li>
+          <li><strong>Forgetting <code>on_lose</code>.</strong> Required on every combat scene. A party wipe with no <code>on_lose</code> crashes the engine.</li>
+          <li><strong>HP bonuses on combat loot.</strong> Combat <code>loot</code> is display-only — <code>party_hp_bonus</code> is silently ignored. Use a dedicated <code>item</code> scene instead.</li>
+          <li><strong>Missing <code>xp_reward</code>.</strong> If the win ending has no <code>xp_reward</code>, the boss awards 0 XP to everyone.</li>
+          <li><strong>Phases in wrong order.</strong> Must be highest threshold first — <code>0.65</code> before <code>0.30</code>.</li>
+          <li><strong>More than 4 choices.</strong> The 5th button slot is used internally — a 5th choice is silently ignored.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- VALIDATION -->
+    <div class="sectionTitle">
+      <h2>✅ Validation</h2>
+      <span>Run this before dropping the file in — broken scene IDs end campaigns silently</span>
+    </div>
+
+    <section class="grid2">
+      <div class="card">
+        <h3>Checklist</h3>
+        <ul>
+          <li>Valid JSON — paste into <a href="https://jsonlint.com" target="_blank" style="color:var(--rose);">jsonlint.com</a> or use the Python validator</li>
+          <li><code>start_scene</code> exists in <code>"scenes"</code></li>
+          <li>Every <code>on_win</code>, <code>on_lose</code>, <code>next</code>, and choice <code>id</code> points to a real scene</li>
+          <li>Every <code>combat</code> scene has both <code>on_win</code> and <code>on_lose</code></li>
+          <li>Every <code>item</code> scene has <code>"next"</code></li>
+          <li>Every <code>story</code> scene has either <code>"choices"</code> or <code>"next"</code></li>
+          <li>At least one <code>ending</code> with <code>"outcome": "win"</code> exists</li>
+          <li>Win ending has <code>"xp_reward"</code> set to a non-zero value</li>
+          <li>Boss phases are ordered highest threshold first</li>
+          <li><code>id</code> doesn't collide with an existing campaign file</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Quick Python Validator</h3>
+        <div class="codebox">
+          <code>import json
+
+data = json.load(open("my_campaign.json"))
+scenes = data["scenes"]
+all_ids = set(scenes.keys())
+errors = []
+
+for sid, scene in scenes.items():
+    for field in ["next", "on_win", "on_lose"]:
+        target = scene.get(field)
+        if target and target not in all_ids:
+            errors.append(
+                f"{sid}.{field} → '{target}' not found")
+    for choice in scene.get("choices", []):
+        if choice["id"] not in all_ids:
+            errors.append(
+                f"{sid} choice '{choice['label']}'"
+                f" → '{choice['id']}' not found")
+
+if errors:
+    for e in errors: print("ERROR:", e)
+else:
+    from collections import Counter
+    types = Counter(s["type"] for s in scenes.values())
+    print("OK —", dict(types))
+    wins = [s for s, v in scenes.items()
+            if v.get("outcome") == "win"]
+    print("Win endings:", wins)</code>
+        </div>
+      </div>
+    </section>
+
+    <!-- QUICK REFERENCE -->
+    <div class="sectionTitle">
+      <h2>📌 Quick Reference</h2>
+      <span>Everything on one card</span>
+    </div>
+
+    <section class="card">
+      <div class="grid2" style="gap:12px;">
+        <div>
+          <p class="muted small" style="margin-bottom:8px;"><strong>Scene types</strong></p>
+          <ul>
+            <li><code>story</code> — text + choices (vote) or auto-next via <code>next</code></li>
+            <li><code>item</code> — text + item object + <code>next</code></li>
+            <li><code>combat</code> — monster fight → <code>on_win</code> / <code>on_lose</code></li>
+            <li><code>boss</code> — phased boss fight → <code>on_win</code> / <code>on_lose</code></li>
+            <li><code>ending</code> — terminal (outcome: <code>"win"</code> or <code>"lose"</code>)</li>
+          </ul>
+
+          <p class="muted small" style="margin-top:14px; margin-bottom:8px;"><strong>Item bonuses (item scenes only)</strong></p>
+          <ul>
+            <li><code>party_hp_bonus</code> — % max HP for full campaign</li>
+            <li><code>first_round_bonus</code> — % damage on boss round 1 only</li>
+            <li><code>xp_bonus_percent</code> — % multiplier on final XP</li>
+          </ul>
+        </div>
+        <div>
+          <div class="codebox">
+            <code>Deployment:
+  drop .json → data/campaigns/
+  no restart needed
+
+Monster HP scaling:
+  hp × (1 + 0.70 × (party_size − 1))
+
+Boss HP scaling:
+  hp + hp_per_fighter × (party_size − 1)
+
+Phase ordering:
+  highest threshold first
+  triggers when hp/max_hp &lt; threshold
+
+XP award:
+  reads xp_reward from win ending
+  base × (0.6 + 0.4 × dmg_share) × mult
+  KO'd players: 40%
+
+Story voting:
+  90s timeout · majority wins
+  no votes → first choice wins
+  max 4 choices per scene</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="btnrow" style="margin-top:16px;">
+        <a class="button bots" href="/bots/echobloom.html">🌙 Back to EchoBloom Overview</a>
+        <a class="button bots" href="/echobloom-classes.html">⚔️ Class Guide</a>
+        <a class="button ghost" href="/projects.html">⬅ Back to Projects</a>
+      </div>
+    </section>
+
+    <div id="shared-footer"></div>
+  </div>
+
+  <script src="/shared.js"></script>
+  <script src="/fireflies.js"></script>
+</body>
+</html>
