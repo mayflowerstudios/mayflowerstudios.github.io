@@ -34,6 +34,7 @@
         <div class="tile"><strong>⚔️ combat</strong><p>Monster fights</p></div>
         <div class="tile"><strong>💀 boss</strong><p>Phased final battle</p></div>
         <div class="tile"><strong>🏁 ending</strong><p>Win or lose terminal</p></div>
+        <div class="tile"><strong>⛺ checkpoint</strong><p>Rest room — heals + ready-up gate</p></div>
         <div class="tile"><strong>✨ XP</strong><p>Damage-scaled rewards</p></div>
       </div>
     </section>
@@ -366,6 +367,51 @@
       </div>
     </section>
 
+    <!-- checkpoint -->
+    <section class="card">
+      <h3>⛺ checkpoint <span class="badge">Rest Room</span></h3>
+      <p class="desc">
+        A safe zone between scenes. When the party reaches a checkpoint the engine
+        <strong>fully heals every member</strong> to their max HP, then waits — with no time
+        limit — until every player clicks ✅&nbsp;Ready. The embed updates live as each person
+        checks in. Once the last player is ready the campaign continues automatically.
+      </p>
+
+      <div class="grid2" style="gap:12px;">
+        <div class="codebox">
+          <code>"vault_rest": {
+  "type": "checkpoint",
+  "title": "The Vault Antechamber",
+  "text": "A heavy door seals behind you. Dust
+hangs in the still air. Someone left
+iron rations in an alcove long ago.
+Rest here before the final push.",
+  "next": "boss_antechamber"
+}</code>
+        </div>
+
+        <div>
+          <p class="muted small" style="margin-bottom:8px;"><strong>Fields</strong></p>
+          <ul>
+            <li><code>type</code> — <code>"checkpoint"</code>. <strong>Required.</strong></li>
+            <li><code>title</code> — shown as the embed title (prefixed with ⛺).</li>
+            <li><code>text</code> — flavour narration for the rest room.</li>
+            <li><code>next</code> — scene to continue to once all players are ready. <strong>Required.</strong></li>
+          </ul>
+
+          <div class="callout" style="margin-top:14px;">
+            <strong>What it does automatically</strong>
+            <ul class="small" style="margin-top:6px;">
+              <li>Heals every party member to full max HP before showing the embed.</li>
+              <li>Shows a live ready-check list — ⏳ becomes ✅ as each player clicks.</li>
+              <li>No timeout — the campaign pauses indefinitely until everyone is ready.</li>
+              <li>Advances to <code>next</code> the moment the last player clicks Ready.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ending -->
     <section class="card">
       <h3>🏁 ending <span class="badge">Terminal Scene</span></h3>
@@ -521,6 +567,7 @@ convergence ────────┤                                         
           <li>Every <code>on_win</code>, <code>on_lose</code>, <code>next</code>, and choice <code>id</code> points to a real scene</li>
           <li>Every <code>combat</code> scene has both <code>on_win</code> and <code>on_lose</code></li>
           <li>Every <code>item</code> scene has <code>"next"</code></li>
+          <li>Every <code>checkpoint</code> scene has <code>"next"</code></li>
           <li>Every <code>story</code> scene has either <code>"choices"</code> or <code>"next"</code></li>
           <li>At least one <code>ending</code> with <code>"outcome": "win"</code> exists</li>
           <li>Win ending has <code>"xp_reward"</code> set to a non-zero value</li>
@@ -550,6 +597,8 @@ for sid, scene in scenes.items():
             errors.append(
                 f"{sid} choice '{choice['label']}'"
                 f" → '{choice['id']}' not found")
+    if scene.get("type") == "checkpoint" and not scene.get("next"):
+        errors.append(f"{sid}: checkpoint is missing 'next'")
 
 if errors:
     for e in errors: print("ERROR:", e)
@@ -579,6 +628,7 @@ else:
             <li><code>item</code> — text + item object + <code>next</code></li>
             <li><code>combat</code> — monster fight → <code>on_win</code> / <code>on_lose</code></li>
             <li><code>boss</code> — phased boss fight → <code>on_win</code> / <code>on_lose</code></li>
+            <li><code>checkpoint</code> — heals party + waits for everyone to ready up → <code>next</code></li>
             <li><code>ending</code> — terminal (outcome: <code>"win"</code> or <code>"lose"</code>)</li>
           </ul>
 
@@ -613,7 +663,12 @@ XP award:
 Story voting:
   90s timeout · majority wins
   no votes → first choice wins
-  max 4 choices per scene</code>
+  max 4 choices per scene
+
+Checkpoint:
+  heals party to full max HP
+  waits until all players click Ready
+  no timeout — pauses indefinitely</code>
           </div>
         </div>
       </div>
