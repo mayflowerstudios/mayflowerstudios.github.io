@@ -28,6 +28,7 @@
         <div class="ctaRow">
           <a class="btn bots" href="/echobloom-classes.html">⚔️ Class Guide</a>
           <a class="btn bots" href="/echobloom-campaigns.html">📜 Campaign Guide</a>
+          <a class="btn bots" href="/echobloom-world.html">🌍 World Reference</a>
           <a class="btn ghost" href="/projects.html">⬅ Back to Projects</a>
         </div>
       </div>
@@ -35,10 +36,10 @@
       <div class="tileGrid">
         <div class="tile"><strong>🌿 Realms</strong><p>Join via reactions, earn XP, climb ranks, grow your realm.</p></div>
         <div class="tile"><strong>⚔️ Classes</strong><p>Pick one of 8 archetypes — each shapes how you earn XP, find items, craft, and fight.</p></div>
-        <div class="tile"><strong>🗺️ Adventures</strong><p>Solo dungeons, server-wide boss fights, class leveling, and prestige progression.</p></div>
+        <div class="tile"><strong>🗺️ Adventures</strong><p>Solo dungeons, group adventures, server-wide boss fights, class leveling, and prestige progression.</p></div>
         <div class="tile"><strong>📜 Campaigns</strong><p>Multi-scene party adventures with branching paths, fights, and a boss finale.</p></div>
         <div class="tile"><strong>🎒 Items & Crafting</strong><p>Discover items, craft artifacts, collect fragments, unlock your realm's story.</p></div>
-        <div class="tile"><strong>🏴 Battles & Raids</strong><p>Riddle battles, reaction races, item hunts, word scrambles, XP frenzies, and realm raids.</p></div>
+        <div class="tile"><strong>🏴 Battles & Raids</strong><p>Riddle battles, reaction races, item hunts, word scrambles, XP frenzies, realm raids, sabotage, and trivia duels.</p></div>
         <div class="tile"><strong>🌀 Waves & Seasons</strong><p>Multi-wave lore progression with Convergence resets and seasonal exclusives.</p></div>
       </div>
     </section>
@@ -59,6 +60,7 @@
         <a class="tile" href="#how-to-use" style="text-decoration:none;">📘 How to Use</a>
         <a class="tile" href="#commands" style="text-decoration:none;">⌨️ Commands</a>
         <a class="tile" href="#setup" style="text-decoration:none;">🔧 Setup</a>
+        <a class="tile" href="/echobloom-world.html" style="text-decoration:none;">🌍 World Reference ↗</a>
       </div>
     </section>
 
@@ -189,17 +191,22 @@
       <div class="card">
         <h3>🗺️ Adventures <span class="badge">New</span></h3>
         <p class="desc">
-          Solo dungeon runs that use your class stats for combat. Higher zones require higher class
+          Solo and group dungeon runs that use your class stats for combat. Higher zones require higher class
           level and reward more class XP and item drops.
         </p>
         <ul>
-          <li>8 adventure zones from The Whispering Woods (Cl. Lv 1) to The Void Between Stars (Cl. Lv 10)</li>
+          <li>11 adventure zones from The Whispering Woods (Cl. Lv 1) to The Void Crucible (Prestige 3+)</li>
           <li>30-minute cooldown between runs</li>
           <li>Fight enemies round-by-round with 12 seconds to pick your move</li>
           <li>Random special events: Shrines (heal), Ambushes (enemy first strike), Traps, Treasure Rooms</li>
           <li>Earn class XP and bonus item drops on clear</li>
-          <li>Use <code>/adventure</code> to start a run</li>
+          <li>Group adventures with <code>/adventure_group</code> — invite friends to fight together</li>
+          <li>Use <code>/adventure</code> to start a solo run</li>
         </ul>
+        <div class="callout" style="margin-top:8px;">
+          <a href="/echobloom-world.html#zones" style="font-weight:600;">🗺️ All Zones, Monsters & Bosses →</a>
+          <p class="muted small" style="margin:4px 0 0;">Full zone list with XP rewards, item chances, boss pools, and all enemy stats.</p>
+        </div>
       </div>
 
       <div class="card">
@@ -214,8 +221,12 @@
           <li>Up to 30 rounds before the boss escapes</li>
           <li>All participants earn class XP on defeat</li>
           <li>Damage leaderboard shown on completion</li>
-          <li>Check current boss with <code>/boss status</code></li>
+          <li>View your boss history with <code>/boss-history</code></li>
         </ul>
+        <div class="callout" style="margin-top:8px;">
+          <a href="/echobloom-world.html#bosses" style="font-weight:600;">🐉 All 9 Bosses with Stats & Phases →</a>
+          <p class="muted small" style="margin:4px 0 0;">HP scaling, attack, phases, loot multipliers, and XP rewards for every boss.</p>
+        </div>
       </div>
 
       <div class="card">
@@ -226,6 +237,7 @@
         </p>
         <ul>
           <li>Start a campaign with <code>/campaign start</code> — pick from a dropdown of adventures</li>
+          <li>Browse available campaigns with <code>/campaign list</code></li>
           <li>Party assembles publicly (2–6 players), then moves to a private channel</li>
           <li>Five scene types: story, item, combat, boss, ending</li>
           <li>Party votes on story choices — majority wins, 90-second window</li>
@@ -247,11 +259,15 @@
         <ul>
           <li>Universal items any realm can find</li>
           <li>Realm-specific items unique to each path (6 per realm)</li>
-          <li>Rarity tiers: Common (2.5%), Uncommon (1.2%), Rare (0.4%), Legendary (0.08%)</li>
-          <li>Usable items with active effects (XP buffs, reveals, etc.)</li>
+          <li>Rarity tiers: Common (2.5%), Uncommon (1.5%), Rare (0.7%), Legendary (0.2%)</li>
+          <li>Usable items with active effects (XP buffs, steals, copies, and more)</li>
           <li>Gift items between realms or trade across borders</li>
           <li>Full item activity log for transparency</li>
         </ul>
+        <div class="callout" style="margin-top:8px;">
+          <a href="/echobloom-world.html#items-universal" style="font-weight:600;">🎒 Full Item List with Effects →</a>
+          <p class="muted small" style="margin:4px 0 0;">Every item across all realms with real drop rates, active effects, and crafting recipes.</p>
+        </div>
       </div>
 
       <div class="card">
@@ -268,6 +284,10 @@
           <li>Realm recipes: rare + legendary items from common/uncommon materials</li>
           <li>Scholar's Studied Hand and Oracle's Omniscience boost crafting success rate</li>
         </ul>
+        <div class="callout" style="margin-top:8px;">
+          <a href="/echobloom-world.html#crafting" style="font-weight:600;">⚗️ All Recipes with Ingredients →</a>
+          <p class="muted small" style="margin:4px 0 0;">Every crafting recipe with exact ingredient counts and success rates.</p>
+        </div>
       </div>
 
       <div class="card">
@@ -300,6 +320,20 @@
           <li>Winners steal 3 items from the defending realm</li>
           <li>2-hour cooldown between raids</li>
           <li>XP rewards for both sides (400 win / 100 lose)</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>🗡️ Rivalry <span class="badge">PvP</span></h3>
+        <p class="desc">
+          Two targeted realm-vs-realm mechanics beyond full raids: Sabotage lets you sneak in and
+          destroy items, while Challenge fires a server-wide trivia duel.
+        </p>
+        <ul>
+          <li><code>/sabotage &lt;realm&gt;</code> — sneak into a rival realm and destroy some of their items</li>
+          <li><code>/challenge &lt;realm&gt;</code> — challenge a rival realm to a trivia duel</li>
+          <li>Sabotage success depends on participant levels and a random roll</li>
+          <li>Trivia challenges are open to the whole server — first correct answer wins for their realm</li>
         </ul>
       </div>
 
@@ -362,7 +396,7 @@
     <!-- ADVENTURES -->
     <div class="sectionTitle" id="adventures">
       <h2>🗺️ Adventures & Boss Fights</h2>
-      <span>Solo dungeons, group boss fights, and class leveling</span>
+      <span>Solo dungeons, group adventures, server boss fights, and class leveling</span>
     </div>
 
     <section class="grid2">
@@ -383,20 +417,42 @@
       </div>
 
       <div class="card">
-        <h3>🌍 Adventure Zones</h3>
+        <h3>👥 Group Adventures <span class="badge">New</span></h3>
         <p class="desc">
-          Eight zones in ascending difficulty. Higher zones need higher class level and pay out more XP and better drops.
+          Team up for a shared dungeon run with <code>/adventure_group</code>. Invite friends, pick a zone,
+          and fight together using the full group combat engine.
         </p>
         <ul>
-          <li>🌲 <strong>The Whispering Woods</strong> — Cl. Lv 1 · +40 XP · +20% item chance</li>
-          <li>💀 <strong>The Sunken Catacombs</strong> — Cl. Lv 2 · +60 XP · +25% item chance</li>
-          <li>⛰️ <strong>The Shattered Peaks</strong> — Cl. Lv 3 · +80 XP · +30% item chance</li>
-          <li>🌋 <strong>The Smoldering Ashlands</strong> — Cl. Lv 5 · +110 XP · +35% item chance</li>
-          <li>🌊 <strong>The Abyssal Depths</strong> — Cl. Lv 6 · +140 XP · +40% item chance</li>
-          <li>🔮 <strong>The Fracture Nexus</strong> — Cl. Lv 7 · +175 XP · +50% item chance</li>
-          <li>❄️ <strong>The Glacial Tomb</strong> — Cl. Lv 9 · +200 XP · +55% item chance</li>
-          <li>🌌 <strong>The Void Between Stars</strong> — Cl. Lv 10 · +250 XP · +65% item chance</li>
+          <li>Uses the same zone list and class stats as solo adventures</li>
+          <li>Monster HP scales up with party size (+70% per extra member)</li>
+          <li>Party buffs, cooldowns, and HP carry between scenes</li>
+          <li>All participants earn class XP on completion</li>
+          <li>Same 30-minute cooldown as solo runs</li>
         </ul>
+      </div>
+
+      <div class="card">
+        <h3>🌍 Adventure Zones</h3>
+        <p class="desc">
+          11 zones across 3 tiers — 8 base zones and 3 prestige-gated. Higher zones need higher class level and pay out more XP and better drops.
+        </p>
+        <ul>
+          <li>🌲 <strong>The Whispering Woods</strong> — Cl. Lv 1 · +40 XP · 20% item chance</li>
+          <li>💀 <strong>The Sunken Catacombs</strong> — Cl. Lv 2 · +60 XP · 25% item chance</li>
+          <li>⛰️ <strong>The Shattered Peaks</strong> — Cl. Lv 3 · +80 XP · 30% item chance</li>
+          <li>🌋 <strong>The Smoldering Ashlands</strong> — Cl. Lv 5 · +110 XP · 35% item chance</li>
+          <li>🌊 <strong>The Abyssal Depths</strong> — Cl. Lv 6 · +140 XP · 40% item chance</li>
+          <li>🔮 <strong>The Fracture Nexus</strong> — Cl. Lv 7 · +175 XP · 50% item chance</li>
+          <li>✨ <strong>The Celestial Spire</strong> — Cl. Lv 9 · +220 XP · 60% item chance</li>
+          <li>🕳️ <strong>The Abyss Gate</strong> — Cl. Lv 10 · +300 XP · 75% item chance</li>
+          <li>🪞 <strong>The Echo Vault</strong> — Cl. Lv 10 · Prestige 1+ · +350 XP · 65% item chance</li>
+          <li>🌪️ <strong>The Shattered Wastes</strong> — Cl. Lv 10 · Prestige 2+ · +520 XP · 75% item chance</li>
+          <li>🕳️ <strong>The Void Crucible</strong> — Cl. Lv 10 · Prestige 3+ · +750 XP · 85% item chance</li>
+        </ul>
+        <div class="callout" style="margin-top:8px;">
+          <a href="/echobloom-world.html#zones" style="font-weight:600;">🗺️ Full Zone & Monster Reference →</a>
+          <p class="muted small" style="margin:4px 0 0;">Boss spawn pools, all 33 monsters with HP/ATK/DEF/SPD, and zone-by-zone breakdowns.</p>
+        </div>
       </div>
 
       <div class="card">
@@ -412,8 +468,12 @@
           <li>Runs up to <strong>30 rounds</strong> before the boss escapes</li>
           <li>Damage leaderboard shown when the boss falls</li>
           <li>All participants earn class XP on defeat, scaled to boss difficulty</li>
-          <li>Check current boss: <code>/boss status</code> · Admin spawn: <code>/boss spawn</code></li>
+          <li>Admin spawn: <code>/boss spawn</code> · View your boss history: <code>/boss-history</code></li>
         </ul>
+        <div class="callout" style="margin-top:8px;">
+          <a href="/echobloom-world.html#bosses" style="font-weight:600;">🐉 All 9 Bosses with Phases & Stats →</a>
+          <p class="muted small" style="margin:4px 0 0;">HP scaling formula, phase triggers, loot multipliers, and XP rewards for every boss.</p>
+        </div>
       </div>
 
       <div class="card">
@@ -477,13 +537,17 @@
           Four seasons, each tied to a realm. During a realm's season, exclusive content appears.
         </p>
         <ul>
-          <li>🌱 Spring (Mar–May) — Grove of Growth</li>
-          <li>☀️ Summer (Jun–Aug) — Ember Circle</li>
-          <li>🍂 Autumn (Sep–Nov) — Mirror Lake</li>
-          <li>❄️ Winter (Dec–Feb) — Moonroot Tree</li>
+          <li>🌱 Spring (Mar 20 – Jun 20) — Grove of Growth</li>
+          <li>☀️ Summer (Jun 21 – Sep 22) — Ember Circle</li>
+          <li>🍂 Autumn (Sep 23 – Dec 20) — Mirror Lake</li>
+          <li>❄️ Winter (Dec 21 – Mar 19) — Moonroot Tree</li>
           <li>3 exclusive seasonal items per season (only drop during that window)</li>
           <li>Seasonal quests with bonus XP rewards</li>
         </ul>
+        <div class="callout" style="margin-top:8px;">
+          <a href="/echobloom-world.html#seasonal" style="font-weight:600;">🌸 All Seasonal Items & Fusion Artifacts →</a>
+          <p class="muted small" style="margin:4px 0 0;">Every seasonal drop with rarity and lore, plus full fusion artifact effects.</p>
+        </div>
       </div>
 
       <div class="card">
@@ -493,10 +557,10 @@
           with game-changing effects.
         </p>
         <ul>
-          <li>🌱 <strong>Verdant Heart</strong> — 3× XP for 1 hour + 1,000 bonus XP</li>
-          <li>☀️ <strong>Eternal Ember</strong> — steal 2 items from each rival + 1,500 XP</li>
-          <li>🍂 <strong>Veil of Echoes</strong> — copy 2 items from each rival + 2× drops for 1 hour</li>
-          <li>❄️ <strong>Moonbound Relic</strong> — +500 XP to all realms, +2,000 to yours</li>
+          <li>💚 <strong>Verdant Heart</strong> — 3× XP for 1 hour + 1,000 bonus XP</li>
+          <li>🔶 <strong>Eternal Ember</strong> — steal 2 items from each rival + 1,500 XP</li>
+          <li>🔮 <strong>Veil of Echoes</strong> — copy 2 items from each rival + 2× drops for 1 hour</li>
+          <li>🌑 <strong>Moonbound Relic</strong> — +500 XP to all realms, +2,000 to yours</li>
           <li>Forge with <code>/forge</code> during the active season</li>
         </ul>
       </div>
@@ -550,6 +614,7 @@
         <p class="desc">Level up your class through solo dungeons and boss fights to unlock prestige.</p>
         <ul>
           <li><code>/adventure</code> — pick a zone and run a solo dungeon (30-min cooldown)</li>
+          <li><code>/adventure_group</code> — invite friends for a group run</li>
           <li><code>/class stats</code> — check your current class level and stats before a run</li>
           <li>Defeat the boss when one spawns for bonus class XP and shared rewards</li>
           <li>Reach Class Lv 10 and use <code>/class prestige</code> to carry stat bonuses to a new class</li>
@@ -562,28 +627,28 @@
         <p class="desc">Check your realm, your rank, and how your realm stacks up.</p>
         <ul>
           <li><code>/character</code> — full profile: level, class, stats, skills, active bonuses</li>
-          <li><code>/realm</code> — your level, XP, rank, and progress bar</li>
-          <li><code>/level</code> — detailed stats (yours or another user's)</li>
-          <li><code>/streak</code> — your daily streak and XP bonus</li>
-          <li><code>/realms</code> — all realms with levels and member counts</li>
-          <li><code>/leaderboard</code> — top members in a realm</li>
+          <li><code>/realm</code> — realm level, XP, rank, and progress bar</li>
+          <li><code>/streak</code> — your daily streak and current XP bonus</li>
+          <li><code>/leaderboard</code> — top members by Realm XP, Class Level, Boss Damage, or Adventures</li>
           <li><code>/wave</code> — current wave progress across all realms</li>
         </ul>
       </div>
 
       <div class="card">
         <h3>6) Engage with Systems</h3>
-        <p class="desc">Items, crafting, raids, quests, lore, events, seasons, and adventures all layer on top of chat.</p>
+        <p class="desc">Items, crafting, raids, quests, lore, events, seasons, campaigns, and adventures all layer on top of chat.</p>
         <ul>
           <li><code>/inventory</code> — view your realm's shared stash</li>
           <li><code>/use</code> — activate a usable item</li>
           <li><code>/recipes</code> and <code>/craft</code> — crafting system</li>
           <li><code>/gift</code> and <code>/trade</code> — move items between realms</li>
           <li><code>/raid</code> — attack another realm for their items</li>
+          <li><code>/sabotage</code> and <code>/challenge</code> — targeted rivalry actions</li>
           <li><code>/forge</code> — fuse seasonal items into artifacts</li>
           <li><code>/quests</code> — view active daily/weekly/seasonal quests</li>
-          <li><code>/lore</code> — view your realm's story progress</li>
+          <li><code>/lore view</code> — view your realm's story progress</li>
           <li><code>/season</code> — current season info and exclusive content</li>
+          <li><code>/campaign start</code> — launch a long-form party adventure</li>
         </ul>
       </div>
     </section>
@@ -599,11 +664,10 @@
         <h3>👤 Player Commands <span class="badge">Use</span></h3>
         <p class="desc muted small" style="margin:0 0 8px;"><strong>Realm & Progression</strong></p>
         <ul>
-          <li><code>/realm</code> — your realm, level, XP, rank, progress</li>
-          <li><code>/level</code> — detailed level card (self or @user)</li>
+          <li><code>/realm</code> — your realm, level, XP, rank, progress (defaults to yours)</li>
           <li><code>/streak</code> — daily activity streak and XP bonus</li>
-          <li><code>/realms</code> — all realms overview with levels</li>
-          <li><code>/leaderboard</code> — top members in a realm</li>
+          <li><code>/leaderboard</code> — rankings by Realm XP, Class Level, Boss Damage, or Adventures</li>
+          <li><code>/boss-history</code> — recent boss kills and your personal damage stats</li>
         </ul>
         <p class="desc muted small" style="margin:8px 0 4px;"><strong>Character & Class</strong></p>
         <ul>
@@ -614,10 +678,12 @@
           <li><code>/class stats</code> — detailed stat sheet for your class</li>
           <li><code>/class prestige</code> — prestige at Class Lv 10 into a new class</li>
         </ul>
-        <p class="desc muted small" style="margin:8px 0 4px;"><strong>Adventures</strong></p>
+        <p class="desc muted small" style="margin:8px 0 4px;"><strong>Adventures & Campaigns</strong></p>
         <ul>
           <li><code>/adventure</code> — run a solo dungeon using your class stats</li>
-          <li><code>/boss status</code> — check current server boss HP and standings</li>
+          <li><code>/adventure_group</code> — start a group adventure with friends</li>
+          <li><code>/campaign list</code> — browse available campaigns</li>
+          <li><code>/campaign start</code> — launch a party campaign</li>
         </ul>
         <p class="desc muted small" style="margin:8px 0 4px;"><strong>Items & Crafting</strong></p>
         <ul>
@@ -631,16 +697,18 @@
           <li><code>/recipes</code> — view crafting recipes for your realm</li>
           <li><code>/craft</code> — craft a usable item from materials</li>
           <li><code>/raid</code> — launch a raid against another realm</li>
+          <li><code>/sabotage</code> — sneak into a rival realm and destroy their items</li>
+          <li><code>/challenge</code> — challenge a rival realm to a trivia duel</li>
           <li><code>/forge</code> — fuse seasonal items into a powerful artifact</li>
         </ul>
         <p class="desc muted small" style="margin:8px 0 4px;"><strong>Lore, Events & Seasons</strong></p>
         <ul>
           <li><code>/quests</code> — active quests and progress</li>
-          <li><code>/lore</code> — realm lore overview + link to Book of Lore</li>
-          <li><code>/lore-read</code> — read a specific unlocked chapter</li>
-          <li><code>/fragments</code> — collected lore fragments</li>
+          <li><code>/lore view</code> — realm lore overview + link to Book of Lore</li>
+          <li><code>/lore read</code> — read a specific unlocked chapter</li>
+          <li><code>/lore fragments</code> — collected lore fragments</li>
           <li><code>/season</code> — current season, items, and quests</li>
-          <li><code>/event-history</code> — recent battle results</li>
+          <li><code>/event-history</code> — recent battle event results</li>
           <li><code>/wave</code> — current wave progress</li>
           <li><code>/wave-history</code> — past completed waves</li>
         </ul>
@@ -649,43 +717,45 @@
       <div class="card">
         <h3>🛡️ Admin Commands <span class="badge">Staff</span></h3>
         <p class="desc">Permission-gated (administrator).</p>
-        <p class="desc muted small" style="margin:0 0 4px;"><strong>Setup</strong></p>
+        <p class="desc muted small" style="margin:0 0 4px;"><strong>Setup — <code>/setup</code></strong></p>
         <ul>
-          <li><code>/setup-realms</code> — post realm selection message + add reactions</li>
-          <li><code>/setup-lore</code> — post a realm's Book of Lore page</li>
-          <li><code>/setup-all-lore</code> — post all 4 lore pages at once</li>
-          <li><code>/setup-events</code> — post persistent event status embed</li>
+          <li><code>/setup realms</code> — post realm selection message + add reactions</li>
+          <li><code>/setup lore</code> — post a realm's Book of Lore page</li>
+          <li><code>/setup lore-all</code> — post all 4 lore pages at once</li>
+          <li><code>/setup events</code> — post persistent event status embed</li>
+          <li><code>/setup wave</code> — post the wave progress embed</li>
         </ul>
-        <p class="desc muted small" style="margin:8px 0 4px;"><strong>Events & Waves</strong></p>
+        <p class="desc muted small" style="margin:8px 0 4px;"><strong>Events, Waves & XP — <code>/admin</code></strong></p>
         <ul>
-          <li><code>/start-event</code> — manually trigger a battle event</li>
-          <li><code>/end-event</code> — force end the current event</li>
-          <li><code>/refresh-status</code> — force refresh the dashboard embed</li>
-          <li><code>/refresh-quests</code> — force rotate quests now</li>
-          <li><code>/admin-convergence</code> — trigger the Convergence event now</li>
-          <li><code>/force-convergence</code> — force trigger Convergence</li>
+          <li><code>/admin start-event</code> — manually trigger a battle event</li>
+          <li><code>/admin end-event</code> — force end the current event</li>
+          <li><code>/admin refresh</code> — force refresh the dashboard embed</li>
+          <li><code>/admin convergence</code> — trigger the Convergence event now</li>
+          <li><code>/admin sync</code> — recalculate all levels from XP</li>
+          <li><code>/admin sync-lore</code> — resync lore page embeds</li>
+          <li><code>/admin reset</code> — reset all realm XP, levels, items, lore, quests</li>
+          <li><code>/admin overview</code> — full admin overview of all realms</li>
         </ul>
-        <p class="desc muted small" style="margin:8px 0 4px;"><strong>Adventures & Boss</strong></p>
+        <p class="desc muted small" style="margin:8px 0 4px;"><strong>XP & Levels — <code>/admin</code></strong></p>
+        <ul>
+          <li><code>/admin set-xp</code> — set a member's XP</li>
+          <li><code>/admin set-level</code> — set a member's level</li>
+          <li><code>/admin add-xp</code> — add XP to a member</li>
+          <li><code>/admin set-realm-xp</code> — set a realm's XP</li>
+          <li><code>/admin set-realm-level</code> — set a realm's level</li>
+          <li><code>/admin add-realm-xp</code> — add XP to a realm</li>
+        </ul>
+        <p class="desc muted small" style="margin:8px 0 4px;"><strong>Items — <code>/admin</code></strong></p>
+        <ul>
+          <li><code>/admin give-item</code> — give an item to a realm</li>
+          <li><code>/admin remove-item</code> — remove an item from a realm</li>
+          <li><code>/admin clear-inventory</code> — wipe a realm's entire inventory</li>
+        </ul>
+        <p class="desc muted small" style="margin:8px 0 4px;"><strong>Boss — <code>/boss</code></strong></p>
         <ul>
           <li><code>/boss spawn</code> — spawn a server boss manually</li>
-        </ul>
-        <p class="desc muted small" style="margin:8px 0 4px;"><strong>XP & Levels</strong></p>
-        <ul>
-          <li><code>/sync-levels</code> — recalculate all levels from XP</li>
-          <li><code>/reset-realms</code> — reset all realm XP, levels, items, lore, quests</li>
-          <li><code>/admin-set-xp</code> — set a member's XP</li>
-          <li><code>/admin-set-level</code> — set a member's level</li>
-          <li><code>/admin-add-xp</code> — add XP to a member</li>
-          <li><code>/admin-set-realm-xp</code> — set a realm's XP</li>
-          <li><code>/admin-set-realm-level</code> — set a realm's level</li>
-          <li><code>/admin-add-realm-xp</code> — add XP to a realm</li>
-        </ul>
-        <p class="desc muted small" style="margin:8px 0 4px;"><strong>Items</strong></p>
-        <ul>
-          <li><code>/admin-give-item</code> — give an item to a realm</li>
-          <li><code>/admin-remove-item</code> — remove an item from a realm</li>
-          <li><code>/admin-clear-inventory</code> — wipe a realm's entire inventory</li>
-          <li><code>/admin-overview</code> — full admin overview of all realms</li>
+          <li><code>/boss cancel</code> — cancel the active boss fight</li>
+          <li><code>/boss status</code> — check current boss HP and standings</li>
         </ul>
       </div>
     </section>
@@ -712,15 +782,16 @@
 1.  Create realm roles (one per realm)
 2.  Create rank roles (3 per realm: Level 1, 10, 25)
 3.  Fill in role IDs in config/config.py
-4.  Run /setup-realms in your realm-select channel
-5.  Create lore channels (one per realm) and run /setup-lore
+4.  Run /setup realms in your realm-select channel
+5.  Create lore channels (one per realm) and run /setup lore
 6.  Set your events channel ID in config
-7.  Run /setup-events to post the persistent dashboard
-8.  Restart — quests auto-rotate, events trigger from chat
-9.  Run /season to verify seasonal content is active
-10. Run /wave to check lore wave status
-11. Announce /class pick to members — classes are ready out of the box
-12. Adventures and boss fights are available immediately; no channel config needed</code>
+7.  Run /setup events to post the persistent dashboard
+8.  Run /setup wave to post the wave progress embed
+9.  Restart — quests auto-rotate, events trigger from chat
+10. Run /season to verify seasonal content is active
+11. Run /wave to check lore wave status
+12. Announce /class pick to members — classes are ready out of the box
+13. Adventures and boss fights are available immediately; no channel config needed</code>
       </div>
 
       <div class="callout" style="margin-top:12px;">
@@ -735,6 +806,7 @@
       <div class="btnrow" style="margin-top:12px;">
         <a class="button bots" href="/echobloom-classes.html">⚔️ Class Guide</a>
         <a class="button bots" href="/echobloom-campaigns.html">📜 Campaign Guide</a>
+        <a class="button bots" href="/echobloom-world.html">🌍 World Reference</a>
         <a class="button bots" href="/bots/foxbot.html">🦊 See FoxBot</a>
         <a class="button ghost" href="/projects.html">⬅ Back to Projects</a>
       </div>
