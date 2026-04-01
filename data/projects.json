@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-30T23:21:50.010Z",
+  "generatedAt": "2026-04-01T01:37:56.048Z",
   "mods": [
     {
       "type": "mod",
@@ -99,7 +99,7 @@
       "type": "bot",
       "slug": "bloombot",
       "title": "🌸 BloomBot",
-      "desc": "",
+      "desc": "BloomBot powers the EchoBloom community — quests, events, and world management for Discord.",
       "links": [
         {
           "label": "📄 Info Page",
@@ -112,7 +112,7 @@
       "type": "bot",
       "slug": "echobloom",
       "title": "🌙 EchoBloom",
-      "desc": "",
+      "desc": "EchoBloom is a Discord RPG bot with eight classes, prestige chains, dungeons, boss fights, crafting, lore, and seasonal campaigns.",
       "links": [
         {
           "label": "📄 Info Page",
@@ -130,7 +130,7 @@
       "type": "bot",
       "slug": "foxbot",
       "title": "🦊 FoxBot",
-      "desc": "",
+      "desc": "FoxBot is Kiko — the cozy fennec fox AI for Luna",
       "links": [
         {
           "label": "📄 Info Page",
