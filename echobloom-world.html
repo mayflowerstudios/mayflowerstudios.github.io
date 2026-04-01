@@ -68,6 +68,8 @@
         <a class="tile" href="#zones" style="text-decoration:none;">🗺️ Zones</a>
         <a class="tile" href="#monsters" style="text-decoration:none;">👹 Monsters</a>
         <a class="tile" href="#bosses" style="text-decoration:none;">🐉 Bosses</a>
+        <a class="tile" href="#weather" style="text-decoration:none;">🌦️ Weather</a>
+        <a class="tile" href="#curses" style="text-decoration:none;">🩸 Curses</a>
       </div>
     </section>
 
@@ -1226,6 +1228,266 @@
         </div>
       </div>
 
+    </section>
+
+    <!-- WEATHER SYSTEM -->
+    <div class="sectionTitle" id="weather">
+      <h2>🌦️ Weather System</h2>
+      <span>One weather type active per day · seeded at midnight UTC · same for all players · use <code>/weather</code> to check</span>
+    </div>
+
+    <section class="card">
+      <p class="desc">
+        The weather changes daily and applies real stat modifiers to every adventure run that day.
+        Severe weather is genuinely brutal — <strong>Clear Skies is the only weather with no negatives</strong>.
+        Class interactions reduce (but never fully negate) global penalties in extreme conditions.
+        The modifier shown is your personal stat change for the day based on your class.
+      </p>
+      <div class="callout" style="margin-bottom:14px;">
+        <strong>How it applies</strong>
+        <p class="muted small" style="margin:6px 0 0;">
+          Global modifiers hit every class. Class-specific modifiers stack on top (multiplicatively).
+          Order: <strong>global flat → global % → class %</strong>. All stats floor at 1 (Fortune can reach 0).
+          Use <code>/weather</code> to see today's weather and your exact stat changes.
+        </p>
+      </div>
+    </section>
+
+    <section class="grid2">
+
+      <div class="card">
+        <h3>☀️ Clear Skies <span class="badge">Common</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>Not a cloud in sight. A perfect day to push deeper into the zones.</em></p>
+        <p class="muted small"><strong>Effect:</strong> No modifiers. The only weather without penalties.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Seasons:</strong> Spring · Summer · Autumn · Winter (lower weight)</p>
+      </div>
+
+      <div class="card">
+        <h3>☁️ Overcast <span class="badge">Common</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>Grey skies press in. Luck runs thin and focus blurs.</em></p>
+        <p class="muted small"><strong>Effect:</strong> Fortune −5 · Wisdom −10% for all.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Seasons:</strong> Spring · Summer · Autumn (peak) · Winter</p>
+      </div>
+
+      <div class="card">
+        <h3>🌫️ Dense Fog <span class="badge">Uncommon</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>Enemies strike from angles you can't see coming.</em></p>
+        <p class="muted small"><strong>Effect:</strong> Agility −20% · Power −10% for all.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Class interactions:</strong> Invoker Power −18% total · Wanderer/Trickster partially offset Agility loss.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Seasons:</strong> Spring · Autumn (peak) · Winter</p>
+      </div>
+
+      <div class="card">
+        <h3>🌦️ Light Rain <span class="badge">Common</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>Grips slip. Flames sputter. Wardens breathe easier.</em></p>
+        <p class="muted small"><strong>Effect:</strong> Power −8% for all.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Class interactions:</strong> Invoker Power −20% total · Warden Power penalty lifted + Vitality +12% · Scholar Wisdom +6%.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Seasons:</strong> Spring (peak) · Summer · Autumn</p>
+      </div>
+
+      <div class="card">
+        <h3>🌧️ Heavy Rain <span class="badge">Uncommon</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>Invokers are fighting with damp kindling. Everyone else is just slower.</em></p>
+        <p class="muted small"><strong>Effect:</strong> Power −15% · Agility −12% for all.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Class interactions:</strong> Invoker Power −30% total · Warden Power penalty lifted (Agility hit remains) · Sentinel minor buffs.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Seasons:</strong> Spring · Summer · Autumn</p>
+      </div>
+
+      <div class="card">
+        <h3>⛈️ Thunderstorm <span class="badge">Uncommon</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>Only Invokers seem to enjoy this.</em></p>
+        <p class="muted small"><strong>Effect:</strong> Agility −18% · Fortune −6 for all.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Class interactions:</strong> Invoker Power +20%, Agility penalty negated · Wanderer partial Agility recovery · Trickster Agility −26% total.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Seasons:</strong> Summer (peak) · Spring</p>
+      </div>
+
+      <div class="card">
+        <h3>💨 High Winds <span class="badge">Common</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>Dodging is effortless. Landing a real strike isn't.</em></p>
+        <p class="muted small"><strong>Effect:</strong> Agility +10% · Power −12% · Fortune −4 for all.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Class interactions:</strong> Striker Power −4% total · Trickster Agility +18% total · Oracle/Scholar Wisdom −6–8%.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Seasons:</strong> Spring · Summer · Autumn (peak) · Winter</p>
+      </div>
+
+      <div class="card">
+        <h3>🌡️ Heat Wave <span class="badge">Uncommon · Summer only</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>Your limbs feel heavy before you've done anything.</em></p>
+        <p class="muted small"><strong>Effect:</strong> Vitality −14% · Agility −10% for all.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Class interactions:</strong> Invoker Power +18%, Vitality penalty negated · Warden Vitality −24% total · Oracle/Scholar Wisdom −8–10%.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Seasons:</strong> Summer only</p>
+      </div>
+
+      <div class="card">
+        <h3>🔥 Scorching Heat <span class="badge">Rare · Summer only</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>One class thrives. The rest are fighting the conditions as much as the enemy.</em></p>
+        <p class="muted small"><strong>Effect:</strong> Power −18% · Vitality −22% · Agility −14% · Fortune −8 for all.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Class interactions:</strong> Invoker Power +25%, fully immune to Vitality loss · Warden Vitality −34% total · Sentinel recovers most Vitality loss.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Seasons:</strong> Summer only (~5% weight — roughly 1 in 20 summer days)</p>
+      </div>
+
+      <div class="card">
+        <h3>🌨️ Light Snow <span class="badge">Common · Winter only</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>Soft snowfall. Warden moves through it like a shadow.</em></p>
+        <p class="muted small"><strong>Effect:</strong> Agility −8% · Fortune −3 for all.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Class interactions:</strong> Warden Agility penalty negated + Vitality +12% · Invoker Power −10% extra · Oracle/Scholar Wisdom +6–10%.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Seasons:</strong> Winter only</p>
+      </div>
+
+      <div class="card">
+        <h3>❄️ Heavy Snow <span class="badge">Uncommon · Winter only</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>Tricksters are floundering. Invokers are barely functional.</em></p>
+        <p class="muted small"><strong>Effect:</strong> Power −16% · Agility −22% for all.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Class interactions:</strong> Warden Power kept, Agility −11% only · Invoker Power −30% total · Trickster Agility −32% total.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Seasons:</strong> Winter only</p>
+      </div>
+
+      <div class="card">
+        <h3>🌬️❄️ Blizzard <span class="badge">Rare · Winter only</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>No one is untouched. Warden suffers less. Invokers fight with dead fire.</em></p>
+        <p class="muted small"><strong>Effect:</strong> Power −25% · Agility −30% · Vitality −18% · Fortune −10 for all.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Class interactions:</strong> Warden reduced to roughly Power −12%, Agility −16%, Vitality +2% · Invoker Power −40% total · Trickster Agility −40% total · Oracle gains Wisdom +15%.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Seasons:</strong> Winter only (~6% weight — roughly 1 in 16 winter days)</p>
+      </div>
+
+      <div class="card">
+        <h3>🧊 Hard Frost <span class="badge">Uncommon · Autumn / Winter</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>Wisdom wins today. Speed doesn't.</em></p>
+        <p class="muted small"><strong>Effect:</strong> Agility −14% · Fortune −5 · Wisdom +10% for all.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Class interactions:</strong> Invoker Power −8% extra · Trickster Agility −24% total · Warden Agility/Vitality partial buffs · Oracle/Scholar extra Wisdom bonus.</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Seasons:</strong> Autumn · Winter</p>
+      </div>
+
+    </section>
+
+    <section class="card">
+      <div class="grid2" style="gap:10px;">
+        <div class="callout">
+          <strong>📊 Class Weather Summary</strong>
+          <p class="muted small" style="margin:6px 0 0;">
+            <strong>Invoker</strong> — thrives in heat (Scorching/Heat Wave), suffers most in cold (Blizzard: Power −40%, fire is dead).<br>
+            <strong>Warden</strong> — thrives in cold (Blizzard: reduced penalties), suffers most in heat (Scorching: Vitality −34%).<br>
+            <strong>Trickster</strong> — worst in cold/fog (Agility is everything, Blizzard: Agility −40%).<br>
+            <strong>Striker</strong> — benefits most from wind (Power partially preserved).<br>
+            <strong>Oracle/Scholar</strong> — gain Wisdom in cold, lose it in heat and fog.<br>
+            <strong>Sentinel</strong> — generally sturdy; endures most conditions with modest extra Vitality.
+          </p>
+        </div>
+        <div class="callout">
+          <strong>🌡️ Season Rarity</strong>
+          <p class="muted small" style="margin:6px 0 0;">
+            Rare weather (Blizzard, Scorching) appears roughly once every 15–20 days in their respective season.
+            Clear Skies is the most rewarding — treat it as a bonus run day.
+            Weather resets at <strong>midnight UTC</strong> and is seeded identically for all players.
+            Check <code>/weather</code> each day to see modifiers and your exact personal stat changes.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CURSES -->
+    <div class="sectionTitle" id="curses">
+      <h2>🩸 Curses</h2>
+      <span>Persistent debuffs from trap and cursed events · tick down after each run · use <code>/curses</code> to check</span>
+    </div>
+
+    <section class="card">
+      <p class="desc">
+        Curses are applied by certain adventure events and persist across multiple runs, debuffing your stats until they wear off.
+        Multiple curses stack — you can be Weakened AND Haunted at the same time.
+        Use <code>/curses</code> to see what you're carrying and how many runs remain.
+      </p>
+      <div class="callout">
+        <strong>How curses work</strong>
+        <p class="muted small" style="margin:6px 0 0;">
+          Curses apply to your stats at the start of every adventure, before weather modifiers.
+          They tick down by 1 run after every adventure (win or lose). When a curse hits 0 runs, it lifts —
+          shown as "✨ Curses Lifted" in your result embed. Refreshing the same curse resets it to full duration.
+        </p>
+      </div>
+    </section>
+
+    <section class="grid2">
+
+      <div class="card">
+        <h3>💔 Weakened <span class="badge">3 runs</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>A dark energy saps your strength.</em></p>
+        <p class="muted small"><strong>Effect:</strong> Power −20%</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Applied by:</strong> Trap (30% chance) · Cursed Ground (50% chance)</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Cleansed by:</strong> Shrine (70%) · Blessing (always) · /cleanse</p>
+      </div>
+
+      <div class="card">
+        <h3>🖤 Unlucky <span class="badge">2 runs</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>Something shifts — luck drains away like water.</em></p>
+        <p class="muted small"><strong>Effect:</strong> Fortune −25%</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Applied by:</strong> Trap (30% chance) · Cursed Ground (50% chance)</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Cleansed by:</strong> Shrine (70%) · Blessing (always) · /cleanse</p>
+      </div>
+
+      <div class="card">
+        <h3>👻 Haunted <span class="badge">4 runs</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>You hear footsteps behind you. Nothing is there.</em></p>
+        <p class="muted small"><strong>Effect:</strong> Incoming enemy crits deal +25% bonus HP damage</p>
+        <p class="muted small" style="margin:4px 0 0;"><em>Note: this doesn't reduce stats — it makes critical hits from enemies hurt more, which is nearly invisible until a crit fires.</em></p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Applied by:</strong> Trap (30% chance) · Cursed Ground (50% chance)</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Cleansed by:</strong> Shrine (70%) · Blessing (always) · /cleanse</p>
+      </div>
+
+      <div class="card">
+        <h3>🐢 Sluggish <span class="badge">3 runs</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>Your movements come slow, like wading through deep water.</em></p>
+        <p class="muted small"><strong>Effect:</strong> Agility −20%</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Applied by:</strong> Trap (30% chance) · Cursed Ground (50% chance)</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Cleansed by:</strong> Shrine (70%) · Blessing (always) · /cleanse</p>
+      </div>
+
+      <div class="card">
+        <h3>🩸 Drained <span class="badge">2 runs</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>Something cold takes root in you, draining your reserves.</em></p>
+        <p class="muted small"><strong>Effect:</strong> Wisdom −25% · Vitality −10%</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Applied by:</strong> Trap (30% chance) · Cursed Ground (50% chance)</p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Cleansed by:</strong> Shrine (70%) · Blessing (always) · /cleanse</p>
+      </div>
+
+      <div class="card">
+        <h3>💀 Forsaken <span class="badge">5 runs · Rare</span></h3>
+        <p class="muted small" style="margin:0 0 6px;"><em>Something ancient and malicious has marked you.</em></p>
+        <p class="muted small"><strong>Effect:</strong> All stats −10%</p>
+        <p class="muted small" style="margin:4px 0 0;"><em>Note: Forsaken is not in the random curse pool — it's reserved for specific future triggers.</em></p>
+        <p class="muted small" style="margin:4px 0 0;"><strong>Cleansed by:</strong> Shrine (70%) · Blessing (always) · /cleanse</p>
+      </div>
+
+    </section>
+
+    <section class="card">
+      <div class="grid2" style="gap:10px;">
+        <div>
+          <p class="muted small" style="margin:0 0 8px;"><strong>🧪 How to cleanse</strong></p>
+          <ul class="muted small" style="margin:0;">
+            <li>🛕 <strong>Shrine encounter</strong> — 70% chance to remove one random curse</li>
+            <li>✨ <strong>Blessing encounter</strong> — always removes <em>all</em> curses</li>
+            <li>🧪 <strong>/cleanse</strong> — spend a Cleansing Vial from your realm's inventory</li>
+            <li>⏳ <strong>Wait it out</strong> — curses expire naturally after each run (fastest for short-duration curses)</li>
+          </ul>
+        </div>
+        <div>
+          <p class="muted small" style="margin:0 0 8px;"><strong>📊 Curse application chances</strong></p>
+          <ul class="muted small" style="margin:0;">
+            <li>🪤 <strong>Trap event</strong> — 30% chance to apply a random curse</li>
+            <li>🌑 <strong>Cursed Ground event</strong> — 50% chance to apply a random curse</li>
+            <li>🛕 <strong>Shrine event</strong> — 70% chance to cleanse one curse</li>
+            <li>✨ <strong>Blessing event</strong> — always cleanses all active curses</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout" style="margin-top:12px;">
+        <strong>Crafting a Cleansing Vial</strong>
+        <p class="muted small" style="margin:6px 0 0;">
+          Cleansing Vials are crafted items that remove all active curses instantly. Use <code>/recipes</code> to see
+          the current ingredients. Once crafted, they go into your realm's shared inventory and can be used with
+          <code>/cleanse</code> — consuming one vial to clear everything.
+        </p>
+      </div>
     </section>
 
     <div class="btnrow" style="margin-top:16px;">

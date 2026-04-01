@@ -53,6 +53,8 @@
         <div class="tile"><strong>🎒 Items & Crafting</strong><p>Discover items, craft artifacts, collect fragments, unlock your realm's story.</p></div>
         <div class="tile"><strong>🏴 Battles & Raids</strong><p>Riddle battles, reaction races, item hunts, word scrambles, XP frenzies, realm raids, sabotage, and trivia duels.</p></div>
         <div class="tile"><strong>🌀 Waves & Seasons</strong><p>Multi-wave lore progression with Convergence resets and seasonal exclusives.</p></div>
+        <div class="tile"><strong>🌦️ Weather & Curses</strong><p>Daily weather modifies combat stats for everyone. Curses from traps persist across runs until cleansed.</p></div>
+        <div class="tile"><strong>📖 Bestiary</strong><p>Track every monster and boss kill. Earn completion titles and passive bonuses at kill milestones.</p></div>
       </div>
     </section>
 
@@ -73,6 +75,8 @@
         <a class="tile" href="#commands" style="text-decoration:none;">⌨️ Commands</a>
         <a class="tile" href="#setup" style="text-decoration:none;">🔧 Setup</a>
         <a class="tile" href="/echobloom-world.html" style="text-decoration:none;">🌍 World Reference ↗</a>
+        <a class="tile" href="#weather-curses" style="text-decoration:none;">🌦️ Weather & Curses</a>
+        <a class="tile" href="#bestiary" style="text-decoration:none;">📖 Bestiary</a>
       </div>
     </section>
 
@@ -260,6 +264,64 @@
           <a href="/echobloom-campaigns.html" style="font-weight:600;">📜 Campaign Authoring Guide →</a>
           <p class="muted small" style="margin:4px 0 0;">How to build campaigns: scene types, JSON schema, boss tuning, validation, and quick reference.</p>
         </div>
+      </div>
+
+      <div class="card" id="weather-curses">
+        <h3>🌦️ Weather System <span class="badge">New</span></h3>
+        <p class="desc">
+          One weather type is active each day, seeded at midnight UTC — the same for every player.
+          Weather applies real stat modifiers to every adventure run. Clear Skies is the only penalty-free weather.
+        </p>
+        <ul>
+          <li>13 weather types across 4 seasons — from Clear Skies to Blizzard and Scorching Heat</li>
+          <li>Rare weather (Blizzard, Scorching) appears roughly once every 15–20 days in season</li>
+          <li>Every weather except Clear has at least one negative — no free-ride days</li>
+          <li>Invoker thrives in extreme heat; collapses in blizzards (Power −40%, fire is dead)</li>
+          <li>Warden handles cold best; suffers most in heat (Scorching: Vitality −34%)</li>
+          <li>Trickster is worst in fog and blizzards — Agility is everything, and it vanishes</li>
+          <li>Check today's weather and your exact stat changes with <code>/weather</code></li>
+        </ul>
+        <div class="callout" style="margin-top:8px;">
+          <a href="/echobloom-world.html#weather" style="font-weight:600;">🌦️ Full Weather Reference — All 13 Types →</a>
+          <p class="muted small" style="margin:4px 0 0;">Every weather type with season availability, global effects, and per-class interactions.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>🩸 Curse & Cleanse System <span class="badge">New</span></h3>
+        <p class="desc">
+          Curses are persistent stat debuffs applied by trap and cursed ground events. They follow you
+          across multiple runs, ticking down by one after each adventure until they expire or are cleansed.
+        </p>
+        <ul>
+          <li>6 curses: Weakened (Power −20%), Unlucky (Fortune −25%), Haunted (incoming crits +25% HP damage), Sluggish (Agility −20%), Drained (Wisdom −25%, Vitality −10%), Forsaken (all stats −10%)</li>
+          <li>Trap events: 30% chance to apply a curse · Cursed Ground events: 50% chance</li>
+          <li>Multiple curses stack — you can carry several simultaneously</li>
+          <li>Shrine events: 70% chance to cleanse one curse · Blessing events: always cleanse all</li>
+          <li>Use <code>/curses</code> to see active curses and runs remaining on each</li>
+          <li>Craft a Cleansing Vial and use <code>/cleanse</code> to remove everything instantly</li>
+          <li>Expired curses shown as "✨ Curses Lifted" in your adventure results</li>
+        </ul>
+        <div class="callout" style="margin-top:8px;">
+          <a href="/echobloom-world.html#curses" style="font-weight:600;">🩸 Full Curse Reference — All 6 Curses →</a>
+          <p class="muted small" style="margin:4px 0 0;">Every curse with duration, effect, application chance, and cleanse methods.</p>
+        </div>
+      </div>
+
+      <div class="card" id="bestiary">
+        <h3>📖 Bestiary <span class="badge">New</span></h3>
+        <p class="desc">
+          Every monster kill and boss kill is tracked per player. Hit kill milestones to earn passive bonuses,
+          unlock lore entries, and earn completion titles for hunting down everything in the game.
+        </p>
+        <ul>
+          <li>33 monsters tracked across all 11 zones</li>
+          <li>9 server bosses tracked separately</li>
+          <li>Monster milestones: Spotted (×1) · Familiar Foe (×10) · Nemesis (×50) · Mastered (×100)</li>
+          <li>Boss milestones: Slain Once (×1) · Repeatedly Bested (×5) · Dominated (×10)</li>
+          <li><strong>Completion titles:</strong> Monster Chronicler (all monsters ×1) · Apex Hunter (all ×10) · Boss Slayer (all bosses ×1) · Warlord (all bosses ×5) · True Completionist (all four)</li>
+          <li>Use <code>/bestiary monsters</code>, <code>/bestiary bosses</code>, or <code>/bestiary stats</code></li>
+        </ul>
       </div>
 
       <div class="card">
@@ -661,6 +723,9 @@
           <li><code>/lore view</code> — view your realm's story progress</li>
           <li><code>/season</code> — current season info and exclusive content</li>
           <li><code>/campaign start</code> — launch a long-form party adventure</li>
+          <li><code>/weather</code> — check today's weather and your personal stat modifiers</li>
+          <li><code>/curses</code> — view active curses and how to remove them</li>
+          <li><code>/bestiary stats</code> — your kill tracking and completion titles</li>
         </ul>
       </div>
     </section>
@@ -696,6 +761,12 @@
           <li><code>/adventure_group</code> — start a group adventure with friends</li>
           <li><code>/campaign list</code> — browse available campaigns</li>
           <li><code>/campaign start</code> — launch a party campaign</li>
+          <li><code>/weather</code> — today's weather, stat modifiers, and your personal impact</li>
+          <li><code>/curses</code> — active curses, runs remaining, and cleanse options</li>
+          <li><code>/cleanse</code> — spend a Cleansing Vial to remove all curses</li>
+          <li><code>/bestiary monsters</code> — your monster kill tracker by tier</li>
+          <li><code>/bestiary bosses</code> — your boss kill tracker with milestones</li>
+          <li><code>/bestiary stats</code> — completion overview and earned titles</li>
         </ul>
         <p class="desc muted small" style="margin:8px 0 4px;"><strong>Items & Crafting</strong></p>
         <ul>
