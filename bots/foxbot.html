@@ -6,9 +6,9 @@
   <title>FoxBot • Mayflower Studios</title>
   <link rel="stylesheet" href="/style.css" />
     <!-- OG:START -->
-  <meta name="description" content="FoxBot is Kiko — the cozy fennec fox AI for Luna's Magical Forest. Birthdays, moderation, lore, reaction roles, weather, and more." />
+  <meta name="description" content="FoxBot is Kiko — the cozy fennec fox AI for Luna's Magical Forest. Birthdays, moderation, lore, reaction roles, weather, reminders, and more." />
   <meta property="og:title" content="FoxBot • Mayflower Studios" />
-  <meta property="og:description" content="FoxBot is Kiko — the cozy fennec fox AI for Luna's Magical Forest. Birthdays, moderation, lore, reaction roles, weather, and more." />
+  <meta property="og:description" content="FoxBot is Kiko — the cozy fennec fox AI for Luna's Magical Forest. Birthdays, moderation, lore, reaction roles, weather, reminders, and more." />
   <meta property="og:url" content="https://mayflowerstudios.net/bots/foxbot.html" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://mayflowerstudios.net/assets/og/bots__foxbot.png" />
@@ -16,7 +16,7 @@
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="FoxBot • Mayflower Studios" />
-  <meta name="twitter:description" content="FoxBot is Kiko — the cozy fennec fox AI for Luna's Magical Forest. Birthdays, moderation, lore, reaction roles, weather, and more." />
+  <meta name="twitter:description" content="FoxBot is Kiko — the cozy fennec fox AI for Luna's Magical Forest. Birthdays, moderation, lore, reaction roles, weather, reminders, and more." />
   <meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/bots__foxbot.png" />
   <!-- OG:END -->
 </head>
@@ -33,7 +33,7 @@
         <p class="muted">
           FoxBot is our cozy, lore-friendly helper for <strong>Luna's Magical Forest</strong> — built for day-to-day server life:
           fun commands, birthdays, holiday announcements, reaction roles, a channel directory, private AI chats, news recaps, safety-minded moderation,
-          real-world weather &amp; time, a self-building lore system, topic controls, and sleep scheduling.
+          real-world weather &amp; time, a self-building lore system, topic controls, sleep scheduling, and <strong>AI-powered personal reminders</strong>.
           Her personality is <strong>Kiko</strong>, a whimsical fennec fox spirit living in an enchanted forest.
         </p>
 
@@ -82,8 +82,8 @@
           <p>Mods can ban specific topics so Kiko gracefully deflects them.</p>
         </div>
         <div class="tile">
-          <strong>😴 Sleep Mode</strong>
-          <p>Put Kiko to sleep or set quiet-hour schedules to pause responses.</p>
+          <strong>⏰ Smart Reminders</strong>
+          <p>AI-written reminders that escalate the more you ignore them — daily, weekdays, or custom days.</p>
         </div>
       </div>
     </section>
@@ -107,7 +107,8 @@
         <strong>automated moderation checks</strong> for new/untrusted members, a <strong>channel directory</strong> so Kiko can
         direct people to the right place, a <strong>self-building lore system</strong> that grows through conversation,
         <strong>real-world weather &amp; time awareness</strong>, <strong>topic banning</strong> so mods can keep certain subjects off-limits,
-        and a <strong>sleep mode</strong> with configurable quiet hours.
+        a <strong>sleep mode</strong> with configurable quiet hours, and a <strong>personal reminder system</strong> where Kiko
+        writes each reminder herself — getting more dramatic the longer you ignore her.
       </p>
 
       <div class="divider" style="margin:14px 0;"></div>
@@ -266,6 +267,21 @@
         </ul>
       </div>
 
+      <div class="card">
+        <h3>⏰ Smart Reminders <span class="badge">New</span></h3>
+        <p class="desc">
+          Kiko sends personal reminder DMs written by her AI — and the longer you ignore them, the more dramatic she gets.
+        </p>
+        <ul>
+          <li>Set reminders by clock time (<code>6pm</code>, <code>14:30</code>) or duration (<code>30m</code>, <code>2h</code>)</li>
+          <li>Repeat schedules: <strong>daily</strong>, <strong>weekdays</strong>, <strong>weekends</strong>, or specific days like <code>mon,wed,fri</code></li>
+          <li>Set a nudge interval so Kiko re-pings every N minutes until you click Done</li>
+          <li>Each nudge is AI-written and escalates in urgency — from gentle to full fox emergency mode 🦊🚨</li>
+          <li>Clicking <strong>✅ Done</strong> resets the escalation counter fresh for the next day</li>
+          <li>View and cancel reminders anytime with <code>/reminders</code> and <code>/cancel_reminder</code></li>
+        </ul>
+      </div>
+
     </section>
 
     <!-- HOW TO USE -->
@@ -414,6 +430,27 @@
 /sleepstatus</code>
         </div>
       </div>
+
+      <div class="card">
+        <h3>11) Set a reminder</h3>
+        <p class="desc">Ask Kiko to remind you about something — she'll DM you in her own words, escalating if you keep ignoring her.</p>
+        <ul>
+          <li>Set a one-time or repeating reminder with <code>/remind</code></li>
+          <li>Use a clock time (<code>6pm</code>, <code>14:30</code>) or a duration (<code>30m</code>, <code>2h</code>)</li>
+          <li>Choose a repeat schedule: <code>daily</code>, <code>weekdays</code>, <code>weekends</code>, or specific days</li>
+          <li>Set a nudge interval so Kiko keeps pinging until you confirm</li>
+          <li>Each message is AI-written — first gentle, then increasingly dramatic 😅</li>
+          <li>Click <strong>✅ Done</strong> in the DM to stop nudges and schedule the next day</li>
+        </ul>
+        <div class="codebox" style="margin-top:10px;">
+          <code>/remind when:6pm message:Take my meds repeat:daily reminders:10m
+/remind when:9am message:Morning standup repeat:weekdays reminders:5m
+/remind when:30m message:Check the oven
+/reminders
+/cancel_reminder reminder_id:3</code>
+        </div>
+      </div>
+
     </section>
 
     <!-- COMMANDS -->
@@ -548,6 +585,21 @@
         </div>
       </div>
 
+      <div class="card">
+        <h3>⏰ Reminders</h3>
+        <p class="desc">Personal AI-written reminders via DM — escalates until you confirm.</p>
+        <div class="codebox" style="margin-top:10px;">
+          <code>/remind when: message: [repeat:] [reminders:]
+/reminders
+/cancel_reminder reminder_id:</code>
+        </div>
+        <p class="desc" style="margin-top:8px;">
+          <strong>when:</strong> <code>6pm</code> · <code>14:30</code> · <code>30m</code> · <code>2h</code> · <code>1d</code><br/>
+          <strong>repeat:</strong> <code>daily</code> · <code>weekdays</code> · <code>weekends</code> · <code>mon,wed,fri</code><br/>
+          <strong>reminders:</strong> nudge interval — <code>5m</code> · <code>10m</code> · <code>1h</code>
+        </p>
+      </div>
+
     </section>
 
     <!-- NOTES -->
@@ -563,6 +615,7 @@
           Kiko responds in server channels only when mentioned, but allows deeper chatting in DMs / private fox-chat rooms.
           Moderation checks are stricter for newer members and relax over time.
           Holiday announcements post automatically at 8 AM ET on recognized holidays.
+          Reminder DMs are sent directly to your inbox — Kiko writes each one herself and gets progressively more dramatic if you keep ignoring them.
         </p>
       </div>
 
@@ -574,7 +627,8 @@
 - Use reaction roles for clean onboarding + self-serve access
 - Use /newsrecap for fun "what did I miss?" moments
 - Set up /setchannel for all key channels so Kiko can guide people
-- Holiday announcements are automatic — no setup needed</code>
+- Holiday announcements are automatic — no setup needed
+- Use /remind with repeat:daily + reminders:10m for recurring tasks like meds</code>
       </div>
 
       <div class="btnrow" style="margin-top:12px;">

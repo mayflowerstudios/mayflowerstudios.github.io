@@ -5,864 +5,468 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EchoBloom • Mayflower Studios</title>
   <link rel="stylesheet" href="/style.css" />
-    <!-- OG:START -->
-  <meta name="description" content="EchoBloom is a Discord RPG bot with eight classes, prestige chains, dungeons, boss fights, crafting, lore, and seasonal campaigns." />
+  <meta name="description" content="EchoBloom — a realm-based living world Discord bot. Overview, classes, campaigns, world reference, and realm lore all in one place." />
   <meta property="og:title" content="EchoBloom • Mayflower Studios" />
-  <meta property="og:description" content="EchoBloom is a Discord RPG bot with eight classes, prestige chains, dungeons, boss fights, crafting, lore, and seasonal campaigns." />
-  <meta property="og:url" content="https://mayflowerstudios.net/bots/echobloom.html" />
+  <meta property="og:description" content="EchoBloom — a realm-based living world Discord bot." />
+  <meta property="og:url" content="https://mayflowerstudios.net/echobloom.html" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://mayflowerstudios.net/assets/og/bots__echobloom.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="EchoBloom • Mayflower Studios" />
-  <meta name="twitter:description" content="EchoBloom is a Discord RPG bot with eight classes, prestige chains, dungeons, boss fights, crafting, lore, and seasonal campaigns." />
   <meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/bots__echobloom.png" />
-  <!-- OG:END -->
+  <style>
+    /* ── Hub Tabs ── */
+    .hub-tabs {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      padding: 16px 20px;
+      border: 1px solid var(--border); border-radius: var(--r-lg);
+      background: var(--glass); backdrop-filter: blur(12px);
+      position: sticky; top: 72px; z-index: 100;
+    }
+    .hub-tab {
+      font-family: var(--font-b); font-size: 13px; font-weight: 500;
+      padding: 8px 16px; border-radius: 999px;
+      border: 1px solid var(--border-2); background: transparent;
+      color: var(--text-2); cursor: pointer;
+      transition: all 160ms var(--ease);
+    }
+    .hub-tab:hover { color: var(--text); background: rgba(255,255,255,.07); }
+    .hub-tab.active {
+      color: var(--rose); background: rgba(249,168,212,.08);
+      border-color: rgba(249,168,212,.25);
+    }
+    .hub-panel { display: none; flex-direction: column; gap: 24px; }
+    .hub-panel.active { display: flex; }
+
+    /* ── Realm Sub-tabs ── */
+    .realm-tabs {
+      display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px;
+    }
+    .realm-tab {
+      font-family: var(--font-b); font-size: 13px; font-weight: 500;
+      padding: 8px 16px; border-radius: 999px;
+      border: 1px solid var(--border-2); background: transparent;
+      color: var(--text-2); cursor: pointer;
+      transition: all 160ms var(--ease);
+    }
+    .realm-tab:hover { color: var(--text); background: rgba(255,255,255,.07); }
+    .realm-tab[data-realm="grove"].active  { color: #6ee7b7; background: rgba(110,231,183,.08); border-color: rgba(110,231,183,.25); }
+    .realm-tab[data-realm="ember"].active  { color: #fca5a5; background: rgba(252,165,165,.08); border-color: rgba(252,165,165,.25); }
+    .realm-tab[data-realm="mirror"].active { color: #93c5fd; background: rgba(147,197,253,.08); border-color: rgba(147,197,253,.25); }
+    .realm-tab[data-realm="moonroot"].active { color: #c4b5fd; background: rgba(196,181,253,.08); border-color: rgba(196,181,253,.25); }
+    .realm-panel { display: none; flex-direction: column; gap: 16px; }
+    .realm-panel.active { display: flex; }
+
+    /* ── Accordions ── */
+    .acc { border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+    .acc + .acc { margin-top: 8px; }
+    .acc summary {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 18px; cursor: pointer; list-style: none;
+      font-weight: 600; font-size: 15px; color: var(--text);
+      background: var(--glass); user-select: none;
+      transition: background 150ms var(--ease);
+    }
+    .acc summary::-webkit-details-marker { display: none; }
+    .acc summary::after {
+      content: '▸'; margin-left: auto; opacity: .4; font-size: 12px;
+      transition: transform .2s ease;
+    }
+    .acc[open] > summary::after { transform: rotate(90deg); }
+    .acc[open] > summary { background: rgba(249,168,212,.04); }
+    .acc summary:hover { background: rgba(255,255,255,.04); }
+    .acc-body { padding: 16px 18px; border-top: 1px solid var(--border); }
+
+    /* ── Tag chips ── */
+    .tag {
+      display: inline-block; font-size: 11px; font-weight: 600;
+      padding: 2px 8px; border-radius: 999px; border: 1px solid;
+      letter-spacing: .3px;
+    }
+    .tag-common   { color: var(--text-3);  border-color: rgba(250,245,255,.15); background: rgba(250,245,255,.05); }
+    .tag-uncommon { color: #86efac;        border-color: rgba(134,239,172,.25); background: rgba(134,239,172,.07); }
+    .tag-rare     { color: #93c5fd;        border-color: rgba(147,197,253,.25); background: rgba(147,197,253,.07); }
+    .tag-legendary{ color: var(--gold);    border-color: rgba(253,230,138,.25); background: rgba(253,230,138,.07); }
+    .tag-fused    { color: var(--violet);  border-color: rgba(196,181,253,.3);  background: rgba(196,181,253,.08); }
+    .tag-usable   { color: var(--rose);    border-color: rgba(249,168,212,.25); background: rgba(249,168,212,.07); }
+    .tag-craft    { color: var(--emerald); border-color: rgba(110,231,183,.25); background: rgba(110,231,183,.07); }
+    .tag-skill    { color: var(--violet);  border-color: rgba(196,181,253,.3);  background: rgba(196,181,253,.08); }
+    .tag-combat   { color: #fca5a5;        border-color: rgba(252,165,165,.3);  background: rgba(252,165,165,.08); }
+    .tag-lore     { color: var(--gold);    border-color: rgba(253,230,138,.25); background: rgba(253,230,138,.07); }
+    .tag-cd       { color: var(--text-3);  border-color: rgba(250,245,255,.12); background: rgba(250,245,255,.04); font-style: normal; }
+
+    /* ── Item rows ── */
+    .item-row { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; padding: 6px 0; }
+    .item-row + .item-row { border-top: 1px solid var(--border); }
+    .item-name { font-weight: 600; color: var(--text); font-size: 14px; }
+    .item-flavour { color: var(--text-3); font-size: 13px; font-style: italic; }
+
+    /* ── Class cards ── */
+    .class-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; }
+    @media (max-width: 700px) { .class-grid { grid-template-columns: 1fr; } }
+
+    .class-card {
+      border: 1px solid var(--border); border-radius: var(--r-md);
+      padding: 18px; background: var(--glass);
+      backdrop-filter: blur(10px);
+      transition: border-color 180ms var(--ease), box-shadow 180ms var(--ease);
+    }
+    .class-card:hover { border-color: var(--border-2); box-shadow: 0 8px 30px rgba(0,0,0,.2); }
+    .class-card h3 { font-size: 18px; margin-bottom: 4px; }
+    .class-quote { color: var(--text-3); font-style: italic; font-size: 13px; margin: 0 0 8px; }
+    .class-desc  { color: var(--text-2); font-size: 13.5px; line-height: 1.68; margin: 0 0 10px; }
+    .class-stat-pill {
+      display: inline-flex; gap: 4px; align-items: center;
+      font-size: 11.5px; color: var(--text-3); margin-bottom: 8px;
+    }
+    .class-skills { list-style: none; padding: 0; margin: 0; }
+    .class-skills li { font-size: 13px; color: var(--text-2); padding: 3px 0; line-height: 1.5; }
+    .class-skills li + li { border-top: 1px solid var(--border); }
+    .best-for {
+      margin-top: 10px; padding: 10px 12px;
+      border: 1px solid rgba(249,168,212,.12);
+      border-radius: var(--r-sm); background: rgba(249,168,212,.04);
+      font-size: 13px; color: var(--text-2); line-height: 1.6;
+    }
+    .best-for strong { color: var(--rose); display: block; margin-bottom: 3px; }
+
+    /* ── Lore chapter accordion ── */
+    .chapter-list { display: flex; flex-direction: column; gap: 0; }
+    .chapter-item {
+      border-bottom: 1px solid var(--border); padding: 12px 0;
+    }
+    .chapter-item:last-child { border-bottom: none; }
+    .chapter-unlock { font-size: 12px; color: var(--text-3); margin: 2px 0 6px; }
+    .chapter-text { font-size: 14px; color: var(--text-2); line-height: 1.72; }
+
+    /* ── Fragment rows ── */
+    .frag-row { padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .frag-row:last-child { border-bottom: none; }
+    .frag-flavour { font-size: 13.5px; color: var(--text-3); font-style: italic; margin: 4px 0 0; padding-left: 2px; }
+
+    /* ── Campaign code blocks ── */
+    .codebox {
+      background: rgba(0,0,0,.35); border: 1px solid var(--border);
+      border-radius: var(--r-sm); padding: 14px 16px; overflow-x: auto;
+    }
+    .codebox code {
+      font-family: var(--font-m); font-size: 12.5px;
+      color: var(--text-2); white-space: pre; display: block; line-height: 1.7;
+    }
+
+    /* ── Stat callout ── */
+    .callout {
+      background: rgba(249,168,212,.05); border: 1px solid rgba(249,168,212,.13);
+      border-radius: var(--r-sm); padding: 12px 14px;
+    }
+    .callout strong { color: var(--rose); display: block; margin-bottom: 4px; font-size: 13.5px; }
+
+    /* ── Section utility ── */
+    .sec-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--rose); margin-bottom: 4px;
+    }
+    .sec-h2 { font-size: 22px; margin-bottom: 12px; }
+    .sec-h2::after {
+      content: ''; display: block; height: 2px; width: 36px; margin-top: 5px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--rose), var(--violet), transparent); opacity: .5;
+    }
+    .two-col { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; }
+    @media (max-width: 680px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* ── Scroll-to-top ── */
+    .hub-tip { font-size: 12px; color: var(--text-3); text-align: center; padding: 6px 0; }
+
+    /* ── Wave header ── */
+    .wave-header {
+      font-size: 16px; font-family: var(--font-d); font-weight: 600;
+      color: var(--text); margin: 0 0 4px;
+    }
+    .wave-sub { font-size: 12.5px; color: var(--text-3); font-style: italic; margin: 0 0 12px; }
+
+    /* ── Realm colour accents ── */
+    .realm-panel[data-realm="grove"]    .acc[open] > summary { background: rgba(110,231,183,.04); }
+    .realm-panel[data-realm="ember"]    .acc[open] > summary { background: rgba(252,165,165,.04); }
+    .realm-panel[data-realm="mirror"]   .acc[open] > summary { background: rgba(147,197,253,.04); }
+    .realm-panel[data-realm="moonroot"] .acc[open] > summary { background: rgba(196,181,253,.04); }
+
+    /* Small responsive tweaks */
+    @media (max-width: 560px) { .hub-tabs { top: 60px; } }
+    ul.plain { list-style: none; padding: 0; margin: 0; }
+    ul.plain li { font-size: 13.5px; color: var(--text-2); padding: 3px 0; line-height: 1.6; }
+    ul.plain li + li { border-top: 1px solid var(--border); }
+    ul.inner { padding-left: 18px; margin: 6px 0 0; }
+    ul.inner li { font-size: 13px; color: var(--text-2); line-height: 1.8; }
+    .grid2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; }
+    @media (max-width: 680px) { .grid2 { grid-template-columns: 1fr; } }
+    table.stat-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    table.stat-table th { text-align: left; padding: 7px 10px; border-bottom: 2px solid var(--border); color: var(--text-2); font-weight: 600; }
+    table.stat-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); color: var(--text-2); }
+    table.stat-table tr:last-child td { border-bottom: none; }
+    table.stat-table td strong { color: var(--text); }
+  </style>
 </head>
+
 <body data-nav="bots">
-  <div class="wrap">
+<div class="wrap">
 
-    <div id="shared-nav"></div>
+  <div id="shared-nav"></div>
 
-    <!-- HERO -->
-    <section class="hero">
-      <div>
-        <p class="kicker">Discord Bot (Private • Server-Only)</p>
-        <h1>🌙 EchoBloom</h1>
-        <p class="muted">
-          A realm-based living world bot built for our server. Choose a realm, pick a class,
-          earn XP through conversation and voice chat, discover items and lore fragments, complete quests,
-          craft powerful artifacts, run solo dungeon adventures, fight server-wide bosses, raid rival realms,
-          and compete in realm-vs-realm battles — with seasonal content, story waves, prestige progression,
-          and a Convergence system that grows the world over time.
-        </p>
-        <div class="ctaRow">
-          <a class="btn bots" href="/echobloom-classes.html">⚔️ Class Guide</a>
-          <a class="btn bots" href="/echobloom-campaigns.html">📜 Campaign Guide</a>
-          <a class="btn bots" href="/echobloom-world.html">🌍 World Reference</a>
-          <a class="btn ghost" href="/projects.html">⬅ Back to Projects</a>
-        </div>
+  <!-- HERO -->
+  <section class="hero">
+    <div>
+      <p class="kicker">Discord Bot (Private · Server-Only)</p>
+      <h1>🌙 EchoBloom</h1>
+      <p class="muted">
+        A realm-based living world bot. Choose a realm, pick a class, earn XP through conversation
+        and voice chat, discover items and lore fragments, run dungeons, fight bosses, raid rival realms,
+        and follow a seasonal story that keeps expanding with Convergence waves.
+      </p>
+      <div class="ctaRow" style="margin-top:12px;">
+        <span class="tag tag-lore">Private Bot</span>
+        <span class="tag tag-skill">4 Realms</span>
+        <span class="tag tag-combat">8 Classes</span>
+        <span class="tag tag-craft">11 Zones</span>
+        <span class="tag tag-uncommon">9 Bosses</span>
       </div>
-
-      <div class="tileGrid">
-        <div class="tile"><strong>🌿 Realms</strong><p>Join via reactions, earn XP, climb ranks, grow your realm.</p></div>
-        <div class="tile"><strong>⚔️ Classes</strong><p>Pick one of 8 archetypes — each shapes how you earn XP, find items, craft, and fight.</p></div>
-        <div class="tile"><strong>🗺️ Adventures</strong><p>Solo dungeons, group adventures, server-wide boss fights, class leveling, and prestige progression.</p></div>
-        <div class="tile"><strong>📜 Campaigns</strong><p>Multi-scene party adventures with branching paths, fights, and a boss finale.</p></div>
-        <div class="tile"><strong>🎒 Items & Crafting</strong><p>Discover items, craft artifacts, collect fragments, unlock your realm's story.</p></div>
-        <div class="tile"><strong>🏴 Battles & Raids</strong><p>Riddle battles, reaction races, item hunts, word scrambles, XP frenzies, realm raids, sabotage, and trivia duels.</p></div>
-        <div class="tile"><strong>🌀 Waves & Seasons</strong><p>Multi-wave lore progression with Convergence resets and seasonal exclusives.</p></div>
-        <div class="tile"><strong>🌦️ Weather & Curses</strong><p>Daily weather modifies combat stats for everyone. Curses from traps persist across runs until cleansed.</p></div>
-        <div class="tile"><strong>📖 Bestiary</strong><p>Track every monster and boss kill. Earn completion titles and passive bonuses at kill milestones.</p></div>
-      </div>
-    </section>
-
-    <!-- QUICK NAV -->
-    <div class="sectionTitle">
-      <h2>🗂️ On This Page</h2>
-      <span>Jump to a section</span>
     </div>
-
-    <section class="card">
-      <div class="tileGrid" style="grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px;">
-        <a class="tile" href="#description" style="text-decoration:none;">📝 Description</a>
-        <a class="tile" href="#core-systems" style="text-decoration:none;">⭐ Core Systems</a>
-        <a class="tile" href="#classes" style="text-decoration:none;">⚔️ Classes</a>
-        <a class="tile" href="#adventures" style="text-decoration:none;">🗺️ Adventures</a>
-        <a class="tile" href="#lore" style="text-decoration:none;">📜 Lore & Seasons</a>
-        <a class="tile" href="#how-to-use" style="text-decoration:none;">📘 How to Use</a>
-        <a class="tile" href="#commands" style="text-decoration:none;">⌨️ Commands</a>
-        <a class="tile" href="#setup" style="text-decoration:none;">🔧 Setup</a>
-        <a class="tile" href="/echobloom-world.html" style="text-decoration:none;">🌍 World Reference ↗</a>
-        <a class="tile" href="#weather-curses" style="text-decoration:none;">🌦️ Weather & Curses</a>
-        <a class="tile" href="#bestiary" style="text-decoration:none;">📖 Bestiary</a>
-      </div>
-    </section>
-
-    <!-- DESCRIPTION -->
-    <div class="sectionTitle" id="description">
-      <h2>📝 Description</h2>
-      <span>What EchoBloom is (in our server)</span>
+    <div class="tileGrid">
+      <div class="tile"><strong>🌿 Realms</strong><p>Join via reactions, earn XP, climb ranks.</p></div>
+      <div class="tile"><strong>⚔️ Classes</strong><p>8 archetypes that reshape how you earn, drop, and fight.</p></div>
+      <div class="tile"><strong>🗺️ Adventures</strong><p>Solo dungeons, group runs, boss fights, prestige.</p></div>
+      <div class="tile"><strong>📜 Campaigns</strong><p>Multi-scene party adventures with branching paths.</p></div>
+      <div class="tile"><strong>🎒 Items</strong><p>Drops, crafting, seasonal exclusives, fused artifacts.</p></div>
+      <div class="tile"><strong>🌀 Waves</strong><p>Story waves, Convergence resets, seasonal content.</p></div>
     </div>
+  </section>
 
-    <section class="card">
-      <p class="desc">
-        <strong>EchoBloom</strong> is our private "living world" bot. Members choose one of four realms and then
-        build progress through daily conversation and voice chat: every message earns XP for both you and your realm,
+  <!-- HUB TABS NAV -->
+  <nav class="hub-tabs" id="hubTabNav" aria-label="EchoBloom sections">
+    <button class="hub-tab active" data-tab="overview">📝 Overview</button>
+    <button class="hub-tab" data-tab="classes">⚔️ Classes</button>
+    <button class="hub-tab" data-tab="campaigns">📜 Campaigns</button>
+    <button class="hub-tab" data-tab="world">🌍 World Ref</button>
+    <button class="hub-tab" data-tab="realms">🌿 Realms</button>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════
+       PANEL: OVERVIEW
+  ═══════════════════════════════════════════════ -->
+  <div class="hub-panel active" id="panel-overview">
+
+    <div class="card">
+      <p class="sec-label">What is EchoBloom?</p>
+      <h2 class="sec-h2">Description</h2>
+      <p class="muted" style="margin-bottom:12px;">
+        <strong>EchoBloom</strong> is our private "living world" bot. Members choose one of four realms and build
+        progress through daily conversation and voice chat — every message earns XP for you and your realm,
         items drop randomly, lore fragments surface from the noise, and realm events can trigger at any moment.
       </p>
-
-      <p class="desc">
-        On top of the realm layer sits a full <strong>class system</strong> — eight archetypes that shape how you
-        earn XP, find items, contribute to your realm, and perform in combat. Pick a class, level it up through
-        solo dungeon runs and boss fights, and prestige into a new class when you hit the cap to carry permanent
-        stat bonuses forward. Master every class to earn the 🏆 <strong>Class Master</strong> title.
+      <p class="muted" style="margin-bottom:12px;">
+        On top of that sits a full <strong>class system</strong> — eight archetypes that shape how you earn XP,
+        find items, contribute to your realm, and perform in combat. Prestige into new classes at cap to carry
+        permanent stat bonuses forward. Master all eight to earn the 🏆 Class Master title.
       </p>
-
-      <p class="desc">
-        It's designed to feel like an RPG layer on top of chat — not a grindy spreadsheet.
-        Progress happens naturally through conversation, with quests, crafting, raids, seasonal content,
-        adventures, and competitive events adding texture over time. A wave system means the story keeps growing:
+      <p class="muted" style="margin-bottom:14px;">
+        It's designed to feel like an RPG layer on top of chat. A wave system means the story keeps growing:
         when all realms complete a wave's lore, a Convergence event fires and the next chapter begins.
       </p>
-
-      <div class="divider" style="margin:14px 0;"></div>
-
-      <h3 style="margin:0 0 6px;">🌿 The Four Realms</h3>
-      <p class="muted small" style="margin:0 0 10px;">
-        Realm identity is a real system: roles, XP tracking, shared inventory, collective lore, and seasonal themes.
-      </p>
-      <ul class="muted small" style="margin:0; padding-left:18px;">
-        <li>🌿 <strong>The Grove of Growth</strong> — <em>Earth · Renewal · Spring</em></li>
-        <li>🔥 <strong>The Ember Circle</strong> — <em>Fire · Transformation · Summer</em></li>
-        <li>💧 <strong>The Mirror Lake</strong> — <em>Water · Reflection · Autumn</em></li>
-        <li>🌙 <strong>The Moonroot Tree</strong> — <em>Spirit · Mystery · Winter</em></li>
-      </ul>
-
-      <div class="callout" style="margin-top:12px;">
-        <strong>Private bot note</strong>
-        <p class="muted small" style="margin:6px 0 0;">
-          EchoBloom is not a public invite bot. This page is our server's reference guide for how it works.
-        </p>
+      <div class="callout">
+        <strong>Private bot</strong>
+        <p class="muted" style="font-size:13px; margin:4px 0 0;">EchoBloom is not a public invite bot. This page is our server's reference guide.</p>
       </div>
-    </section>
+    </div>
+
+    <!-- THE FOUR REALMS -->
+    <div>
+      <p class="sec-label">Realms</p>
+      <h2 class="sec-h2">The Four Realms</h2>
+      <div class="grid2">
+        <div class="class-card">
+          <h3>🌿 Grove of Growth</h3>
+          <p class="class-desc">Nurturing, learning, steady evolution. The Grove teaches: growth cannot be forced — only nurtured.</p>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <span class="tag tag-uncommon">Earth</span>
+            <span class="tag tag-uncommon">Renewal</span>
+            <span class="tag tag-uncommon">Spring</span>
+          </div>
+        </div>
+        <div class="class-card">
+          <h3>🔥 Ember Circle</h3>
+          <p class="class-desc">Passion, drive, transformation. Fire tests not to destroy — but to reveal what cannot be burned away.</p>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <span class="tag tag-combat">Fire</span>
+            <span class="tag tag-combat">Transformation</span>
+            <span class="tag tag-combat">Summer</span>
+          </div>
+        </div>
+        <div class="class-card">
+          <h3>💧 Mirror Lake</h3>
+          <p class="class-desc">Reflection, clarity, emotional depth. Wisdom is not certainty — it is awareness.</p>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <span class="tag tag-rare">Water</span>
+            <span class="tag tag-rare">Reflection</span>
+            <span class="tag tag-rare">Autumn</span>
+          </div>
+        </div>
+        <div class="class-card">
+          <h3>🌙 Moonroot Tree</h3>
+          <p class="class-desc">Intuition, rest, inner wisdom. Not all truths are meant to be known at once.</p>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <span class="tag tag-skill">Spirit</span>
+            <span class="tag tag-skill">Mystery</span>
+            <span class="tag tag-skill">Winter</span>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- CORE SYSTEMS -->
-    <div class="sectionTitle" id="core-systems">
-      <h2>⭐ Core Systems</h2>
-      <span>What makes EchoBloom EchoBloom</span>
+    <div>
+      <p class="sec-label">Systems</p>
+      <h2 class="sec-h2">Core Systems</h2>
+      <div class="grid2">
+        <details class="acc">
+          <summary>🌿 Realm Progression</summary>
+          <div class="acc-body">
+            <p class="muted" style="font-size:13.5px; margin-bottom:10px;">Every XP-eligible message contributes to both your personal level and your realm's collective level. Realm levels unlock lore chapters, exclusive events, and rank roles.</p>
+            <ul class="inner">
+              <li>Realm XP is pooled across all members</li>
+              <li>Realm level gates lore chapter unlocks (3, 7, 12, 18, 25…)</li>
+              <li>3 rank roles per realm at Levels 1, 10, and 25</li>
+              <li>Seasonal items are realm-specific drops</li>
+            </ul>
+          </div>
+        </details>
+        <details class="acc">
+          <summary>⚔️ Class System</summary>
+          <div class="acc-body">
+            <p class="muted" style="font-size:13.5px; margin-bottom:10px;">8 archetypes — each with a passive, 3 skill tiers, 5 stats, and unique combat specials. One pick per Wave.</p>
+            <ul class="inner">
+              <li>Pick with <code>/class pick</code> — no switching mid-wave</li>
+              <li>Two XP tracks: member level (chat) and class level (adventure)</li>
+              <li>Skills unlock at member levels 5, 15, and 30</li>
+              <li>Prestige at Class Level 10 → carry 30% of max stats forward</li>
+              <li>Play all 8 classes → 🏆 Class Master title</li>
+            </ul>
+          </div>
+        </details>
+        <details class="acc">
+          <summary>🎒 Items & Crafting</summary>
+          <div class="acc-body">
+            <p class="muted" style="font-size:13.5px; margin-bottom:10px;">Items drop randomly from chat messages into your realm's shared inventory. Combine materials to craft usable items.</p>
+            <ul class="inner">
+              <li>Common (2.5%), Uncommon, Rare, Legendary drop tiers</li>
+              <li>Realm-specific drops plus universal items</li>
+              <li>Craft with <code>/craft</code> from recipes in <code>/recipes</code></li>
+              <li>Use items with <code>/use</code> — effects apply realm-wide</li>
+              <li>Seasonal items only drop during their season; fuse with <code>/forge</code></li>
+            </ul>
+          </div>
+        </details>
+        <details class="acc">
+          <summary>🗺️ Adventures & Boss Fights</summary>
+          <div class="acc-body">
+            <p class="muted" style="font-size:13.5px; margin-bottom:10px;">Solo and group dungeon runs earn class XP and items. Server-wide boss fights rally all realms.</p>
+            <ul class="inner">
+              <li><code>/adventure</code> — solo dungeon run</li>
+              <li><code>/adventure_group</code> — party dungeon</li>
+              <li>11 adventure zones, gated by class level</li>
+              <li>9 server bosses with phased fights and loot multipliers</li>
+              <li>Curses from traps persist across runs until cleansed</li>
+              <li>Daily weather modifies combat stats server-wide</li>
+            </ul>
+          </div>
+        </details>
+        <details class="acc">
+          <summary>🏴 Battles & Raids</summary>
+          <div class="acc-body">
+            <ul class="inner">
+              <li>Riddle battles, reaction races, item hunts, word scrambles, XP frenzies</li>
+              <li><code>/raid</code> — launch a raid against a rival realm</li>
+              <li><code>/sabotage</code> — sneak in and destroy their items</li>
+              <li><code>/challenge</code> — trivia duel between realms</li>
+              <li>Events auto-trigger from chat activity or via <code>/admin start-event</code></li>
+            </ul>
+          </div>
+        </details>
+        <details class="acc">
+          <summary>🌀 Waves, Seasons & Convergence</summary>
+          <div class="acc-body">
+            <p class="muted" style="font-size:13.5px; margin-bottom:10px;">The world evolves in waves. When all realms finish a wave's lore, Convergence fires and the next wave begins.</p>
+            <ul class="inner">
+              <li>Each wave: 5 lore chapters + 3 lore fragments per realm</li>
+              <li>Seasonal items (Spring/Summer/Autumn/Winter) only available during their window</li>
+              <li>Fuse all 3 seasonal items into a powerful Legendary artifact</li>
+              <li>Use <code>/wave</code> to check progress; <code>/season</code> for seasonal status</li>
+              <li>Convergence resets wave progress but carries member history forward</li>
+            </ul>
+          </div>
+        </details>
+        <details class="acc">
+          <summary>🌦️ Weather & Curses</summary>
+          <div class="acc-body">
+            <p class="muted" style="font-size:13.5px; margin-bottom:10px;">Two passive world modifiers that affect all combat and adventures.</p>
+            <ul class="inner">
+              <li>Daily weather changes at midnight — affects Power, Agility, Vitality for everyone</li>
+              <li>Sunny: +Power. Rainy: +Wisdom. Stormy: +Agility. Foggy: -Vitality. Blizzard: -all</li>
+              <li>Curses apply when you trigger traps in dungeons</li>
+              <li>Curse effects persist across all runs until cleansed</li>
+              <li><code>/curses</code> to view active curses; <code>/cleanse</code> to remove them</li>
+            </ul>
+          </div>
+        </details>
+        <details class="acc">
+          <summary>📖 Bestiary</summary>
+          <div class="acc-body">
+            <ul class="inner">
+              <li>Track every monster and boss kill with <code>/bestiary monsters</code> and <code>/bestiary bosses</code></li>
+              <li>Earn completion titles and passive bonuses at kill milestones</li>
+              <li><code>/bestiary stats</code> for your full completion overview</li>
+            </ul>
+          </div>
+        </details>
+      </div>
     </div>
 
-    <section class="grid2">
-      <div class="card">
-        <h3>🌿 Realm Progression <span class="badge">Core</span></h3>
-        <p class="desc">
-          Every message you send earns XP — for you <em>and</em> your realm.
-          Both track levels independently, so individual effort lifts the whole community.
-        </p>
-        <ul>
-          <li>Join realms via a reaction-based realm message</li>
-          <li>Realm roles assigned automatically on react</li>
-          <li>Three rank milestones at Level 1, 10, and 25</li>
-          <li>Realm-wide and individual leaderboards</li>
-          <li>XP cooldown (60s) prevents spam — paces naturally</li>
-          <li>XP per message: 5–25 (15 base ± 10 variance)</li>
-          <li>Level caps scale per wave (base: 50 member / 30 realm)</li>
-        </ul>
-      </div>
+    <!-- COMMANDS -->
+    <div>
+      <p class="sec-label">Reference</p>
+      <h2 class="sec-h2">Commands</h2>
+      <div class="grid2">
+        <div class="card">
+          <h3 style="font-size:17px; margin-bottom:12px;">👤 Member Commands</h3>
+          <details class="acc" style="margin-bottom:8px;"><summary>Profile & XP</summary><div class="acc-body"><ul class="inner"><li><code>/profile</code> — realm level, XP, rank</li><li><code>/character</code> — class, stats, skills, prestige</li><li><code>/leaderboard</code> — realm XP rankings</li><li><code>/streak</code> — daily streak and bonus</li></ul></div></details>
+          <details class="acc" style="margin-bottom:8px;"><summary>Class & Adventures</summary><div class="acc-body"><ul class="inner"><li><code>/class pick</code> — pick your class</li><li><code>/class info</code> — compare all 8 classes</li><li><code>/class stats</code> — current combat stats</li><li><code>/class prestige</code> — prestige at CL 10</li><li><code>/class loadout</code> — set up combat specials</li><li><code>/class skills</code> — view unlocked skills</li><li><code>/adventure</code> — solo dungeon run</li><li><code>/adventure_group</code> — invite party to run</li><li><code>/boss status</code> — current boss HP & standings</li></ul></div></details>
+          <details class="acc" style="margin-bottom:8px;"><summary>Items, Crafting & Raids</summary><div class="acc-body"><ul class="inner"><li><code>/inventory</code> — realm item stash</li><li><code>/item-info</code> — item details and effects</li><li><code>/use</code> — activate a usable item</li><li><code>/buffs</code> — active realm XP buffs</li><li><code>/recipes</code> — crafting recipes</li><li><code>/craft</code> — craft an item</li><li><code>/forge</code> — fuse seasonal items</li><li><code>/gift</code> — send items to another realm</li><li><code>/trade</code> — swap items between realms</li><li><code>/raid</code> — launch a raid</li><li><code>/sabotage</code> — destroy rival items</li><li><code>/challenge</code> — trivia duel</li></ul></div></details>
+          <details class="acc"><summary>Lore, Seasons & Events</summary><div class="acc-body"><ul class="inner"><li><code>/lore view</code> — realm lore overview</li><li><code>/lore read</code> — read a specific chapter</li><li><code>/lore fragments</code> — collected fragments</li><li><code>/season</code> — current season and items</li><li><code>/quests</code> — active quests</li><li><code>/wave</code> — current wave progress</li><li><code>/wave-history</code> — past waves</li><li><code>/event-history</code> — battle event results</li><li><code>/curses</code> — active curses</li><li><code>/cleanse</code> — remove curses</li><li><code>/bestiary monsters</code> / <code>bosses</code> / <code>stats</code></li></ul></div></details>
+        </div>
 
-      <div class="card">
-        <h3>🎙️ Voice XP <span class="badge">Core</span></h3>
-        <p class="desc">
-          Earn XP just by hanging out in voice channels. No commands needed — just be present
-          with at least one other person.
-        </p>
-        <ul>
-          <li>5 XP per tick (every 5 minutes) while in voice</li>
-          <li>Minimum 2 non-bot members required in the channel</li>
-          <li>AFK channel and self-deafened users are excluded</li>
-          <li>Streak and item XP buffs apply to voice XP too</li>
-          <li>Scholar's Deep Focus and Warden's Ancient Bond stack voice XP bonuses</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h3>🔥 Streak System <span class="badge">Core</span></h3>
-        <p class="desc">
-          Stay active daily and earn escalating XP bonuses. Streaks reward consistency
-          without punishing breaks too harshly.
-        </p>
-        <ul>
-          <li>7 days → +3% XP bonus</li>
-          <li>14 days → +6% XP bonus</li>
-          <li>21 days → +9% XP bonus</li>
-          <li>28 days → +12% XP bonus (cap)</li>
-          <li>Sentinel's Rally, Wanderer's Road Rhythm, and Trickster's Lucky Escape add further streak bonuses</li>
-          <li>Check your streak anytime with <code>/streak</code></li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h3>⚔️ Class System <span class="badge">New</span></h3>
-        <p class="desc">
-          Choose one of eight archetypes to shape how you earn, fight, and contribute. Your class is
-          universal — any realm member can pick any class.
-        </p>
-        <ul>
-          <li>Pick once per Wave with <code>/class pick</code></li>
-          <li>Three skills unlock at member levels 5, 15, and 30</li>
-          <li>Class level (1–10) earned through adventures and boss fights</li>
-          <li>Stats (Power, Wisdom, Agility, Vitality, Fortune) scale with class level</li>
-          <li>Prestige at Class Lv 10 → pick a new class, keep permanent stat bonuses</li>
-          <li>Play all 8 classes to earn 🏆 Class Master status</li>
-          <li>View your profile with <code>/character</code></li>
-        </ul>
-        <div class="callout" style="margin-top:8px;">
-          <a href="/echobloom-classes.html" style="font-weight:600;">⚔️ Full Class Guide →</a>
-          <p class="muted small" style="margin:4px 0 0;">All 8 classes, skill breakdowns, stat comparisons, prestige strategy, and build recommendations.</p>
+        <div class="card">
+          <h3 style="font-size:17px; margin-bottom:12px;">🛡️ Admin Commands <span class="tag tag-combat" style="font-size:11px;">Staff</span></h3>
+          <details class="acc" style="margin-bottom:8px;"><summary>Setup — <code>/setup</code></summary><div class="acc-body"><ul class="inner"><li><code>/setup realms</code> — post realm selection + reactions</li><li><code>/setup lore</code> — post a realm's Book of Lore</li><li><code>/setup lore-all</code> — post all 4 lore pages</li><li><code>/setup events</code> — post persistent event dashboard</li><li><code>/setup wave</code> — post wave progress embed</li></ul></div></details>
+          <details class="acc" style="margin-bottom:8px;"><summary>Events, Waves & XP — <code>/admin</code></summary><div class="acc-body"><ul class="inner"><li><code>/admin start-event</code> — trigger a battle event</li><li><code>/admin end-event</code> — force end current event</li><li><code>/admin convergence</code> — trigger Convergence now</li><li><code>/admin sync</code> — recalculate all levels from XP</li><li><code>/admin sync-lore</code> — resync lore embeds</li><li><code>/admin reset</code> — reset all realm data</li><li><code>/admin overview</code> — full admin overview</li><li><code>/admin refresh</code> — force refresh dashboard</li></ul></div></details>
+          <details class="acc" style="margin-bottom:8px;"><summary>XP & Levels — <code>/admin</code></summary><div class="acc-body"><ul class="inner"><li><code>/admin set-xp</code> — set member XP</li><li><code>/admin set-level</code> — set member level</li><li><code>/admin add-xp</code> — add XP to member</li><li><code>/admin set-realm-xp</code> — set realm XP</li><li><code>/admin set-realm-level</code> — set realm level</li><li><code>/admin add-realm-xp</code> — add XP to realm</li></ul></div></details>
+          <details class="acc" style="margin-bottom:8px;"><summary>Items — <code>/admin</code></summary><div class="acc-body"><ul class="inner"><li><code>/admin give-item</code> — give item to a realm</li><li><code>/admin remove-item</code> — remove item from realm</li><li><code>/admin clear-inventory</code> — wipe realm inventory</li></ul></div></details>
+          <details class="acc"><summary>Boss — <code>/boss</code></summary><div class="acc-body"><ul class="inner"><li><code>/boss spawn</code> — spawn a boss manually</li><li><code>/boss cancel</code> — cancel the active boss fight</li><li><code>/boss status</code> — boss HP and standings</li></ul></div></details>
         </div>
       </div>
-
-      <div class="card">
-        <h3>🗺️ Adventures <span class="badge">New</span></h3>
-        <p class="desc">
-          Solo and group dungeon runs that use your class stats for combat. Higher zones require higher class
-          level and reward more class XP and item drops.
-        </p>
-        <ul>
-          <li>11 adventure zones from The Whispering Woods (Cl. Lv 1) to The Void Crucible (Prestige 3+)</li>
-          <li>30-minute cooldown between runs</li>
-          <li>Fight enemies round-by-round with 12 seconds to pick your move</li>
-          <li>Random special events: Shrines (heal), Ambushes (enemy first strike), Traps, Treasure Rooms</li>
-          <li>Earn class XP and bonus item drops on clear</li>
-          <li>Group adventures with <code>/adventure_group</code> — invite friends to fight together</li>
-          <li>Use <code>/adventure</code> to start a solo run</li>
-        </ul>
-        <div class="callout" style="margin-top:8px;">
-          <a href="/echobloom-world.html#zones" style="font-weight:600;">🗺️ All Zones, Monsters & Bosses →</a>
-          <p class="muted small" style="margin:4px 0 0;">Full zone list with XP rewards, item chances, boss pools, and all enemy stats.</p>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>🐉 Boss Fights <span class="badge">New</span></h3>
-        <p class="desc">
-          Server-wide co-op fights against powerful bosses. All participants deal damage together and
-          share the rewards when the boss falls.
-        </p>
-        <ul>
-          <li>Bosses spawn from adventure zones or via admin with <code>/boss spawn</code></li>
-          <li>Multi-round fights — 15 seconds per round to pick an action</li>
-          <li>Up to 30 rounds before the boss escapes</li>
-          <li>All participants earn class XP on defeat</li>
-          <li>Damage leaderboard shown on completion</li>
-          <li>View your boss history with <code>/boss-history</code></li>
-        </ul>
-        <div class="callout" style="margin-top:8px;">
-          <a href="/echobloom-world.html#bosses" style="font-weight:600;">🐉 All 9 Bosses with Stats & Phases →</a>
-          <p class="muted small" style="margin:4px 0 0;">HP scaling, attack, phases, loot multipliers, and XP rewards for every boss.</p>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>📜 Campaigns <span class="badge">New</span></h3>
-        <p class="desc">
-          Long-form party adventures built from JSON files. A private channel is created for the group,
-          scenes branch based on party votes, and every fight and item found carries forward to the finale.
-        </p>
-        <ul>
-          <li>Start a campaign with <code>/campaign start</code> — pick from a dropdown of adventures</li>
-          <li>Browse available campaigns with <code>/campaign list</code></li>
-          <li>Party assembles publicly (2–6 players), then moves to a private channel</li>
-          <li>Five scene types: story, item, combat, boss, ending</li>
-          <li>Party votes on story choices — majority wins, 90-second window</li>
-          <li>HP, cooldowns, items, and buffs persist across every scene</li>
-          <li>Boss fights have phases, enrage timers, and XP scaled by damage dealt</li>
-        </ul>
-        <div class="callout" style="margin-top:8px;">
-          <a href="/echobloom-campaigns.html" style="font-weight:600;">📜 Campaign Authoring Guide →</a>
-          <p class="muted small" style="margin:4px 0 0;">How to build campaigns: scene types, JSON schema, boss tuning, validation, and quick reference.</p>
-        </div>
-      </div>
-
-      <div class="card" id="weather-curses">
-        <h3>🌦️ Weather System <span class="badge">New</span></h3>
-        <p class="desc">
-          One weather type is active each day, seeded at midnight UTC — the same for every player.
-          Weather applies real stat modifiers to every adventure run. Clear Skies is the only penalty-free weather.
-        </p>
-        <ul>
-          <li>13 weather types across 4 seasons — from Clear Skies to Blizzard and Scorching Heat</li>
-          <li>Rare weather (Blizzard, Scorching) appears roughly once every 15–20 days in season</li>
-          <li>Every weather except Clear has at least one negative — no free-ride days</li>
-          <li>Invoker thrives in extreme heat; collapses in blizzards (Power −40%, fire is dead)</li>
-          <li>Warden handles cold best; suffers most in heat (Scorching: Vitality −34%)</li>
-          <li>Trickster is worst in fog and blizzards — Agility is everything, and it vanishes</li>
-          <li>Check today's weather and your exact stat changes with <code>/weather</code></li>
-        </ul>
-        <div class="callout" style="margin-top:8px;">
-          <a href="/echobloom-world.html#weather" style="font-weight:600;">🌦️ Full Weather Reference — All 13 Types →</a>
-          <p class="muted small" style="margin:4px 0 0;">Every weather type with season availability, global effects, and per-class interactions.</p>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>🩸 Curse & Cleanse System <span class="badge">New</span></h3>
-        <p class="desc">
-          Curses are persistent stat debuffs applied by trap and cursed ground events. They follow you
-          across multiple runs, ticking down by one after each adventure until they expire or are cleansed.
-        </p>
-        <ul>
-          <li>6 curses: Weakened (Power −20%), Unlucky (Fortune −25%), Haunted (incoming crits +25% HP damage), Sluggish (Agility −20%), Drained (Wisdom −25%, Vitality −10%), Forsaken (all stats −10%)</li>
-          <li>Trap events: 30% chance to apply a curse · Cursed Ground events: 50% chance</li>
-          <li>Multiple curses stack — you can carry several simultaneously</li>
-          <li>Shrine events: 70% chance to cleanse one curse · Blessing events: always cleanse all</li>
-          <li>Use <code>/curses</code> to see active curses and runs remaining on each</li>
-          <li>Craft a Cleansing Vial and use <code>/cleanse</code> to remove everything instantly</li>
-          <li>Expired curses shown as "✨ Curses Lifted" in your adventure results</li>
-        </ul>
-        <div class="callout" style="margin-top:8px;">
-          <a href="/echobloom-world.html#curses" style="font-weight:600;">🩸 Full Curse Reference — All 6 Curses →</a>
-          <p class="muted small" style="margin:4px 0 0;">Every curse with duration, effect, application chance, and cleanse methods.</p>
-        </div>
-      </div>
-
-      <div class="card" id="bestiary">
-        <h3>📖 Bestiary <span class="badge">New</span></h3>
-        <p class="desc">
-          Every monster kill and boss kill is tracked per player. Hit kill milestones to earn passive bonuses,
-          unlock lore entries, and earn completion titles for hunting down everything in the game.
-        </p>
-        <ul>
-          <li>33 monsters tracked across all 11 zones</li>
-          <li>9 server bosses tracked separately</li>
-          <li>Monster milestones: Spotted (×1) · Familiar Foe (×10) · Nemesis (×50) · Mastered (×100)</li>
-          <li>Boss milestones: Slain Once (×1) · Repeatedly Bested (×5) · Dominated (×10)</li>
-          <li><strong>Completion titles:</strong> Monster Chronicler (all monsters ×1) · Apex Hunter (all ×10) · Boss Slayer (all bosses ×1) · Warlord (all bosses ×5) · True Completionist (all four)</li>
-          <li>Use <code>/bestiary monsters</code>, <code>/bestiary bosses</code>, or <code>/bestiary stats</code></li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h3>🎒 Items & Inventory <span class="badge">Drops</span></h3>
-        <p class="desc">
-          Items drop randomly from messages. Every item belongs to the realm — not the individual.
-          Realms build a shared stash together.
-        </p>
-        <ul>
-          <li>Universal items any realm can find</li>
-          <li>Realm-specific items unique to each path (6 per realm)</li>
-          <li>Rarity tiers: Common (2.5%), Uncommon (1.5%), Rare (0.7%), Legendary (0.2%)</li>
-          <li>Usable items with active effects (XP buffs, steals, copies, and more)</li>
-          <li>Gift items between realms or trade across borders</li>
-          <li>Full item activity log for transparency</li>
-        </ul>
-        <div class="callout" style="margin-top:8px;">
-          <a href="/echobloom-world.html#items-universal" style="font-weight:600;">🎒 Full Item List with Effects →</a>
-          <p class="muted small" style="margin:4px 0 0;">Every item across all realms with real drop rates, active effects, and crafting recipes.</p>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>🔨 Crafting <span class="badge">Systems</span></h3>
-        <p class="desc">
-          Combine common and uncommon materials from your realm's inventory into powerful
-          usable items. Each realm has its own recipes plus universal ones.
-        </p>
-        <ul>
-          <li>View available recipes with <code>/recipes</code></li>
-          <li>Craft items with <code>/craft</code></li>
-          <li>Realm members get an objection window before crafting completes</li>
-          <li>Universal recipes: Realm Compass, Void Lantern, Worldseed</li>
-          <li>Realm recipes: rare + legendary items from common/uncommon materials</li>
-          <li>Scholar's Studied Hand and Oracle's Omniscience boost crafting success rate</li>
-        </ul>
-        <div class="callout" style="margin-top:8px;">
-          <a href="/echobloom-world.html#crafting" style="font-weight:600;">⚗️ All Recipes with Ingredients →</a>
-          <p class="muted small" style="margin:4px 0 0;">Every crafting recipe with exact ingredient counts and success rates.</p>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>⚔️ Realm Battles <span class="badge">Event</span></h3>
-        <p class="desc">
-          Events trigger randomly from messages (5% chance, 1hr cooldown) or can be started by admins.
-          Six battle types keep things fresh.
-        </p>
-        <ul>
-          <li>⚡ <strong>Riddle Battles</strong> — first correct answer wins XP for their realm</li>
-          <li>🏃 <strong>Reaction Races</strong> — fastest finger on the right emoji wins</li>
-          <li>🔎 <strong>Item Hunts</strong> — first realm to find a target item claims the prize</li>
-          <li>🔤 <strong>Word Scrambles</strong> — unscramble a word with a hint for realm XP</li>
-          <li>🔥 <strong>XP Frenzies</strong> — 10-minute 2× XP window, winning realm gets bonus</li>
-          <li>🔗 <strong>Emoji Chains</strong> — react in the correct sequence of 5 emojis</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h3>🏴 Realm Raids <span class="badge">PvP</span></h3>
-        <p class="desc">
-          Launch a raid against another realm to steal their items. Power is based on
-          participant levels, reaction count, and a dash of randomness.
-        </p>
-        <ul>
-          <li>Start a raid with <code>/raid</code></li>
-          <li>Both sides rally members via reactions</li>
-          <li>Power = (avg level × 1.5) + (participants × 1.0) + random factor</li>
-          <li>Striker's Battle Charge and Invoker's Battle Fury boost raid damage contribution</li>
-          <li>Winners steal 3 items from the defending realm</li>
-          <li>2-hour cooldown between raids</li>
-          <li>XP rewards for both sides (400 win / 100 lose)</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h3>🗡️ Rivalry <span class="badge">PvP</span></h3>
-        <p class="desc">
-          Two targeted realm-vs-realm mechanics beyond full raids: Sabotage lets you sneak in and
-          destroy items, while Challenge fires a server-wide trivia duel.
-        </p>
-        <ul>
-          <li><code>/sabotage &lt;realm&gt;</code> — sneak into a rival realm and destroy some of their items</li>
-          <li><code>/challenge &lt;realm&gt;</code> — challenge a rival realm to a trivia duel</li>
-          <li>Sabotage success depends on participant levels and a random roll</li>
-          <li>Trivia challenges are open to the whole server — first correct answer wins for their realm</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h3>📋 Quests <span class="badge">Daily / Weekly</span></h3>
-        <p class="desc">
-          Quests rotate automatically — daily and weekly targets that reward bonus realm XP on completion.
-        </p>
-        <ul>
-          <li>Message count targets (e.g. "Send 50 messages today")</li>
-          <li>XP milestones (e.g. "Earn 500 XP today")</li>
-          <li>Item collection goals (e.g. "Find 2 items today")</li>
-          <li>Seasonal quests during active seasons</li>
-          <li>Progress tracked automatically from normal chatting</li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- CLASSES OVERVIEW -->
-    <div class="sectionTitle" id="classes">
-      <h2>⚔️ Classes</h2>
-      <span>Eight archetypes — choose wisely, prestige strategically</span>
     </div>
 
-    <section class="card">
-      <p class="desc">
-        Classes are <strong>universal</strong> — any member of any realm can pick any class. Your class
-        shapes your passive bonuses, the skills you unlock as you level up, and your stats in solo adventures
-        and boss fights. You pick once per Wave. When you reach Class Level 10, you can <strong>prestige</strong>:
-        switch to a new class and permanently carry 30% of your old class's max stats as a bonus. Play all
-        8 classes to earn 🏆 <strong>Class Master</strong>.
-      </p>
-
-      <div class="callout" style="margin-bottom:16px;">
-        <strong>Class Level vs. Member Level</strong>
-        <p class="muted small" style="margin:6px 0 0;">
-          <strong>Member level</strong> comes from chatting — it unlocks class skills at levels 5, 15, and 30.
-          <strong>Class level</strong> (1–10) is earned separately through <code>/adventure</code> and boss fights —
-          it scales your stats and determines which adventure zones you can enter.
-        </p>
-      </div>
-
-      <!-- Class quick-glance grid -->
-      <div class="tileGrid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:8px; margin-bottom:16px;">
-        <div class="tile"><strong>🛡️ Sentinel</strong><p class="muted small" style="margin:4px 0 0;">Tank · Realm backbone. Highest realm XP contribution.</p></div>
-        <div class="tile"><strong>⚔️ Striker</strong><p class="muted small" style="margin:4px 0 0;">Combat · Events. Best event XP + raid damage.</p></div>
-        <div class="tile"><strong>📖 Scholar</strong><p class="muted small" style="margin:4px 0 0;">Lore · Crafting · Voice. Top lore finder.</p></div>
-        <div class="tile"><strong>🎲 Wanderer</strong><p class="muted small" style="margin:4px 0 0;">All-round. Broad XP + item drop boost.</p></div>
-        <div class="tile"><strong>🔥 Invoker</strong><p class="muted small" style="margin:4px 0 0;">Glass cannon. Highest combined event XP.</p></div>
-        <div class="tile"><strong>🌿 Warden</strong><p class="muted small" style="margin:4px 0 0;">Voice · Endurance. Stacks highest VC XP.</p></div>
-        <div class="tile"><strong>🎭 Trickster</strong><p class="muted small" style="margin:4px 0 0;">Items · Speed. +55% item drop rate at cap.</p></div>
-        <div class="tile"><strong>🔮 Oracle</strong><p class="muted small" style="margin:4px 0 0;">Lore · Crafting · Endgame. Best lore completionist.</p></div>
-      </div>
-
-      <div class="btnrow">
-        <a class="button bots" href="/echobloom-classes.html">⚔️ Full Class Guide — Skills, Stats & Prestige →</a>
-      </div>
-    </section>
-
-    <!-- ADVENTURES -->
-    <div class="sectionTitle" id="adventures">
-      <h2>🗺️ Adventures & Boss Fights</h2>
-      <span>Solo dungeons, group adventures, server boss fights, and class leveling</span>
-    </div>
-
-    <section class="grid2">
+    <!-- SETUP -->
+    <div>
+      <p class="sec-label">Getting Started</p>
+      <h2 class="sec-h2">Setup Notes</h2>
       <div class="card">
-        <h3>⚔️ Solo Adventures <span class="badge">New</span></h3>
-        <p class="desc">
-          Run a solo dungeon with <code>/adventure</code>. Pick a zone, fight a monster round-by-round,
-          and earn class XP and item drops on the way out.
-        </p>
-        <ul>
-          <li><strong>30-minute cooldown</strong> between runs</li>
-          <li>Pick your move each round — <strong>12 seconds</strong> before it auto-resolves</li>
-          <li>Max 8 rounds per solo fight before the dungeon collapses</li>
-          <li>Combat uses Power, Agility, Vitality, Wisdom, and Fortune stats</li>
-          <li>Random events before combat: Shrines (restore HP), Ambushes (enemy first strike), Traps, Treasure Rooms (skip combat for guaranteed loot)</li>
-          <li>Earn class XP on any outcome; more on a full clear</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h3>👥 Group Adventures <span class="badge">New</span></h3>
-        <p class="desc">
-          Team up for a shared dungeon run with <code>/adventure_group</code>. Invite friends, pick a zone,
-          and fight together using the full group combat engine.
-        </p>
-        <ul>
-          <li>Uses the same zone list and class stats as solo adventures</li>
-          <li>Monster HP scales up with party size (+70% per extra member)</li>
-          <li>Party buffs, cooldowns, and HP carry between scenes</li>
-          <li>All participants earn class XP on completion</li>
-          <li>Same 30-minute cooldown as solo runs</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h3>🌍 Adventure Zones</h3>
-        <p class="desc">
-          11 zones across 3 tiers — 8 base zones and 3 prestige-gated. Higher zones need higher class level and pay out more XP and better drops.
-        </p>
-        <ul>
-          <li>🌲 <strong>The Whispering Woods</strong> — Cl. Lv 1 · +40 XP · 20% item chance</li>
-          <li>💀 <strong>The Sunken Catacombs</strong> — Cl. Lv 2 · +60 XP · 25% item chance</li>
-          <li>⛰️ <strong>The Shattered Peaks</strong> — Cl. Lv 3 · +80 XP · 30% item chance</li>
-          <li>🌋 <strong>The Smoldering Ashlands</strong> — Cl. Lv 5 · +110 XP · 35% item chance</li>
-          <li>🌊 <strong>The Abyssal Depths</strong> — Cl. Lv 6 · +140 XP · 40% item chance</li>
-          <li>🔮 <strong>The Fracture Nexus</strong> — Cl. Lv 7 · +175 XP · 50% item chance</li>
-          <li>✨ <strong>The Celestial Spire</strong> — Cl. Lv 9 · +220 XP · 60% item chance</li>
-          <li>🕳️ <strong>The Abyss Gate</strong> — Cl. Lv 10 · +300 XP · 75% item chance</li>
-          <li>🪞 <strong>The Echo Vault</strong> — Cl. Lv 10 · Prestige 1+ · +350 XP · 65% item chance</li>
-          <li>🌪️ <strong>The Shattered Wastes</strong> — Cl. Lv 10 · Prestige 2+ · +520 XP · 75% item chance</li>
-          <li>🕳️ <strong>The Void Crucible</strong> — Cl. Lv 10 · Prestige 3+ · +750 XP · 85% item chance</li>
-        </ul>
-        <div class="callout" style="margin-top:8px;">
-          <a href="/echobloom-world.html#zones" style="font-weight:600;">🗺️ Full Zone & Monster Reference →</a>
-          <p class="muted small" style="margin:4px 0 0;">Boss spawn pools, all 33 monsters with HP/ATK/DEF/SPD, and zone-by-zone breakdowns.</p>
+        <div class="callout" style="margin-bottom:14px;">
+          <strong>Recommended rollout</strong>
+          <p class="muted" style="font-size:13px; margin:4px 0 0;">Enable realms first. Once people chat and earn XP, introduce classes. Adventures and boss fights layer in after that. Items, quests, events, lore, and seasons add texture over time. No need to introduce everything at once.</p>
         </div>
-      </div>
-
-      <div class="card">
-        <h3>🐉 Server Boss Fights <span class="badge">Co-op</span></h3>
-        <p class="desc">
-          A boss can spawn from any adventure run (chance varies by zone) or be summoned manually
-          by an admin. Anyone can join and deal damage each round.
-        </p>
-        <ul>
-          <li>Bosses have a shared HP pool — everyone whittles it down together</li>
-          <li><strong>15 seconds</strong> per round for participants to pick an action</li>
-          <li><strong>10-second pause</strong> between rounds to see results</li>
-          <li>Runs up to <strong>30 rounds</strong> before the boss escapes</li>
-          <li>Damage leaderboard shown when the boss falls</li>
-          <li>All participants earn class XP on defeat, scaled to boss difficulty</li>
-          <li>Admin spawn: <code>/boss spawn</code> · View your boss history: <code>/boss-history</code></li>
-        </ul>
-        <div class="callout" style="margin-top:8px;">
-          <a href="/echobloom-world.html#bosses" style="font-weight:600;">🐉 All 9 Bosses with Phases & Stats →</a>
-          <p class="muted small" style="margin:4px 0 0;">HP scaling formula, phase triggers, loot multipliers, and XP rewards for every boss.</p>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>📈 Class XP & Leveling</h3>
-        <p class="desc">
-          Class XP is earned exclusively from adventures and boss fights. It's the only path to Class
-          Level 10 and unlocking prestige.
-        </p>
-        <ul>
-          <li>Class Level cap: <strong>10</strong></li>
-          <li>XP earned scales with zone difficulty and adventure outcome</li>
-          <li>Boss fights award a flat XP reward to all participants on defeat</li>
-          <li>Class level-ups are shown immediately after adventures complete</li>
-          <li>View your class level and XP bar on <code>/character</code> or <code>/class stats</code></li>
-          <li>Prestige resets class level to 1 but stats carry the permanent bonus</li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- LORE & SEASONS -->
-    <div class="sectionTitle" id="lore">
-      <h2>📜 Lore, Waves & Seasons</h2>
-      <span>The world that grows with you</span>
-    </div>
-
-    <section class="grid2">
-      <div class="card">
-        <h3>📖 Realm Lore <span class="badge">Story</span></h3>
-        <p class="desc">
-          Each realm has its own Book of Lore — a persistent page that updates live as new content is discovered.
-        </p>
-        <ul>
-          <li>5 chapters per realm per wave, unlocking at realm level milestones</li>
-          <li>3 lore fragments per realm per wave (uncommon / rare / legendary drops)</li>
-          <li>Fragment drop rate: 1% per XP-eligible message (boosted by Scholar, Warden, Oracle)</li>
-          <li>Each realm has its own dedicated lore channel</li>
-          <li>Lore pages auto-update when chapters unlock or fragments are found</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h3>🌀 Wave System <span class="badge">Progression</span></h3>
-        <p class="desc">
-          Lore is organized into waves — each wave is a full set of chapters and fragments for every realm.
-          When all realms complete a wave, the Convergence fires.
-        </p>
-        <ul>
-          <li>Wave 1: <strong>Origins</strong> — "Where it all began."</li>
-          <li>Wave 2: <strong>Echoes</strong> — "What the past left behind."</li>
-          <li>Convergence resets realm progress and begins the next wave</li>
-          <li>Lore from past waves is preserved in wave history</li>
-          <li>Level caps increase with each wave (+50 member / +10 realm)</li>
-          <li>Class choice resets each Wave — use <code>/class pick</code> at the start of each new wave</li>
-          <li>Track progress with <code>/wave</code> and <code>/wave-history</code></li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h3>🌸 Seasonal System <span class="badge">Rotating</span></h3>
-        <p class="desc">
-          Four seasons, each tied to a realm. During a realm's season, exclusive content appears.
-        </p>
-        <ul>
-          <li>🌱 Spring (Mar 20 – Jun 20) — Grove of Growth</li>
-          <li>☀️ Summer (Jun 21 – Sep 22) — Ember Circle</li>
-          <li>🍂 Autumn (Sep 23 – Dec 20) — Mirror Lake</li>
-          <li>❄️ Winter (Dec 21 – Mar 19) — Moonroot Tree</li>
-          <li>3 exclusive seasonal items per season (only drop during that window)</li>
-          <li>Seasonal quests with bonus XP rewards</li>
-        </ul>
-        <div class="callout" style="margin-top:8px;">
-          <a href="/echobloom-world.html#seasonal" style="font-weight:600;">🌸 All Seasonal Items & Fusion Artifacts →</a>
-          <p class="muted small" style="margin:4px 0 0;">Every seasonal drop with rarity and lore, plus full fusion artifact effects.</p>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>🔮 Seasonal Fusion <span class="badge">Endgame</span></h3>
-        <p class="desc">
-          Collect all 3 seasonal items during a season to forge a powerful fused artifact
-          with game-changing effects.
-        </p>
-        <ul>
-          <li>💚 <strong>Verdant Heart</strong> — 3× XP for 1 hour + 1,000 bonus XP</li>
-          <li>🔶 <strong>Eternal Ember</strong> — steal 2 items from each rival + 1,500 XP</li>
-          <li>🔮 <strong>Veil of Echoes</strong> — copy 2 items from each rival + 2× drops for 1 hour</li>
-          <li>🌑 <strong>Moonbound Relic</strong> — +500 XP to all realms, +2,000 to yours</li>
-          <li>Forge with <code>/forge</code> during the active season</li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- HOW TO USE -->
-    <div class="sectionTitle" id="how-to-use">
-      <h2>📘 How to Use</h2>
-      <span>Quick gameplay flow</span>
-    </div>
-
-    <section class="grid2">
-      <div class="card">
-        <h3>1) Join a Realm</h3>
-        <p class="desc">Pick a realm by reacting on the realm-selection message.</p>
-        <ul>
-          <li>React with 🌿 🔥 💧 or 🌙 to join</li>
-          <li>EchoBloom assigns your realm role automatically</li>
-          <li>One realm at a time — unreact to leave</li>
-          <li>Non-realm emoji are blocked on the selection message</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h3>2) Pick a Class</h3>
-        <p class="desc">Open the class guide, pick your archetype, and unlock your first passive bonus immediately.</p>
-        <ul>
-          <li><code>/class info</code> — compare all 8 classes before committing</li>
-          <li><code>/class pick</code> — choose from a dropdown (once per Wave)</li>
-          <li>Your passive activates instantly — no level required</li>
-          <li>Skills unlock automatically at member levels 5, 15, and 30</li>
-          <li>Check your profile anytime with <code>/character</code></li>
-          <li><a href="/echobloom-classes.html">Full Class Guide →</a></li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h3>3) Chat & Progress</h3>
-        <p class="desc">Just talk. Every message earns XP, drops items, and advances quests.</p>
-        <ul>
-          <li>XP earned for you and your realm (5–25 per message, modified by class)</li>
-          <li>Voice chat earns XP too (5 per 5-min tick, boosted by Scholar / Warden)</li>
-          <li>Items drop randomly as you chat (boost by Wanderer / Trickster)</li>
-          <li>Lore fragments surface from conversation (1% chance, boosted by Scholar / Oracle / Warden)</li>
-          <li>Quests and streaks track automatically in the background</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h3>4) Run Adventures</h3>
-        <p class="desc">Level up your class through solo dungeons and boss fights to unlock prestige.</p>
-        <ul>
-          <li><code>/adventure</code> — pick a zone and run a solo dungeon (30-min cooldown)</li>
-          <li><code>/adventure_group</code> — invite friends for a group run</li>
-          <li><code>/class stats</code> — check your current class level and stats before a run</li>
-          <li>Defeat the boss when one spawns for bonus class XP and shared rewards</li>
-          <li>Reach Class Lv 10 and use <code>/class prestige</code> to carry stat bonuses to a new class</li>
-          <li>Repeat until you've played all 8 classes to earn 🏆 Class Master</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h3>5) Track Progress</h3>
-        <p class="desc">Check your realm, your rank, and how your realm stacks up.</p>
-        <ul>
-          <li><code>/character</code> — full profile: level, class, stats, skills, active bonuses</li>
-          <li><code>/realm</code> — realm level, XP, rank, and progress bar</li>
-          <li><code>/streak</code> — your daily streak and current XP bonus</li>
-          <li><code>/leaderboard</code> — top members by Realm XP, Class Level, Boss Damage, or Adventures</li>
-          <li><code>/wave</code> — current wave progress across all realms</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h3>6) Engage with Systems</h3>
-        <p class="desc">Items, crafting, raids, quests, lore, events, seasons, campaigns, and adventures all layer on top of chat.</p>
-        <ul>
-          <li><code>/inventory</code> — view your realm's shared stash</li>
-          <li><code>/use</code> — activate a usable item</li>
-          <li><code>/recipes</code> and <code>/craft</code> — crafting system</li>
-          <li><code>/gift</code> and <code>/trade</code> — move items between realms</li>
-          <li><code>/raid</code> — attack another realm for their items</li>
-          <li><code>/sabotage</code> and <code>/challenge</code> — targeted rivalry actions</li>
-          <li><code>/forge</code> — fuse seasonal items into artifacts</li>
-          <li><code>/quests</code> — view active daily/weekly/seasonal quests</li>
-          <li><code>/lore view</code> — view your realm's story progress</li>
-          <li><code>/season</code> — current season info and exclusive content</li>
-          <li><code>/campaign start</code> — launch a long-form party adventure</li>
-          <li><code>/weather</code> — check today's weather and your personal stat modifiers</li>
-          <li><code>/curses</code> — view active curses and how to remove them</li>
-          <li><code>/bestiary stats</code> — your kill tracking and completion titles</li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- COMMAND REFERENCE -->
-    <div class="sectionTitle" id="commands">
-      <h2>⌨️ Command Reference</h2>
-      <span>All commands (player + admin)</span>
-    </div>
-
-    <section class="grid2">
-      <div class="card">
-        <h3>👤 Player Commands <span class="badge">Use</span></h3>
-        <p class="desc muted small" style="margin:0 0 8px;"><strong>Realm & Progression</strong></p>
-        <ul>
-          <li><code>/realm</code> — your realm, level, XP, rank, progress (defaults to yours)</li>
-          <li><code>/streak</code> — daily activity streak and XP bonus</li>
-          <li><code>/leaderboard</code> — rankings by Realm XP, Class Level, Boss Damage, or Adventures</li>
-          <li><code>/boss-history</code> — recent boss kills and your personal damage stats</li>
-        </ul>
-        <p class="desc muted small" style="margin:8px 0 4px;"><strong>Character & Class</strong></p>
-        <ul>
-          <li><code>/character</code> — full profile: level, class, stats, skills, bonuses</li>
-          <li><code>/class pick</code> — choose your class for this Wave</li>
-          <li><code>/class info</code> — full class guide with all stats and skills</li>
-          <li><code>/class skills</code> — your unlocked skills and what's next</li>
-          <li><code>/class stats</code> — detailed stat sheet for your class</li>
-          <li><code>/class prestige</code> — prestige at Class Lv 10 into a new class</li>
-        </ul>
-        <p class="desc muted small" style="margin:8px 0 4px;"><strong>Adventures & Campaigns</strong></p>
-        <ul>
-          <li><code>/adventure</code> — run a solo dungeon using your class stats</li>
-          <li><code>/adventure_group</code> — start a group adventure with friends</li>
-          <li><code>/campaign list</code> — browse available campaigns</li>
-          <li><code>/campaign start</code> — launch a party campaign</li>
-          <li><code>/weather</code> — today's weather, stat modifiers, and your personal impact</li>
-          <li><code>/curses</code> — active curses, runs remaining, and cleanse options</li>
-          <li><code>/cleanse</code> — spend a Cleansing Vial to remove all curses</li>
-          <li><code>/bestiary monsters</code> — your monster kill tracker by tier</li>
-          <li><code>/bestiary bosses</code> — your boss kill tracker with milestones</li>
-          <li><code>/bestiary stats</code> — completion overview and earned titles</li>
-        </ul>
-        <p class="desc muted small" style="margin:8px 0 4px;"><strong>Items & Crafting</strong></p>
-        <ul>
-          <li><code>/inventory</code> — realm's item stash</li>
-          <li><code>/item-info</code> — see details and effects of an item</li>
-          <li><code>/use</code> — activate a usable item</li>
-          <li><code>/buffs</code> — view active realm XP buffs</li>
-          <li><code>/gift</code> — send items to another realm</li>
-          <li><code>/trade</code> — swap items between realms</li>
-          <li><code>/item-log</code> — recent item activity</li>
-          <li><code>/recipes</code> — view crafting recipes for your realm</li>
-          <li><code>/craft</code> — craft a usable item from materials</li>
-          <li><code>/raid</code> — launch a raid against another realm</li>
-          <li><code>/sabotage</code> — sneak into a rival realm and destroy their items</li>
-          <li><code>/challenge</code> — challenge a rival realm to a trivia duel</li>
-          <li><code>/forge</code> — fuse seasonal items into a powerful artifact</li>
-        </ul>
-        <p class="desc muted small" style="margin:8px 0 4px;"><strong>Lore, Events & Seasons</strong></p>
-        <ul>
-          <li><code>/quests</code> — active quests and progress</li>
-          <li><code>/lore view</code> — realm lore overview + link to Book of Lore</li>
-          <li><code>/lore read</code> — read a specific unlocked chapter</li>
-          <li><code>/lore fragments</code> — collected lore fragments</li>
-          <li><code>/season</code> — current season, items, and quests</li>
-          <li><code>/event-history</code> — recent battle event results</li>
-          <li><code>/wave</code> — current wave progress</li>
-          <li><code>/wave-history</code> — past completed waves</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <h3>🛡️ Admin Commands <span class="badge">Staff</span></h3>
-        <p class="desc">Permission-gated (administrator).</p>
-        <p class="desc muted small" style="margin:0 0 4px;"><strong>Setup — <code>/setup</code></strong></p>
-        <ul>
-          <li><code>/setup realms</code> — post realm selection message + add reactions</li>
-          <li><code>/setup lore</code> — post a realm's Book of Lore page</li>
-          <li><code>/setup lore-all</code> — post all 4 lore pages at once</li>
-          <li><code>/setup events</code> — post persistent event status embed</li>
-          <li><code>/setup wave</code> — post the wave progress embed</li>
-        </ul>
-        <p class="desc muted small" style="margin:8px 0 4px;"><strong>Events, Waves & XP — <code>/admin</code></strong></p>
-        <ul>
-          <li><code>/admin start-event</code> — manually trigger a battle event</li>
-          <li><code>/admin end-event</code> — force end the current event</li>
-          <li><code>/admin refresh</code> — force refresh the dashboard embed</li>
-          <li><code>/admin convergence</code> — trigger the Convergence event now</li>
-          <li><code>/admin sync</code> — recalculate all levels from XP</li>
-          <li><code>/admin sync-lore</code> — resync lore page embeds</li>
-          <li><code>/admin reset</code> — reset all realm XP, levels, items, lore, quests</li>
-          <li><code>/admin overview</code> — full admin overview of all realms</li>
-        </ul>
-        <p class="desc muted small" style="margin:8px 0 4px;"><strong>XP & Levels — <code>/admin</code></strong></p>
-        <ul>
-          <li><code>/admin set-xp</code> — set a member's XP</li>
-          <li><code>/admin set-level</code> — set a member's level</li>
-          <li><code>/admin add-xp</code> — add XP to a member</li>
-          <li><code>/admin set-realm-xp</code> — set a realm's XP</li>
-          <li><code>/admin set-realm-level</code> — set a realm's level</li>
-          <li><code>/admin add-realm-xp</code> — add XP to a realm</li>
-        </ul>
-        <p class="desc muted small" style="margin:8px 0 4px;"><strong>Items — <code>/admin</code></strong></p>
-        <ul>
-          <li><code>/admin give-item</code> — give an item to a realm</li>
-          <li><code>/admin remove-item</code> — remove an item from a realm</li>
-          <li><code>/admin clear-inventory</code> — wipe a realm's entire inventory</li>
-        </ul>
-        <p class="desc muted small" style="margin:8px 0 4px;"><strong>Boss — <code>/boss</code></strong></p>
-        <ul>
-          <li><code>/boss spawn</code> — spawn a server boss manually</li>
-          <li><code>/boss cancel</code> — cancel the active boss fight</li>
-          <li><code>/boss status</code> — check current boss HP and standings</li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- SETUP NOTES -->
-    <div class="sectionTitle" id="setup">
-      <h2>🔧 Setup Notes</h2>
-      <span>Start clean, keep it readable</span>
-    </div>
-
-    <section class="card">
-      <div class="callout">
-        <strong>Recommended rollout</strong>
-        <p class="muted small">
-          Enable realms first. Once people are chatting and earning XP, introduce the class system — members
-          will pick classes naturally once they understand the passives. Adventures and boss fights layer in
-          cleanly after that since they don't require any channel setup. Items, quests, events, lore, and
-          seasons all add texture over time. No need to introduce everything at once.
-        </p>
-      </div>
-
-      <div class="codebox">
-        <code>Setup flow:
-1.  Create realm roles (one per realm)
+        <div class="codebox">
+          <code>1.  Create realm roles (one per realm)
 2.  Create rank roles (3 per realm: Level 1, 10, 25)
 3.  Fill in role IDs in config/config.py
 4.  Run /setup realms in your realm-select channel
@@ -874,31 +478,1000 @@
 10. Run /season to verify seasonal content is active
 11. Run /wave to check lore wave status
 12. Announce /class pick to members — classes are ready out of the box
-13. Adventures and boss fights are available immediately; no channel config needed</code>
+13. Adventures and boss fights are available immediately</code>
+        </div>
+        <div class="callout" style="margin-top:12px;">
+          <strong>Everything is in one file</strong>
+          <p class="muted" style="font-size:13px; margin:4px 0 0;">All IDs, realm definitions, items, crafting recipes, quests, lore waves, seasonal content, riddles, word scrambles, emoji chains, drop rates, adventure zones, monsters, and boss definitions live in <code>config/config.py</code>.</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /panel-overview -->
+
+
+  <!-- ═══════════════════════════════════════════════
+       PANEL: CLASSES
+  ═══════════════════════════════════════════════ -->
+  <div class="hub-panel" id="panel-classes">
+
+    <div class="card">
+      <p class="sec-label">How it works</p>
+      <h2 class="sec-h2">Class Fundamentals</h2>
+      <div class="grid2">
+        <details class="acc"><summary>🔑 The Basics</summary><div class="acc-body"><ul class="inner"><li>Pick once per Wave with <code>/class pick</code> — no switching mid-wave</li><li>Classes are universal — any realm can pick any class</li><li>Your passive activates the moment you pick</li><li>Use <code>/class info</code> to compare all 8 before committing</li><li>View active bonuses with <code>/character</code></li></ul></div></details>
+        <details class="acc"><summary>📊 Two XP Tracks</summary><div class="acc-body"><ul class="inner"><li><strong>Member Level</strong> — earned from chatting. Unlocks class skills at Lv 5, 15, and 30</li><li><strong>Class Level (1–10)</strong> — earned only through adventures and boss fights</li><li>Class level scales your five combat stats</li><li>Class level determines which adventure zones you can enter</li><li>The two tracks are completely separate</li></ul></div></details>
+        <details class="acc"><summary>⭐ Prestige</summary><div class="acc-body"><ul class="inner"><li>Reach Class Level 10 and run <code>/class prestige</code></li><li>Choose any class except the one you're leaving</li><li>Carry a permanent +30% of your old class's max stats</li><li>Bonuses stack — each prestige adds another layer permanently</li><li><strong>Strategy:</strong> prestige from high-Power classes (Invoker, Striker) early to build a combat foundation</li></ul></div></details>
+        <details class="acc"><summary>🏆 Class Mastery</summary><div class="acc-body"><ul class="inner"><li>Play <strong>all 8 classes</strong> — current class + full prestige history — to earn 🏆 Class Master</li><li>Badge appears automatically on <code>/character</code></li><li>Requires at least 7 prestiges in a single wave (minimum path)</li><li>Resets with each Wave; prestige history carries into wave history</li></ul></div></details>
+        <details class="acc"><summary>📊 The Five Stats</summary><div class="acc-body">
+          <p class="muted" style="font-size:13px; margin-bottom:10px;">Stats start at base value at CL1 and grow each level to CL10. Use <code>/class stats</code> to see yours.</p>
+          <ul class="inner">
+            <li><strong>⚔️ Power</strong> — Damage dealt each round. High Power: Invoker, Striker.</li>
+            <li><strong>📖 Wisdom</strong> — Pre-combat heal + bonus adventure XP. High Wisdom: Scholar, Oracle.</li>
+            <li><strong>🏃 Agility</strong> — Crit chance, dodge chance, first-strike prob. High Agility: Trickster, Wanderer, Invoker.</li>
+            <li><strong>🛡️ Vitality</strong> — HP pool for dungeons. High Vitality: Sentinel, Warden.</li>
+            <li><strong>🍀 Fortune</strong> — Loot drop chance + adventure XP bonus. High Fortune: Wanderer, Oracle, Trickster.</li>
+          </ul>
+        </div></details>
+        <details class="acc"><summary>🔓 Skill Unlock Reference</summary><div class="acc-body"><div class="callout" style="margin-bottom:10px;"><strong>Remember</strong><p class="muted" style="font-size:13px; margin:4px 0 0;">Skills unlock from <strong>member level</strong> (chat), not class level (adventures).</p></div><ul class="inner"><li><strong>Level 5</strong> — Skill 1 unlocks (early passive modifier)</li><li><strong>Level 15</strong> — Skill 2 unlocks (secondary specialisation)</li><li><strong>Level 30</strong> — Skill 3 unlocks (signature power spike)</li></ul></div></details>
+      </div>
+    </div>
+
+    <!-- COMPARISON TABLE -->
+    <div class="card" style="overflow-x:auto;">
+      <p class="sec-label">At a glance</p>
+      <h2 class="sec-h2">Class Comparison</h2>
+      <table class="stat-table" style="min-width:560px;">
+        <thead><tr><th>Class</th><th>Focus</th><th>Top Stat</th><th>Passive</th><th>Lv 30 Power Spike</th></tr></thead>
+        <tbody>
+          <tr><td><strong>🛡️ Sentinel</strong></td><td>Realm XP</td><td>Vitality</td><td>Realm XP +8%</td><td>Realm XP doubled</td></tr>
+          <tr><td><strong>⚔️ Striker</strong></td><td>Events / Raids</td><td>Power</td><td>Event XP +10%</td><td>Event XP +25% · Raid dmg +25%</td></tr>
+          <tr><td><strong>📖 Scholar</strong></td><td>Lore / Voice</td><td>Wisdom</td><td>Lore frag +12%</td><td>Lore fragments doubled</td></tr>
+          <tr><td><strong>🎲 Wanderer</strong></td><td>All-Round</td><td>Fortune</td><td>All XP +5%</td><td>All XP +10% · Item drop +20%</td></tr>
+          <tr><td><strong>🔥 Invoker</strong></td><td>Events (glass cannon)</td><td>Power</td><td>Event XP +12%</td><td>Event XP +20% · All XP +8%</td></tr>
+          <tr><td><strong>🌿 Warden</strong></td><td>Voice / Tank</td><td>Vitality</td><td>Voice XP +12%</td><td>Voice XP +18% · Lore frag +20%</td></tr>
+          <tr><td><strong>🎭 Trickster</strong></td><td>Items / Speed</td><td>Agility</td><td>Item drop +15%</td><td>Item drop +22% · All XP +7%</td></tr>
+          <tr><td><strong>🔮 Oracle</strong></td><td>Lore / Crafting</td><td>Wisdom</td><td>Lore frag +15%</td><td>Lore frag +30% · Craft success +15%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- CLASS CARDS -->
+    <div>
+      <p class="sec-label">Full Breakdown</p>
+      <h2 class="sec-h2">The Eight Classes</h2>
+      <div class="class-grid">
+
+        <div class="class-card">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+            <h3>🛡️ Sentinel</h3>
+            <span class="tag tag-skill">Tank / Realm</span>
+          </div>
+          <p class="class-quote">"Stand firm. Every message is a stone in the wall."</p>
+          <p class="class-desc">Steadfast protectors who pour energy into their community. Compound effort into massive realm gains over time.</p>
+          <p class="class-stat-pill">Stats: Vitality › Power › Wisdom › Agility › Fortune</p>
+          <details class="acc"><summary>Skills &amp; Specials</summary><div class="acc-body">
+            <p class="muted" style="font-size:12px; margin-bottom:8px;"><strong>Passive Bonuses</strong></p>
+            <ul class="inner"><li>✦ <strong>Bulwark:</strong> Realm XP contribution +8%</li><li>Lv 5 · <strong>Rally:</strong> Daily streak XP +10%</li><li>Lv 15 · <strong>Iron Will:</strong> Item drop rate +10%</li><li>Lv 30 · <strong>Bastion:</strong> Realm XP doubled (stacks)</li></ul>
+            <hr class="sep" />
+            <p class="muted" style="font-size:12px; margin-bottom:8px;"><strong>Combat</strong></p>
+            <ul class="inner"><li>🛡️ <strong>Iron Guard</strong> <span class="tag tag-cd">Block</span></li><li>⚔️ <strong>Shield Bash</strong> <span class="tag tag-cd">Counter</span> — dmg + heal +6 HP</li><li>📣 <strong>War Cry</strong> <span class="tag tag-cd">Lv1 · CD4</span> — party +30% dmg next round</li><li>🏰 <strong>Fortify</strong> <span class="tag tag-cd">Lv4 · CD3</span> — −70% dmg taken, −50% dmg output</li><li>✝️ <strong>Holy Strike</strong> <span class="tag tag-cd">Lv8 · CD5</span> — +1.4× dmg, self+10 / party+5 HP</li></ul>
+          </div></details>
+          <div class="best-for"><strong>Best for</strong>Members who want to be the backbone of their realm's leaderboard. Bastion at Lv 30 stacks with Bulwark for the highest realm XP per message.</div>
+        </div>
+
+        <div class="class-card">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+            <h3>⚔️ Striker</h3>
+            <span class="tag tag-combat">Combat / Events</span>
+          </div>
+          <p class="class-quote">"Hit hard. Hit first. Hit again."</p>
+          <p class="class-desc">Fighters who live for conflict and spectacle. Turn every event and raid into massive damage and outsized rewards.</p>
+          <p class="class-stat-pill">Stats: Power › Agility › Fortune › Wisdom › Vitality</p>
+          <details class="acc"><summary>Skills &amp; Specials</summary><div class="acc-body">
+            <p class="muted" style="font-size:12px; margin-bottom:8px;"><strong>Passive Bonuses</strong></p>
+            <ul class="inner"><li>✦ <strong>Battle Lust:</strong> Event XP +10%</li><li>Lv 5 · <strong>Battle Charge:</strong> Raid damage +15%</li><li>Lv 15 · <strong>Momentum:</strong> Message XP +8%</li><li>Lv 30 · <strong>Rampage:</strong> Event XP +25% + Raid dmg +25% (stacks)</li></ul>
+            <hr class="sep" />
+            <p class="muted" style="font-size:12px; margin-bottom:8px;"><strong>Combat</strong></p>
+            <ul class="inner"><li>💨 <strong>Sidestep</strong> <span class="tag tag-cd">Dodge</span> — low HP damage</li><li>⚔️ <strong>Power Strike</strong> <span class="tag tag-cd">Counter</span></li><li>💥 <strong>Reckless Assault</strong> <span class="tag tag-cd">Lv1 · CD4</span> — +1.5× dmg, +1.5× HP taken</li><li>🌪️ <strong>Shatter Strike</strong> <span class="tag tag-cd">Lv4 · CD3</span> — +1.8× dmg, no drawbacks</li><li>🩸 <strong>Bloodrush</strong> <span class="tag tag-cd">Lv8 · No CD</span> — +2× dmg, +2× HP taken</li></ul>
+          </div></details>
+          <div class="best-for"><strong>Best for</strong>Active event participants and raiders. Lv 30 gives the highest combined event XP + raid power. Strong prestige target — Power carry-over helps all combat builds.</div>
+        </div>
+
+        <div class="class-card">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+            <h3>📖 Scholar</h3>
+            <span class="tag tag-lore">Lore / Crafting</span>
+          </div>
+          <p class="class-quote">"Every fragment of truth is worth a thousand blades."</p>
+          <p class="class-desc">Devoted students of hidden knowledge. Scholars uncover lore others miss, master crafting, and earn deep rewards for voice presence.</p>
+          <p class="class-stat-pill">Stats: Wisdom › Fortune › Agility › Vitality › Power</p>
+          <details class="acc"><summary>Skills &amp; Specials</summary><div class="acc-body">
+            <p class="muted" style="font-size:12px; margin-bottom:8px;"><strong>Passive Bonuses</strong></p>
+            <ul class="inner"><li>✦ <strong>Keen Mind:</strong> Lore fragment drop +12%</li><li>Lv 5 · <strong>Studied Hand:</strong> Crafting success +10%</li><li>Lv 15 · <strong>Deep Focus:</strong> Voice XP +15%</li><li>Lv 30 · <strong>Grand Archive:</strong> Lore fragments doubled (stacks)</li></ul>
+            <hr class="sep" />
+            <p class="muted" style="font-size:12px; margin-bottom:8px;"><strong>Combat</strong></p>
+            <ul class="inner"><li>🔮 <strong>Mana Barrier</strong> <span class="tag tag-cd">Block</span></li><li>✨ <strong>Arcane Bolt</strong> <span class="tag tag-cd">Counter</span></li><li>💊 <strong>Mending Word</strong> <span class="tag tag-cd">Lv1 · CD4</span> — party heal +14 HP</li><li>🪄 <strong>Arcane Shield</strong> <span class="tag tag-cd">Lv4 · CD3</span> — ~80% dmg reduction</li><li>⚡ <strong>Overload</strong> <span class="tag tag-cd">Lv8 · CD5</span> — +2.5× dmg, +1.8× HP taken</li></ul>
+          </div></details>
+          <div class="best-for"><strong>Best for</strong>Lore hunters and voice regulars. Scholar/Oracle is the fastest path to unlock all lore chapters. Deep Focus stacks with Warden's Ancient Bond via prestige.</div>
+        </div>
+
+        <div class="class-card">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+            <h3>🎲 Wanderer</h3>
+            <span class="tag tag-uncommon">All-Round</span>
+          </div>
+          <p class="class-quote">"Fortune favours those who keep moving."</p>
+          <p class="class-desc">Drifters led by instinct and luck. Wanderers stumble across items others walk past and earn bonus XP on everything.</p>
+          <p class="class-stat-pill">Stats: Fortune › Agility › Wisdom › Power › Vitality</p>
+          <details class="acc"><summary>Skills &amp; Specials</summary><div class="acc-body">
+            <p class="muted" style="font-size:12px; margin-bottom:8px;"><strong>Passive Bonuses</strong></p>
+            <ul class="inner"><li>✦ <strong>Wanderlust:</strong> All XP +5%</li><li>Lv 5 · <strong>Lucky Eye:</strong> Item drop rate +15%</li><li>Lv 15 · <strong>Road Rhythm:</strong> Daily streak XP +10%</li><li>Lv 30 · <strong>Windfall:</strong> All XP +10% + Item drop +20% (stacks)</li></ul>
+            <hr class="sep" />
+            <p class="muted" style="font-size:12px; margin-bottom:8px;"><strong>Combat</strong></p>
+            <ul class="inner"><li>🌫️ <strong>Vanish</strong> <span class="tag tag-cd">Dodge</span> — near-zero HP damage</li><li>🎲 <strong>Wild Strike</strong> <span class="tag tag-cd">Wild</span> — fortune decides outcome</li><li>🍀 <strong>Fortune's Gambit</strong> <span class="tag tag-cd">Lv1 · CD3</span> — crits deal 3× dmg</li><li>🌑 <strong>Shadow Step</strong> <span class="tag tag-cd">Lv4 · No CD</span> — −90% HP damage</li><li>🎰 <strong>Lucky Break</strong> <span class="tag tag-cd">Lv8 · CD4</span> — +1.6× dmg + self heal +8 HP</li></ul>
+          </div></details>
+          <div class="best-for"><strong>Best for</strong>Consistent daily chatters who want broad boosts. Excellent first class and prestige target — Fortune carry-over benefits nearly every subsequent class.</div>
+        </div>
+
+        <div class="class-card">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+            <h3>🔥 Invoker</h3>
+            <span class="tag tag-combat">Offense / Events</span>
+          </div>
+          <p class="class-quote">"The flame doesn't ask permission."</p>
+          <p class="class-desc">Channellers of raw elemental force. Invokers sacrifice survivability for unmatched offensive output. Glass cannon.</p>
+          <p class="class-stat-pill">Stats: Power › Agility › Fortune › Wisdom › Vitality</p>
+          <details class="acc"><summary>Skills &amp; Specials</summary><div class="acc-body">
+            <p class="muted" style="font-size:12px; margin-bottom:8px;"><strong>Passive Bonuses</strong></p>
+            <ul class="inner"><li>✦ <strong>Blazing Presence:</strong> Event XP +12%</li><li>Lv 5 · <strong>Blazing Trail:</strong> Event XP +12%</li><li>Lv 15 · <strong>Battle Fury:</strong> Raid damage +20%</li><li>Lv 30 · <strong>Conflagration:</strong> Event XP +20% + All XP +8% (stacks)</li></ul>
+            <hr class="sep" />
+            <p class="muted" style="font-size:12px; margin-bottom:8px;"><strong>Combat</strong></p>
+            <ul class="inner"><li>🌋 <strong>Ember Dash</strong> <span class="tag tag-cd">Dodge</span></li><li>🔥 <strong>Flame Strike</strong> <span class="tag tag-cd">Counter</span></li><li>💢 <strong>Ignite</strong> <span class="tag tag-cd">Lv1 · CD3</span> — DoT burst</li><li>☄️ <strong>Meteor</strong> <span class="tag tag-cd">Lv4 · CD4</span> — +2× dmg, AoE</li><li>🌊 <strong>Inferno</strong> <span class="tag tag-cd">Lv8 · CD5</span> — highest elemental burst</li></ul>
+          </div></details>
+          <div class="best-for"><strong>Best for</strong>Event-heavy players who also want raid power. Prestige from Invoker early to bank the Power carry-over for future combat builds.</div>
+        </div>
+
+        <div class="class-card">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+            <h3>🌿 Warden</h3>
+            <span class="tag tag-uncommon">Voice / Tank</span>
+          </div>
+          <p class="class-quote">"The forest does not hurry, yet everything is accomplished."</p>
+          <p class="class-desc">Guardians of the natural order. Wardens are the toughest fighters — they outlast everything through sheer endurance.</p>
+          <p class="class-stat-pill">Stats: Vitality › Wisdom › Power › Agility › Fortune</p>
+          <details class="acc"><summary>Skills &amp; Specials</summary><div class="acc-body">
+            <p class="muted" style="font-size:12px; margin-bottom:8px;"><strong>Passive Bonuses</strong></p>
+            <ul class="inner"><li>✦ <strong>Deep Roots:</strong> Voice XP +12%</li><li>Lv 5 · <strong>Ancient Bond:</strong> Voice XP +12%</li><li>Lv 15 · <strong>Grove's Blessing:</strong> Realm XP +10%</li><li>Lv 30 · <strong>Overgrowth:</strong> Voice XP +18% + Lore frags +20% (stacks)</li></ul>
+            <hr class="sep" />
+            <p class="muted" style="font-size:12px; margin-bottom:8px;"><strong>Combat</strong></p>
+            <ul class="inner"><li>🌿 <strong>Root Brace</strong> <span class="tag tag-cd">Block</span></li><li>🌳 <strong>Verdant Strike</strong> <span class="tag tag-cd">Counter</span></li><li>🌱 <strong>Regrowth</strong> <span class="tag tag-cd">Lv1 · CD4</span> — party regen over 2 rounds</li><li>🛡️ <strong>Bark Armor</strong> <span class="tag tag-cd">Lv4 · CD3</span> — heavy dmg reduction</li><li>🍃 <strong>Living Forest</strong> <span class="tag tag-cd">Lv8 · CD5</span> — summon vines, stun + dmg</li></ul>
+          </div></details>
+          <div class="best-for"><strong>Best for</strong>Voice chat regulars. Passive + Ancient Bond + Overgrowth = +42% voice XP combined (highest of any class). Best solo dungeon tank.</div>
+        </div>
+
+        <div class="class-card">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+            <h3>🎭 Trickster</h3>
+            <span class="tag tag-craft">Items / Speed</span>
+          </div>
+          <p class="class-quote">"If they see it coming, you're doing it wrong."</p>
+          <p class="class-desc">Masters of misdirection who win through speed, feints, and outrageous luck. Best item drop rate in the game at Lv 30.</p>
+          <p class="class-stat-pill">Stats: Agility › Fortune › Power › Wisdom › Vitality</p>
+          <details class="acc"><summary>Skills &amp; Specials</summary><div class="acc-body">
+            <p class="muted" style="font-size:12px; margin-bottom:8px;"><strong>Passive Bonuses</strong></p>
+            <ul class="inner"><li>✦ <strong>Light Fingers:</strong> Item drop rate +15%</li><li>Lv 5 · <strong>Five-Finger Discount:</strong> Item drop rate +18%</li><li>Lv 15 · <strong>Lucky Escape:</strong> Daily streak XP +12%</li><li>Lv 30 · <strong>Con Artist:</strong> Item drop +22% + All XP +7% (stacks) — total +55%</li></ul>
+            <hr class="sep" />
+            <p class="muted" style="font-size:12px; margin-bottom:8px;"><strong>Combat</strong></p>
+            <ul class="inner"><li>🎭 <strong>Feint</strong> <span class="tag tag-cd">Dodge</span></li><li>🃏 <strong>Trick Shot</strong> <span class="tag tag-cd">Counter</span></li><li>🎪 <strong>Smoke Bomb</strong> <span class="tag tag-cd">Lv1 · CD3</span> — enemy misses next attack</li><li>🌀 <strong>Chain Trick</strong> <span class="tag tag-cd">Lv4 · CD4</span> — multi-hit combo</li><li>🎰 <strong>Wild Card</strong> <span class="tag tag-cd">Lv8 · No CD</span> — RNG high-risk reward</li></ul>
+          </div></details>
+          <div class="best-for"><strong>Best for</strong>Inventory builders and item hoarding. +55% total item drop rate at Lv 30. High Agility also means best crit/dodge rates in dungeons.</div>
+        </div>
+
+        <div class="class-card">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+            <h3>🔮 Oracle</h3>
+            <span class="tag tag-lore">Lore / Endgame</span>
+          </div>
+          <p class="class-quote">"I didn't predict the future. I shaped it."</p>
+          <p class="class-desc">Seers who channel the flow of fate. Oracles accumulate knowledge faster than any other class and master crafting at endgame.</p>
+          <p class="class-stat-pill">Stats: Wisdom › Fortune › Agility › Power › Vitality</p>
+          <details class="acc"><summary>Skills &amp; Specials</summary><div class="acc-body">
+            <p class="muted" style="font-size:12px; margin-bottom:8px;"><strong>Passive Bonuses</strong></p>
+            <ul class="inner"><li>✦ <strong>Third Eye:</strong> Lore fragment drop +15%</li><li>Lv 5 · <strong>Clarity:</strong> Lore fragment drops +15%</li><li>Lv 15 · <strong>Cosmic Insight:</strong> All XP +8%</li><li>Lv 30 · <strong>Omniscience:</strong> Lore frags +30% + Craft success +15% (stacks)</li></ul>
+            <hr class="sep" />
+            <p class="muted" style="font-size:12px; margin-bottom:8px;"><strong>Combat</strong></p>
+            <ul class="inner"><li>🌙 <strong>Foresight</strong> <span class="tag tag-cd">Block</span> — predicts attack</li><li>⭐ <strong>Starfall</strong> <span class="tag tag-cd">Counter</span></li><li>🔮 <strong>Prophecy</strong> <span class="tag tag-cd">Lv1 · CD4</span> — reveals enemy next move, team buff</li><li>💫 <strong>Fate's Hand</strong> <span class="tag tag-cd">Lv4 · CD4</span> — +2× crit chance this round</li><li>🌌 <strong>Void Gaze</strong> <span class="tag tag-cd">Lv8 · CD5</span> — massive burst, enemy -DEF next round</li></ul>
+          </div></details>
+          <div class="best-for"><strong>Best for</strong>Dedicated lore completionists and crafters. Oracle/Scholar combo is the fastest path to unlocking all lore chapters. Omniscience makes Oracle the best crafting class at endgame.</div>
+        </div>
+
+      </div><!-- /class-grid -->
+    </div>
+
+  </div><!-- /panel-classes -->
+
+
+  <!-- ═══════════════════════════════════════════════
+       PANEL: CAMPAIGNS
+  ═══════════════════════════════════════════════ -->
+  <div class="hub-panel" id="panel-campaigns">
+
+    <div class="card">
+      <p class="sec-label">Campaign Authoring</p>
+      <h2 class="sec-h2">How Campaigns Work</h2>
+      <p class="muted" style="margin-bottom:12px;">Drop a <code>.json</code> file into <code>data/campaigns/</code>. The bot re-scans on every <code>/campaign start</code> — no restart, no code changes.</p>
+      <div class="grid2">
+        <div class="callout"><strong>🗺️ Scene Graph</strong><p class="muted" style="font-size:13px; margin:4px 0 0;">A campaign is a directed graph of scenes — each has a type, text, and either a single <code>next</code> pointer or branching <code>choices</code>. The engine walks until it hits an <code>ending</code>.</p></div>
+        <div class="callout"><strong>💾 Persistent State</strong><p class="muted" style="font-size:13px; margin:4px 0 0;">HP damage, ability cooldowns, party buffs, and found items all carry forward through the entire run. Early decisions have real consequences at the boss. Vote timeout: 90 seconds, leading choice wins.</p></div>
+      </div>
+    </div>
+
+    <!-- SCENE TYPES -->
+    <div>
+      <p class="sec-label">Scene Types</p>
+      <h2 class="sec-h2">Scene Reference</h2>
+
+      <details class="acc"><summary>📖 story — Narration &amp; Choices</summary><div class="acc-body">
+        <p class="muted" style="font-size:13.5px; margin-bottom:12px;">The workhorse. Include <code>choices</code> for a party vote; omit them and use <code>next</code> to auto-advance after 4 seconds.</p>
+        <div class="grid2">
+          <div><p style="font-size:12px; color:var(--text-3); margin-bottom:6px;">With choices (party vote)</p>
+          <div class="codebox"><code>"my_scene": {
+  "type": "story",
+  "title": "The Cracked Gate",
+  "text": "The ruins loom...",
+  "choices": [
+    {
+      "id": "scene_a",
+      "label": "Take the main corridor",
+      "emoji": "🚪",
+      "hint": "Straightforward but exposed"
+    }
+  ]
+}</code></div></div>
+          <div><p style="font-size:12px; color:var(--text-3); margin-bottom:6px;">Auto-advance (no vote)</p>
+          <div class="codebox"><code>"cutscene": {
+  "type": "story",
+  "title": "A Beat of Silence",
+  "text": "The dust settles...",
+  "next": "next_scene_id"
+}</code></div></div>
+        </div>
+      </div></details>
+
+      <details class="acc"><summary>⚔️ combat — Monster Fights</summary><div class="acc-body">
+        <p class="muted" style="font-size:13.5px; margin-bottom:12px;">Party fights a monster. HP scales with party size: <code>hp × (1 + 0.70 × (party_size − 1))</code>.</p>
+        <div class="codebox"><code>"forest_ambush": {
+  "type": "combat",
+  "title": "Ambushed!",
+  "text": "Something lunges from the dark...",
+  "enemy": {
+    "name": "Ruinspawn",
+    "emoji": "👹",
+    "hp": 80,
+    "attack": 18,
+    "defense": 8,
+    "speed": 12
+  },
+  "loot": ["Tarnished Cog", "Rusted Bolt"],
+  "on_win": "next_scene_id",
+  "on_lose": "defeat"
+}</code></div>
+        <div class="callout" style="margin-top:12px;"><strong>Required</strong><p class="muted" style="font-size:13px; margin:4px 0 0;">Every combat scene must have both <code>on_win</code> and <code>on_lose</code>. Missing <code>on_lose</code> errors out.</p></div>
+      </div></details>
+
+      <details class="acc"><summary>💀 boss — Phased Final Battle</summary><div class="acc-body">
+        <p class="muted" style="font-size:13.5px; margin-bottom:12px;">Phased boss fight. HP: <code>hp + hp_per_fighter × (party_size − 1)</code>. Phases must be highest threshold first.</p>
+        <div class="codebox"><code>"boss_ruinlord": {
+  "type": "boss",
+  "title": "The Ruinlord Awakens",
+  "text": "An ancient colossus rises...",
+  "enemy": {
+    "name": "The Ruinlord",
+    "emoji": "🐉",
+    "hp": 350,
+    "hp_per_fighter": 80,
+    "attack": 28,
+    "defense": 18,
+    "speed": 8,
+    "loot_multiplier": 2.0
+  },
+  "phases": [
+    { "threshold": 50, "text": "The Ruinlord rages!" },
+    { "threshold": 25, "text": "It burns with desperation..." }
+  ],
+  "on_win": "victory",
+  "on_lose": "defeat_boss"
+}</code></div>
+      </div></details>
+
+      <details class="acc"><summary>🎁 item — Treasure Rooms</summary><div class="acc-body">
+        <p class="muted" style="font-size:13.5px; margin-bottom:12px;">Grants items with optional HP and XP bonuses. Must have a <code>next</code> pointer.</p>
+        <div class="codebox"><code>"treasure_vault": {
+  "type": "item",
+  "title": "The Hidden Vault",
+  "text": "Shelves of forgotten relics...",
+  "items": [
+    { "name": "Ember Shard", "emoji": "🔴",
+      "description": "Warm to the touch.",
+      "hp_bonus": 0, "xp_bonus_percent": 15 }
+  ],
+  "next": "after_vault"
+}</code></div>
+      </div></details>
+
+      <details class="acc"><summary>⛺ checkpoint — Rest Room &amp; 🏁 ending — Terminal Scene</summary><div class="acc-body">
+        <div class="grid2">
+          <div>
+            <p class="muted" style="font-size:12px; margin-bottom:8px;"><strong>Checkpoint</strong> — Heals entire party, waits until all click ✅ Ready.</p>
+            <div class="codebox"><code>"vault_rest": {
+  "type": "checkpoint",
+  "title": "Antechamber",
+  "text": "A heavy door seals...",
+  "next": "boss_scene"
+}</code></div>
+          </div>
+          <div>
+            <p class="muted" style="font-size:12px; margin-bottom:8px;"><strong>Ending</strong> — Terminal scene. Always set <code>xp_reward</code> on win or everyone gets 0 XP.</p>
+            <div class="codebox"><code>"victory": {
+  "type": "ending",
+  "outcome": "win",
+  "title": "Ruins Fall Silent",
+  "text": "The Ruinlord dissolves...",
+  "xp_reward": 250
+}</code></div>
+          </div>
+        </div>
+      </div></details>
+    </div>
+
+    <!-- OUTER ENVELOPE -->
+    <div class="card">
+      <p class="sec-label">File Structure</p>
+      <h2 class="sec-h2">The Outer Envelope</h2>
+      <div class="codebox"><code>{
+  "id": "my_campaign",
+  "title": "My Campaign Title",
+  "emoji": "⚔️",
+  "description": "One or two sentences shown in /campaign list.",
+  "lore": "Longer flavour text shown when the party assembles. Use \\n\\n for breaks.",
+  "min_party": 2, "max_party": 6,
+  "join_window": 90,
+  "color": 8356863,
+  "start_scene": "first_scene_id",
+  "scenes": { ... }
+}</code></div>
+    </div>
+
+    <!-- XP FORMULA -->
+    <div>
+      <p class="sec-label">Rewards</p>
+      <h2 class="sec-h2">XP Formula &amp; Scaling</h2>
+      <div class="grid2">
+        <div class="card"><h3 style="font-size:16px; margin-bottom:10px;">How it's Calculated</h3>
+          <ol class="inner"><li>Reads <code>xp_reward</code> from the win ending</li><li>Each member's share scales by damage dealt: <code>base × (0.6 + 0.4 × damage_share)</code></li><li>KO'd players receive <strong>40%</strong> of their share</li><li>Multiplied by any <code>xp_bonus_percent</code> from items</li></ol>
+        </div>
+        <div class="card"><h3 style="font-size:16px; margin-bottom:10px;">Scaling Reference</h3>
+          <div class="codebox"><code>Monster HP:
+  hp × (1 + 0.70 × (party_size − 1))
+
+Boss HP:
+  hp + hp_per_fighter × (party_size − 1)
+
+XP per player:
+  base × (0.6 + 0.4 × dmg_share)
+       × (1 + xp_bonus_pct / 100)
+  KO'd: 40%</code></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOS AND DONTS -->
+    <div>
+      <p class="sec-label">Best Practices</p>
+      <h2 class="sec-h2">Dos &amp; Don'ts</h2>
+      <div class="grid2">
+        <div class="card">
+          <h3 style="color:var(--emerald); font-size:16px; margin-bottom:10px;">✅ Do This</h3>
+          <ul class="inner"><li><strong style="color:var(--text);">Converge paths before the boss.</strong> Two separate bosses doubles your writing work.</li><li><strong style="color:var(--text);">Put item scenes after hard fights.</strong> Natural reward cadence — HP bonus helps.</li><li><strong style="color:var(--text);">Give every path something.</strong> If path A has a treasure, give path B intel or a shortcut.</li><li><strong style="color:var(--text);">Have at least 2 lose endings.</strong> Different text for early vs. boss fails.</li></ul>
+        </div>
+        <div class="card">
+          <h3 style="color:var(--rose); font-size:16px; margin-bottom:10px;">❌ Avoid This</h3>
+          <ul class="inner"><li><strong style="color:var(--text);">Missing scene IDs.</strong> A broken <code>next</code> or <code>on_win</code> pointer errors and ends the campaign.</li><li><strong style="color:var(--text);">Forgetting <code>on_lose</code>.</strong> Required on every combat scene.</li><li><strong style="color:var(--text);">HP bonuses on combat loot.</strong> Combat loot is display-only — use an item scene instead.</li><li><strong style="color:var(--text);">Missing <code>xp_reward</code>.</strong> Boss awards 0 XP without it.</li><li><strong style="color:var(--text);">Phases in wrong order.</strong> Must be highest threshold first.</li></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- VALIDATION -->
+    <div class="card">
+      <p class="sec-label">Before you ship</p>
+      <h2 class="sec-h2">Validation Checklist</h2>
+      <div class="grid2">
+        <ul class="inner"><li>Valid JSON — paste into <a href="https://jsonlint.com" target="_blank" style="color:var(--rose);">jsonlint.com</a></li><li><code>start_scene</code> exists in <code>"scenes"</code></li><li>Every <code>on_win</code>, <code>on_lose</code>, <code>next</code>, and choice <code>id</code> points to a real scene</li><li>Every <code>combat</code> has both <code>on_win</code> and <code>on_lose</code></li><li>Every <code>item</code>, <code>checkpoint</code>, and auto-advance <code>story</code> has <code>next</code></li><li>At least one <code>ending</code> with <code>"outcome": "win"</code></li><li>Win ending has <code>xp_reward</code> set to non-zero</li><li>Boss phases ordered highest threshold first</li></ul>
+        <div class="codebox" style="font-size:12px;"><code>import json
+data = json.load(open("my_campaign.json"))
+scenes = data["scenes"]
+all_ids = set(scenes.keys())
+errors = []
+for sid, scene in scenes.items():
+    for field in ["next","on_win","on_lose"]:
+        t = scene.get(field)
+        if t and t not in all_ids:
+            errors.append(f"{sid}.{field} → not found")
+    for c in scene.get("choices", []):
+        if c["id"] not in all_ids:
+            errors.append(f"{sid} choice not found")
+if errors:
+    for e in errors: print("ERROR:", e)
+else:
+    print("OK")</code></div>
+      </div>
+    </div>
+
+  </div><!-- /panel-campaigns -->
+
+
+  <!-- ═══════════════════════════════════════════════
+       PANEL: WORLD REFERENCE
+  ═══════════════════════════════════════════════ -->
+  <div class="hub-panel" id="panel-world">
+
+    <div class="card">
+      <p class="sec-label">World Reference</p>
+      <h2 class="sec-h2">Items, Zones, Monsters &amp; Bosses</h2>
+      <p class="muted" style="font-size:13.5px;">Stats pulled directly from the game files. Use the dropdowns below to browse each section.</p>
+    </div>
+
+    <!-- DROP RATES -->
+    <details class="acc"><summary>📊 Drop Rates</summary><div class="acc-body">
+      <div class="grid2">
+        <div>
+          <p class="muted" style="font-size:13px; margin-bottom:10px;"><strong>💬 Chat &amp; Voice Drops</strong> — Per message, before class bonuses.</p>
+          <table class="stat-table"><thead><tr><th>Rarity</th><th>Base chance</th><th>Trickster Lv 30</th></tr></thead><tbody>
+            <tr><td><span class="tag tag-common">Common</span></td><td>2.5%</td><td>~3.9%</td></tr>
+            <tr><td><span class="tag tag-uncommon">Uncommon</span></td><td>0.8%</td><td>~1.2%</td></tr>
+            <tr><td><span class="tag tag-rare">Rare</span></td><td>0.25%</td><td>~0.39%</td></tr>
+            <tr><td><span class="tag tag-legendary">Legendary</span></td><td>0.04%</td><td>~0.06%</td></tr>
+            <tr><td><span class="tag tag-lore">Lore Fragment</span></td><td>1.0%</td><td>—</td></tr>
+          </tbody></table>
+        </div>
+        <div>
+          <p class="muted" style="font-size:13px; margin-bottom:10px;"><strong>📝 Notes</strong></p>
+          <ul class="inner"><li>Seasonal items use the same drop rate as their rarity tier, but only during their season</li><li>Class bonuses stack multiplicatively with base rates</li><li>Voice XP drops use the same rate table per minute of presence</li><li>Lore fragments can only drop once per fragment per wave — duplicates are blocked</li></ul>
+        </div>
+      </div>
+    </div></details>
+
+    <!-- UNIVERSAL ITEMS -->
+    <details class="acc"><summary>🌐 Universal Items — available to all realms</summary><div class="acc-body">
+      <div class="item-row"><span class="item-name">🌀 Echo Shard</span><span class="tag tag-common">Common</span><span class="item-flavour">Hums faintly with borrowed memory.</span></div>
+      <div class="item-row"><span class="item-name">🪨 Stone Rune</span><span class="tag tag-common">Common</span><span class="item-flavour">Worn smooth by time and intention.</span></div>
+      <div class="item-row"><span class="item-name">🌿 Wild Herb</span><span class="tag tag-uncommon">Uncommon</span><span class="item-flavour">Useful in every recipe, found almost nowhere.</span></div>
+      <div class="item-row"><span class="item-name">✨ Starweave Thread</span><span class="tag tag-uncommon">Uncommon</span><span class="item-flavour">Spun from the edge of night.</span></div>
+      <div class="item-row"><span class="item-name">💎 Convergence Crystal</span><span class="tag tag-rare">Rare</span><span class="tag tag-usable">Usable</span><span class="item-flavour">Grants +300 XP to your realm immediately.</span></div>
+      <div class="item-row"><span class="item-name">🌸 Bloom Essence</span><span class="tag tag-rare">Rare</span><span class="tag tag-usable">Usable</span><span class="item-flavour">Doubles realm XP gain for 30 minutes.</span></div>
+      <div class="item-row"><span class="item-name">⚗️ Cleansing Vial</span><span class="tag tag-uncommon">Uncommon</span><span class="tag tag-usable">Usable</span><span class="item-flavour">Clears all active curses from your member profile.</span></div>
+      <div class="item-row"><span class="item-name">🌌 Void Fragment</span><span class="tag tag-legendary">Legendary</span><span class="tag tag-usable">Usable</span><span class="item-flavour">Steals 1 random item from every rival realm.</span></div>
+    </div></details>
+
+    <!-- REALM ITEMS -->
+    <details class="acc"><summary>🌿 Realm-Specific Items</summary><div class="acc-body">
+      <div class="grid2">
+        <div>
+          <p style="font-weight:600; margin-bottom:8px;">🌿 Grove of Growth</p>
+          <div class="item-row"><span class="item-name">🍃 Verdant Leaf</span><span class="tag tag-common">Common</span></div>
+          <div class="item-row"><span class="item-name">🧩 Moss Clump</span><span class="tag tag-common">Common</span></div>
+          <div class="item-row"><span class="item-name">🪨 Rootstone</span><span class="tag tag-uncommon">Uncommon</span></div>
+          <div class="item-row"><span class="item-name">🍯 Amber Resin</span><span class="tag tag-uncommon">Uncommon</span></div>
+          <div class="item-row"><span class="item-name">🌳 Living Branch</span><span class="tag tag-rare">Rare</span><span class="tag tag-usable">Usable</span><span class="tag tag-craft">Craftable</span></div>
+          <div class="item-row"><span class="item-name">💚 Heartwood Core</span><span class="tag tag-legendary">Legendary</span><span class="tag tag-usable">Usable</span><span class="tag tag-craft">Craftable</span></div>
+        </div>
+        <div>
+          <p style="font-weight:600; margin-bottom:8px;">🔥 Ember Circle</p>
+          <div class="item-row"><span class="item-name">💥 Cinder Spark</span><span class="tag tag-common">Common</span></div>
+          <div class="item-row"><span class="item-name">🕸️ Ash Flake</span><span class="tag tag-common">Common</span></div>
+          <div class="item-row"><span class="item-name">🌋 Molten Core</span><span class="tag tag-uncommon">Uncommon</span></div>
+          <div class="item-row"><span class="item-name">📌 Forge Nail</span><span class="tag tag-uncommon">Uncommon</span></div>
+          <div class="item-row"><span class="item-name">🪶 Phoenix Feather</span><span class="tag tag-rare">Rare</span><span class="tag tag-usable">Usable</span><span class="tag tag-craft">Craftable</span></div>
+          <div class="item-row"><span class="item-name">❤️‍🔥 Infernal Heart</span><span class="tag tag-legendary">Legendary</span><span class="tag tag-usable">Usable</span><span class="tag tag-craft">Craftable</span></div>
+        </div>
+        <div>
+          <p style="font-weight:600; margin-bottom:8px;">💧 Mirror Lake</p>
+          <div class="item-row"><span class="item-name">💎 Still Droplet</span><span class="tag tag-common">Common</span></div>
+          <div class="item-row"><span class="item-name">🐟 Silver Scale</span><span class="tag tag-common">Common</span></div>
+          <div class="item-row"><span class="item-name">🫧 Depth Pearl</span><span class="tag tag-uncommon">Uncommon</span></div>
+          <div class="item-row"><span class="item-name">🔍 Memory Glass</span><span class="tag tag-uncommon">Uncommon</span></div>
+          <div class="item-row"><span class="item-name">🪞 Mirror Shard</span><span class="tag tag-rare">Rare</span><span class="tag tag-usable">Usable</span><span class="tag tag-craft">Craftable</span></div>
+          <div class="item-row"><span class="item-name">🖤 Abyssal Tear</span><span class="tag tag-legendary">Legendary</span><span class="tag tag-usable">Usable</span><span class="tag tag-craft">Craftable</span></div>
+        </div>
+        <div>
+          <p style="font-weight:600; margin-bottom:8px;">🌙 Moonroot Tree</p>
+          <div class="item-row"><span class="item-name">🌸 Moonpetal</span><span class="tag tag-common">Common</span></div>
+          <div class="item-row"><span class="item-name">🧶 Shadow Silk</span><span class="tag tag-common">Common</span></div>
+          <div class="item-row"><span class="item-name">🫠 Dreamroot</span><span class="tag tag-uncommon">Uncommon</span></div>
+          <div class="item-row"><span class="item-name">🩵 Twilight Sap</span><span class="tag tag-uncommon">Uncommon</span></div>
+          <div class="item-row"><span class="item-name">🌕 Lunar Essence</span><span class="tag tag-rare">Rare</span><span class="tag tag-usable">Usable</span><span class="tag tag-craft">Craftable</span></div>
+          <div class="item-row"><span class="item-name">⚓ Dream Anchor</span><span class="tag tag-legendary">Legendary</span><span class="tag tag-usable">Usable</span><span class="tag tag-craft">Craftable</span></div>
+        </div>
+      </div>
+    </div></details>
+
+    <!-- CRAFTING -->
+    <details class="acc"><summary>⚗️ Crafting Recipes — all realms</summary><div class="acc-body">
+      <div class="grid2">
+        <div>
+          <p style="font-weight:600; font-size:13px; margin-bottom:8px;">🌿 Grove</p>
+          <p class="muted" style="font-size:13px;">🌳 <strong>Living Branch</strong> — 4× Verdant Leaf + 3× Moss Clump + 2× Rootstone</p>
+          <p class="muted" style="font-size:13px; margin-top:8px;">💚 <strong>Heartwood Core</strong> — 6× Verdant Leaf + 4× Moss Clump + 3× Rootstone + 3× Amber Resin</p>
+          <hr class="sep" />
+          <p style="font-weight:600; font-size:13px; margin-bottom:8px;">🔥 Ember</p>
+          <p class="muted" style="font-size:13px;">🪶 <strong>Phoenix Feather</strong> — 4× Cinder Spark + 3× Ash Flake + 2× Molten Core</p>
+          <p class="muted" style="font-size:13px; margin-top:8px;">❤️‍🔥 <strong>Infernal Heart</strong> — 6× Cinder Spark + 4× Ash Flake + 3× Molten Core + 3× Forge Nail</p>
+        </div>
+        <div>
+          <p style="font-weight:600; font-size:13px; margin-bottom:8px;">💧 Mirror</p>
+          <p class="muted" style="font-size:13px;">🪞 <strong>Mirror Shard</strong> — 4× Still Droplet + 3× Silver Scale + 2× Depth Pearl</p>
+          <p class="muted" style="font-size:13px; margin-top:8px;">🖤 <strong>Abyssal Tear</strong> — 6× Still Droplet + 4× Silver Scale + 3× Depth Pearl + 3× Memory Glass</p>
+          <hr class="sep" />
+          <p style="font-weight:600; font-size:13px; margin-bottom:8px;">🌙 Moonroot</p>
+          <p class="muted" style="font-size:13px;">🌕 <strong>Lunar Essence</strong> — 4× Moonpetal + 3× Shadow Silk + 2× Dreamroot</p>
+          <p class="muted" style="font-size:13px; margin-top:8px;">⚓ <strong>Dream Anchor</strong> — 6× Moonpetal + 4× Shadow Silk + 3× Dreamroot + 3× Twilight Sap</p>
+        </div>
+      </div>
+    </div></details>
+
+    <!-- SEASONAL -->
+    <details class="acc"><summary>🌸 Seasonal Items &amp; Fusion Artifacts</summary><div class="acc-body">
+      <div class="grid2">
+        <div>
+          <p style="font-weight:600; margin-bottom:8px;">🌱 Spring (March–May) · Grove</p>
+          <div class="item-row"><span class="item-name">👑 Seedling Crown</span><span class="tag tag-uncommon">Uncommon</span></div>
+          <div class="item-row"><span class="item-name">💧 Dewdrop Charm</span><span class="tag tag-rare">Rare</span></div>
+          <div class="item-row"><span class="item-name">🌺 Spring Blossom</span><span class="tag tag-legendary">Legendary</span></div>
+          <div class="item-row" style="padding-top:10px;"><span class="item-name">💚 Verdant Heart</span><span class="tag tag-fused">Fused</span><span class="item-flavour">3× realm XP for 1 hour + 1,000 bonus XP.</span></div>
+        </div>
+        <div>
+          <p style="font-weight:600; margin-bottom:8px;">☀️ Summer (June–Aug) · Ember</p>
+          <div class="item-row"><span class="item-name">🔆 Sunforge Shard</span><span class="tag tag-uncommon">Uncommon</span></div>
+          <div class="item-row"><span class="item-name">🕯️ Inferno Ash</span><span class="tag tag-rare">Rare</span></div>
+          <div class="item-row"><span class="item-name">💛 Solar Heart</span><span class="tag tag-legendary">Legendary</span></div>
+          <div class="item-row" style="padding-top:10px;"><span class="item-name">🔶 Eternal Ember</span><span class="tag tag-fused">Fused</span><span class="item-flavour">Steal 2 items from EACH rival realm + 1,500 XP.</span></div>
+        </div>
+        <div>
+          <p style="font-weight:600; margin-bottom:8px;">🍂 Autumn (Sep–Nov) · Mirror</p>
+          <div class="item-row"><span class="item-name">🍁 Amber Leaf</span><span class="tag tag-uncommon">Uncommon</span></div>
+          <div class="item-row"><span class="item-name">🌫️ Fog Crystal</span><span class="tag tag-rare">Rare</span></div>
+          <div class="item-row"><span class="item-name">🪞 Harvest Mirror</span><span class="tag tag-legendary">Legendary</span></div>
+          <div class="item-row" style="padding-top:10px;"><span class="item-name">🔮 Veil of Echoes</span><span class="tag tag-fused">Fused</span><span class="item-flavour">Copy 2 items from each rival realm + 2× drop rates for 1 hour.</span></div>
+        </div>
+        <div>
+          <p style="font-weight:600; margin-bottom:8px;">❄️ Winter (Dec–Feb) · Moonroot</p>
+          <div class="item-row"><span class="item-name">🧊 Frost Whisper</span><span class="tag tag-uncommon">Uncommon</span></div>
+          <div class="item-row"><span class="item-name">⭐ Starfall Dust</span><span class="tag tag-rare">Rare</span></div>
+          <div class="item-row"><span class="item-name">💜 Dreamweave Shard</span><span class="tag tag-legendary">Legendary</span></div>
+          <div class="item-row" style="padding-top:10px;"><span class="item-name">🌑 Moonbound Relic</span><span class="tag tag-fused">Fused</span><span class="item-flavour">+500 XP to ALL realms, then +2,000 bonus XP to yours.</span></div>
+        </div>
+      </div>
+    </div></details>
+
+    <!-- ADVENTURE ZONES -->
+    <details class="acc"><summary>🗺️ Adventure Zones (11 total)</summary><div class="acc-body">
+      <table class="stat-table"><thead><tr><th>Zone</th><th>Min CL</th><th>Difficulty</th><th>Boss Chance</th></tr></thead><tbody>
+        <tr><td>🌲 Whispering Woods</td><td>1</td><td>⭐</td><td>5%</td></tr>
+        <tr><td>🏚️ Abandoned Village</td><td>1</td><td>⭐</td><td>8%</td></tr>
+        <tr><td>🌿 Thornvale Glade</td><td>2</td><td>⭐⭐</td><td>10%</td></tr>
+        <tr><td>🏔️ Ashpeak Cliffs</td><td>3</td><td>⭐⭐</td><td>12%</td></tr>
+        <tr><td>🌊 Mirror Coast</td><td>3</td><td>⭐⭐</td><td>12%</td></tr>
+        <tr><td>🌑 Shadowfen Marsh</td><td>4</td><td>⭐⭐⭐</td><td>15%</td></tr>
+        <tr><td>🔥 Emberfall Ruins</td><td>5</td><td>⭐⭐⭐</td><td>18%</td></tr>
+        <tr><td>🌙 Moonlit Caverns</td><td>5</td><td>⭐⭐⭐</td><td>18%</td></tr>
+        <tr><td>⚡ Stormspire Peaks</td><td>6</td><td>⭐⭐⭐⭐</td><td>22%</td></tr>
+        <tr><td>💀 Ruinlord's Citadel</td><td>8</td><td>⭐⭐⭐⭐⭐</td><td>35%</td></tr>
+        <tr><td>🌀 The Convergence Rift</td><td>10</td><td>⭐⭐⭐⭐⭐</td><td>50%</td></tr>
+      </tbody></table>
+    </div></details>
+
+    <!-- WEATHER & CURSES -->
+    <details class="acc"><summary>🌦️ Weather &amp; 🩸 Curses</summary><div class="acc-body">
+      <div class="grid2">
+        <div>
+          <p style="font-weight:600; margin-bottom:8px;">🌦️ Daily Weather</p>
+          <table class="stat-table"><thead><tr><th>Weather</th><th>Effect</th></tr></thead><tbody>
+            <tr><td>☀️ Sunny</td><td>Power +15%</td></tr>
+            <tr><td>🌧️ Rainy</td><td>Wisdom +15%</td></tr>
+            <tr><td>⛈️ Stormy</td><td>Agility +20%</td></tr>
+            <tr><td>🌫️ Foggy</td><td>Vitality −10%</td></tr>
+            <tr><td>❄️ Blizzard</td><td>All stats −10%</td></tr>
+            <tr><td>🌤️ Cloudy</td><td>No effect</td></tr>
+          </tbody></table>
+        </div>
+        <div>
+          <p style="font-weight:600; margin-bottom:8px;">🩸 Curses</p>
+          <ul class="inner"><li>Apply when you trigger traps in dungeons</li><li>Persist until cleansed with <code>/cleanse</code> (costs a Cleansing Vial)</li><li><strong>Weakness:</strong> Power −20% for 3 runs</li><li><strong>Fog of Mind:</strong> Wisdom −20% for 3 runs</li><li><strong>Stone Skin:</strong> Agility −20% for 3 runs</li><li><strong>Brittle Bones:</strong> Vitality −20% for 3 runs</li><li><strong>Ill Luck:</strong> Fortune −20%, item drops −15% for 5 runs</li><li>Multiple curses stack. Check with <code>/curses</code>.</li></ul>
+        </div>
+      </div>
+    </div></details>
+
+  </div><!-- /panel-world -->
+
+
+  <!-- ═══════════════════════════════════════════════
+       PANEL: REALMS
+  ═══════════════════════════════════════════════ -->
+  <div class="hub-panel" id="panel-realms">
+
+    <!-- REALM SUB-TABS -->
+    <div class="realm-tabs" id="realmTabNav" role="tablist">
+      <button class="realm-tab active" data-realm="grove">🌿 Grove of Growth</button>
+      <button class="realm-tab" data-realm="ember">🔥 Ember Circle</button>
+      <button class="realm-tab" data-realm="mirror">💧 Mirror Lake</button>
+      <button class="realm-tab" data-realm="moonroot">🌙 Moonroot Tree</button>
+    </div>
+
+    <!-- ── GROVE ─────────────────────────────── -->
+    <div class="realm-panel active" id="realm-grove" data-realm="grove">
+      <div class="card">
+        <p class="kicker">EchoBloom Lore · Realm Shrine · Renewal</p>
+        <h2 style="font-size:26px; margin-bottom:6px;">🌿 The Grove of Growth</h2>
+        <p class="muted">A place of nurturing, learning, and steady evolution. The Grove teaches one truth above all: <strong>growth cannot be forced — only nurtured</strong>. Patience, given enough time, becomes something permanent.</p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+          <span class="tag tag-uncommon">Spring (Mar–May)</span>
+          <span class="tag tag-lore">Renewal</span>
+          <span class="tag tag-skill">Earth</span>
+        </div>
       </div>
 
-      <div class="callout" style="margin-top:12px;">
-        <strong>Everything is in one file</strong>
-        <p class="muted small" style="margin:6px 0 0;">
-          All IDs, realm definitions, items, crafting recipes, quests, lore waves, seasonal content,
-          riddles, word scrambles, emoji chains, drop rates, adventure zones, monsters, and boss
-          definitions live in <code>config/config.py</code>. One file to rule them all.
-        </p>
+      <details class="acc"><summary>🌱 Realm Ranks</summary><div class="acc-body">
+        <p class="muted" style="font-size:13.5px; margin-bottom:8px;">XP earned through conversation and voice chat. Rank roles unlock at milestones.</p>
+        <div class="item-row"><span class="tag tag-common">Rank 1</span><span style="font-size:13.5px; color:var(--text-2); margin-left:4px;"><strong>Level 1</strong> — You've planted your first root.</span></div>
+        <div class="item-row"><span class="tag tag-uncommon">Rank 2</span><span style="font-size:13.5px; color:var(--text-2); margin-left:4px;"><strong>Level 10</strong> — The canopy recognizes you.</span></div>
+        <div class="item-row"><span class="tag tag-legendary">Rank 3</span><span style="font-size:13.5px; color:var(--text-2); margin-left:4px;"><strong>Level 25</strong> — You are part of the Grove itself.</span></div>
+      </div></details>
+
+      <details class="acc"><summary>🎒 Realm Items &amp; Crafting</summary><div class="acc-body">
+        <div class="item-row"><span class="item-name">🍃 Verdant Leaf</span><span class="tag tag-common">Common</span><span class="item-flavour">Still green, still growing.</span></div>
+        <div class="item-row"><span class="item-name">🧩 Moss Clump</span><span class="tag tag-common">Common</span><span class="item-flavour">Soft, damp, and older than it looks.</span></div>
+        <div class="item-row"><span class="item-name">🪨 Rootstone</span><span class="tag tag-uncommon">Uncommon</span><span class="item-flavour">Heavy with patience.</span></div>
+        <div class="item-row"><span class="item-name">🍯 Amber Resin</span><span class="tag tag-uncommon">Uncommon</span><span class="item-flavour">Trapped time, golden and still.</span></div>
+        <div class="item-row"><span class="item-name">🌳 Living Branch</span><span class="tag tag-rare">Rare</span><span class="tag tag-usable">Usable</span><span class="tag tag-craft">Craftable</span><span class="item-flavour">A branch that still sprouts.</span></div>
+        <div class="item-row"><span class="item-name">💚 Heartwood Core</span><span class="tag tag-legendary">Legendary</span><span class="tag tag-usable">Usable</span><span class="tag tag-craft">Craftable</span><span class="item-flavour">The very center of the oldest tree. It still beats.</span></div>
+        <hr class="sep" />
+        <p style="font-size:13px; font-weight:600; margin-bottom:6px;">🔨 Recipes</p>
+        <p class="muted" style="font-size:13px;">🌳 <strong>Living Branch</strong> — 4× Verdant Leaf + 3× Moss Clump + 2× Rootstone</p>
+        <p class="muted" style="font-size:13px; margin-top:6px;">💚 <strong>Heartwood Core</strong> — 6× Verdant Leaf + 4× Moss Clump + 3× Rootstone + 3× Amber Resin</p>
+      </div></details>
+
+      <details class="acc"><summary>🌱 Season of Growth — Spring (Mar–May)</summary><div class="acc-body">
+        <p class="muted" style="font-size:13.5px; font-style:italic; margin-bottom:12px;">The Grove awakens. Life stirs beneath the soil.</p>
+        <div class="item-row"><span class="item-name">👑 Seedling Crown</span><span class="tag tag-uncommon">Uncommon</span><span class="item-flavour">Woven from the first sprouts of the year.</span></div>
+        <div class="item-row"><span class="item-name">💧 Dewdrop Charm</span><span class="tag tag-rare">Rare</span><span class="item-flavour">Morning light trapped in a single drop.</span></div>
+        <div class="item-row"><span class="item-name">🌺 Spring Blossom</span><span class="tag tag-legendary">Legendary</span><span class="item-flavour">The first bloom. A promise of things to come.</span></div>
+        <hr class="sep" />
+        <p style="font-size:13px; font-weight:600; margin-bottom:6px;">🔮 Seasonal Fusion</p>
+        <div class="item-row"><span class="item-name">💚 Verdant Heart</span><span class="tag tag-fused">Fused · Legendary</span><span class="item-flavour">3× realm XP for 1 hour + 1,000 bonus XP.</span></div>
+        <p class="muted" style="font-size:12px; margin-top:6px;">Collect all 3 seasonal items and use <code>/forge</code> to create.</p>
+      </div></details>
+
+      <details class="acc"><summary>📖 Book of Lore — Wave 1: Origins</summary><div class="acc-body">
+        <p class="wave-header">🌀 Wave 1: Origins</p><p class="wave-sub">"Where it all began."</p>
+        <div class="chapter-list">
+          <div class="chapter-item"><strong>Chapter I: The First Root</strong><p class="chapter-unlock">Unlocks at Realm Level 3</p><p class="chapter-text">Before the Grove was a grove, there was a single root — pale and searching — that broke through stone to find the light. It did not know what it was becoming. It only knew it had to grow.</p></div>
+          <div class="chapter-item"><strong>Chapter II: The Canopy Whisper</strong><p class="chapter-unlock">Unlocks at Realm Level 7</p><p class="chapter-text">As the Grove grew tall, its leaves began to whisper to one another. Not words, but intention. The trees learned that growth shared is growth multiplied. They reached for each other, and the canopy closed.</p></div>
+          <div class="chapter-item"><strong>Chapter III: The Hollow Heart</strong><p class="chapter-unlock">Unlocks at Realm Level 12</p><p class="chapter-text">Deep in the oldest trunk, a hollow formed — not from decay, but from trust. The Grove had learned to hold space. To be strong and empty at once. Creatures came to rest there, and left changed.</p></div>
+          <div class="chapter-item"><strong>Chapter IV: The Overgrowth</strong><p class="chapter-unlock">Unlocks at Realm Level 18</p><p class="chapter-text">Growth unchecked becomes a tangle. The Grove nearly lost itself, vines choking vines, roots fighting roots. But the oldest tree spoke without speaking: 'Not more. Better.' And the Grove remembered its purpose.</p></div>
+          <div class="chapter-item"><strong>Chapter V: The Eternal Bloom</strong><p class="chapter-unlock">Unlocks at Realm Level 25</p><p class="chapter-text">In the deepest glade, a flower blooms that never wilts. It has no name. It needs no water. It exists because the Grove exists — a living proof that patience, given enough time, becomes something permanent.</p></div>
+        </div>
+      </div></details>
+
+      <details class="acc"><summary>📖 Book of Lore — Wave 2: Echoes</summary><div class="acc-body">
+        <p class="wave-header">🌀 Wave 2: Echoes</p><p class="wave-sub">"What the past left behind."</p>
+        <div class="chapter-list">
+          <div class="chapter-item"><strong>Chapter VI: The Second Planting</strong><p class="chapter-unlock">Unlocks at Realm Level 3</p><p class="chapter-text">After the bloom, silence. The Grove forgot what it was and had to learn again. New seeds fell into old soil and found it rich with memory. Growth, the second time, is not innocent — it is intentional.</p></div>
+          <div class="chapter-item"><strong>Chapter VII: The Buried Garden</strong><p class="chapter-unlock">Unlocks at Realm Level 8</p><p class="chapter-text">Beneath the Grove, another grove. A mirror made of roots and dark soil. Everything that fell — every leaf, every failed branch — composted into something the surface could never have made alone.</p></div>
+          <div class="chapter-item"><strong>Chapter VIII: The Thorn Accord</strong><p class="chapter-unlock">Unlocks at Realm Level 14</p><p class="chapter-text">The Grove grew thorns. Not from anger, but from understanding. Some things must be protected. The sweetest fruit hangs behind the sharpest edge, and the Grove no longer apologizes for its boundaries.</p></div>
+          <div class="chapter-item"><strong>Chapter IX: The Symbiont</strong><p class="chapter-unlock">Unlocks at Realm Level 20</p><p class="chapter-text">A creature arrived that was neither plant nor animal. It fed the Grove and the Grove fed it. For the first time, growth was not just within — it was between. The Grove learned the word 'together' in a language without words.</p></div>
+          <div class="chapter-item"><strong>Chapter X: The Living Archive</strong><p class="chapter-unlock">Unlocks at Realm Level 28</p><p class="chapter-text">Every ring in every trunk is a year. Every year is a story. The Grove realized it was not just growing — it was recording. When the last tree falls, the soil will remember everything.</p></div>
+        </div>
+      </div></details>
+
+      <details class="acc"><summary>🧩 Lore Fragments</summary><div class="acc-body">
+        <p class="muted" style="font-size:12px; margin-bottom:10px;">Drop randomly from messages (1% chance). Reveal hidden truths about the Grove's nature.</p>
+        <p style="font-weight:600; font-size:13px; margin-bottom:8px;">Wave 1: Origins</p>
+        <div class="frag-row"><span class="item-name">🌱 Seed Memory</span> <span class="tag tag-uncommon">Uncommon</span><p class="frag-flavour">A memory of the first planting. Something small becoming something vast.</p></div>
+        <div class="frag-row"><span class="item-name">📜 Bark Inscription</span> <span class="tag tag-rare">Rare</span><p class="frag-flavour">"We grow together or not at all."</p></div>
+        <div class="frag-row"><span class="item-name">🍃 Canopy Whisper</span> <span class="tag tag-legendary">Legendary</span><p class="frag-flavour">The secret the leaves pass between themselves when no one is listening.</p></div>
+        <hr class="sep" />
+        <p style="font-weight:600; font-size:13px; margin-bottom:8px;">Wave 2: Echoes</p>
+        <div class="frag-row"><span class="item-name">🍂 Compost Memory</span> <span class="tag tag-uncommon">Uncommon</span><p class="frag-flavour">What fell and decayed became the richest soil. Nothing is wasted in the Grove.</p></div>
+        <div class="frag-row"><span class="item-name">🌹 Thorn Covenant</span> <span class="tag tag-rare">Rare</span><p class="frag-flavour">A thorn willingly grown. Protection is also a form of love.</p></div>
+        <div class="frag-row"><span class="item-name">🪵 Ancient Ring</span> <span class="tag tag-legendary">Legendary</span><p class="frag-flavour">A cross-section of the oldest trunk. Every year is written here in silence.</p></div>
+      </div></details>
+    </div><!-- /realm-grove -->
+
+    <!-- ── EMBER ─────────────────────────────── -->
+    <div class="realm-panel" id="realm-ember" data-realm="ember">
+      <div class="card">
+        <p class="kicker">EchoBloom Lore · Realm Shrine · Will</p>
+        <h2 style="font-size:26px; margin-bottom:6px;">🔥 The Ember Circle</h2>
+        <p class="muted">A ring of fire for passion, drive, and transformation. The Circle's truth: <strong>fire tests not to destroy — but to reveal what cannot be burned away</strong>.</p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+          <span class="tag tag-combat">Summer (Jun–Aug)</span>
+          <span class="tag tag-lore">Transformation</span>
+          <span class="tag tag-combat">Fire</span>
+        </div>
       </div>
 
-      <div class="btnrow" style="margin-top:12px;">
-        <a class="button bots" href="/echobloom-classes.html">⚔️ Class Guide</a>
-        <a class="button bots" href="/echobloom-campaigns.html">📜 Campaign Guide</a>
-        <a class="button bots" href="/echobloom-world.html">🌍 World Reference</a>
-        <a class="button bots" href="/bots/foxbot.html">🦊 See FoxBot</a>
-        <a class="button ghost" href="/projects.html">⬅ Back to Projects</a>
+      <details class="acc"><summary>🔥 Realm Ranks</summary><div class="acc-body">
+        <div class="item-row"><span class="tag tag-common">Rank 1</span><span style="font-size:13.5px; color:var(--text-2); margin-left:4px;"><strong>Level 1</strong> — The first spark catches.</span></div>
+        <div class="item-row"><span class="tag tag-uncommon">Rank 2</span><span style="font-size:13.5px; color:var(--text-2); margin-left:4px;"><strong>Level 10</strong> — The forge recognizes your heat.</span></div>
+        <div class="item-row"><span class="tag tag-legendary">Rank 3</span><span style="font-size:13.5px; color:var(--text-2); margin-left:4px;"><strong>Level 25</strong> — You are the flame itself.</span></div>
+      </div></details>
+
+      <details class="acc"><summary>🎒 Realm Items &amp; Crafting</summary><div class="acc-body">
+        <div class="item-row"><span class="item-name">💥 Cinder Spark</span><span class="tag tag-common">Common</span><span class="item-flavour">Hot to the touch.</span></div>
+        <div class="item-row"><span class="item-name">🕸️ Ash Flake</span><span class="tag tag-common">Common</span><span class="item-flavour">Light as nothing. Remembers everything.</span></div>
+        <div class="item-row"><span class="item-name">🌋 Molten Core</span><span class="tag tag-uncommon">Uncommon</span><span class="item-flavour">Radiates purpose.</span></div>
+        <div class="item-row"><span class="item-name">📌 Forge Nail</span><span class="tag tag-uncommon">Uncommon</span><span class="item-flavour">Hammered with intent. Holds things together.</span></div>
+        <div class="item-row"><span class="item-name">🪶 Phoenix Feather</span><span class="tag tag-rare">Rare</span><span class="tag tag-usable">Usable</span><span class="tag tag-craft">Craftable</span><span class="item-flavour">Burns bright, then renews.</span></div>
+        <div class="item-row"><span class="item-name">❤️‍🔥 Infernal Heart</span><span class="tag tag-legendary">Legendary</span><span class="tag tag-usable">Usable</span><span class="tag tag-craft">Craftable</span><span class="item-flavour">A core that burns without consuming itself.</span></div>
+        <hr class="sep" />
+        <p style="font-size:13px; font-weight:600; margin-bottom:6px;">🔨 Recipes</p>
+        <p class="muted" style="font-size:13px;">🪶 <strong>Phoenix Feather</strong> — 4× Cinder Spark + 3× Ash Flake + 2× Molten Core</p>
+        <p class="muted" style="font-size:13px; margin-top:6px;">❤️‍🔥 <strong>Infernal Heart</strong> — 6× Cinder Spark + 4× Ash Flake + 3× Molten Core + 3× Forge Nail</p>
+      </div></details>
+
+      <details class="acc"><summary>☀️ Season of Flame — Summer (Jun–Aug)</summary><div class="acc-body">
+        <p class="muted" style="font-size:13.5px; font-style:italic; margin-bottom:12px;">The Ember Circle blazes. Passion runs unchecked.</p>
+        <div class="item-row"><span class="item-name">🔆 Sunforge Shard</span><span class="tag tag-uncommon">Uncommon</span><span class="item-flavour">A fragment of concentrated heat.</span></div>
+        <div class="item-row"><span class="item-name">🕯️ Inferno Ash</span><span class="tag tag-rare">Rare</span><span class="item-flavour">What remains after everything burns.</span></div>
+        <div class="item-row"><span class="item-name">💛 Solar Heart</span><span class="tag tag-legendary">Legendary</span><span class="item-flavour">The heart of summer itself. Unstoppable warmth.</span></div>
+        <hr class="sep" />
+        <p style="font-size:13px; font-weight:600; margin-bottom:6px;">🔮 Seasonal Fusion</p>
+        <div class="item-row"><span class="item-name">🔶 Eternal Ember</span><span class="tag tag-fused">Fused · Legendary</span><span class="item-flavour">Steal 2 items from EACH rival realm + 1,500 XP.</span></div>
+      </div></details>
+
+      <details class="acc"><summary>📖 Book of Lore — Wave 1: Origins</summary><div class="acc-body">
+        <p class="wave-header">🌀 Wave 1: Origins</p><p class="wave-sub">"Where it all began."</p>
+        <div class="chapter-list">
+          <div class="chapter-item"><strong>Chapter I: The First Spark</strong><p class="chapter-unlock">Unlocks at Realm Level 3</p><p class="chapter-text">Before the Circle, there was a single spark — born from the collision of two stones that had waited millennia to meet. The spark did not care that it was small. It only cared that it burned.</p></div>
+          <div class="chapter-item"><strong>Chapter II: The Forge Song</strong><p class="chapter-unlock">Unlocks at Realm Level 7</p><p class="chapter-text">The embers learned to sing together, a low hum that turned iron to purpose. The Forge Song could shape anything — but only if the singer meant it. Half-hearted flames make brittle things.</p></div>
+          <div class="chapter-item"><strong>Chapter III: The Ash Memory</strong><p class="chapter-unlock">Unlocks at Realm Level 12</p><p class="chapter-text">When the great fire passed, only ash remained. But the Circle discovered that ash remembers. Press your hand to it and feel what burned — every passion, every failure, every refusal to stop.</p></div>
+          <div class="chapter-item"><strong>Chapter IV: The Contained Fury</strong><p class="chapter-unlock">Unlocks at Realm Level 18</p><p class="chapter-text">Raw fire destroys. The Circle learned this the hard way, burning bridges it needed. So it built the ring — not to cage the flame, but to focus it. Controlled fire builds. Wild fire only consumes.</p></div>
+          <div class="chapter-item"><strong>Chapter V: The Undying Flame</strong><p class="chapter-unlock">Unlocks at Realm Level 25</p><p class="chapter-text">At the center of the Circle burns a flame that cannot be extinguished. It was not lit. It was willed into existence by every soul that refused to go quietly. It will burn until there is nothing left to fight for.</p></div>
+        </div>
+      </div></details>
+
+      <details class="acc"><summary>📖 Book of Lore — Wave 2: Echoes</summary><div class="acc-body">
+        <p class="wave-header">🌀 Wave 2: Echoes</p><p class="wave-sub">"What the past left behind."</p>
+        <div class="chapter-list">
+          <div class="chapter-item"><strong>Chapter VI: The Cold Forge</strong><p class="chapter-unlock">Unlocks at Realm Level 3</p><p class="chapter-text">After the Undying Flame, the Circle went cold. Not dead — waiting. The embers learned that between bursts of fire, there is a silence that makes the next flame mean something.</p></div>
+          <div class="chapter-item"><strong>Chapter VII: The Scar Map</strong><p class="chapter-unlock">Unlocks at Realm Level 8</p><p class="chapter-text">Every burn leaves a mark. The Circle began to read its scars like a map — each one pointing toward a lesson it had paid for in pain. Scars are not wounds. They are proof of survival.</p></div>
+          <div class="chapter-item"><strong>Chapter VIII: The Stolen Fire</strong><p class="chapter-unlock">Unlocks at Realm Level 14</p><p class="chapter-text">Someone took fire from the Circle and used it to destroy. The Circle felt the theft in its bones and learned the hardest lesson: power shared is power risked. But power hoarded is power wasted.</p></div>
+          <div class="chapter-item"><strong>Chapter IX: The Ember Covenant</strong><p class="chapter-unlock">Unlocks at Realm Level 20</p><p class="chapter-text">The Circle made a pact: every flame lit would carry intent. No more wild burning. Every spark would mean something — a promise, a signal, a choice. Fire without purpose is just destruction.</p></div>
+          <div class="chapter-item"><strong>Chapter X: The Heart of the Furnace</strong><p class="chapter-unlock">Unlocks at Realm Level 28</p><p class="chapter-text">Deep in the core, the temperature changes. It does not get hotter — it gets denser. Pressure beyond measurement, patience beyond time. Here, fire becomes diamond. Here, the Circle becomes eternal.</p></div>
+        </div>
+      </div></details>
+
+      <details class="acc"><summary>🧩 Lore Fragments</summary><div class="acc-body">
+        <p class="muted" style="font-size:12px; margin-bottom:10px;">Drop randomly from messages (1% chance).</p>
+        <p style="font-weight:600; font-size:13px; margin-bottom:8px;">Wave 1: Origins</p>
+        <div class="frag-row"><span class="item-name">💫 Spark Origin</span> <span class="tag tag-uncommon">Uncommon</span><p class="frag-flavour">The exact moment of ignition, frozen in time. It still feels warm.</p></div>
+        <div class="frag-row"><span class="item-name">⚒️ Forge Slag</span> <span class="tag tag-rare">Rare</span><p class="frag-flavour">What was left behind when the first weapon was forged. Purpose given form.</p></div>
+        <div class="frag-row"><span class="item-name">🔥 Phoenix Memory</span> <span class="tag tag-legendary">Legendary</span><p class="frag-flavour">The moment between death and rebirth. It lasts forever and no time at all.</p></div>
+        <hr class="sep" />
+        <p style="font-weight:600; font-size:13px; margin-bottom:8px;">Wave 2: Echoes</p>
+        <div class="frag-row"><span class="item-name">📖 Scar Reading</span> <span class="tag tag-uncommon">Uncommon</span><p class="frag-flavour">A map made of burns. Every mark is a lesson paid for in full.</p></div>
+        <div class="frag-row"><span class="item-name">🤝 Ember Oath</span> <span class="tag tag-rare">Rare</span><p class="frag-flavour">A promise crystallized in heat. Fire with purpose is sacred.</p></div>
+        <div class="frag-row"><span class="item-name">💠 Furnace Diamond</span> <span class="tag tag-legendary">Legendary</span><p class="frag-flavour">Born from impossible pressure. Fire's final form is not flame — it is permanence.</p></div>
+      </div></details>
+    </div><!-- /realm-ember -->
+
+    <!-- ── MIRROR ─────────────────────────────── -->
+    <div class="realm-panel" id="realm-mirror" data-realm="mirror">
+      <div class="card">
+        <p class="kicker">EchoBloom Lore · Realm Shrine · Insight</p>
+        <h2 style="font-size:26px; margin-bottom:6px;">💧 The Mirror Lake</h2>
+        <p class="muted">Still waters for reflection, clarity, and emotional depth. Mirror Lake teaches one truth above all: <strong>wisdom is not certainty, but awareness</strong>.</p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+          <span class="tag tag-rare">Autumn (Sep–Nov)</span>
+          <span class="tag tag-lore">Reflection</span>
+          <span class="tag tag-rare">Water</span>
+        </div>
       </div>
-    </section>
 
-    <div id="shared-footer"></div>
-  </div>
+      <details class="acc"><summary>💧 Realm Ranks</summary><div class="acc-body">
+        <div class="item-row"><span class="tag tag-common">Rank 1</span><span style="font-size:13.5px; color:var(--text-2); margin-left:4px;"><strong>Level 1</strong> — Your first ripple on the surface.</span></div>
+        <div class="item-row"><span class="tag tag-uncommon">Rank 2</span><span style="font-size:13.5px; color:var(--text-2); margin-left:4px;"><strong>Level 10</strong> — The Lake shows you what others miss.</span></div>
+        <div class="item-row"><span class="tag tag-legendary">Rank 3</span><span style="font-size:13.5px; color:var(--text-2); margin-left:4px;"><strong>Level 25</strong> — You see what's meant to become.</span></div>
+      </div></details>
 
-  <script src="/shared.js"></script>
-  <script src="/fireflies.js"></script>
+      <details class="acc"><summary>🎒 Realm Items &amp; Crafting</summary><div class="acc-body">
+        <div class="item-row"><span class="item-name">💎 Still Droplet</span><span class="tag tag-common">Common</span><span class="item-flavour">Perfectly clear.</span></div>
+        <div class="item-row"><span class="item-name">🐟 Silver Scale</span><span class="tag tag-common">Common</span><span class="item-flavour">Shed by something that swims in thought.</span></div>
+        <div class="item-row"><span class="item-name">🫧 Depth Pearl</span><span class="tag tag-uncommon">Uncommon</span><span class="item-flavour">Found at the bottom.</span></div>
+        <div class="item-row"><span class="item-name">🔍 Memory Glass</span><span class="tag tag-uncommon">Uncommon</span><span class="item-flavour">Look through it and see yesterday.</span></div>
+        <div class="item-row"><span class="item-name">🪞 Mirror Shard</span><span class="tag tag-rare">Rare</span><span class="tag tag-usable">Usable</span><span class="tag tag-craft">Craftable</span><span class="item-flavour">Reflects your intent.</span></div>
+        <div class="item-row"><span class="item-name">🖤 Abyssal Tear</span><span class="tag tag-legendary">Legendary</span><span class="tag tag-usable">Usable</span><span class="tag tag-craft">Craftable</span><span class="item-flavour">Wept by the Lake itself. Heavy with truth.</span></div>
+        <hr class="sep" />
+        <p style="font-size:13px; font-weight:600; margin-bottom:6px;">🔨 Recipes</p>
+        <p class="muted" style="font-size:13px;">🪞 <strong>Mirror Shard</strong> — 4× Still Droplet + 3× Silver Scale + 2× Depth Pearl</p>
+        <p class="muted" style="font-size:13px; margin-top:6px;">🖤 <strong>Abyssal Tear</strong> — 6× Still Droplet + 4× Silver Scale + 3× Depth Pearl + 3× Memory Glass</p>
+      </div></details>
+
+      <details class="acc"><summary>🍂 Season of Reflection — Autumn (Sep–Nov)</summary><div class="acc-body">
+        <p class="muted" style="font-size:13.5px; font-style:italic; margin-bottom:12px;">The Mirror Lake deepens. Truths surface in stillness.</p>
+        <div class="item-row"><span class="item-name">🍁 Amber Leaf</span><span class="tag tag-uncommon">Uncommon</span><span class="item-flavour">Frozen mid-fall. Time stands still.</span></div>
+        <div class="item-row"><span class="item-name">🌫️ Fog Crystal</span><span class="tag tag-rare">Rare</span><span class="item-flavour">Solid mist. Cold clarity.</span></div>
+        <div class="item-row"><span class="item-name">🪞 Harvest Mirror</span><span class="tag tag-legendary">Legendary</span><span class="item-flavour">Shows what you've gathered — and what you've lost.</span></div>
+        <hr class="sep" />
+        <div class="item-row"><span class="item-name">🔮 Veil of Echoes</span><span class="tag tag-fused">Fused · Legendary</span><span class="item-flavour">Copy 2 items from each rival realm + 2× drop rates for 1 hour.</span></div>
+      </div></details>
+
+      <details class="acc"><summary>📖 Book of Lore — Wave 1: Origins</summary><div class="acc-body">
+        <p class="wave-header">🌀 Wave 1: Origins</p><p class="wave-sub">"Where it all began."</p>
+        <div class="chapter-list">
+          <div class="chapter-item"><strong>Chapter I: The First Reflection</strong><p class="chapter-unlock">Unlocks at Realm Level 3</p><p class="chapter-text">The Lake was not always still. It raged once, wild and churning. But one day it chose to stop — not from exhaustion, but from curiosity. 'What would I see,' it wondered, 'if I were perfectly clear?'</p></div>
+          <div class="chapter-item"><strong>Chapter II: The Depth Below</strong><p class="chapter-unlock">Unlocks at Realm Level 7</p><p class="chapter-text">Those who looked into the Lake saw themselves. But those who dove beneath the surface found something else — memories that weren't theirs. The Lake collects what people try to forget.</p></div>
+          <div class="chapter-item"><strong>Chapter III: The Shattered Surface</strong><p class="chapter-unlock">Unlocks at Realm Level 12</p><p class="chapter-text">A stone was thrown. The reflection broke into a thousand truths, each one a version of the same face. The Lake learned that clarity is not one image — it is the courage to see all of them at once.</p></div>
+          <div class="chapter-item"><strong>Chapter IV: The Silent Keeper</strong><p class="chapter-unlock">Unlocks at Realm Level 18</p><p class="chapter-text">The Lake does not judge what it reflects. It shows the kind and the cruel with equal stillness. This is its greatest strength and its heaviest burden — to see everything and say nothing.</p></div>
+          <div class="chapter-item"><strong>Chapter V: The Perfect Mirror</strong><p class="chapter-unlock">Unlocks at Realm Level 25</p><p class="chapter-text">In the deepest part of the Lake, the water becomes something else entirely — not liquid, not solid, but truth in its purest form. Those who reach it don't see their reflection. They see what they're meant to become.</p></div>
+        </div>
+      </div></details>
+
+      <details class="acc"><summary>📖 Book of Lore — Wave 2: Echoes</summary><div class="acc-body">
+        <p class="wave-header">🌀 Wave 2: Echoes</p><p class="wave-sub">"What the past left behind."</p>
+        <div class="chapter-list">
+          <div class="chapter-item"><strong>Chapter VI: The Second Stillness</strong><p class="chapter-unlock">Unlocks at Realm Level 3</p><p class="chapter-text">After the Perfect Mirror cracked, the Lake had to choose: reform perfectly, or reform honestly. It chose honestly. The new surface was imperfect, and in its imperfection, it reflected truth more clearly than before.</p></div>
+          <div class="chapter-item"><strong>Chapter VII: The Drowned Memory</strong><p class="chapter-unlock">Unlocks at Realm Level 8</p><p class="chapter-text">At the bottom of the Lake, memories pool like sediment. Not just reflections — real memories, surrendered by those who could no longer carry them. The Lake became a vault for what others need to forget.</p></div>
+          <div class="chapter-item"><strong>Chapter VIII: The Frozen Layer</strong><p class="chapter-unlock">Unlocks at Realm Level 14</p><p class="chapter-text">In winter, the surface froze. Beneath the ice, the Lake continued to move — slowly, deliberately. The Lake learned that stillness on the surface does not mean stillness within.</p></div>
+          <div class="chapter-item"><strong>Chapter IX: The Reflection War</strong><p class="chapter-unlock">Unlocks at Realm Level 20</p><p class="chapter-text">Two truths appeared in the Lake that contradicted each other. Both were real. The Lake nearly split trying to hold them both, then realized: contradiction is not failure. It is depth.</p></div>
+          <div class="chapter-item"><strong>Chapter X: The Source Spring</strong><p class="chapter-unlock">Unlocks at Realm Level 28</p><p class="chapter-text">The Lake discovered it was fed by a spring so deep it had no bottom — a source older than the Lake itself. It was never self-made. It was always connected to something beneath everything.</p></div>
+        </div>
+      </div></details>
+
+      <details class="acc"><summary>🧩 Lore Fragments</summary><div class="acc-body">
+        <p class="muted" style="font-size:12px; margin-bottom:10px;">Drop randomly from messages (1% chance).</p>
+        <p style="font-weight:600; font-size:13px; margin-bottom:8px;">Wave 1: Origins</p>
+        <div class="frag-row"><span class="item-name">🌊 First Ripple</span> <span class="tag tag-uncommon">Uncommon</span><p class="frag-flavour">The disturbance that started everything. Before the ripple, the Lake was just water.</p></div>
+        <div class="frag-row"><span class="item-name">🔮 Deep Truth</span> <span class="tag tag-rare">Rare</span><p class="frag-flavour">A truth pulled from the bottom. It hurts to hold. It hurts more to let go.</p></div>
+        <div class="frag-row"><span class="item-name">💎 Perfect Clarity</span> <span class="tag tag-legendary">Legendary</span><p class="frag-flavour">A single moment of absolute understanding. It cannot be described, only experienced.</p></div>
+        <hr class="sep" />
+        <p style="font-weight:600; font-size:13px; margin-bottom:8px;">Wave 2: Echoes</p>
+        <div class="frag-row"><span class="item-name">🏺 Lake Sediment</span> <span class="tag tag-uncommon">Uncommon</span><p class="frag-flavour">Memories that sank to the bottom. Heavy with the weight of what others released.</p></div>
+        <div class="frag-row"><span class="item-name">🧊 Frozen Surface</span> <span class="tag tag-rare">Rare</span><p class="frag-flavour">The moment the Lake chose stillness over chaos, preserved in ice.</p></div>
+        <div class="frag-row"><span class="item-name">🫧 Source Water</span> <span class="tag tag-legendary">Legendary</span><p class="frag-flavour">A drop from the spring that has no bottom. Older than the Lake, older than memory.</p></div>
+      </div></details>
+    </div><!-- /realm-mirror -->
+
+    <!-- ── MOONROOT ─────────────────────────────── -->
+    <div class="realm-panel" id="realm-moonroot" data-realm="moonroot">
+      <div class="card">
+        <p class="kicker">EchoBloom Lore · Realm Shrine · Wonder</p>
+        <h2 style="font-size:26px; margin-bottom:6px;">🌙 The Moonroot Tree</h2>
+        <p class="muted">Ancient roots under moonlight — intuition, rest, and inner wisdom. Moonroot's truth: <strong>not all truths are meant to be known at once</strong>. Some truths exist beyond understanding.</p>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+          <span class="tag tag-skill">Winter (Dec–Feb)</span>
+          <span class="tag tag-lore">Intuition</span>
+          <span class="tag tag-skill">Spirit</span>
+        </div>
+      </div>
+
+      <details class="acc"><summary>🌙 Realm Ranks</summary><div class="acc-body">
+        <div class="item-row"><span class="tag tag-common">Rank 1</span><span style="font-size:13.5px; color:var(--text-2); margin-left:4px;"><strong>Level 1</strong> — Your first dream beneath the branches.</span></div>
+        <div class="item-row"><span class="tag tag-uncommon">Rank 2</span><span style="font-size:13.5px; color:var(--text-2); margin-left:4px;"><strong>Level 10</strong> — The roots hum when you're near.</span></div>
+        <div class="item-row"><span class="tag tag-legendary">Rank 3</span><span style="font-size:13.5px; color:var(--text-2); margin-left:4px;"><strong>Level 25</strong> — You walk between waking and sleep.</span></div>
+      </div></details>
+
+      <details class="acc"><summary>🎒 Realm Items &amp; Crafting</summary><div class="acc-body">
+        <div class="item-row"><span class="item-name">🌸 Moonpetal</span><span class="tag tag-common">Common</span><span class="item-flavour">Only blooms at night.</span></div>
+        <div class="item-row"><span class="item-name">🧶 Shadow Silk</span><span class="tag tag-common">Common</span><span class="item-flavour">Spun from the space between stars.</span></div>
+        <div class="item-row"><span class="item-name">🫠 Dreamroot</span><span class="tag tag-uncommon">Uncommon</span><span class="item-flavour">Twists in strange directions.</span></div>
+        <div class="item-row"><span class="item-name">🩵 Twilight Sap</span><span class="tag tag-uncommon">Uncommon</span><span class="item-flavour">Sticky, sweet, and faintly luminous.</span></div>
+        <div class="item-row"><span class="item-name">🌕 Lunar Essence</span><span class="tag tag-rare">Rare</span><span class="tag tag-usable">Usable</span><span class="tag tag-craft">Craftable</span><span class="item-flavour">Bottled moonlight.</span></div>
+        <div class="item-row"><span class="item-name">⚓ Dream Anchor</span><span class="tag tag-legendary">Legendary</span><span class="tag tag-usable">Usable</span><span class="tag tag-craft">Craftable</span><span class="item-flavour">Keeps you tethered when the dream tries to pull you under.</span></div>
+        <hr class="sep" />
+        <p style="font-size:13px; font-weight:600; margin-bottom:6px;">🔨 Recipes</p>
+        <p class="muted" style="font-size:13px;">🌕 <strong>Lunar Essence</strong> — 4× Moonpetal + 3× Shadow Silk + 2× Dreamroot</p>
+        <p class="muted" style="font-size:13px; margin-top:6px;">⚓ <strong>Dream Anchor</strong> — 6× Moonpetal + 4× Shadow Silk + 3× Dreamroot + 3× Twilight Sap</p>
+      </div></details>
+
+      <details class="acc"><summary>❄️ Season of Dreams — Winter (Dec–Feb)</summary><div class="acc-body">
+        <p class="muted" style="font-size:13.5px; font-style:italic; margin-bottom:12px;">The Moonroot Tree slumbers. Wisdom grows in darkness.</p>
+        <div class="item-row"><span class="item-name">🧊 Frost Whisper</span><span class="tag tag-uncommon">Uncommon</span><span class="item-flavour">A frozen word. It will thaw when spoken.</span></div>
+        <div class="item-row"><span class="item-name">⭐ Starfall Dust</span><span class="tag tag-rare">Rare</span><span class="item-flavour">Caught from the longest night sky.</span></div>
+        <div class="item-row"><span class="item-name">💜 Dreamweave Shard</span><span class="tag tag-legendary">Legendary</span><span class="item-flavour">A piece of the dreaming world. Handle with care.</span></div>
+        <hr class="sep" />
+        <div class="item-row"><span class="item-name">🌑 Moonbound Relic</span><span class="tag tag-fused">Fused · Legendary</span><span class="item-flavour">+500 XP to ALL realms, then +2,000 bonus XP to yours.</span></div>
+      </div></details>
+
+      <details class="acc"><summary>📖 Book of Lore — Wave 1: Origins</summary><div class="acc-body">
+        <p class="wave-header">🌀 Wave 1: Origins</p><p class="wave-sub">"Where it all began."</p>
+        <div class="chapter-list">
+          <div class="chapter-item"><strong>Chapter I: The First Dream</strong><p class="chapter-unlock">Unlocks at Realm Level 3</p><p class="chapter-text">The Tree was planted in moonlight by hands that left no prints. It grew downward first, its roots reaching for something beneath the earth — not water, not stone, but the place where dreams collect.</p></div>
+          <div class="chapter-item"><strong>Chapter II: The Silver Bark</strong><p class="chapter-unlock">Unlocks at Realm Level 7</p><p class="chapter-text">Under the full moon, the bark turns silver and hums a frequency that only sleeping minds can hear. Those who rest beneath it wake with answers to questions they forgot they asked.</p></div>
+          <div class="chapter-item"><strong>Chapter III: The Root Network</strong><p class="chapter-unlock">Unlocks at Realm Level 12</p><p class="chapter-text">The roots stretch further than any eye can see — beneath rivers, beneath mountains, beneath the other realms. The Moonroot Tree is connected to everything. It does not intrude. It simply listens.</p></div>
+          <div class="chapter-item"><strong>Chapter IV: The Waning</strong><p class="chapter-unlock">Unlocks at Realm Level 18</p><p class="chapter-text">Even the moon goes dark. The Tree learned that rest is not weakness — it is preparation. In its dormant phases, it processes everything it has absorbed, turning raw experience into wisdom.</p></div>
+          <div class="chapter-item"><strong>Chapter V: The Dream Eternal</strong><p class="chapter-unlock">Unlocks at Realm Level 25</p><p class="chapter-text">The oldest root touches something that has no name — the source of all dreams, all intuition, all quiet knowing. The Tree does not understand it. It doesn't need to. Some truths exist beyond understanding.</p></div>
+        </div>
+      </div></details>
+
+      <details class="acc"><summary>📖 Book of Lore — Wave 2: Echoes</summary><div class="acc-body">
+        <p class="wave-header">🌀 Wave 2: Echoes</p><p class="wave-sub">"What the past left behind."</p>
+        <div class="chapter-list">
+          <div class="chapter-item"><strong>Chapter VI: The Second Moon</strong><p class="chapter-unlock">Unlocks at Realm Level 3</p><p class="chapter-text">A new moon appeared in the sky — or perhaps the Tree simply noticed it for the first time. Under its light, the roots grew differently. Not deeper, but wider. Connection over depth.</p></div>
+          <div class="chapter-item"><strong>Chapter VII: The Nightmare Knot</strong><p class="chapter-unlock">Unlocks at Realm Level 8</p><p class="chapter-text">Not all dreams are kind. The Tree absorbed a nightmare so vast it tangled the root network for days. When it finally unraveled, the Tree understood: darkness processed becomes wisdom. Darkness ignored becomes poison.</p></div>
+          <div class="chapter-item"><strong>Chapter VIII: The Sleepwalkers</strong><p class="chapter-unlock">Unlocks at Realm Level 14</p><p class="chapter-text">People began walking in their sleep, drawn to the Tree by its hum. They came with questions their waking minds refused to ask. The Tree answered not with words but with the feeling of being understood.</p></div>
+          <div class="chapter-item"><strong>Chapter IX: The Eclipse Root</strong><p class="chapter-unlock">Unlocks at Realm Level 20</p><p class="chapter-text">During the eclipse, the Tree's shadow stretched across all four realms. For one moment, every root connected. Every dream touched every other dream. The Tree glimpsed the shape of everything.</p></div>
+          <div class="chapter-item"><strong>Chapter X: The Dreamer's Return</strong><p class="chapter-unlock">Unlocks at Realm Level 28</p><p class="chapter-text">The one who planted the Tree returned — not in body, but in dream. They left no message, only a feeling: 'You are exactly what I hoped you would become.' The roots hummed with something that felt like gratitude.</p></div>
+        </div>
+      </div></details>
+
+      <details class="acc"><summary>🧩 Lore Fragments</summary><div class="acc-body">
+        <p class="muted" style="font-size:12px; margin-bottom:10px;">Drop randomly from messages (1% chance).</p>
+        <p style="font-weight:600; font-size:13px; margin-bottom:8px;">Wave 1: Origins</p>
+        <div class="frag-row"><span class="item-name">🧵 Dream Thread</span> <span class="tag tag-uncommon">Uncommon</span><p class="frag-flavour">A thread from the loom of sleep. Pull it and something unravels.</p></div>
+        <div class="frag-row"><span class="item-name">🌙 Moonlit Rune</span> <span class="tag tag-rare">Rare</span><p class="frag-flavour">A symbol that only appears under moonlight. It means 'remember.'</p></div>
+        <div class="frag-row"><span class="item-name">🕳️ Void Whisper</span> <span class="tag tag-legendary">Legendary</span><p class="frag-flavour">The Tree's deepest secret. What lies beneath all roots, beneath all dreams.</p></div>
+        <hr class="sep" />
+        <p style="font-weight:600; font-size:13px; margin-bottom:8px;">Wave 2: Echoes</p>
+        <div class="frag-row"><span class="item-name">🪢 Nightmare Knot</span> <span class="tag tag-uncommon">Uncommon</span><p class="frag-flavour">A tangle from the darkest dream. Unraveling it taught the Tree about patience.</p></div>
+        <div class="frag-row"><span class="item-name">🌑 Eclipse Shadow</span> <span class="tag tag-rare">Rare</span><p class="frag-flavour">The moment all four realms touched through the roots. Brief and infinite.</p></div>
+        <div class="frag-row"><span class="item-name">👁️ Dreamer's Touch</span> <span class="tag tag-legendary">Legendary</span><p class="frag-flavour">The feeling the planter left behind. Not a message — a presence.</p></div>
+      </div></details>
+    </div><!-- /realm-moonroot -->
+
+  </div><!-- /panel-realms -->
+
+  <div id="shared-footer"></div>
+</div><!-- /wrap -->
+
+<script src="/shared.js"></script>
+<script src="/fireflies.js"></script>
+<script>
+(function () {
+  /* ── Hub tab switching ── */
+  const tabBtns  = document.querySelectorAll('.hub-tab');
+  const panels   = document.querySelectorAll('.hub-panel');
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.tab;
+      tabBtns.forEach(b => b.classList.remove('active'));
+      panels.forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('panel-' + target).classList.add('active');
+      // Scroll to just below sticky nav
+      document.getElementById('hubTabNav').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  });
+
+  /* ── Realm sub-tab switching ── */
+  const realmBtns   = document.querySelectorAll('.realm-tab');
+  const realmPanels = document.querySelectorAll('.realm-panel');
+
+  realmBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.realm;
+      realmBtns.forEach(b => b.classList.remove('active'));
+      realmPanels.forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('realm-' + target).classList.add('active');
+    });
+  });
+
+  /* ── Deep link via ?tab=classes&realm=ember ── */
+  const params = new URLSearchParams(window.location.search);
+  const deepTab = params.get('tab');
+  const deepRealm = params.get('realm');
+  if (deepTab) {
+    const btn = document.querySelector(`.hub-tab[data-tab="${deepTab}"]`);
+    if (btn) btn.click();
+  }
+  if (deepRealm) {
+    const rBtn = document.querySelector(`.realm-tab[data-realm="${deepRealm}"]`);
+    if (rBtn) rBtn.click();
+  }
+})();
+</script>
 </body>
 </html>

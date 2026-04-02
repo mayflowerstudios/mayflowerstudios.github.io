@@ -4,476 +4,214 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>How to Join • Mayflower Studios</title>
-
-  <link rel="stylesheet" href="style.css" />
-
-  <style>
-    .steps{ display:grid; gap:14px; }
-    .step{
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.14);
-      border-radius: 18px;
-      padding: 14px;
-      box-shadow: 0 0 0 1px rgba(253,164,175,.06) inset;
-    }
-    .step h3{ margin:0 0 6px; font-size:18px; }
-    .step p{ margin:0; color: var(--muted); line-height:1.6; }
-
-    .callRow{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:10px; }
-
-    .ipBox{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.20);
-      border-radius: 16px;
-      padding: 12px;
-      margin-top: 10px;
-    }
-    .ipBox code{
-      font-family: var(--mono);
-      font-weight: 800;
-      font-size: 14px;
-      color: rgba(255,255,255,.92);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .btn2{
-      display:inline-flex;
-      align-items:center;
-      gap:10px;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.04);
-      color: inherit;
-      text-decoration:none;
-      cursor:pointer;
-      font-weight: 750;
-    }
-    .btn2:hover{ background: rgba(255,255,255,.07); }
-    .btn2.primary{
-      border-color: rgba(253,164,175,.40);
-      box-shadow: 0 0 0 1px rgba(253,164,175,.15) inset;
-    }
-
-    .note{
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.12);
-      border-radius: 16px;
-      padding: 12px;
-      color: var(--muted);
-      line-height: 1.65;
-    }
-
-    .grid2-tight{
-      display:grid;
-      grid-template-columns: 1.05fr .95fr;
-      gap:16px;
-      align-items:start;
-    }
-    @media (max-width: 980px){
-      .grid2-tight{ grid-template-columns: 1fr; }
-    }
-
-    .checklist li{ margin: 8px 0; }
-
-    .tabsRow{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:10px;
-    }
-    .tabBtn{
-      border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.04);
-      color: inherit;
-      padding:8px 10px;
-      border-radius: 999px;
-      font-weight: 800;
-      cursor:pointer;
-      transition: transform var(--t), filter var(--t);
-      user-select:none;
-    }
-    .tabBtn:hover{ transform: var(--lift); filter: brightness(1.06); }
-    .tabBtn.active{
-      border-color: rgba(253,164,175,.40);
-      background: rgba(253,164,175,.10);
-      box-shadow: 0 10px 30px rgba(0,0,0,.18);
-    }
-    .tabPanel{ display:none; margin-top:10px; }
-    .tabPanel.active{ display:block; }
-
-    .kbd{
-      font-family: var(--mono);
-      font-weight: 850;
-      padding: 2px 8px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.18);
-      color: rgba(255,255,255,.92);
-      white-space: nowrap;
-    }
-  </style>
-
-  <!-- OG:START -->
-<meta name="description" content="Cozy mods, bots, and worlds built with heart — designed for long-term communities." />
-<meta property="og:title" content="How to Join • Mayflower Studios" />
-<meta property="og:description" content="Cozy mods, bots, and worlds built with heart — designed for long-term communities." />
-<meta property="og:url" content="https://mayflowerstudios.net/server-info.html" />
-<meta property="og:type" content="website" />
-<meta property="og:image" content="https://mayflowerstudios.net/assets/og/server-info.png" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="How to Join • Mayflower Studios" />
-<meta name="twitter:description" content="Cozy mods, bots, and worlds built with heart — designed for long-term communities." />
-<meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/server-info.png" />
-<!-- OG:END -->
+  <meta name="description" content="Join our cozy Minecraft server — modpack download, step-by-step setup, and the server address." />
+  <meta property="og:title" content="How to Join • Mayflower Studios" />
+  <meta property="og:image" content="https://mayflowerstudios.net/assets/og/server-info.png" />
+  <link rel="stylesheet" href="/style.css" />
 </head>
-
 <body data-nav="server">
-  <div class="wrap">
-    <div id="shared-nav"></div>
+  <div class="site-page">
+    <div id="site-nav"></div>
 
-    <section class="hero">
-      <div>
-        <p class="kicker">Minecraft Server</p>
-        <h1>🧭 How to Join</h1>
-        <p class="muted">
-          You’ll need our modpack installed to connect. Once you’re set up, join using the IP below.
+    <main class="content">
+
+      <!-- Hero -->
+      <div class="page-hero">
+        <p class="page-kicker">🌎 Minecraft · Survival</p>
+        <h1 class="page-title">How to <em>Join</em></h1>
+        <p class="page-sub">
+          Install the modpack, add the server address, and you're in. Here's everything you need.
         </p>
+        <div class="page-actions">
+          <a href="https://www.curseforge.com/minecraft/modpacks/lunas-guns-and-stuff" target="_blank" rel="noopener" class="btn-pri">⬇️ Get the Modpack</a>
+          <a href="https://discord.com/invite/MutqYAdrwz" target="_blank" rel="noopener" class="btn-ghost">💬 Discord</a>
+          <a href="https://map.mayflowerstudios.net:8445" target="_blank" rel="noopener" class="btn-ghost">🗺 Live Map ↗</a>
+        </div>
+      </div>
 
-        <div class="ipBox" aria-label="Server IP">
+      <!-- Server address -->
+      <section class="sec reveal">
+        <div class="sec-head">
+          <p class="sec-kicker">📡 Address</p>
+          <h2 class="sec-title">Server IP</h2>
+        </div>
+        <div class="addr-box">
           <code id="serverIp">play.mayflowerstudios.net</code>
-          <button class="btn2 primary" id="copyIpBtn" type="button">📋 Copy IP</button>
+          <button class="copy-btn" id="copyIpBtn">Copy IP</button>
+        </div>
+      </section>
+
+      <!-- Requirements + Troubleshooting -->
+      <section class="sec reveal">
+        <div class="sec-head">
+          <p class="sec-kicker">✅ Before you start</p>
+          <h2 class="sec-title">Quick Checklist</h2>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-shine"></div>
+            <h3>Requirements</h3>
+            <ul style="color:var(--text-2); font-size:14px; line-height:2; padding-left:18px; margin-top:10px;">
+              <li>Java Edition Minecraft</li>
+              <li>CurseForge app (recommended launcher)</li>
+              <li>Modpack: <strong style="color:var(--text);">Luna's Guns &amp; Stuff</strong></li>
+              <li>6–8 GB RAM allocated</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-shine"></div>
+            <h3>Common Fixes</h3>
+            <ul style="color:var(--text-2); font-size:14px; line-height:2; padding-left:18px; margin-top:10px;">
+              <li><strong style="color:var(--text);">Can't connect:</strong> verify you typed the IP exactly</li>
+              <li><strong style="color:var(--text);">Missing mods:</strong> update the modpack in CurseForge</li>
+              <li><strong style="color:var(--text);">Low FPS:</strong> lower shaders, set render distance 8–12</li>
+              <li><strong style="color:var(--text);">Crashes:</strong> drop your log in Discord and we'll help</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step by step -->
+      <section class="sec reveal">
+        <div class="sec-head">
+          <p class="sec-kicker">🧩 Setup</p>
+          <h2 class="sec-title">Step-by-Step</h2>
         </div>
 
-        <div class="callRow">
-          <a class="btn2 primary" id="curseforgeBtn"
-             href="https://www.curseforge.com/minecraft/modpacks/lunas-guns-and-stuff"
-             target="_blank" rel="noreferrer">
-            ⬇️ Get the Modpack (CurseForge)
-          </a>
+        <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:20px; align-items:start;">
+          <div class="step-list">
 
-          <a class="btn2" id="directZipBtn"
-             href="#"
-             target="_blank" rel="noreferrer"
-             style="display:none;">
-            📦 Direct Download (ZIP)
-          </a>
+            <div class="step">
+              <h3>1 · Install the Modpack</h3>
+              <p>Find <strong>Luna's Guns &amp; Stuff</strong> on CurseForge and install it. This is the easiest method — it keeps your version synced with the server automatically.</p>
+              <div style="margin-top:12px;">
+                <a href="https://www.curseforge.com/minecraft/modpacks/lunas-guns-and-stuff" target="_blank" rel="noopener" class="btn-pri sm">Open Modpack Page ↗</a>
+              </div>
+            </div>
 
-          <a class="btn2" id="discordBtn"
-             href="https://discord.com/invite/MutqYAdrwz"
-             target="_blank" rel="noreferrer">
-            💬 Join Discord
-          </a>
+            <div class="step" id="directZipStep" style="display:none;">
+              <h3>1B · Direct ZIP Install</h3>
+              <p>If you downloaded the server ZIP directly, choose your install method below.</p>
+              <div class="tab-row" style="margin-top:12px;">
+                <button class="tab-btn active" data-tab="cf">CurseForge Import</button>
+                <button class="tab-btn" data-tab="prism">Prism Launcher</button>
+                <button class="tab-btn" data-tab="manual">Manual</button>
+              </div>
+              <div class="tab-panel active" id="tab-cf" style="margin-top:12px;">
+                <div class="callout">
+                  <strong>CurseForge Import</strong>
+                  <ol style="color:var(--text-2); font-size:13.5px; line-height:1.9; padding-left:18px; margin:8px 0 0;">
+                    <li>Open CurseForge → Minecraft → My Modpacks</li>
+                    <li>Look for <strong>Import</strong> or <strong>Create Custom Profile → Import</strong></li>
+                    <li>Select the ZIP you downloaded, wait for install, click Play</li>
+                  </ol>
+                </div>
+              </div>
+              <div class="tab-panel" id="tab-prism" style="margin-top:12px;">
+                <div class="callout">
+                  <strong>Prism Launcher</strong>
+                  <ol style="color:var(--text-2); font-size:13.5px; line-height:1.9; padding-left:18px; margin:8px 0 0;">
+                    <li>Open Prism → Add Instance → Import from zip</li>
+                    <li>Select the downloaded ZIP</li>
+                    <li>Let it set up, then click Launch</li>
+                  </ol>
+                </div>
+              </div>
+              <div class="tab-panel" id="tab-manual" style="margin-top:12px;">
+                <div class="callout">
+                  <strong>Manual (fallback — only if ZIP contains mods/config folders)</strong>
+                  <ol style="color:var(--text-2); font-size:13.5px; line-height:1.9; padding-left:18px; margin:8px 0 0;">
+                    <li>Extract the ZIP</li>
+                    <li>Install Minecraft Forge 1.20.1</li>
+                    <li>Copy <code>mods/</code>, <code>config/</code>, <code>kubejs/</code> into your <code>.minecraft</code> folder</li>
+                    <li>Launch the Forge profile and join</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
 
-          <a class="btn2" href="server.html">🛰️ Back to Dashboard</a>
-        </div>
-      </div>
+            <div class="step">
+              <h3>2 · Launch Minecraft</h3>
+              <p>Launch from CurseForge (or your imported instance). Allocate <strong>6–8 GB RAM</strong> in your launcher settings for the best experience.</p>
+            </div>
 
-      <div class="tileGrid">
-        <div class="tile">
-          <strong>✅ Quick Requirements</strong>
-          <p class="muted2">You’ll need Java Minecraft + the modpack.</p>
-          <ul class="checklist">
-            <li>Java Edition</li>
-            <li>CurseForge app (recommended)</li>
-            <li>Modpack: <strong>Luna’s Guns &amp; Stuff</strong></li>
-          </ul>
-        </div>
+            <div class="step">
+              <h3>3 · Add the Server</h3>
+              <p>In Minecraft: <strong>Multiplayer → Add Server</strong>. Paste the address below.</p>
+              <div class="addr-box" style="margin-top:12px;">
+                <code>play.mayflowerstudios.net</code>
+                <button class="copy-btn" id="copyIpBtn2">Copy</button>
+              </div>
+            </div>
 
-        <div class="tile">
-          <strong>🛠️ Troubleshooting</strong>
-          <p class="muted2">Most issues are quick fixes.</p>
-          <ul class="checklist">
-            <li>Update GPU drivers</li>
-            <li>Allocate 6–8GB RAM in launcher</li>
-            <li>Use the exact modpack version</li>
-          </ul>
-        </div>
-      </div>
-    </section>
+            <div class="step">
+              <h3>4 · Join &amp; Say Hi 👋</h3>
+              <p>If you get kicked for a missing mod, you're on the wrong modpack version — update and try again. Otherwise, welcome!</p>
+            </div>
 
-    <section class="card">
-      <div class="sectionTitle">
-        <h2>🧩 Step-by-step</h2>
-        <span>Fast setup</span>
-      </div>
+          </div>
 
-      <div class="grid2-tight">
-        <div class="steps">
-          <div class="step">
-            <h3>1) Install the Modpack (CurseForge)</h3>
-            <p>
-              Install <strong>Luna’s Guns &amp; Stuff</strong> through CurseForge.
-              This is the easiest method and keeps versions synced.
+          <div class="card" style="position:sticky; top:80px;">
+            <div class="card-shine"></div>
+            <h3 style="margin-bottom:14px;">🎬 Movie Nights</h3>
+            <p style="font-size:14px; color:var(--text-2); margin-bottom:14px;">
+              We also run SyncPlay watch parties on Jellyfin. Join as <strong style="color:var(--text);">Guest</strong> — no password needed — and hop in when we start.
             </p>
-            <div class="callRow">
-              <a class="btn2 primary"
-                 href="https://www.curseforge.com/minecraft/modpacks/lunas-guns-and-stuff"
-                 target="_blank" rel="noreferrer">
-                Open Modpack Page
-              </a>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <a href="/movienight.html" class="btn-pri sm">Movie Night Info</a>
+              <a href="https://jellyfin.mayflowerstudios.net:8443" target="_blank" rel="noopener" class="btn-ghost sm">Jellyfin ↗</a>
             </div>
-          </div>
-
-          <!-- Direct ZIP step (auto-shown only if directZipUrl exists) -->
-          <div class="step" id="directZipStep" style="display:none;">
-            <h3>1B) Install using the Direct Download (ZIP)</h3>
-            <p>
-              This is a “grab the exact pack we’re running” option. Download the ZIP, then install it using one of the methods below.
+            <hr class="divider" style="margin:18px 0;" />
+            <h3 style="margin-bottom:10px;">📜 Server Rules</h3>
+            <p style="font-size:14px; color:var(--text-2); margin-bottom:14px;">
+              Please read the rules before joining — it keeps the community cozy for everyone.
             </p>
-
-            <div class="tabsRow" role="tablist" aria-label="Direct download install methods">
-              <button class="tabBtn active" type="button" data-tab="cf" role="tab" aria-selected="true">CurseForge Import</button>
-              <button class="tabBtn" type="button" data-tab="prism" role="tab" aria-selected="false">Prism Launcher</button>
-              <button class="tabBtn" type="button" data-tab="manual" role="tab" aria-selected="false">Manual (Fallback)</button>
-            </div>
-
-            <div class="note tabPanel active" data-panel="cf" role="tabpanel">
-              <strong style="display:block; margin-bottom:6px; color: rgba(255,255,255,.9);">
-                Method A: CurseForge Import (best if the ZIP is a CurseForge export)
-              </strong>
-              <ol style="margin: 0; padding-left: 18px;">
-                <li>Click <strong>📦 Direct Download (ZIP)</strong> at the top of this page.</li>
-                <li>Open the <strong>CurseForge</strong> app.</li>
-                <li>Go to <strong>Minecraft</strong> → <strong>My Modpacks</strong>.</li>
-                <li>Look for an <strong>Import</strong> option:
-                  <ul>
-                    <li>Either a button like <span class="kbd">Import</span> / <span class="kbd">Import Profile</span>, or</li>
-                    <li><span class="kbd">Create Custom Profile</span> → <span class="kbd">Import</span></li>
-                  </ul>
-                </li>
-                <li>Select the ZIP you downloaded.</li>
-                <li>Wait for it to install, then click <strong>Play</strong>.</li>
-              </ol>
-
-              <hr class="sep" />
-
-              <p style="margin:0;">
-                <strong>If CurseForge says the ZIP is invalid:</strong> that usually means the ZIP isn’t a CurseForge export (missing <span class="kbd">manifest.json</span>).
-                Use the <strong>Prism</strong> method below instead — it’s super reliable.
-              </p>
-            </div>
-
-            <div class="note tabPanel" data-panel="prism" role="tabpanel">
-              <strong style="display:block; margin-bottom:6px; color: rgba(255,255,255,.9);">
-                Method B: Prism Launcher (very reliable for direct packs)
-              </strong>
-              <ol style="margin: 0; padding-left: 18px;">
-                <li>Install Prism Launcher if you don’t have it yet.</li>
-                <li>Click <strong>Add Instance</strong>.</li>
-                <li>Choose <strong>Import</strong> (or <strong>Import from zip</strong>).</li>
-                <li>Select the ZIP you downloaded from this page.</li>
-                <li>Let it set up the instance, then click <strong>Launch</strong>.</li>
-              </ol>
-
-              <hr class="sep" />
-
-              <p style="margin:0;">
-                Prism is usually the easiest way to use a “direct pack ZIP” when CurseForge import is picky.
-              </p>
-            </div>
-
-            <div class="note tabPanel" data-panel="manual" role="tabpanel">
-              <strong style="display:block; margin-bottom:6px; color: rgba(255,255,255,.9);">
-                Method C: Manual Install (fallback — only if the ZIP contains mods/config)
-              </strong>
-              <p style="margin:0 0 8px;">
-                Only use this if the ZIP includes folders like <span class="kbd">mods</span>, <span class="kbd">config</span>, <span class="kbd">kubejs</span>, etc.
-                (If it’s a CurseForge export ZIP, use Import instead.)
-              </p>
-
-              <ol style="margin: 0; padding-left: 18px;">
-                <li>Download the ZIP and extract it somewhere (Right-click → Extract All).</li>
-                <li>Install <strong>Minecraft Forge 1.20.1</strong> (must match the server’s Forge version).</li>
-                <li>Open your Minecraft folder:
-                  <ul>
-                    <li>Windows: <span class="kbd">%appdata%\.minecraft</span></li>
-                  </ul>
-                </li>
-                <li>Copy the extracted folders into your Minecraft folder:
-                  <ul>
-                    <li>Copy <span class="kbd">mods</span> → <span class="kbd">.minecraft\mods</span></li>
-                    <li>Copy <span class="kbd">config</span> → <span class="kbd">.minecraft\config</span></li>
-                    <li>Copy <span class="kbd">kubejs</span> → <span class="kbd">.minecraft\kubejs</span> (if present)</li>
-                  </ul>
-                </li>
-                <li>Launch the Forge profile, then join the server.</li>
-              </ol>
-
-              <hr class="sep" />
-
-              <p style="margin:0;">
-                If manual install sounds annoying, ping us in Discord and we’ll point you to the easiest method for your launcher.
-              </p>
-            </div>
-          </div>
-
-          <div class="step">
-            <h3>2) Launch Minecraft</h3>
-            <p>
-              Launch from CurseForge (or your imported instance). Make sure you have <strong>6–8GB RAM</strong> allocated if needed.
-            </p>
-          </div>
-
-          <div class="step">
-            <h3>3) Add the Server</h3>
-            <p>
-              In Minecraft: <strong>Multiplayer → Add Server</strong><br/>
-              Address: <strong>play.mayflowerstudios.net</strong>
-            </p>
-            <div class="callRow">
-              <button class="btn2 primary" id="copyIpBtn2" type="button">📋 Copy IP</button>
-            </div>
-          </div>
-
-          <div class="step">
-            <h3>4) Join &amp; Say Hi 👋</h3>
-            <p>
-              If you get kicked for a missing mod, you’re likely on the wrong modpack version.
-              Update/reinstall the pack and try again.
-            </p>
+            <a href="/rules.html" class="btn-ghost sm">Read Rules</a>
           </div>
         </div>
+      </section>
 
-        <div class="note">
-          <strong style="display:block; margin-bottom:6px; color: rgba(255,255,255,.9);">
-            Common fixes
-          </strong>
-          <ul>
-            <li><strong>Stuck on “Connecting”:</strong> verify you typed the IP exactly: <code>play.mayflowerstudios.net</code></li>
-            <li><strong>Missing mods:</strong> update the modpack in CurseForge (right click → change version / update)</li>
-            <li><strong>Low FPS:</strong> lower shaders, set render distance ~8–12, allocate 6–8GB RAM</li>
-            <li><strong>Crashes:</strong> join the Discord and drop your latest log (we’ll help)</li>
-          </ul>
+    </main>
 
-          <hr class="sep" />
-
-          <div class="callRow">
-            <a class="btn2" href="rules.html">📜 Read Server Rules</a>
-            <a class="btn2"
-               href="https://discord.com/invite/MutqYAdrwz"
-               target="_blank" rel="noreferrer">
-              💬 Get Help on Discord
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <div id="shared-footer"></div>
+    <div id="site-footer"></div>
   </div>
 
-  <script src="shared.js"></script>
-  <script src="fireflies.js"></script>
-
+  <script src="/shared.js"></script>
   <script>
-    async function fetchJson(url, timeoutMs = 6000) {
-      const controller = new AbortController();
-      const t = setTimeout(() => controller.abort(), timeoutMs);
+    /* Copy IP */
+    function copyIp(btnId) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      btn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText('play.mayflowerstudios.net');
+          btn.textContent = '✓ Copied!'; btn.classList.add('copied');
+          setTimeout(() => { btn.textContent = 'Copy IP'; btn.classList.remove('copied'); }, 2000);
+        } catch { alert('Copy: play.mayflowerstudios.net'); }
+      });
+    }
+    copyIp('copyIpBtn'); copyIp('copyIpBtn2');
+
+    /* Tabs */
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.closest('.step').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.closest('.step').querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        const panel = document.getElementById('tab-' + btn.dataset.tab);
+        if (panel) panel.classList.add('active');
+      });
+    });
+
+    /* Load direct ZIP from data/server.json */
+    (async () => {
       try {
-        const res = await fetch(url, { cache: "no-store", signal: controller.signal });
-        const text = await res.text();
-        if (!res.ok) throw new Error(`HTTP ${res.status}: ${text.slice(0, 120)}`);
-        return JSON.parse(text);
-      } finally {
-        clearTimeout(t);
-      }
-    }
-
-    function resolveUrl(url) {
-      const u = String(url || "").trim();
-      if (!u) return "";
-
-      // Absolute URLs stay absolute
-      if (u.startsWith("http://") || u.startsWith("https://")) return u;
-
-      // Resolve relative or root-relative against the current site
-      return new URL(u, window.location.origin).toString();
-    }
-
-    // Direct ZIP tabs
-    (function(){
-      const buttons = Array.from(document.querySelectorAll(".tabBtn"));
-      const panels = Array.from(document.querySelectorAll(".tabPanel"));
-
-      function activate(key){
-        for (const b of buttons){
-          const on = b.getAttribute("data-tab") === key;
-          b.classList.toggle("active", on);
-          b.setAttribute("aria-selected", on ? "true" : "false");
+        const cfg = await fetch('/data/server.json').then(r => r.json());
+        const zip = cfg?.modpack?.directZipUrl;
+        if (zip) {
+          document.getElementById('directZipStep').style.display = '';
         }
-        for (const p of panels){
-          const on = p.getAttribute("data-panel") === key;
-          p.classList.toggle("active", on);
-        }
-      }
-
-      for (const b of buttons){
-        b.addEventListener("click", () => activate(b.getAttribute("data-tab")));
-      }
-    })();
-
-    // Load links from data/server.json so you only edit one place
-    (async function(){
-      try{
-        const cfg = await fetchJson("data/server.json", 6000);
-
-        const curseforge = String(cfg?.modpack?.curseforgeUrl || "").trim();
-        const directZip = resolveUrl(cfg?.modpack?.directZipUrl || "");
-
-        const curseforgeBtn = document.getElementById("curseforgeBtn");
-        if (curseforgeBtn && curseforge) curseforgeBtn.href = curseforge;
-
-        const directZipBtn = document.getElementById("directZipBtn");
-        const directZipStep = document.getElementById("directZipStep");
-
-        if (directZipBtn && directZipStep) {
-          if (directZip) {
-            directZipBtn.href = directZip;
-            directZipBtn.style.display = "";
-            directZipStep.style.display = "";
-          } else {
-            directZipBtn.style.display = "none";
-            directZipStep.style.display = "none";
-          }
-        }
-      } catch {
-        const directZipBtn = document.getElementById("directZipBtn");
-        const directZipStep = document.getElementById("directZipStep");
-        if (directZipBtn) directZipBtn.style.display = "none";
-        if (directZipStep) directZipStep.style.display = "none";
-      }
-    })();
-
-    // Copy IP
-    (function(){
-      const ip = "play.mayflowerstudios.net";
-      const btn1 = document.getElementById("copyIpBtn");
-      const btn2 = document.getElementById("copyIpBtn2");
-
-      async function copy(btn){
-        try{
-          await navigator.clipboard.writeText(ip);
-          if (btn){
-            const old = btn.textContent;
-            btn.textContent = "✅ Copied!";
-            setTimeout(()=> btn.textContent = old, 1200);
-          }
-        }catch{
-          alert("Couldn’t copy automatically — manually copy:\n" + ip);
-        }
-      }
-
-      if (btn1) btn1.addEventListener("click", () => copy(btn1));
-      if (btn2) btn2.addEventListener("click", () => copy(btn2));
+      } catch {}
     })();
   </script>
 </body>

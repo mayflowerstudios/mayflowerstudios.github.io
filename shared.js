@@ -1,56 +1,184 @@
-function injectFavicon(href = "/assets/icons/favicon.png") {
-  // If there’s already a favicon link, don’t duplicate it
-  if (document.querySelector('link[rel="icon"]')) return;
+/* shared.js — Mayflower Studios */
+(function () {
 
-  const link = document.createElement("link");
-  link.rel = "icon";
-  link.type = "image/png";
+  function injectBg() {
+    if (document.querySelector('.bg-scene')) return;
+    const s1 = document.createElement('div'); s1.className = 'bg-scene';
+    const s2 = document.createElement('div'); s2.className = 'bg-glow';
+    document.body.prepend(s2);
+    document.body.prepend(s1);
+  }
 
-  // Optional cache-buster so updates show up faster
-  link.href = `${href}?v=1`;
+  function injectFavicon() {
+    if (document.querySelector('link[rel="icon"]')) return;
+    const l = document.createElement('link'); l.rel = 'icon'; l.type = 'image/png'; l.href = '/assets/icons/favicon.png?v=2';
+    const a = document.createElement('link'); a.rel = 'apple-touch-icon'; a.href = '/assets/icons/favicon.png?v=2';
+    document.head.appendChild(l); document.head.appendChild(a);
+  }
 
-  document.head.appendChild(link);
+  function injectFireflies() {
+    if (document.getElementById('fireflies')) return;
+    const c = document.createElement('canvas'); c.id = 'fireflies';
+    document.body.prepend(c);
+  }
 
-  // Optional: iOS home screen icon
-  const apple = document.createElement("link");
-  apple.rel = "apple-touch-icon";
-  apple.href = `${href}?v=1`;
-  document.head.appendChild(apple);
-}
+  function injectPetals() {
+    if (document.getElementById('petals')) return;
+    const c = document.createElement('canvas'); c.id = 'petals';
+    document.body.prepend(c);
+    startPetals(c);
+  }
 
-function injectFireflies(){
-  if (document.getElementById("fireflies")) return;
+  function startPetals(canvas) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const ctx = canvas.getContext('2d');
+    let W, H, petals = [], DPR = 1;
+    const COLORS = ['rgba(249,168,212,', 'rgba(251,207,232,', 'rgba(196,181,253,', 'rgba(253,242,248,'];
+    function resize() {
+      DPR = window.devicePixelRatio || 1; W = window.innerWidth; H = window.innerHeight;
+      canvas.width = Math.floor(W * DPR); canvas.height = Math.floor(H * DPR);
+      canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+    function Petal(initial) {
+      this.x = Math.random() * W;
+      this.y = initial ? Math.random() * H : -20;
+      this.size = 2.5 + Math.random() * 4;
+      this.vy = 0.22 + Math.random() * 0.42;
+      this.vx = (Math.random() - .5) * .35;
+      this.rot = Math.random() * Math.PI * 2;
+      this.rs = (Math.random() - .5) * .011;
+      this.swing = Math.random() * Math.PI * 2;
+      this.ss = .008 + Math.random() * .012;
+      this.sa = .4 + Math.random() * .8;
+      this.a = .15 + Math.random() * .45;
+      this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+    }
+    Petal.prototype.update = function () {
+      this.swing += this.ss;
+      this.x += this.vx + Math.sin(this.swing) * this.sa;
+      this.y += this.vy; this.rot += this.rs;
+      if (this.y > H + 30) { this.x = Math.random() * W; this.y = -20; }
+    };
+    Petal.prototype.draw = function () {
+      ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.rot);
+      ctx.fillStyle = this.color + this.a + ')';
+      ctx.beginPath(); ctx.ellipse(0, 0, this.size, this.size * 1.7, 0, 0, Math.PI * 2);
+      ctx.fill(); ctx.restore();
+    };
+    function init() {
+      petals = [];
+      const n = Math.min(55, Math.floor(W / 30));
+      for (let i = 0; i < n; i++) petals.push(new Petal(true));
+    }
+    let raf;
+    function animate() {
+      ctx.clearRect(0, 0, W, H);
+      petals.forEach(p => { p.update(); p.draw(); });
+      raf = requestAnimationFrame(animate);
+    }
+    resize(); init(); animate();
+    window.addEventListener('resize', () => { resize(); init(); });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) { cancelAnimationFrame(raf); raf = null; }
+      else if (!raf) animate();
+    });
+  }
 
-  const canvas = document.createElement("canvas");
-  canvas.id = "fireflies";
-  document.body.prepend(canvas);
-}
+  function buildNav() {
+    const key = document.body.dataset.nav || '';
+    const links = [
+      { href: '/',                       label: 'Home',      key: 'home'   },
+      { href: '/lore.html',              label: 'EchoBloom', key: 'lore'   },
+      { href: '/server-info.html',       label: 'Server',    key: 'server' },
+      { href: '/bots/echobloom.html',    label: 'Bots',      key: 'bots'   },
+      { href: '/mods/steelhold.html',    label: 'Mods',      key: 'mods'   },
+    ];
+    const linksHtml = links.map(l =>
+      `<a href="${l.href}"${l.key === key ? ' class="nav-active"' : ''}>${l.label}</a>`
+    ).join('');
+    return `<nav class="site-nav">
+        <div class="nav-inner">
+          <a href="/" class="nav-brand">
+            <strong>Mayflower Studios</strong>
+            <span>indie · cozy · enchanted</span>
+          </a>
+          <button class="nav-mob-btn" id="navToggle" aria-label="Menu">☰</button>
+          <div class="nav-links" id="navLinks">
+            ${linksHtml}
+            <a href="https://discord.gg/MutqYAdrwz" target="_blank" rel="noopener" class="nav-cta">Discord ↗</a>
+          </div>
+        </div>
+      </nav>`;
+  }
 
-async function loadPartial(selector, url) {
-  const el = document.querySelector(selector);
-  if (!el) return;
-  const res = await fetch(url);
-  el.innerHTML = await res.text();
-}
+  function buildFooter() {
+    return `<footer class="site-footer">
+        <span class="footer-brand">Mayflower Studios</span>
+        <div class="footer-links">
+          <a href="/privacy.html">Privacy</a>
+          <a href="/tos.html">Terms</a>
+          <a href="/server-info.html">Server</a>
+          <a href="https://discord.gg/MutqYAdrwz" target="_blank" rel="noopener">Discord ↗</a>
+          <a href="https://ko-fi.com/mayflowerstudiosteam" target="_blank" rel="noopener">Ko-fi ↗</a>
+        </div>
+        <p class="footer-copy">© <span class="footer-year"></span> Mayflower Studios — made with 🌸 and fireflies</p>
+      </footer>`;
+  }
 
-function setYear() {
-  const y = document.getElementById("year");
-  if (y) y.textContent = new Date().getFullYear();
-}
+  /* Supports both new (#site-nav) and legacy (#shared-nav) selectors */
+  function injectNav() {
+    const html = buildNav();
+    ['#site-nav', '#shared-nav'].forEach(sel => {
+      const el = document.querySelector(sel);
+      if (el) el.innerHTML = html;
+    });
+    const toggle = document.getElementById('navToggle');
+    if (toggle) {
+      toggle.addEventListener('click', () => {
+        document.getElementById('navLinks').classList.toggle('open');
+      });
+    }
+  }
 
-function highlightNav() {
-  const key = document.body.dataset.nav;
-  if (!key) return;
-  const link = document.querySelector(`.pill[data-nav="${key}"]`);
-  if (link) link.classList.add("active");
-}
+  function injectFooter() {
+    const html = buildFooter();
+    ['#site-footer', '#shared-footer'].forEach(sel => {
+      const el = document.querySelector(sel);
+      if (el) el.innerHTML = html;
+    });
+    document.querySelectorAll('.footer-year').forEach(el => {
+      el.textContent = new Date().getFullYear();
+    });
+  }
 
-(async function initShared() {
-  injectFavicon("/assets/icons/favicon.png");
-  injectFireflies();
+  function initReveal() {
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+      });
+    }, { threshold: 0.07 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+  }
 
-  await loadPartial("#shared-nav", "/partials/nav.html");
-  await loadPartial("#shared-footer", "/partials/footer.html");
-  setYear();
-  highlightNav();
+  function loadFireflies() {
+    // Only load if not already loaded by a <script src> tag on the page
+    if (window._firefliesLoaded) return;
+    window._firefliesLoaded = true;
+    const s = document.createElement('script');
+    s.src = '/fireflies.js';
+    document.body.appendChild(s);
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    injectFavicon();
+    injectBg();
+    injectFireflies();
+    injectPetals();
+    injectNav();
+    injectFooter();
+    initReveal();
+    loadFireflies();
+  });
+
 })();
