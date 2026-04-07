@@ -170,6 +170,8 @@ body{background:var(--bg);color:var(--text);font-family:'Lora',serif;font-size:1
 .spiral-line.show{opacity:1;transform:none}
 #spiral-dismiss{margin-top:32px;background:none;border:1px solid var(--border);color:var(--muted);font-family:'Lora',serif;font-size:11.5px;padding:9px 22px;cursor:pointer;letter-spacing:0.1em}
 #spiral-dismiss:hover{border-color:var(--accent-dim);color:var(--accent)}
+.spiral-note{font-family:'Lora',serif;font-size:12px;letter-spacing:0.1em;color:var(--muted);margin:20px auto 0;max-width:380px;line-height:1.8;opacity:0;transition:opacity 0.6s;border-top:1px solid var(--border);padding-top:16px;font-style:italic}
+.spiral-note.show{opacity:1}
 
 /* ── EPILOGUE ──────────────────────────────────────────── */
 #epilogue{display:none;max-width:620px;margin:0 auto;padding:60px 24px}
@@ -280,7 +282,7 @@ var SCENES={
 
   morning_1:{label:'morning · 6:47 am',dep:0,anx:0,nrg:0,
     prose:[
-      {text:"Your alarm went off twenty-three minutes ago. You know this because you've been watching the time change — 6:24, 6:31, 6:38, and now 6:47 — and each number feels like an accusation. The ceiling is the same as it always is. The light coming through the curtain is the colour of something you don't want to think about yet."},
+      {text:"Your alarm went off twenty-three minutes ago. You know this because you've been watching the time change — 6:24, 6:31, 6:38, and now 6:47 — and each number feels like an accusation. The ceiling is the same as it always is. The light coming through the curtain is the colour of something you don't want to think about yet. Your body has a specific weight this morning — not tiredness exactly, more like gravity has made a personal decision about you."},
       {type:'thought',text:"if you stay here long enough, maybe the day will start without you. maybe it'll just — go."},
       {text:"This is what <span class='term' data-key='executive'>getting up</span> looks like from the inside. Not the act itself, but the ten minutes before it when the act feels like climbing something very tall with nothing to hold onto. You set four alarms. You knew this would happen. You set four alarms anyway."},
     ],
@@ -311,7 +313,7 @@ var SCENES={
     ],
     choices:[
       {text:"You look fine. Stop it. Leave.",locked:true,reason:"you know you don't believe this. you've tried saying it out loud before. the words just sit there."},
-      {text:"Change your outfit. Something that covers more.",next:'getting_ready'},
+      {text:"Change your outfit. Something that covers more.",next:'meds_check'},
       {text:"Text Maya. Ask if the outfit looks okay.",next:'text_maya_outfit',note:'DPD'},
       {text:"Stop looking at yourself and just go.",locked:true,reason:"you've been trying to do this for eight minutes."},
     ]
@@ -384,6 +386,20 @@ var SCENES={
     ]
   },
 
+
+  meds_check:{label:'morning · bathroom shelf',dep:0,anx:0,nrg:0,
+    prose:[
+      {text:"Your medication is on the shelf behind you. You can see it in the mirror — the small orange bottles that have been there for eight months. You don't think about them most days, which your therapist says is a good sign. Today you're looking at them and thinking: <em>is this working</em>. You have this thought approximately once a fortnight. It never leads anywhere useful."},
+      {type:'thought',text:"just take them. it's four seconds. you've done this 168 times."},
+      {text:"Some days you're certain they're working and terrified of what you'd be without them. Some days you're certain they're not and you're just this, with or without the pills. Today you don't know. You stand there and you don't know and the four seconds pass and the question is still open."},
+    ],
+    choices:[
+      {text:"Take them. Four seconds, done.",next:'getting_ready',dep:-5},
+      {text:"You're already running late. Take them tonight.",next:'getting_ready',dep:5,note:'risk'},
+      {text:"Stop thinking about whether they're working and just take them.",locked:true,reason:"you know this is the right thought. you cannot stop having the other one first."},
+    ]
+  },
+
   getting_ready:{label:'morning · the door',dep:0,anx:10,nrg:-4,
     prose:[
       {text:"You're ready. Standing at the front door with your keys. The door is right there. You have to leave in four minutes to arrive on time."},
@@ -410,7 +426,7 @@ var SCENES={
     prose:[
       {text:"The air is cold. You forgot how cold it gets in the morning. You're going to be eight minutes late, which is not a lot, which you know is not a lot, but which will require you to walk through a room of people who will notice the door opening and look up and see you walk in late, and you will feel each of those looks separately and carry them for the rest of the morning."},
       {type:'thought',text:"they'll think you're unreliable. they've been thinking it for a while. you give them reasons."},
-      {text:"<span class='term' data-key='emotional_intensity'>The math of this</span> — late, looked at, judged — your nervous system is processing as something much larger than it is. You know this. You are walking faster than you need to."},
+      {text:"There is a thing that happens in your chest when you're late — a tightening around the sternum that isn't quite pain but has pain's qualities, its insistence. <span class='term' data-key='emotional_intensity'>The math of this</span> — late, looked at, judged — your nervous system is processing as something much larger than it is. You know this. You are walking faster than you need to."},
     ],
     choices:[
       {text:"Eight minutes is nothing. It happens to everyone.",locked:true,reason:"it does happen to everyone. you are not everyone right now. your heart rate has been elevated since you left the house."},
@@ -511,7 +527,7 @@ var SCENES={
 
   split_happening:{label:'late afternoon · the split',dep:0,anx:15,nrg:-10,isSplit:true,
     prose:[
-      {text:"You read it again. It doesn't help. Something has shifted in the quality of the message — not the words, the words are the same, but the warmth has gone out of them. <span class='term' data-key='splitting'>This is what splitting feels like</span>: not a decision, not a thought you can argue yourself out of. More like a light changing. The Maya who sent the heart-eyes emoji this morning and the person who sent 'or no' at 4:38pm are, in this moment, two different people."},
+      {text:"You read it again. It doesn't help. Something happens in your body when the shift occurs — a withdrawal, a pulling inward, like a physical bracing. Something has shifted in the quality of the message — not the words, the words are the same, but the warmth has gone out of them. <span class='term' data-key='splitting'>This is what splitting feels like</span>: not a decision, not a thought you can argue yourself out of. More like a light changing. The Maya who sent the heart-eyes emoji this morning and the person who sent 'or no' at 4:38pm are, in this moment, two different people."},
       {type:'msg',name:'Maya',cold:true,text:"hey quick q - are you still coming tonight or no"},
       {text:"The cold version of her is more familiar, in some ways. The cold version of her is the one you've been waiting for. The warm version was borrowed time; this is what you knew was coming. You know — the part of you that can still access knowledge — that this is not real. That Maya hasn't changed. That <span class='term' data-key='object_constancy'>the warm version of her still exists</span>. You cannot feel that right now. Knowing it and feeling it are different countries."},
       {type:'thought',text:"she wants you to say no. she's giving you an out because she wants you to take it. she's been politely tolerating you for weeks and this is the message where she stops."},
@@ -660,7 +676,32 @@ var SCENES={
       {type:'thought',text:"hold onto this. this is real. this happened today. this is also you."},
       {text:"You don't know how long it lasts. It doesn't matter. What matters is that it happened, that there was a moment today inside all the other moments where the weight lifted and you were just a person in a room with people she loves, and it was enough."},
     ],
-    choices:[{text:"Go home →",next:'end_day'}]
+    choices:[{text:"Go home →",next:'walk_home'}]
+  },
+
+
+  walk_home:{label:'night · the walk home',dep:0,anx:5,nrg:-5,
+    prose:[
+      {text:"You leave at ten past ten. Your headphones are in but you're not really listening. The walk home is when the review starts. It always starts on the walk home."},
+      {text:"First pass: the overall shape. It was a good evening. You were present for parts of it. There was a moment on the couch — that actual moment — that was real. Maya laughed at things you said. No one looked uncomfortable when you sat near them."},
+      {text:"Second pass: the specifics. There was that thing you said about the film. You watched the person you said it to for a reaction and couldn't read it. And at the end of the night, when you hugged Maya goodbye, she seemed slightly distracted. She said she had work in the morning. She was probably just tired. She was probably—"},
+      {type:'thought',text:"she was probably just tired. she said she had work in the morning. she was just tired."},
+    ],
+    choices:[
+      {text:"She was tired. You had a good evening. Let it go.",next:'end_day',anx:-5},
+      {text:"Text her. A quick 'tonight was nice' so you know she's okay.",next:'walk_home_text',note:'BPD/anxiety',anx:-10},
+      {text:"Don't text. Sit with the uncertainty.",locked:true,reason:"you know yourself. you know how this ends if you don't resolve it. you can either text her now or text her at 2am."},
+    ]
+  },
+
+  walk_home_text:{label:'night · the text',dep:-5,anx:-10,nrg:0,
+    prose:[
+      {type:'msg',name:'You',text:"tonight was so nice, thank you for having me ❤️"},
+      {type:'msg',name:'Maya',text:"it really was!! so glad you came :) sleep well xx"},
+      {text:"She responds in four minutes. The four minutes costs you, but the response lands clean and warm and you carry it the rest of the way home like something cupped in both hands, careful not to spill it."},
+      {type:'thought',text:"see. she was just tired. you can put it down now. she said it was nice."},
+    ],
+    choices:[{text:"Go home.",next:'end_day'}]
   },
 
   end_day_alone:{label:'night · home',dep:5,anx:-5,nrg:5,
@@ -670,7 +711,7 @@ var SCENES={
       {type:'thought',text:"you protected yourself tonight. that's allowed. you're allowed to do that."},
       {text:"The evening you didn't go to is happening somewhere without you, and you're here in the quiet, and both of those things are true at the same time. Tomorrow is a different calculation."},
     ],
-    choices:[{text:"Try to sleep.",next:'__epilogue__'}]
+    choices:[{text:"Try to sleep.",next:'try_sleep'}]
   },
 
   end_day:{label:'night · home',dep:-5,anx:-5,nrg:-5,
@@ -680,19 +721,89 @@ var SCENES={
       {type:'thought',text:"you got up. you got there. you came home. that is everything today. it has to be enough."},
       {text:"Tomorrow is a different morning. That's either comforting or terrifying depending on how you hold it. Right now, at 10:38pm, it's mostly just true."},
     ],
-    choices:[{text:"Try to sleep.",next:'__epilogue__'}]
+    choices:[{text:"Try to sleep.",next:'try_sleep'}]
   }
+
+  try_sleep:{label:'night · 11:52pm',dep:0,anx:5,nrg:0,
+    prose:[
+      {text:"Lights off. Eyes open. This is the part nobody warns you about. Not the getting up, not the social calibration, not the stove or the split or the wardrobe paralysis. This part. The horizontal part, in the dark, when there's nothing to do but be inside your own head, uninterrupted."},
+      {type:'thought',text:"okay. sleeping now. you're going to sleep now."},
+      {text:"Your brain starts filing the day. This is normal. This is what brains do. Yours files more thoroughly than most, and cross-references as it goes. It finds the film comment. It finds the moment you went quiet. It finds Maya's hug at the end of the night and files it under: <em>slightly distracted — possible significance — review again in forty minutes.</em>"},
+      {type:'thought',text:"stop. you already dealt with this. she texted back. she said it was nice."},
+      {text:"You know all of this. Knowing it doesn't end the filing process. The brain is not interested in the verdict. It's interested in the evidence. It will continue to gather evidence. You have approximately four to six hours of this ahead of you, at which point exhaustion will make the decision your brain cannot."},
+    ],
+    choices:[
+      {text:"Count your breaths. Something your therapist taught you.",next:'sleep_breathe',dep:-5},
+      {text:"Pick up your phone. Not reading anything, just — the blue light.",next:'sleep_phone',note:'avoidance',anx:-10},
+      {text:"Lie here and ride it out.",next:'sleep_wait'},
+      {text:"Turn the light on and write some of it down.",next:'sleep_write',dep:-5},
+      {text:"Let yourself think about what Maya actually sees when she looks at you.",spiral:'spiral_shame',note:'BPD shame'},
+    ]
+  },
+
+  sleep_breathe:{label:'night · breathing',dep:-5,anx:-5,nrg:0,
+    prose:[
+      {text:"In for four. Hold for seven. Out for eight. You've done this enough times that the counting comes automatically now, which took a long time and is, you think, an accomplishment. Your therapist says it activates the parasympathetic nervous system. You say: I don't care what it activates, it works sometimes."},
+      {text:"It works tonight, eventually. The filing slows. The film comment gets smaller. Maya's hug is just a hug — she was tired, she said she was tired. You are in your bed and the bed is familiar and the day is, at last, behind you."},
+      {type:'thought',text:"you're okay. the day is done. you can put it down."},
+    ],
+    choices:[{text:"Sleep.",next:'__epilogue__'}]
+  },
+
+  sleep_phone:{label:'night · screen light',dep:0,anx:0,nrg:0,
+    prose:[
+      {text:"The screen is very bright. You turn the brightness down. You're not reading anything, not really scrolling — just existing in the blue light, letting it fill up the space where the thoughts were. It works, as a strategy, in the same way standing still works when you're cold. Technically true. Not actually okay."},
+      {type:'thought',text:"you'll pay for this tomorrow. you know that. put it down and sleep."},
+      {text:"Forty minutes later, your eyes are aching and the filing has slowed enough that sleep feels possible. You put the phone face-down on the bedside table. You make a note to do better tomorrow. You make this note most nights."},
+    ],
+    choices:[{text:"Sleep.",next:'__epilogue__',dep:5}]
+  },
+
+  sleep_wait:{label:'night · waiting',dep:5,anx:0,nrg:0,
+    prose:[
+      {text:"You lie there. The thoughts do what thoughts do. You try to observe them without getting caught in them — not following each one to its conclusion, just watching them pass. This is the goal. This is much harder than it sounds, which is something people say about meditation like it's a mild inconvenience rather than the hardest cognitive task you've ever attempted."},
+      {type:'thought',text:"you don't have to resolve any of this tonight. none of it needs resolving tonight."},
+      {text:"Around 1:40am, the brain runs out of material. You sleep. Tomorrow will be different, or it won't, or it will be different in a different way. Either way this exact day is over, and that is something."},
+    ],
+    choices:[{text:"Sleep.",next:'__epilogue__'}]
+  },
+
+  sleep_write:{label:'night · writing it down',dep:-10,anx:-5,nrg:0,
+    prose:[
+      {text:"You turn the lamp on. The notebook is in the drawer — always in the drawer, your therapist's suggestion from eight months ago that you kept. You write: <em>film comment. couldn't read the reaction. maya hug — probably tired. texted back, said nice.</em>"},
+      {text:"The act of writing makes them smaller, somehow. They exist now outside your head, documented, filed somewhere you can find them if you need to. Which means your head doesn't have to hold them anymore. Your head is a little quieter without them."},
+      {type:'thought',text:"okay. it's outside now. it's written down. you can sleep."},
+    ],
+    choices:[{text:"Sleep.",next:'__epilogue__',dep:-5}]
+  },
+
 };
 
 var SPIRALS={
-  spiral_morning:[
-    "the presentation is at 10. you haven't prepared enough for the presentation.",
-    "did you reply to that email from tuesday? you think you did. you're not sure you did.",
-    "is Maya getting tired of how much you need right now? you've been a lot lately.",
-    "the stove. you should check the stove before you leave. you haven't left yet but — the stove.",
-    "you're going to be late. you're always late. people have noticed that you're always late.",
-    "if the presentation goes badly today that's — you haven't even gotten out of bed yet.",
-  ]
+  spiral_morning:{
+    lines:[
+      "the presentation is at 10. you haven't prepared enough for the presentation.",
+      "did you reply to that email from tuesday? you think you did. you're not sure you did.",
+      "is Maya getting tired of how much you need right now? you've been a lot lately.",
+      "the stove. you should check the stove before you leave. you haven't left yet but — the stove.",
+      "you're going to be late. you're always late. people have noticed that you're always late.",
+      "if the presentation goes badly today that's — you haven't even gotten out of bed yet.",
+    ],
+    dismiss:"breathe. come back."
+  },
+  spiral_shame:{
+    lines:[
+      "she's your friend because she decided to be before she knew what you were like.",
+      "every time you check in, every time you need her to pick something or confirm something or tell you it's okay — she sees it.",
+      "she's kind enough not to say anything. that's different from it not being there.",
+      "you spent twenty minutes today convinced she didn't want you at her own party.",
+      "you needed her to pick your outfit.",
+      "and then you had a good time, and before you were even home you were already trying to make sure it couldn't be taken away.",
+      "you are a lot of work. you have always been a lot of work.",
+    ],
+    dismiss:"that is the disorder talking. it is loud and it sounds true. it is not true.",
+    note:"this is BPD shame. it arrives without warning and it sounds like facts. it isn't."
+  }
 };
 
 /* ── STATUS ────────────────────────────────────────────── */
@@ -813,13 +924,24 @@ function triggerSpiral(key){
   document.getElementById('choices-wrap').style.display='none';
   var el=document.getElementById('spiral');
   el.innerHTML='';el.className='on';
-  (SPIRALS[key]||[]).forEach(function(t,i){
+  var sp=SPIRALS[key]||{lines:[],dismiss:'breathe. come back.'};
+  var lines=Array.isArray(sp)?sp:(sp.lines||[]);
+  var dismissText=Array.isArray(sp)?'breathe. come back.':(sp.dismiss||'breathe. come back.');
+  var noteText=Array.isArray(sp)?'':(sp.note||'');
+  lines.forEach(function(t,i){
     var d=document.createElement('div');d.className='spiral-line';d.textContent=t;
     el.appendChild(d);
     setTimeout(function(){d.classList.add('show')},i*600+200);
   });
+  if(noteText){
+    var totalDelay=lines.length*600+400;
+    var nd=document.createElement('div');
+    nd.className='spiral-note';nd.textContent=noteText;
+    el.appendChild(nd);
+    setTimeout(function(){nd.classList.add('show')},totalDelay);
+  }
   var btn=document.createElement('button');
-  btn.id='spiral-dismiss';btn.textContent='breathe. come back.';
+  btn.id='spiral-dismiss';btn.textContent=dismissText;
   btn.onclick=dismissSpiral;el.appendChild(btn);
 }
 
