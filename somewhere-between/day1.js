@@ -497,7 +497,7 @@ var SCENES={
       {text:"Tomorrow is a different morning. That's either comforting or terrifying depending on how you hold it. Right now, at 10:38pm, it's mostly just true."},
     ],
     choices:[{text:"Try to sleep.",next:'try_sleep'}]
-  }
+  },
 
   try_sleep:{label:'night · 11:52pm',dep:0,anx:5,nrg:0,
     prose:[
