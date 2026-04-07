@@ -306,10 +306,9 @@ var SCENES={
       {type:'msg',name:'Maya',cold:true,text:"hey quick q - are you still coming tonight or no"},
       {text:"The cold version of her is more familiar, in some ways. The cold version of her is the one you've been waiting for. The warm version was borrowed time; this is what you knew was coming. You know — the part of you that can still access knowledge — that this is not real. That Maya hasn't changed. That <span class='term' data-key='object_constancy'>the warm version of her still exists</span>. You cannot feel that right now. Knowing it and feeling it are different countries."},
       {type:'thought',text:"she wants you to say no. she's giving you an out because she wants you to take it. she's been politely tolerating you for weeks and this is the message where she stops."},
-      {type:'wanted',wanted:"i'm scared i've done something wrong and i don't know what it is. are you okay with me? are we okay?"},
     ],
     choices:[
-      {text:"Send the normal message. Don't show her what's happening.",next:'split_reply_normal'},
+      {text:"Send the normal message. Don't show her what's happening.",next:'split_reply_normal',wanted:"i'm scared i've done something wrong and i don't know what it is. are you okay with me? are we okay?"},
       {text:"Ask her directly if she actually wants you there.",next:'split_reply_check',note:'BPD',anx:5},
       {text:"Tell her you can't make it.",next:'split_withdraw',dep:10},
     ]
@@ -317,7 +316,6 @@ var SCENES={
 
   split_reply_normal:{label:'late afternoon · after',dep:0,anx:-5,nrg:0,
     prose:[
-      {type:'wanted',sent:"yeah still coming :) see you there"},
       {type:'msg',name:'Maya',text:"yay!! ok see you at 8 ❤️"},
       {text:"She sends the heart. The heart is warm. The heart goes some way toward making 'or no' feel like the thing it was, which was a casual phrase, which was nothing. Your nervous system doesn't fully believe this yet. But it's receiving the evidence."},
       {type:'thought',text:"see. she's fine. she was always fine. you knew that. you spent twenty minutes not knowing that and now you know it again."},

@@ -122,7 +122,7 @@ function renderScene(id){
       if(c.note)html2+='<span class="choice-note">'+c.note+'</span>';
       html2+='</button>';
       item.innerHTML=html2;
-      (function(choice){item.querySelector('button').addEventListener('click',function(){pick(choice)})})(c);
+      (function(choice,it){it.querySelector('button').addEventListener('click',function(){pick(choice,it)})})(c,item);
     }
     cEl.appendChild(item);
   });
@@ -131,8 +131,40 @@ function renderScene(id){
   setupTerms();
 }
 
-function pick(c){
+function pick(c,itemEl){
   if(c.spiral){triggerSpiral(c.spiral);return}
+
+  // wanted/sent reveal — show the gap before moving on
+  if(c.wanted){
+    // disable all choices
+    document.querySelectorAll('.choice-item').forEach(function(it){
+      if(it===itemEl){it.classList.add('chosen')}
+      else{it.classList.add('dimmed')}
+    });
+    // replace button with the reveal block
+    var btn=itemEl.querySelector('button');
+    if(btn)btn.style.display='none';
+    var rev=document.createElement('div');
+    rev.className='wanted-block inline-reveal';
+    rev.innerHTML='<div class="wb-label">what you wanted to say</div>'
+      +'<div class="wb-text">'+c.wanted+'</div>'
+      +'<div class="wb-label sent">what you sent</div>'
+      +'<div class="wb-text sent">'+c.text+'</div>';
+    itemEl.appendChild(rev);
+    setTimeout(function(){rev.classList.add('show')},40);
+    setTimeout(function(){
+      if(c.nrg)S.nrg=Math.max(0,Math.min(100,S.nrg+c.nrg));
+      if(c.dep)S.dep=Math.max(0,Math.min(100,S.dep+c.dep));
+      if(c.anx)S.anx=Math.max(0,Math.min(100,S.anx+c.anx));
+      updateStatus();
+      var prose=document.getElementById('prose');
+      prose.style.opacity='0';
+      document.getElementById('choices-wrap').style.display='none';
+      setTimeout(function(){prose.style.opacity='1';renderScene(c.next)},350);
+    },2000);
+    return;
+  }
+
   if(c.nrg)S.nrg=Math.max(0,Math.min(100,S.nrg+c.nrg));
   if(c.dep)S.dep=Math.max(0,Math.min(100,S.dep+c.dep));
   if(c.anx)S.anx=Math.max(0,Math.min(100,S.anx+c.anx));
@@ -212,30 +244,45 @@ function showEpilogue(){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-/* ── TOOLTIP ─────────────────────────────────────────── */
 function setupTerms(){
   var tip=document.getElementById('tooltip');
   document.querySelectorAll('.term').forEach(function(el){
     el.addEventListener('mouseenter',function(e){
       var g=GLOSSARY[el.dataset.key];if(!g)return;
       tip.innerHTML='<strong>'+g.title+'</strong>'+g.body;
-      tip.classList.add('show');positionTip(e);
+      tip.classList.add('show');positionTip(e,el);
     });
-    el.addEventListener('mousemove',positionTip);
+    el.addEventListener('mousemove',function(e){positionTip(e,el)});
     el.addEventListener('mouseleave',function(){tip.classList.remove('show')});
     el.addEventListener('click',function(e){
       var g=GLOSSARY[el.dataset.key];if(!g)return;
       tip.innerHTML='<strong>'+g.title+'</strong>'+g.body;
-      tip.classList.add('show');positionTip(e);e.stopPropagation();
+      tip.classList.add('show');positionTip(e,el);e.stopPropagation();
     });
   });
   document.addEventListener('click',function(){tip.classList.remove('show')});
 }
 
-function positionTip(e){
+function positionTip(e,targetEl){
   var tip=document.getElementById('tooltip');
-  var x=e.clientX+14,y=e.clientY+14;
-  if(x+300>window.innerWidth)x=e.clientX-308;
-  if(y+180>window.innerHeight)y=e.clientY-180;
-  tip.style.left=x+'px';tip.style.top=y+'px';
+  var vw=window.innerWidth;
+  var vh=window.innerHeight;
+  var TW=Math.min(300,vw-32);
+  var tipH=tip.scrollHeight||180;
+  var x,y;
+  // on mobile or tap events: anchor to element rect, not cursor
+  if(vw<640||(e&&e.type==='click')){
+    var rect=(targetEl||e.target).getBoundingClientRect();
+    x=Math.max(16,Math.min(vw-TW-16,rect.left+rect.width/2-TW/2));
+    y=rect.bottom+10;
+    if(y+tipH>vh-8)y=Math.max(8,rect.top-tipH-10);
+  } else {
+    x=e.clientX+14;y=e.clientY+14;
+    if(x+TW>vw)x=e.clientX-TW-8;
+    if(y+tipH>vh)y=e.clientY-tipH-8;
+    if(x<8)x=8;
+  }
+  tip.style.maxWidth=TW+'px';
+  tip.style.left=x+'px';
+  tip.style.top=y+'px';
 }
