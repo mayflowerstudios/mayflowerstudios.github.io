@@ -285,7 +285,7 @@ var SCENES={
       {text:"This is what <span class='term' data-key='executive'>getting up</span> looks like from the inside. Not the act itself, but the ten minutes before it when the act feels like climbing something very tall with nothing to hold onto. You set four alarms. You knew this would happen. You set four alarms anyway."},
     ],
     choices:[
-      {text:"Get up. Swing your legs over the side of the bed and don't think about it.",next:'morning_mirror',nrg:-20,dep:-5},
+      {text:"Get up. Swing your legs over the side of the bed and don't think about it.",next:'morning_mirror',nrg:-8,dep:-5},
       {text:"Five more minutes. Set another alarm.",next:'morning_snooze',nrg:-5},
       {text:"Try to think through everything you need to do today — maybe that'll motivate you.",locked:true,reason:"you know better than this. you've tried it before. thinking about the list doesn't shrink it. it just makes the ceiling feel lower.",spiral:'spiral_morning'},
     ]
@@ -298,7 +298,7 @@ var SCENES={
       {text:"You could keep setting alarms. There's a version of this morning where you do it twice more and arrive somewhere an hour late and spend the rest of the day managing the fallout. You've lived that version before."},
     ],
     choices:[
-      {text:"Okay. For real this time. Get up.",next:'morning_mirror',nrg:-25,dep:-5},
+      {text:"Okay. For real this time. Get up.",next:'morning_mirror',nrg:-8,dep:-5},
       {text:"Check your phone first. Just for a minute.",next:'phone_check'},
     ]
   },
@@ -317,7 +317,7 @@ var SCENES={
     ]
   },
 
-  text_maya_outfit:{label:'morning · waiting',dep:0,anx:10,nrg:-10,
+  text_maya_outfit:{label:'morning · waiting',dep:0,anx:10,nrg:-4,
     prose:[
       {text:"You send the photo. <span class='term' data-key='fp'>Maya</span> is — she's the person whose opinion matters right now. Not just about the outfit. About most things. You know this about yourself. You know it isn't fair to her. You send the photo anyway because the alternative is standing in front of the mirror for another ten minutes."},
       {text:"The typing indicator appears. Disappears. Appears again. It's been four minutes. She usually responds in under a minute. Four minutes means something. You go through the possibilities. She's busy. She's in the shower. She saw the message and thought something she didn't want to say."},
@@ -327,7 +327,7 @@ var SCENES={
     choices:[
       {text:"She's probably just busy. It's early. Wait.",locked:true,reason:"you know this is probably true. your brain has already written three different versions of what the silence means and is deciding between them."},
       {text:"Send a follow-up. 'sorry ignore me lol'",next:'maya_followup',note:'anxiety/BPD',anx:5},
-      {text:"Put the phone face-down and get ready anyway.",next:'getting_ready',nrg:-15,anx:5},
+      {text:"Put the phone face-down and get ready anyway.",next:'getting_ready',nrg:-8,anx:5},
     ]
   },
 
@@ -384,17 +384,17 @@ var SCENES={
     ]
   },
 
-  getting_ready:{label:'morning · the door',dep:0,anx:10,nrg:-10,
+  getting_ready:{label:'morning · the door',dep:0,anx:10,nrg:-4,
     prose:[
       {text:"You're ready. Standing at the front door with your keys. The door is right there. You have to leave in four minutes to arrive on time."},
       {type:'thought',text:"is the stove off. you checked it. you checked it twice. did you actually check it or did you just stand near it? there's a difference."},
       {text:"You checked the stove. You know you checked it. The problem with <span class='term' data-key='intrusive'>intrusive doubt</span> is that 'knowing' something and 'being able to act as though you know it' are not the same cognitive step. The stove is off. You might have to go back and confirm that before your body believes it."},
     ],
     choices:[
-      {text:"Go back and check the stove one more time.",next:'check_stove',nrg:-10,anx:-10},
+      {text:"Go back and check the stove one more time.",next:'check_stove',nrg:-5,anx:-10},
       {text:"You checked it. You can leave.",locked:true,reason:"you know you did. your hands remember doing it. your brain is not interested in what your hands remember."},
       {text:"Text Maya 'leaving now' — just so someone knows.",next:'commute',note:'DPD'},
-      {text:"Leave. Just leave.",next:'commute',nrg:-15},
+      {text:"Leave. Just leave.",next:'commute',nrg:-8},
     ]
   },
 
@@ -458,20 +458,20 @@ var SCENES={
       {type:'thought',text:"you're here. you're at your desk. it's 1:14pm. that's where you are."},
     ],
     choices:[
-      {text:"There's a team meeting at 2. Prepare something to say.",locked:true,reason:"you can't find the part of yourself that would know what to say. you'll go and listen and nod and that will have to be enough.",egGate:45},
+      {text:"There's a team meeting at 2. Prepare something to say.",locked:true,reason:"you can't find the part of yourself that would know what to say. you'll go and listen and nod and that will have to be enough.",egGate:20},
       {text:"There's a team meeting at 2. You'll go and get through it.",next:'midday_meeting'},
       {text:"Reply to the email you've been staring at.",next:'midday_meeting',nrg:-5},
     ]
   },
 
-  midday_meeting:{label:'midday · 2:00pm',dep:0,anx:10,nrg:-15,
+  midday_meeting:{label:'midday · 2:00pm',dep:0,anx:10,nrg:-8,
     prose:[
       {text:"The meeting. You're in the meeting. Someone is talking about the quarterly numbers. You are performing the posture of someone who is engaged with the quarterly numbers. Your face is doing the thing your face does in meetings. You have been doing this for long enough that the performance doesn't require much conscious effort anymore, which is both a skill and a cost."},
       {text:"Your manager asks if you have anything to add. Everyone looks at you. You have approximately three seconds before the pause becomes notable."},
       {type:'thought',text:"say something. anything. you know enough about the quarterly numbers to say something."},
     ],
     choices:[
-      {text:"Say something brief and useful about Q3.",next:'meeting_speaks',nrg:-10},
+      {text:"Say something brief and useful about Q3.",next:'meeting_speaks',nrg:-6},
       {text:"Say 'nothing to add from me, sounds good'",next:'meeting_silent',note:'masking'},
       {text:"Actually engage. Push back on the projections you think are off.",locked:true,reason:"you have the thought. you cannot get it from your brain to your mouth right now. the room is too loud in your head."},
     ]
@@ -515,7 +515,7 @@ var SCENES={
       {type:'msg',name:'Maya',cold:true,text:"hey quick q - are you still coming tonight or no"},
       {text:"The cold version of her is more familiar, in some ways. The cold version of her is the one you've been waiting for. The warm version was borrowed time; this is what you knew was coming. You know — the part of you that can still access knowledge — that this is not real. That Maya hasn't changed. That <span class='term' data-key='object_constancy'>the warm version of her still exists</span>. You cannot feel that right now. Knowing it and feeling it are different countries."},
       {type:'thought',text:"she wants you to say no. she's giving you an out because she wants you to take it. she's been politely tolerating you for weeks and this is the message where she stops."},
-      {type:'wanted',wanted:"i'm scared i've done something wrong and i don't know what it is. are you okay with me? are we okay?",sent:"yeah still coming :) see you there"},
+      {type:'wanted',wanted:"i'm scared i've done something wrong and i don't know what it is. are you okay with me? are we okay?"},
     ],
     choices:[
       {text:"Send the normal message. Don't show her what's happening.",next:'split_reply_normal'},
@@ -526,6 +526,7 @@ var SCENES={
 
   split_reply_normal:{label:'late afternoon · after',dep:0,anx:-5,nrg:0,
     prose:[
+      {type:'wanted',sent:"yeah still coming :) see you there"},
       {type:'msg',name:'Maya',text:"yay!! ok see you at 8 ❤️"},
       {text:"She sends the heart. The heart is warm. The heart goes some way toward making 'or no' feel like the thing it was, which was a casual phrase, which was nothing. Your nervous system doesn't fully believe this yet. But it's receiving the evidence."},
       {type:'thought',text:"see. she's fine. she was always fine. you knew that. you spent twenty minutes not knowing that and now you know it again."},
@@ -609,12 +610,12 @@ var SCENES={
       {text:"You stand there until the standing there becomes unbearable and then you grab the nearest thing and put it on. It's fine. It was always going to be fine. You've spent twenty-two minutes on this. You are going to be late."},
       {type:'thought',text:"it's fine. it's a top. it's fine. you're going."},
     ],
-    choices:[{text:"Leave. You're late.",next:'evening_arrival',nrg:-10}]
+    choices:[{text:"Leave. You're late.",next:'evening_arrival',nrg:-5}]
   },
 
   /* ── EVENING ───────────────────────────────────────── */
 
-  evening_arrival:{label:'evening · Maya\'s',dep:0,anx:5,nrg:-10,
+  evening_arrival:{label:'evening · Maya\'s',dep:0,anx:5,nrg:-5,
     prose:[
       {text:"You get there. Maya opens the door and she looks like herself — like the warm version of her, which is the real version, which is the only version that was ever real — and the last residue of the split dissolves in approximately four seconds."},
       {text:"Her flat is warm and loud with other people and for the first ten minutes you're calibrating — reading the room, finding your register, figuring out who is safe to talk to and who will require too much energy. You're good at this. You've been doing it your whole life."},
@@ -622,7 +623,7 @@ var SCENES={
     ],
     choices:[
       {text:"Find a spot near Maya and stay close.",next:'evening_close',note:'DPD'},
-      {text:"Talk to someone new. Make the effort.",next:'evening_effort',nrg:-15},
+      {text:"Talk to someone new. Make the effort.",next:'evening_effort',nrg:-8},
       {text:"Help in the kitchen. Useful and low-pressure.",next:'evening_kitchen'},
     ]
   },
@@ -755,10 +756,8 @@ function renderScene(id){
       proseEl.appendChild(d);
     } else if(p.type==='wanted'){
       var d=document.createElement('div');d.className='wanted-block';
-      d.innerHTML='<div class="wb-label">what you wanted to say</div>'
-        +'<div class="wb-text">'+p.wanted+'</div>'
-        +'<div class="wb-label sent">what you sent</div>'
-        +'<div class="wb-text sent">'+p.sent+'</div>';
+      d.innerHTML=(p.wanted?'<div class="wb-label">what you wanted to say</div><div class="wb-text">'+p.wanted+'</div>':'')
+        +(p.sent?'<div class="wb-label sent">what you sent</div><div class="wb-text sent">'+p.sent+'</div>':'');
       proseEl.appendChild(d);
     } else {
       var d=document.createElement('div');d.innerHTML='<p>'+p.text+'</p>';proseEl.appendChild(d);
