@@ -425,17 +425,17 @@ body{background:var(--bg);color:var(--text);font-family:'Lora',serif;font-size:1
 
 
 <!-- ══════════════════════════════════════════════════
-     Load order matters:
-       1. glossary.js  — term definitions
-       2. day1.js      — scenes + spirals for day one
-       3. engine.js    — rendering + game logic
+     Load order:
+       1. sakari/somewhere-between/glossary.js  — term definitions
+       2. sakari/somewhere-between/day1.js      — scenes + spirals
+       3. sakari/sakari.js                      — shared engine
 
-     To add day 2: create somewhere-between/day2.js
-     then add it here between day1.js and engine.js:
-       <script src="somewhere-between/day2.js"></script>
+     To add day 2: create sakari/somewhere-between/day2.js
+     and add it here before sakari/sakari.js:
+       <script src="sakari/somewhere-between/day2.js"></script>
      ══════════════════════════════════════════════════ -->
-<script src="somewhere-between/glossary.js"></script>
-<script src="somewhere-between/day1.js"></script>
-<script src="somewhere-between/sakari.js"></script>
+<script src="sakari/somewhere-between/glossary.js"></script>
+<script src="sakari/somewhere-between/day1.js"></script>
+<script src="sakari/sakari.js"></script>
 </body>
 </html>
