@@ -55,6 +55,9 @@
     <loc>https://mayflowerstudios.net/rules.html</loc>
   </url>
   <url>
+    <loc>https://mayflowerstudios.net/sakari.html</loc>
+  </url>
+  <url>
     <loc>https://mayflowerstudios.net/server-info.html</loc>
   </url>
   <url>
@@ -65,8 +68,5 @@
   </url>
   <url>
     <loc>https://mayflowerstudios.net/tos.html</loc>
-  </url>
-  <url>
-    <loc>https://mayflowerstudios.net/sakari.html</loc>
   </url>
 </urlset>
