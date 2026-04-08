@@ -52,6 +52,16 @@ function startGame(){
   renderScene('morning_1');
 }
 
+function startWren(){
+  S={dep:55,anx:70,nrg:80,scene:'wren_start',lockedCount:0,choiceCount:0};
+  document.getElementById('splash').style.display='none';
+  document.getElementById('game').style.display='block';
+  document.getElementById('epilogue').style.display='none';
+  document.getElementById('prose-wrap').style.display='block';
+  updateStatus();
+  renderScene('wren_start');
+}
+
 function restart(){
   document.getElementById('epilogue').style.display='none';
   document.getElementById('prose-wrap').style.display='block';

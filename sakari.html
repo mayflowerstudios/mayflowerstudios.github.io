@@ -5,333 +5,638 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sakari — Interactive Stories • Mayflower Studios</title>
   <meta name="description" content="Sakari is a narrative engine for intimate, honest stories. Choose-your-path games where some choices are locked — not by the story, but by the brain." />
-  <meta property="og:title" content="Sakari — Interactive Stories • Mayflower Studios" />
+  <meta property="og:title"       content="Sakari — Interactive Stories • Mayflower Studios" />
   <meta property="og:description" content="Choose-your-path stories for difficult truths. Some choices are locked — not by the story, but by the brain." />
-  <meta property="og:url" content="https://mayflowerstudios.net/sakari.html" />
-  <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://mayflowerstudios.net/assets/og/home.png" />
-  <meta name="twitter:card" content="summary_large_image" />
+  <meta property="og:url"         content="https://mayflowerstudios.net/sakari.html" />
+  <meta property="og:type"        content="website" />
+  <meta property="og:image"       content="https://mayflowerstudios.net/assets/og/sakari.png" />
+  <meta name="twitter:card"       content="summary_large_image" />
   <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=1" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=Caveat:wght@400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/style.css" />
+
   <style>
-    /* ── Sakari hero ── */
+    /* ════════════════════════════════════════════════
+       HUB STYLES  (site style.css handles nav/layout)
+       ════════════════════════════════════════════════ */
+
     .sakari-hero {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 20px;
-      padding: 64px 0 20px;
+      display: flex; flex-direction: column; align-items: flex-start;
+      gap: 20px; padding: 64px 0 20px;
     }
     .sakari-engine-label {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 1.2px;
-      text-transform: uppercase;
-      color: var(--rose);
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      font-size: 11px; font-weight: 600; letter-spacing: 1.2px;
+      text-transform: uppercase; color: var(--rose);
+      display: flex; align-items: center; gap: 10px;
     }
     .sakari-engine-label::after {
-      content: '';
-      display: inline-block;
-      width: 32px;
-      height: 1px;
-      background: var(--rose);
-      opacity: 0.4;
+      content: ''; display: inline-block; width: 32px; height: 1px;
+      background: var(--rose); opacity: .4;
     }
     .sakari-title {
       font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: clamp(56px, 11vw, 110px);
-      font-weight: 300;
-      letter-spacing: -0.01em;
-      line-height: 0.95;
+      font-size: clamp(56px, 11vw, 110px); font-weight: 300;
+      letter-spacing: -0.01em; line-height: .95;
       background: linear-gradient(135deg, var(--text) 20%, var(--rose) 60%, var(--violet) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
-    .sakari-title em {
-      font-style: italic;
-    }
-    .sakari-sub {
-      font-size: 16px;
-      line-height: 1.8;
-      color: var(--text-2);
-      max-width: 54ch;
-    }
-    .sakari-sub strong {
-      color: var(--text);
-      font-weight: 500;
-    }
-    .sakari-meta {
-      font-size: 12px;
-      color: var(--text-3);
-      letter-spacing: 0.3px;
-    }
-    .sakari-meta a {
-      color: var(--text-3);
-      text-decoration: underline;
-      text-decoration-color: rgba(250,245,255,.18);
-      transition: color 150ms;
-    }
+    .sakari-title em { font-style: italic; }
+    .sakari-sub { font-size: 16px; line-height: 1.8; color: var(--text-2); max-width: 54ch; }
+    .sakari-sub strong { color: var(--text); font-weight: 500; }
+    .sakari-meta { font-size: 12px; color: var(--text-3); letter-spacing: .3px; }
+    .sakari-meta a { color: var(--text-3); text-decoration: underline;
+      text-decoration-color: rgba(250,245,255,.18); transition: color 150ms; }
     .sakari-meta a:hover { color: var(--text-2); }
 
-    /* ── Stories section ── */
-    .stories-section {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-    .stories-header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 12px;
-    }
+    .stories-section { display: flex; flex-direction: column; gap: 20px; }
+    .stories-header { display: flex; align-items: baseline;
+      justify-content: space-between; gap: 12px; }
     .stories-header h2 {
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--text-3);
+      font-size: 13px; font-weight: 600; letter-spacing: 1px;
+      text-transform: uppercase; color: var(--text-3);
       font-family: 'DM Sans', system-ui, sans-serif;
     }
 
-    /* ── Story card ── */
     .story-card {
-      display: block;
-      text-decoration: none;
-      color: inherit;
-      border: 1px solid var(--border);
-      border-radius: var(--r-lg);
-      padding: 28px 32px;
-      background: var(--glass);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      display: block; text-decoration: none; color: inherit;
+      border: 1px solid var(--border); border-radius: var(--r-lg);
+      padding: 28px 32px; background: var(--glass);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
       transition: border-color 200ms var(--ease), box-shadow 200ms var(--ease), transform 200ms var(--ease);
-      position: relative;
-      overflow: hidden;
+      position: relative; overflow: hidden; cursor: pointer;
     }
     .story-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 1px;
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
       background: linear-gradient(90deg, transparent, rgba(249,168,212,.4), rgba(196,181,253,.3), transparent);
-      opacity: 0;
-      transition: opacity 200ms;
+      opacity: 0; transition: opacity 200ms;
     }
-    .story-card:hover {
-      border-color: var(--border-2);
-      box-shadow: 0 16px 48px rgba(0,0,0,.28);
-      transform: translateY(-2px);
-    }
+    .story-card:hover { border-color: var(--border-2);
+      box-shadow: 0 16px 48px rgba(0,0,0,.28); transform: translateY(-2px); }
     .story-card:hover::before { opacity: 1; }
-
-    .story-card-inner {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+    .story-card-inner { display: flex; flex-direction: column; gap: 12px; }
     .story-card-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 16px; flex-wrap: wrap;
     }
     .story-card-title {
       font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: 28px;
-      font-weight: 400;
-      font-style: italic;
-      line-height: 1.1;
-      color: var(--text);
+      font-size: 28px; font-weight: 400; font-style: italic;
+      line-height: 1.1; color: var(--text);
     }
-    .story-card-tags {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      align-items: center;
-      padding-top: 4px;
-    }
-    .story-card-desc {
-      font-size: 14px;
-      line-height: 1.8;
-      color: var(--text-2);
-      max-width: 68ch;
-    }
+    .story-card-tags { display: flex; gap: 6px; flex-wrap: wrap;
+      align-items: center; padding-top: 4px; }
+    .story-card-desc { font-size: 14px; line-height: 1.8; color: var(--text-2); max-width: 68ch; }
     .story-card-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 4px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap; margin-top: 4px;
     }
-    .story-cw {
-      font-size: 11px;
-      color: var(--text-3);
-      letter-spacing: 0.3px;
+    .story-cw { font-size: 11px; color: var(--text-3); letter-spacing: .3px; }
+    .story-card-note {
+      font-size: 12px; color: var(--rose); opacity: 0.8;
+      letter-spacing: 0.2px; font-style: italic; margin-top: -4px;
     }
     .story-enter {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+      display: inline-flex; align-items: center; gap: 6px;
       font-family: 'DM Sans', system-ui, sans-serif;
-      font-size: 13px;
-      font-weight: 600;
-      color: #0b1120;
+      font-size: 13px; font-weight: 600; color: #0b1120;
       background: linear-gradient(135deg, var(--rose), var(--violet));
-      padding: 8px 20px;
-      border-radius: var(--r-md);
+      padding: 8px 20px; border-radius: var(--r-md);
       box-shadow: 0 4px 18px rgba(249,168,212,.2);
-      transition: all 160ms var(--ease);
-      flex-shrink: 0;
+      transition: all 160ms var(--ease); flex-shrink: 0;
     }
     .story-card:hover .story-enter {
-      box-shadow: 0 6px 24px rgba(249,168,212,.35);
-      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(249,168,212,.35); transform: translateY(-1px);
     }
-
-    /* ── Coming soon card ── */
-    .story-card.soon {
-      opacity: 0.38;
-      pointer-events: none;
-    }
-    .story-card.soon:hover { transform: none; box-shadow: none; }
-
-    /* ── Engine note ── */
     .engine-note {
-      border: 1px solid var(--border);
-      border-radius: var(--r-lg);
-      padding: 22px 28px;
-      background: rgba(255,255,255,.025);
-      display: flex;
-      align-items: flex-start;
-      gap: 16px;
+      border: 1px solid var(--border); border-radius: var(--r-lg);
+      padding: 22px 28px; background: rgba(255,255,255,.025);
+      display: flex; align-items: flex-start; gap: 16px;
     }
-    .engine-note-icon {
-      font-size: 22px;
-      flex-shrink: 0;
-      margin-top: 2px;
-      opacity: 0.7;
-    }
-    .engine-note-body {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .engine-note-body strong {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-2);
-    }
-    .engine-note-body p {
-      font-size: 13px;
-      color: var(--text-3);
-      line-height: 1.7;
+    .engine-note-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; opacity: .7; }
+    .engine-note-body { display: flex; flex-direction: column; gap: 4px; }
+    .engine-note-body strong { font-size: 13px; font-weight: 600; color: var(--text-2); }
+    .engine-note-body p { font-size: 13px; color: var(--text-3); line-height: 1.7; }
+
+    /* ════════════════════════════════════════════════
+       PLAYER  (full-viewport overlay when active)
+       ════════════════════════════════════════════════ */
+
+    #sk-player {
+      display: none;
+      position: fixed; inset: 0;
+      background: var(--sk-bg, #0e0c0b);
+      overflow-y: auto;
+      font-family: 'Lora', serif;
+      z-index: 500;
+      transition: background 0.4s, color 0.4s;
+      color: var(--sk-text, #e8ddd4);
     }
 
+    /* ── Player themes ── */
+    #sk-player { --sk-bg:#0e0c0b; --sk-text:#e8ddd4; --sk-muted:#8a7a70; --sk-faint:#3a3028;
+      --sk-accent:#d4899a; --sk-accent-dim:#8a4455; --sk-link:#c47888;
+      --sk-struck:#4a3a34; --sk-reason:#b06878; --sk-status-bar:#1a1512;
+      --sk-tooltip-bg:#1e1814; --sk-tooltip-border:#3a2c24; --sk-border:#2e2218;
+      --sk-msg-bg:#1e1814; --sk-msg-cold:#2a1820; }
+    [data-theme="parchment"] #sk-player { --sk-bg:#f4f0e8; --sk-text:#2a221a; --sk-muted:#7a6a5a; --sk-faint:#c8bfb0;
+      --sk-accent:#8a3a4a; --sk-accent-dim:#c07080; --sk-link:#7a3040;
+      --sk-struck:#c0b0a0; --sk-reason:#a05060; --sk-status-bar:#e8e2d8;
+      --sk-tooltip-bg:#fff8f0; --sk-tooltip-border:#d0c8b8; --sk-border:#d8d0c4;
+      --sk-msg-bg:#ede8de; --sk-msg-cold:#f0dde0; }
+    [data-theme="violet"] #sk-player { --sk-bg:#0d0b14; --sk-text:#ddd8f0; --sk-muted:#7870a0; --sk-faint:#2a2440;
+      --sk-accent:#c0a0e0; --sk-accent-dim:#6040a0; --sk-link:#b090d0;
+      --sk-struck:#3a3050; --sk-reason:#9070c0; --sk-status-bar:#14101e;
+      --sk-tooltip-bg:#181428; --sk-tooltip-border:#302850; --sk-border:#28203c;
+      --sk-msg-bg:#181428; --sk-msg-cold:#2a1030; }
+    [data-theme="rose"] #sk-player { --sk-bg:#140e10; --sk-text:#f0e0e6; --sk-muted:#907080; --sk-faint:#3a2030;
+      --sk-accent:#f0a0b8; --sk-accent-dim:#a04060; --sk-link:#e090a8;
+      --sk-struck:#4a2838; --sk-reason:#c07090; --sk-status-bar:#1c1018;
+      --sk-tooltip-bg:#201018; --sk-tooltip-border:#3e2030; --sk-border:#341828;
+      --sk-msg-bg:#201018; --sk-msg-cold:#2e0c18; }
+    [data-theme="paper"] #sk-player { --sk-bg:#1a1814; --sk-text:#f0ead8; --sk-muted:#9a8a78; --sk-faint:#3a3428;
+      --sk-accent:#e0b060; --sk-accent-dim:#905820; --sk-link:#d0a050;
+      --sk-struck:#4a4034; --sk-reason:#b08040; --sk-status-bar:#141210;
+      --sk-tooltip-bg:#221e18; --sk-tooltip-border:#3e3828; --sk-border:#302c20;
+      --sk-msg-bg:#221e18; --sk-msg-cold:#2a1c10; }
+
+    /* ── Player header ── */
+    #sk-player-header {
+      position: sticky; top: 0; z-index: 60;
+      height: 48px; display: flex; align-items: center;
+      padding: 0 24px; gap: 16px;
+      background: rgba(14,12,11,.92);
+      border-bottom: 1px solid var(--sk-border);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    }
+    [data-theme="parchment"] #sk-player-header { background: rgba(244,240,232,.95); }
+    [data-theme="violet"]    #sk-player-header { background: rgba(13,11,20,.92); }
+    [data-theme="rose"]      #sk-player-header { background: rgba(20,14,16,.92); }
+    [data-theme="paper"]     #sk-player-header { background: rgba(26,24,20,.92); }
+
+    #sk-back {
+      font-size: 12px; letter-spacing: .08em;
+      color: rgba(200,180,170,.6);
+      background: none; border: none; cursor: pointer;
+      font-family: 'Lora', serif; transition: color .2s; padding: 0;
+    }
+    #sk-back:hover { color: rgba(212,137,154,.9); }
+    [data-theme="parchment"] #sk-back { color: rgba(100,80,70,.7); }
+    #sk-player-header .sep { color: rgba(200,180,170,.2); font-size: 12px; }
+    #sk-player-title {
+      font-size: 13px; letter-spacing: .06em;
+      color: rgba(230,210,200,.8);
+      font-family: 'Lora', serif; font-style: italic;
+    }
+    [data-theme="parchment"] #sk-player-title { color: rgba(60,40,30,.8); }
+
+    /* ── Status bar ── */
+    #sk-statusbar {
+      position: sticky; top: 48px; z-index: 50;
+      background: var(--sk-status-bar);
+      border-bottom: 1px solid var(--sk-border);
+      padding: 9px 0; transition: background .4s;
+    }
+    .sk-status-inner {
+      max-width: 680px; margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    }
+    .sk-stat {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 11px; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--sk-muted);
+    }
+    .sk-stat-bar {
+      width: 56px; height: 2px;
+      background: var(--sk-faint); border-radius: 1px; overflow: hidden;
+    }
+    .sk-stat-fill { height: 100%; border-radius: 1px; transition: width .8s ease; }
+    #sk-dep-fill { background: #c07090; }
+    #sk-anx-fill { background: #8090c0; }
+    #sk-nrg-fill { background: #60b090; }
+    .sk-stat-label-val { font-size: 10px; color: var(--sk-muted); min-width: 44px; }
+    .sk-status-themes { margin-left: auto; display: flex; gap: 7px; align-items: center; }
+    .sk-swatch {
+      width: 13px; height: 13px; border-radius: 50%; cursor: pointer;
+      border: 1.5px solid transparent;
+      transition: border-color .2s, transform .15s; flex-shrink: 0;
+    }
+    .sk-swatch:hover { transform: scale(1.2); }
+    .sk-swatch.active { border-color: var(--sk-text); }
+    .t-swatch { width: 18px; height: 18px; }
+
+    /* ── Scene / prose ── */
+    #sk-scene-label {
+      max-width: 680px; margin: 0 auto; padding: 32px 24px 0;
+      font-size: 11px; letter-spacing: .2em; text-transform: uppercase;
+      color: var(--sk-muted);
+    }
+    #sk-prose-wrap { max-width: 680px; margin: 0 auto; padding: 24px 24px 40px; }
+    #sk-prose { font-size: 16px; line-height: 2; color: var(--sk-text); transition: opacity .4s; }
+    #sk-prose p { margin-bottom: 1.4em; }
+    #sk-prose .thought {
+      font-family: 'Caveat', cursive; font-size: 18px;
+      color: var(--sk-accent); line-height: 1.7; font-style: italic;
+      margin-bottom: 1.4em; padding-left: 14px;
+      border-left: 1.5px solid var(--sk-accent-dim);
+    }
+
+    .msg-block {
+      background: var(--sk-msg-bg); border: 1px solid var(--sk-border);
+      padding: 12px 16px; margin-bottom: 1.4em;
+      font-size: 15px; line-height: 1.7; border-radius: 2px;
+      transition: background .5s, border-color .5s;
+    }
+    .msg-block.cold { background: var(--sk-msg-cold); border-color: var(--sk-accent-dim); }
+    .msg-block .msg-name {
+      font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--sk-muted); margin-bottom: 5px;
+    }
+    .msg-block.cold .msg-name { color: var(--sk-accent); }
+
+    .wanted-block { margin-bottom: 1.4em; border-left: 1.5px solid var(--sk-border); padding-left: 14px; }
+    .wanted-block .wb-label {
+      font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--sk-muted); margin-bottom: 4px;
+    }
+    .wanted-block .wb-text {
+      font-size: 15px; line-height: 1.7; color: var(--sk-struck);
+      text-decoration: line-through; text-decoration-color: var(--sk-faint);
+      margin-bottom: 12px;
+    }
+    .wanted-block .wb-label.sent { color: var(--sk-muted); }
+    .wanted-block .wb-text.sent { color: var(--sk-text); text-decoration: none; }
+    .choice-item.dimmed { opacity: .2; pointer-events: none; transition: opacity .3s; }
+    .choice-item.chosen .choice-link { display: none; }
+    .inline-reveal {
+      opacity: 0; max-height: 0; overflow: hidden;
+      transition: opacity .5s, max-height .5s ease;
+    }
+    .inline-reveal.show { opacity: 1; max-height: 300px; }
+
+    .energy-warning {
+      font-family: 'Caveat', cursive; font-size: 15px;
+      color: var(--sk-reason); font-style: italic;
+      margin-bottom: 1.4em; opacity: .8;
+    }
+
+    .term {
+      color: var(--sk-link); text-decoration: underline;
+      text-decoration-style: dotted; text-underline-offset: 3px;
+      cursor: pointer; transition: color .15s;
+    }
+    .term:hover { color: var(--sk-accent); }
+
+    /* ── Choices ── */
+    #sk-choices-wrap {
+      max-width: 680px; margin: 0 auto;
+      padding: 28px 24px 60px;
+      border-top: 1px solid var(--sk-border);
+    }
+    #sk-choices-wrap h3 {
+      font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+      color: var(--sk-muted); margin-bottom: 18px; font-weight: 400;
+    }
+    .choice-item { margin-bottom: 18px; }
+    .choice-link {
+      display: inline; font-family: 'Lora', serif; font-size: 15px;
+      color: var(--sk-text); cursor: pointer;
+      border-bottom: 1px solid var(--sk-border); padding-bottom: 1px;
+      background: none; border-top: none; border-left: none; border-right: none;
+      transition: color .15s, border-color .15s; text-align: left; line-height: 1.7;
+    }
+    .choice-link:hover { color: var(--sk-accent); border-bottom-color: var(--sk-accent-dim); }
+    .choice-link.locked {
+      color: var(--sk-struck); text-decoration: line-through;
+      text-decoration-color: var(--sk-faint);
+      border-bottom-color: transparent; cursor: not-allowed;
+    }
+    .choice-reason {
+      display: block; font-family: 'Caveat', cursive; font-size: 15px;
+      color: var(--sk-reason); font-style: italic; margin-top: 3px; padding-left: 2px;
+    }
+    .choice-note {
+      font-size: 10px; letter-spacing: .1em; color: var(--sk-muted);
+      border: 1px solid var(--sk-border); padding: 1px 6px; margin-left: 8px;
+      vertical-align: middle; font-style: normal; font-family: 'Lora', serif;
+      text-transform: uppercase;
+    }
+
+    /* ── Spiral ── */
+    #sk-spiral { max-width: 680px; margin: 0 auto; padding: 40px 24px; text-align: center; display: none; }
+    #sk-spiral.on { display: block; }
+    .spiral-line {
+      font-family: 'Caveat', cursive; font-size: 19px;
+      color: var(--sk-accent); line-height: 1.8;
+      opacity: 0; transform: translateY(4px);
+      transition: opacity .4s, transform .4s; margin-bottom: 6px;
+    }
+    .spiral-line.show { opacity: 1; transform: none; }
+    #sk-spiral-dismiss {
+      margin-top: 32px; background: none; border: 1px solid var(--sk-border);
+      color: var(--sk-muted); font-family: 'Lora', serif; font-size: 11.5px;
+      padding: 9px 22px; cursor: pointer; letter-spacing: .1em;
+    }
+    #sk-spiral-dismiss:hover { border-color: var(--sk-accent-dim); color: var(--sk-accent); }
+    .spiral-note {
+      font-family: 'Lora', serif; font-size: 12px; letter-spacing: .1em;
+      color: var(--sk-muted); margin: 20px auto 0; max-width: 380px;
+      line-height: 1.8; opacity: 0; transition: opacity .6s;
+      border-top: 1px solid var(--sk-border); padding-top: 16px; font-style: italic;
+    }
+    .spiral-note.show { opacity: 1; }
+
+    /* ── Day transition ── */
+    #sk-day-transition {
+      display: none; min-height: calc(100vh - 48px);
+      align-items: center; justify-content: center;
+      flex-direction: column; padding: 60px 24px;
+    }
+    .day-transition-inner {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 20px; text-align: center; max-width: 500px;
+    }
+    .day-transition-label {
+      font-size: 11px; letter-spacing: .2em; text-transform: uppercase;
+      color: var(--sk-muted);
+    }
+    .day-transition-next {
+      font-family: 'Caveat', cursive; font-size: 32px;
+      color: var(--sk-accent); font-style: italic;
+    }
+
+    /* ── Epilogue ── */
+    #sk-epilogue {
+      display: none; max-width: 620px; margin: 0 auto; padding: 60px 24px;
+    }
+    #sk-epilogue h2 {
+      font-weight: 400; font-size: 22px; letter-spacing: .05em;
+      color: var(--sk-text); margin-bottom: 32px; text-align: center;
+    }
+    .epi-block { margin-bottom: 28px; }
+    .epi-block p { font-size: 15px; line-height: 2; color: var(--sk-muted); margin-bottom: 1em; }
+    .epi-block .thought {
+      font-family: 'Caveat', cursive; font-size: 18px;
+      color: var(--sk-accent); line-height: 1.7; font-style: italic;
+      padding-left: 14px; border-left: 1.5px solid var(--sk-accent-dim); margin-bottom: 1em;
+    }
+    .epi-stats {
+      display: flex; gap: 32px; flex-wrap: wrap;
+      border-top: 1px solid var(--sk-border); border-bottom: 1px solid var(--sk-border);
+      padding: 20px 0; margin: 32px 0;
+    }
+    .epi-stat { text-align: center; }
+    .epi-stat .n { font-size: 28px; font-weight: 400; color: var(--sk-accent); }
+    .epi-stat .l {
+      font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--sk-muted); margin-top: 4px;
+    }
+    .epi-resources {
+      border: 1px solid var(--sk-border); padding: 16px 20px;
+      font-size: 13.5px; line-height: 1.9; color: var(--sk-muted);
+    }
+    .epi-resources a { color: var(--sk-accent); text-decoration: none; }
+    .epi-restart-btn {
+      display: block; margin: 32px auto 0;
+      background: none; border: 1px solid var(--sk-border);
+      color: var(--sk-muted); font-family: 'Lora', serif;
+      font-size: 12px; padding: 10px 28px; cursor: pointer; letter-spacing: .1em;
+    }
+    .epi-restart-btn:hover { border-color: var(--sk-accent-dim); color: var(--sk-accent); }
+
+    /* ── Loading ── */
+    #sk-loading {
+      display: none; min-height: calc(100vh - 48px);
+      align-items: center; justify-content: center;
+      flex-direction: column; gap: 16px;
+    }
+    .sk-loading-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--sk-accent); opacity: .3; display: inline-block; margin: 0 3px;
+      animation: skPulse 1.2s ease-in-out infinite;
+    }
+    .sk-loading-dot:nth-child(2) { animation-delay: .2s; }
+    .sk-loading-dot:nth-child(3) { animation-delay: .4s; }
+    @keyframes skPulse { 0%,100%{opacity:.3} 50%{opacity:1} }
+
+    /* ── Splash ── */
+    #sk-splash {
+      min-height: calc(100vh - 48px); display: none;
+      flex-direction: column; align-items: center; justify-content: center;
+      padding: 60px 24px; gap: 26px; text-align: center;
+      max-width: 600px; margin: 0 auto;
+    }
+    #sk-splash h1 {
+      font-weight: 400; font-size: 28px; letter-spacing: .06em; color: var(--sk-text);
+    }
+    #sk-splash .byline {
+      font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--sk-muted);
+    }
+    .tags { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .tag {
+      font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+      border: 1px solid var(--sk-border); color: var(--sk-muted); padding: 3px 9px;
+    }
+    .splash-note {
+      font-size: 12.5px; color: var(--sk-accent); opacity: 0.75;
+      font-style: italic; text-align: center; max-width: 400px;
+    }
+    .theme-row { display: flex; gap: 10px; align-items: center; }
+    .theme-row span {
+      font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--sk-muted);
+    }
+    .t-swatch {
+      width: 18px; height: 18px; border-radius: 50%; cursor: pointer;
+      border: 2px solid transparent; transition: border-color .2s, transform .15s;
+    }
+    .t-swatch:hover { transform: scale(1.15); }
+    .t-swatch.active { border-color: var(--sk-text); }
+    #sk-splash .cw {
+      font-size: 12.5px; line-height: 1.9; color: var(--sk-muted);
+      border-top: 1px solid var(--sk-border); padding-top: 20px; max-width: 480px;
+    }
+    #sk-splash .crisis {
+      font-size: 12px; color: var(--sk-muted);
+      border: 1px solid var(--sk-border); padding: 12px 16px;
+      max-width: 440px; line-height: 1.8;
+    }
+    #sk-splash .crisis a { color: var(--sk-accent); text-decoration: none; }
+    .start-btn {
+      background: none; border: 1px solid var(--sk-accent-dim);
+      color: var(--sk-accent); font-family: 'Lora', serif; font-size: 13px;
+      padding: 12px 32px; cursor: pointer; letter-spacing: .1em; transition: all .2s;
+    }
+    .start-btn:hover { background: rgba(180,100,120,.1); border-color: var(--sk-accent); }
+
+    /* ── Tooltip ── */
+    #sk-tooltip {
+      position: fixed; max-width: 300px; min-width: 200px;
+      background: var(--sk-tooltip-bg); border: 1px solid var(--sk-tooltip-border);
+      padding: 13px 15px; font-size: 13px; line-height: 1.8;
+      color: var(--sk-text); z-index: 700; pointer-events: none;
+      opacity: 0; transition: opacity .15s, background .4s;
+      font-family: 'Lora', serif;
+    }
+    #sk-tooltip.show { opacity: 1; }
+    #sk-tooltip strong {
+      display: block; font-size: 10px; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--sk-accent);
+      margin-bottom: 5px; font-weight: 400;
+    }
+
+    /* ── Mobile ── */
     @media (max-width: 520px) {
       .sakari-hero { padding-top: 40px; }
       .story-card { padding: 22px 20px; }
       .story-card-title { font-size: 24px; }
       .story-enter { width: 100%; justify-content: center; }
+      #sk-splash { padding: 40px 20px; gap: 22px; }
+      #sk-splash h1 { font-size: 24px; }
+      .sk-status-inner { gap: 12px; padding: 0 16px; }
+      .sk-stat { gap: 5px; font-size: 10px; }
+      .sk-stat-bar { width: 40px; }
+      .sk-stat-label-val { display: none; }
+      #sk-scene-label, #sk-prose-wrap { padding-left: 20px; padding-right: 20px; }
+      #sk-choices-wrap { padding-left: 20px; padding-right: 20px; }
+      #sk-prose .thought { font-size: 17px; }
+      .spiral-line { font-size: 17px; }
+      #sk-epilogue { padding: 40px 20px; }
     }
   </style>
 </head>
 <body data-nav="stories">
 
-  <div id="site-nav"></div>
+  <!-- ══════════════════════════════════════════════
+       HUB VIEW
+       ══════════════════════════════════════════════ -->
+  <div id="sk-hub">
+    <div id="site-nav"></div>
 
-  <div class="site-page">
-    <div class="content">
+    <div class="site-page">
+      <div class="content">
 
-      <!-- ── HERO ── -->
-      <div class="sakari-hero reveal">
-        <div class="sakari-engine-label">interactive narrative engine</div>
-        <h1 class="sakari-title">Sa<em>kari</em></h1>
-        <p class="sakari-sub">
-          Choose-your-path stories for <strong>difficult, intimate truths.</strong>
-          Some choices will be visible but unavailable —
-          not because of the story, but because of what the brain allows.
-        </p>
-        <p class="sakari-meta">
-          A <a href="/">Mayflower Studios</a> project.
-          Stories are free to read, always.
-        </p>
-      </div>
-
-      <!-- ── STORIES ── -->
-      <div class="stories-section reveal">
-        <div class="stories-header">
-          <h2>Stories</h2>
-        </div>
-
-        <!-- somewhere between -->
-        <a class="story-card" href="/somewhere-between.html">
-          <div class="story-card-inner">
-            <div class="story-card-top">
-              <span class="story-card-title">somewhere between</span>
-              <div class="story-card-tags">
-                <span class="badge badge-rose">BPD</span>
-                <span class="badge badge-violet">DPD</span>
-                <span class="badge">anxiety</span>
-                <span class="badge">depression</span>
-              </div>
-            </div>
-            <p class="story-card-desc">
-              A day in the life of a girl navigating BPD, dependent personality disorder, anxiety, and depression —
-              told from the inside. Some choices are locked. Not by the story. By the brain.
-            </p>
-            <div class="story-card-footer">
-              <span class="story-cw">⚠ content warnings on the next page</span>
-              <span class="story-enter">read →</span>
-            </div>
-          </div>
-        </a>
-
-        <!-- coming soon placeholder -->
-        <div class="story-card soon">
-          <div class="story-card-inner">
-            <div class="story-card-top">
-              <span class="story-card-title">more stories coming</span>
-              <div class="story-card-tags">
-                <span class="badge">coming soon</span>
-              </div>
-            </div>
-            <p class="story-card-desc">
-              The next Sakari story is in progress.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── ENGINE NOTE ── -->
-      <div class="engine-note reveal">
-        <div class="engine-note-icon">🌸</div>
-        <div class="engine-note-body">
-          <strong>About Sakari</strong>
-          <p>
-            Sakari is a lightweight open narrative engine built for honest, character-driven stories.
-            Choices track emotional state — depression, anxiety, energy — and some options lock when
-            the numbers say they would. The engine is open; the stories built on it are Mayflower originals.
+        <div class="sakari-hero reveal">
+          <div class="sakari-engine-label">interactive narrative engine</div>
+          <h1 class="sakari-title">Sa<em>kari</em></h1>
+          <p class="sakari-sub">
+            Choose-your-path stories for <strong>difficult, intimate truths.</strong>
+            Some choices will be visible but unavailable —
+            not because of the story, but because of what the brain allows.
+          </p>
+          <p class="sakari-meta">
+            A <a href="/">Mayflower Studios</a> project.
+            Stories are free to read, always.
           </p>
         </div>
+
+        <div class="stories-section reveal">
+          <div class="stories-header"><h2>Stories</h2></div>
+          <!-- Engine populates this -->
+          <div id="sk-story-grid"></div>
+        </div>
+
+        <div class="engine-note reveal">
+          <div class="engine-note-icon">🌸</div>
+          <div class="engine-note-body">
+            <strong>About Sakari</strong>
+            <p>
+              Sakari is a lightweight narrative engine built for honest, character-driven stories.
+              Choices track emotional state — depression, anxiety, energy — and some options lock
+              when the numbers say they would. The engine is open; the stories are Mayflower originals.
+            </p>
+          </div>
+        </div>
+
       </div>
-
-    </div>
-
-    <div class="wrap">
-      <div id="site-footer"></div>
+      <div class="wrap"><div id="site-footer"></div></div>
     </div>
   </div>
 
+  <!-- ══════════════════════════════════════════════
+       PLAYER VIEW  (full-screen overlay when active)
+       ══════════════════════════════════════════════ -->
+  <div id="sk-player">
+
+    <!-- Player header -->
+    <div id="sk-player-header">
+      <button id="sk-back" onclick="showHub()">← all stories</button>
+      <span class="sep">|</span>
+      <span id="sk-player-title"></span>
+    </div>
+
+    <!-- Loading indicator -->
+    <div id="sk-loading">
+      <div>
+        <span class="sk-loading-dot"></span>
+        <span class="sk-loading-dot"></span>
+        <span class="sk-loading-dot"></span>
+      </div>
+    </div>
+
+    <!-- Splash / title screen -->
+    <div id="sk-splash"></div>
+
+    <!-- Game -->
+    <div id="sk-game" style="display:none">
+      <!-- Status bar -->
+      <div id="sk-statusbar">
+        <div class="sk-status-inner">
+          <div class="sk-stat">
+            <span>depression</span>
+            <div class="sk-stat-bar"><div class="sk-stat-fill" id="sk-dep-fill" style="width:55%"></div></div>
+            <span class="sk-stat-label-val" id="sk-dep-val">moderate</span>
+          </div>
+          <div class="sk-stat">
+            <span>anxiety</span>
+            <div class="sk-stat-bar"><div class="sk-stat-fill" id="sk-anx-fill" style="width:70%"></div></div>
+            <span class="sk-stat-label-val" id="sk-anx-val">high</span>
+          </div>
+          <div class="sk-stat">
+            <span>energy</span>
+            <div class="sk-stat-bar"><div class="sk-stat-fill" id="sk-nrg-fill" style="width:80%"></div></div>
+            <span class="sk-stat-label-val" id="sk-nrg-val">80</span>
+          </div>
+          <div class="sk-status-themes">
+            <div class="sk-swatch" data-theme="midnight" style="background:#2a1e18" onclick="skSetTheme('midnight')"></div>
+            <div class="sk-swatch" data-theme="parchment" style="background:#d0c8b0" onclick="skSetTheme('parchment')"></div>
+            <div class="sk-swatch" data-theme="violet" style="background:#3a2868" onclick="skSetTheme('violet')"></div>
+            <div class="sk-swatch" data-theme="rose" style="background:#6a2040" onclick="skSetTheme('rose')"></div>
+            <div class="sk-swatch" data-theme="paper" style="background:#7a6030" onclick="skSetTheme('paper')"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="sk-scene-label"></div>
+      <div id="sk-prose-wrap"><div id="sk-prose"></div></div>
+      <div id="sk-spiral"></div>
+      <div id="sk-choices-wrap" style="display:none">
+        <h3>what do you do</h3>
+        <div id="sk-choices"></div>
+      </div>
+    </div>
+
+    <!-- Day transition screen -->
+    <div id="sk-day-transition"></div>
+
+    <!-- Epilogue -->
+    <div id="sk-epilogue"></div>
+
+    <!-- Tooltip lives inside player to inherit --sk-* theme variables -->
+    <div id="sk-tooltip"></div>
+
+  </div><!-- /sk-player -->
+
+
+  <!-- ══════════════════════════════════════════════
+       SCRIPTS
+       Load order:
+         1. stories.js  — story ID index
+         2. engine.js   — engine + hub + game logic
+         3. shared.js   — site nav/footer
+       ══════════════════════════════════════════════ -->
+  <script src="sakari/stories.js"></script>
+  <script src="sakari/engine.js"></script>
   <script src="/shared.js"></script>
 </body>
 </html>
