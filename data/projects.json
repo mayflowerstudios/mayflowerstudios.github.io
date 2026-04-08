@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-01T02:37:23.239Z",
+  "generatedAt": "2026-04-08T03:15:16.710Z",
   "mods": [
     {
       "type": "mod",
@@ -112,7 +112,7 @@
       "type": "bot",
       "slug": "echobloom",
       "title": "🌙 EchoBloom",
-      "desc": "EchoBloom is a Discord RPG bot with eight classes, prestige chains, dungeons, boss fights, crafting, lore, and seasonal campaigns.",
+      "desc": "EchoBloom — a realm-based living world Discord bot. Overview, classes, campaigns, world reference, and realm lore all in one place.",
       "links": [
         {
           "label": "📄 Info Page",
