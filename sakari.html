@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sakari — Interactive Stories • Mayflower Studios</title>
+  <meta name="description" content="Sakari is a narrative engine for intimate, honest stories. Choose-your-path games where some choices are locked — not by the story, but by the brain." />
+  <meta property="og:title" content="Sakari — Interactive Stories • Mayflower Studios" />
+  <meta property="og:description" content="Choose-your-path stories for difficult truths. Some choices are locked — not by the story, but by the brain." />
+  <meta property="og:url" content="https://mayflowerstudios.net/sakari.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://mayflowerstudios.net/assets/og/home.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    /* ── Sakari hero ── */
+    .sakari-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 20px;
+      padding: 64px 0 20px;
+    }
+    .sakari-engine-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--rose);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sakari-engine-label::after {
+      content: '';
+      display: inline-block;
+      width: 32px;
+      height: 1px;
+      background: var(--rose);
+      opacity: 0.4;
+    }
+    .sakari-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: clamp(56px, 11vw, 110px);
+      font-weight: 300;
+      letter-spacing: -0.01em;
+      line-height: 0.95;
+      background: linear-gradient(135deg, var(--text) 20%, var(--rose) 60%, var(--violet) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .sakari-title em {
+      font-style: italic;
+    }
+    .sakari-sub {
+      font-size: 16px;
+      line-height: 1.8;
+      color: var(--text-2);
+      max-width: 54ch;
+    }
+    .sakari-sub strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+    .sakari-meta {
+      font-size: 12px;
+      color: var(--text-3);
+      letter-spacing: 0.3px;
+    }
+    .sakari-meta a {
+      color: var(--text-3);
+      text-decoration: underline;
+      text-decoration-color: rgba(250,245,255,.18);
+      transition: color 150ms;
+    }
+    .sakari-meta a:hover { color: var(--text-2); }
+
+    /* ── Stories section ── */
+    .stories-section {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .stories-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .stories-header h2 {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-3);
+      font-family: 'DM Sans', system-ui, sans-serif;
+    }
+
+    /* ── Story card ── */
+    .story-card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 28px 32px;
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: border-color 200ms var(--ease), box-shadow 200ms var(--ease), transform 200ms var(--ease);
+      position: relative;
+      overflow: hidden;
+    }
+    .story-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(249,168,212,.4), rgba(196,181,253,.3), transparent);
+      opacity: 0;
+      transition: opacity 200ms;
+    }
+    .story-card:hover {
+      border-color: var(--border-2);
+      box-shadow: 0 16px 48px rgba(0,0,0,.28);
+      transform: translateY(-2px);
+    }
+    .story-card:hover::before { opacity: 1; }
+
+    .story-card-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .story-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .story-card-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 28px;
+      font-weight: 400;
+      font-style: italic;
+      line-height: 1.1;
+      color: var(--text);
+    }
+    .story-card-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+      padding-top: 4px;
+    }
+    .story-card-desc {
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--text-2);
+      max-width: 68ch;
+    }
+    .story-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+    .story-cw {
+      font-size: 11px;
+      color: var(--text-3);
+      letter-spacing: 0.3px;
+    }
+    .story-enter {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'DM Sans', system-ui, sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: #0b1120;
+      background: linear-gradient(135deg, var(--rose), var(--violet));
+      padding: 8px 20px;
+      border-radius: var(--r-md);
+      box-shadow: 0 4px 18px rgba(249,168,212,.2);
+      transition: all 160ms var(--ease);
+      flex-shrink: 0;
+    }
+    .story-card:hover .story-enter {
+      box-shadow: 0 6px 24px rgba(249,168,212,.35);
+      transform: translateY(-1px);
+    }
+
+    /* ── Coming soon card ── */
+    .story-card.soon {
+      opacity: 0.38;
+      pointer-events: none;
+    }
+    .story-card.soon:hover { transform: none; box-shadow: none; }
+
+    /* ── Engine note ── */
+    .engine-note {
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 22px 28px;
+      background: rgba(255,255,255,.025);
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .engine-note-icon {
+      font-size: 22px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      opacity: 0.7;
+    }
+    .engine-note-body {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .engine-note-body strong {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-2);
+    }
+    .engine-note-body p {
+      font-size: 13px;
+      color: var(--text-3);
+      line-height: 1.7;
+    }
+
+    @media (max-width: 520px) {
+      .sakari-hero { padding-top: 40px; }
+      .story-card { padding: 22px 20px; }
+      .story-card-title { font-size: 24px; }
+      .story-enter { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body data-nav="stories">
+
+  <div id="site-nav"></div>
+
+  <div class="site-page">
+    <div class="content">
+
+      <!-- ── HERO ── -->
+      <div class="sakari-hero reveal">
+        <div class="sakari-engine-label">interactive narrative engine</div>
+        <h1 class="sakari-title">Sa<em>kari</em></h1>
+        <p class="sakari-sub">
+          Choose-your-path stories for <strong>difficult, intimate truths.</strong>
+          Some choices will be visible but unavailable —
+          not because of the story, but because of what the brain allows.
+        </p>
+        <p class="sakari-meta">
+          A <a href="/">Mayflower Studios</a> project.
+          Stories are free to read, always.
+        </p>
+      </div>
+
+      <!-- ── STORIES ── -->
+      <div class="stories-section reveal">
+        <div class="stories-header">
+          <h2>Stories</h2>
+        </div>
+
+        <!-- somewhere between -->
+        <a class="story-card" href="/somewhere-between.html">
+          <div class="story-card-inner">
+            <div class="story-card-top">
+              <span class="story-card-title">somewhere between</span>
+              <div class="story-card-tags">
+                <span class="badge badge-rose">BPD</span>
+                <span class="badge badge-violet">DPD</span>
+                <span class="badge">anxiety</span>
+                <span class="badge">depression</span>
+              </div>
+            </div>
+            <p class="story-card-desc">
+              A day in the life of a girl navigating BPD, dependent personality disorder, anxiety, and depression —
+              told from the inside. Some choices are locked. Not by the story. By the brain.
+            </p>
+            <div class="story-card-footer">
+              <span class="story-cw">⚠ content warnings on the next page</span>
+              <span class="story-enter">read →</span>
+            </div>
+          </div>
+        </a>
+
+        <!-- coming soon placeholder -->
+        <div class="story-card soon">
+          <div class="story-card-inner">
+            <div class="story-card-top">
+              <span class="story-card-title">more stories coming</span>
+              <div class="story-card-tags">
+                <span class="badge">coming soon</span>
+              </div>
+            </div>
+            <p class="story-card-desc">
+              The next Sakari story is in progress.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ENGINE NOTE ── -->
+      <div class="engine-note reveal">
+        <div class="engine-note-icon">🌸</div>
+        <div class="engine-note-body">
+          <strong>About Sakari</strong>
+          <p>
+            Sakari is a lightweight open narrative engine built for honest, character-driven stories.
+            Choices track emotional state — depression, anxiety, energy — and some options lock when
+            the numbers say they would. The engine is open; the stories built on it are Mayflower originals.
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="wrap">
+      <div id="site-footer"></div>
+    </div>
+  </div>
+
+  <script src="/shared.js"></script>
+</body>
+</html>

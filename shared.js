@@ -88,11 +88,12 @@
   function buildNav() {
     const key = document.body.dataset.nav || '';
     const links = [
-      { href: '/',                       label: 'Home',      key: 'home'   },
-      { href: '/lore.html',              label: 'EchoBloom', key: 'lore'   },
-      { href: '/server-info.html',       label: 'Server',    key: 'server' },
-      { href: '/bots/echobloom.html',    label: 'Bots',      key: 'bots'   },
-      { href: '/mods/steelhold.html',    label: 'Mods',      key: 'mods'   },
+      { href: '/',                       label: 'Home',      key: 'home'    },
+      { href: '/lore.html',              label: 'EchoBloom', key: 'lore'    },
+      { href: '/server-info.html',       label: 'Server',    key: 'server'  },
+      { href: '/bots/echobloom.html',    label: 'Bots',      key: 'bots'    },
+      { href: '/mods/steelhold.html',    label: 'Mods',      key: 'mods'    },
+      { href: '/sakari.html',            label: 'Stories',   key: 'stories' },
     ];
     const linksHtml = links.map(l =>
       `<a href="${l.href}"${l.key === key ? ' class="nav-active"' : ''}>${l.label}</a>`
