@@ -12,6 +12,11 @@ SAKARI.stories['somewhere-between'] = {
     { text: 'anxiety',    style: ''       },
     { text: 'depression', style: ''       },
   ],
+  langs: [
+    { code: 'en', label: 'English'   },
+    { code: 'de', label: 'Deutsch'   },
+    { code: 'pt', label: 'Português' },
+  ],
   desc: 'A day in the life of a girl navigating BPD, dependent personality disorder, anxiety, and depression — told from the inside. Some choices are locked. Not by the story. By the brain.',
   note: 'This is a beta — a single day, a sample of what Sakari is. More is coming.',
   cw:   'Realistic depictions of mental health struggles including intrusive thoughts, emotional dysregulation, splitting, and dissociation.',
