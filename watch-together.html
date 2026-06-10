@@ -73,6 +73,13 @@
       background: rgba(167,139,250,.14);
       display:inline-flex; align-items:center; gap:6px;
     }
+    .awakeTag{
+      font-size:13px; opacity:.9;
+      padding:7px 12px; border-radius:999px;
+      border:1px solid rgba(253,230,138,.28);
+      background: rgba(253,230,138,.12);
+      display:inline-flex; align-items:center; gap:6px;
+    }
 
     .divider{ height:1px; background: rgba(255,255,255,.10); margin:18px 0; }
 
@@ -395,6 +402,7 @@
               <div class="grp">
                 <button class="btn violet" id="resyncBtn" title="Snap to the other person's position">🔄 Resync</button>
                 <span class="hostTag" id="hostTag" hidden>🎬 <span id="hostName"></span> is hosting</span>
+                <span class="awakeTag" id="awakeTag" hidden>☀️ Screen staying on</span>
               </div>
               <div class="nowPlaying" id="nowPlaying">No video loaded</div>
             </div>
@@ -527,6 +535,7 @@
     const resyncBtn = $("resyncBtn");
     const hostTag = $("hostTag");
     const hostName = $("hostName");
+    const awakeTag = $("awakeTag");
     const nameInput = $("nameInput");
     const placeholder = $("placeholder");
     const nowPlaying = $("nowPlaying");
@@ -650,6 +659,9 @@
 
     function onPlayerStateChange(e) {
       if (currentKind !== "yt") return;
+      if (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.PAUSED || e.data === YT.PlayerState.ENDED) {
+        syncWakeLock();
+      }
       if (e.data === YT.PlayerState.ENDED) { advanceQueue(); return; }
       if (applyingRemote) return;
       if (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.PAUSED) {
@@ -662,10 +674,10 @@
       if (applyingRemote || currentKind !== "file") return;
       broadcast(fileVid.paused ? "paused" : "playing");
     }
-    fileVid.addEventListener("play",  fileEvent);
-    fileVid.addEventListener("pause", fileEvent);
+    fileVid.addEventListener("play",  () => { syncWakeLock(); fileEvent(); });
+    fileVid.addEventListener("pause", () => { syncWakeLock(); fileEvent(); });
     fileVid.addEventListener("seeked", fileEvent);
-    fileVid.addEventListener("ended", () => { if (currentKind === "file") advanceQueue(); });
+    fileVid.addEventListener("ended", () => { syncWakeLock(); if (currentKind === "file") advanceQueue(); });
     fileVid.addEventListener("error", () => {
       if (currentKind === "file") toast("Couldn't load that video link");
     });
@@ -691,6 +703,36 @@
       } catch (_) {}
       return false;
     }
+
+    // ---- Screen Wake Lock ----
+    // Keeps the screen from auto-dimming/sleeping while a video is playing and
+    // the page is visible. Released on pause or when the tab is hidden so it
+    // doesn't waste battery. Only works while the tab is foregrounded — the OS
+    // still suspends things on a manual lock or app switch.
+    let wakeLock = null;
+    const wakeLockSupported = ("wakeLock" in navigator);
+
+    async function syncWakeLock() {
+      if (!wakeLockSupported) return;
+      const wantLock = isPlayingNow() && document.visibilityState === "visible";
+      try {
+        if (wantLock && !wakeLock) {
+          wakeLock = await navigator.wakeLock.request("screen");
+          wakeLock.addEventListener("release", () => { wakeLock = null; if (awakeTag) awakeTag.hidden = true; });
+        } else if (!wantLock && wakeLock) {
+          await wakeLock.release();
+          wakeLock = null;
+        }
+      } catch (_) {
+        // request can reject (e.g. low battery) — ignore, playback still works
+        wakeLock = null;
+      }
+      if (awakeTag) awakeTag.hidden = !wakeLock;
+    }
+
+    // re-evaluate when the tab returns to the foreground (the OS drops the lock
+    // automatically when hidden, so we re-acquire if still playing)
+    document.addEventListener("visibilitychange", syncWakeLock);
 
     function applyState(s, force) {
       if (!s) return;
