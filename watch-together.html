@@ -259,6 +259,7 @@
     }
     .qMini:hover{ filter:brightness(1.15); }
     .qMini.play{ background: rgba(34,197,94,.16); border-color:rgba(34,197,94,.26); }
+    .qMini.wide{ width:auto; padding:0 12px; gap:5px; font-size:12px; }
 
     /* mini ghost button used in panel headers */
     .miniGhost{
@@ -648,7 +649,9 @@
     })();
 
     function onPlayerStateChange(e) {
-      if (applyingRemote || currentKind !== "yt") return;
+      if (currentKind !== "yt") return;
+      if (e.data === YT.PlayerState.ENDED) { advanceQueue(); return; }
+      if (applyingRemote) return;
       if (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.PAUSED) {
         broadcast(e.data === YT.PlayerState.PLAYING ? "playing" : "paused");
       }
@@ -662,6 +665,7 @@
     fileVid.addEventListener("play",  fileEvent);
     fileVid.addEventListener("pause", fileEvent);
     fileVid.addEventListener("seeked", fileEvent);
+    fileVid.addEventListener("ended", () => { if (currentKind === "file") advanceQueue(); });
     fileVid.addEventListener("error", () => {
       if (currentKind === "file") toast("Couldn't load that video link");
     });
@@ -924,7 +928,7 @@
         });
 
         // --- saved rooms (global index, visible from any room) ---
-        roomIndexRef = ref(db, `roomIndex`);
+        roomIndexRef = ref(db, `watch/_rooms`);
         onValue(roomIndexRef, (snap) => {
           renderRooms(snap.val() || {});
         });
@@ -1117,12 +1121,29 @@
       remove(ref(db, `watch/${ROOM}/queue/${key}`));
     }
 
+    // Auto-advance to the next queued item when the current one ends.
+    // Only the current host advances, so both sides don't skip two at once.
+    let advancing = false;
+    function advanceQueue() {
+      if (advancing) return;
+      if (lastHostId && lastHostId !== clientId) return;  // only host drives forward
+      const entries = Object.entries(queueCache).sort((a, b) => (a[1].t || 0) - (b[1].t || 0));
+      if (!entries.length) return;
+      advancing = true;
+      const [key, it] = entries[0];
+      const kind = it.kind || (it.videoId ? "yt" : "file");
+      const src  = it.src  || it.videoId;
+      removeQueued(key);
+      startSource({ kind, src });
+      setTimeout(() => { advancing = false; }, 1500);
+    }
+
     // ============================================================
     //  Playlists (saved per room, shared)
     // ============================================================
     // Optional: paste a YouTube Data API key here to enable importing
     // full YouTube playlists by URL. Without it, single videos still work.
-    const YT_API_KEY = "AIzaSyCB6vwNfeWV4nTJIvC__CWhsC05OqcBXv0";
+    const YT_API_KEY = "";
 
     function renderPlaylists(data) {
       playlistsCache = data || {};
@@ -1152,8 +1173,8 @@
              <span class="plName">${escapeHtml(pl.name || "Untitled")}</span>
              <span class="plCount">${itemEntries.length}</span>
              <span class="plBtns">
-               <button class="qMini play" data-load="${pid}" title="Load into queue & play">⏵ Play all</button>
-               <button class="qMini" data-queue="${pid}" title="Add all to queue">＋</button>
+               <button class="qMini play wide" data-load="${pid}" title="Play this playlist now">⏵ Play all</button>
+               <button class="qMini wide" data-queue="${pid}" title="Add all to the Up Next queue">＋ Queue</button>
                <button class="qMini" data-del-pl="${pid}" title="Delete playlist">🗑</button>
              </span>
            </div>
@@ -1214,12 +1235,27 @@
     }
 
     function addToPlaylist(pid, link, title) {
+      // if they pasted a YouTube playlist URL, import all of its videos into this playlist
+      if (parsePlaylistId(link)) {
+        importYouTubePlaylist(link, pid);
+        return;
+      }
       const parsed = parseSource(link);
       if (!parsed) { toast("Couldn't read that link"); return; }
       const id = "i" + Math.random().toString(36).slice(2, 9);
       set(ref(db, `watch/${ROOM}/playlists/${pid}/items/${id}`),
           { kind: parsed.kind, src: parsed.src, title: title || null, t: Date.now() });
+      // resolve a friendlier title in the background for YouTube
+      if (parsed.kind === "yt" && !title) resolveItemTitle(pid, id, parsed.src);
       toast("Added to playlist 📚");
+    }
+
+    // fetch a YouTube title via oEmbed and store it on the playlist item
+    function resolveItemTitle(pid, iid, vid) {
+      fetch("https://www.youtube.com/oembed?format=json&url=https://www.youtube.com/watch?v=" + encodeURIComponent(vid))
+        .then(r => r.ok ? r.json() : null)
+        .then(d => { if (d && d.title) set(ref(db, `watch/${ROOM}/playlists/${pid}/items/${iid}/title`), d.title); })
+        .catch(() => {});
     }
 
     function removePlaylistItem(pid, iid) {
@@ -1285,7 +1321,7 @@
       return m ? m[1] : null;
     }
 
-    async function importYouTubePlaylist(url) {
+    async function importYouTubePlaylist(url, targetPid) {
       const listId = parsePlaylistId(url);
       if (!listId) { toast("That doesn't look like a YouTube playlist URL"); return; }
       if (!YT_API_KEY) {
@@ -1309,7 +1345,16 @@
         } while (pageToken && ++guard < 20);
 
         if (!items.length) { toast("No videos found in that playlist"); return; }
-        createPlaylist(playlistTitle, items);
+        if (targetPid) {
+          // add into the existing playlist
+          items.forEach((it, i) => {
+            const id = "i" + Math.random().toString(36).slice(2, 9);
+            set(ref(db, `watch/${ROOM}/playlists/${targetPid}/items/${id}`),
+                { kind: "yt", src: it.src, title: it.title || null, t: Date.now() + i });
+          });
+        } else {
+          createPlaylist(playlistTitle, items);
+        }
         toast(`Imported ${items.length} videos 📚`);
       } catch (_) {
         toast("Couldn't import that playlist");
@@ -1338,14 +1383,14 @@
       }
       roomsList.querySelectorAll("[data-del-room]").forEach(x =>
         x.addEventListener("click", () => {
-          remove(ref(db, `roomIndex/${x.dataset.delRoom}`));
+          remove(ref(db, `watch/_rooms/${x.dataset.delRoom}`));
           toast("Removed from saved rooms");
         }));
     }
 
     roomSaveBtn.addEventListener("click", () => {
       if (!FIREBASE_READY || !roomIndexRef) { toast("Needs Firebase set up first"); return; }
-      set(ref(db, `roomIndex/${ROOM}`), { name: ROOM, t: Date.now() });
+      set(ref(db, `watch/_rooms/${ROOM}`), { name: ROOM, t: Date.now() });
       toast("Room saved ⭐");
     });
   </script>
