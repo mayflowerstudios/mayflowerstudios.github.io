@@ -98,6 +98,9 @@
     .videoBox > #ytplayer, .videoBox > iframe{
       position:absolute; inset:0; width:100%; height:100%; border:0;
     }
+    .videoBox > #filevid{
+      position:absolute; inset:0; width:100%; height:100%; background:#000;
+    }
     .placeholder{
       position:absolute; inset:0; display:grid; place-items:center; text-align:center;
       padding:24px; gap:8px;
@@ -131,12 +134,58 @@
     }
     .tiny{font-size:13px;opacity:.72;margin:10px 0 0;line-height:1.55}
 
-    /* chat */
-    .chatPanel{ display:flex; flex-direction:column; }
+    /* chat — floating popup */
+    .chatFab{
+      position:fixed; right:22px; bottom:22px; z-index:60;
+      width:58px; height:58px; border-radius:50%;
+      border:1px solid rgba(167,139,250,.30);
+      background: rgba(167,139,250,.20);
+      backdrop-filter: blur(8px);
+      box-shadow:0 12px 36px rgba(0,0,0,.5);
+      color:inherit; font-size:24px; cursor:pointer;
+      display:grid; place-items:center;
+      transition: transform .14s ease, filter .14s ease;
+    }
+    .chatFab:hover{ transform:translateY(-2px); filter:brightness(1.1); }
+    .chatBadge{
+      position:absolute; top:-4px; right:-4px;
+      min-width:20px; height:20px; padding:0 5px;
+      border-radius:999px; background:#fb7185; color:#fff;
+      font-size:12px; font-weight:600; line-height:20px; text-align:center;
+      border:2px solid rgba(20,16,28,.9);
+    }
+
+    .chatPop{
+      position:fixed; right:22px; bottom:92px; z-index:60;
+      width:340px; max-width:calc(100vw - 32px);
+      height:460px; max-height:calc(100vh - 130px);
+      display:flex; flex-direction:column;
+      background: rgba(20,16,28,.92);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:20px;
+      box-shadow:0 20px 60px rgba(0,0,0,.55);
+      backdrop-filter: blur(12px);
+      overflow:hidden;
+      transform-origin: bottom right;
+      animation: chatIn .18s ease;
+    }
+    @keyframes chatIn{ from{opacity:0; transform:translateY(10px) scale(.97)} to{opacity:1; transform:none} }
+    .chatPopHead{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:13px 16px; border-bottom:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+    }
+    .chatPopHead strong{ font-size:15px; }
+    .chatClose{
+      background:transparent; border:0; color:inherit; cursor:pointer;
+      font-size:16px; opacity:.7; padding:4px 6px; border-radius:8px;
+    }
+    .chatClose:hover{ opacity:1; background:rgba(255,255,255,.06); }
+
     .chatLog{
-      flex:1 1 auto; min-height:200px; max-height:300px; overflow-y:auto;
+      flex:1 1 auto; min-height:0; overflow-y:auto;
       display:flex; flex-direction:column; gap:8px;
-      padding:6px 4px; margin:4px 0 12px;
+      padding:12px;
     }
     .chatEmpty{ opacity:.5; font-size:14px; text-align:center; margin:auto 0; }
     .msg{ display:flex; flex-direction:column; max-width:85%; }
@@ -148,8 +197,11 @@
     }
     .msg.mine .bubble{ background: rgba(251,113,133,.16); border-color: rgba(251,113,133,.26); }
     .msg .who{ font-size:11px; opacity:.55; margin:2px 6px 0; }
-    .chatRow{ display:flex; gap:8px; }
+    .chatRow{ display:flex; gap:8px; padding:12px; border-top:1px solid rgba(255,255,255,.10); }
     .chatRow .input{ flex:1 1 auto; }
+    @media (max-width:560px){
+      .chatPop{ right:12px; left:12px; width:auto; bottom:86px; }
+    }
 
     /* queue */
     .queuePanel{ display:flex; flex-direction:column; }
@@ -208,7 +260,7 @@
               <div class="kicker">🌙 Just the two of us • 📺 Watch Together</div>
               <h1 class="title">Watch Together</h1>
               <p class="sub">
-                Paste a YouTube link, hit play, and you'll both stay perfectly in sync —
+                Paste a YouTube link or a direct video URL, hit play, and you'll both stay perfectly in sync —
                 play, pause, and skip carry across to the other person automatically.
               </p>
             </div>
@@ -223,7 +275,7 @@
 
           <div class="controls">
             <input class="input" id="urlInput" type="text"
-                   placeholder="Paste a YouTube link or video ID…"
+                   placeholder="Paste a YouTube link or video URL…"
                    autocomplete="off" spellcheck="false" />
             <button class="btn primary" id="loadBtn">▶ Load &amp; Sync</button>
             <button class="btn link" id="copyRoomBtn">🔗 Copy room link</button>
@@ -232,10 +284,11 @@
           <div class="stage">
             <div class="videoBox" id="videoBox">
               <div id="ytplayer"></div>
+              <video id="filevid" playsinline controls preload="auto" style="display:none"></video>
               <div class="placeholder" id="placeholder">
                 <div class="big">🌸</div>
                 <strong>Nothing playing yet</strong>
-                <p>Paste a YouTube link above and hit <strong>Load &amp; Sync</strong>. Whatever one of you starts, the other sees too.</p>
+                <p>Paste a YouTube link or a direct video URL above and hit <strong>Load &amp; Sync</strong>. Whatever one of you starts, the other sees too.</p>
               </div>
             </div>
 
@@ -248,29 +301,15 @@
             </div>
           </div>
 
-          <div class="grid2" style="margin-top:16px">
-            <div class="panel chatPanel">
-              <h2>💬 Chat</h2>
-              <div class="chatLog" id="chatLog">
-                <p class="chatEmpty" id="chatEmpty">Say hi 🌸</p>
-              </div>
-              <div class="chatRow">
-                <input class="input" id="chatInput" type="text" maxlength="500"
-                       placeholder="Type a message…" autocomplete="off" />
-                <button class="btn violet" id="chatSend">Send</button>
-              </div>
+          <div class="panel queuePanel" style="margin-top:16px">
+            <h2>🎞️ Up Next</h2>
+            <div class="queueAdd">
+              <input class="input" id="queueInput" type="text"
+                     placeholder="Paste a YouTube or video link to queue…" autocomplete="off" spellcheck="false" />
+              <button class="btn" id="queueAddBtn">＋ Add</button>
             </div>
-
-            <div class="panel queuePanel">
-              <h2>🎞️ Up Next</h2>
-              <div class="queueAdd">
-                <input class="input" id="queueInput" type="text"
-                       placeholder="Paste a YouTube link to queue…" autocomplete="off" spellcheck="false" />
-                <button class="btn" id="queueAddBtn">＋ Add</button>
-              </div>
-              <div class="queueList" id="queueList">
-                <p class="queueEmpty" id="queueEmpty">Queue's empty — add something to watch next.</p>
-              </div>
+            <div class="queueList" id="queueList">
+              <p class="queueEmpty" id="queueEmpty">Queue's empty — add something to watch next.</p>
             </div>
           </div>
 
@@ -306,6 +345,26 @@
   </div>
 
   <div class="toast" id="toast"></div>
+
+  <!-- Floating chat -->
+  <button class="chatFab" id="chatFab" aria-label="Open chat">
+    💬<span class="chatBadge" id="chatBadge" hidden>0</span>
+  </button>
+
+  <div class="chatPop" id="chatPop" hidden>
+    <div class="chatPopHead">
+      <strong>💬 Chat</strong>
+      <button class="chatClose" id="chatClose" aria-label="Close chat">✕</button>
+    </div>
+    <div class="chatLog" id="chatLog">
+      <p class="chatEmpty" id="chatEmpty">Say hi 🌸</p>
+    </div>
+    <div class="chatRow">
+      <input class="input" id="chatInput" type="text" maxlength="500"
+             placeholder="Type a message…" autocomplete="off" />
+      <button class="btn violet" id="chatSend">Send</button>
+    </div>
+  </div>
 
   <script src="/shared.js"></script>
   <script src="fireflies.js"></script>
@@ -349,6 +408,10 @@
     const chatEmpty = $("chatEmpty");
     const chatInput = $("chatInput");
     const chatSend = $("chatSend");
+    const chatFab = $("chatFab");
+    const chatPop = $("chatPop");
+    const chatClose = $("chatClose");
+    const chatBadge = $("chatBadge");
     const queueInput = $("queueInput");
     const queueAddBtn = $("queueAddBtn");
     const queueList = $("queueList");
@@ -387,12 +450,44 @@
       return m ? m[1] : null;
     }
 
+    // Returns { kind: "yt"|"file", src } or null.
+    // YouTube links -> the 11-char video id. Anything else that looks like a
+    // playable video URL (.mp4/.webm/.ogg/.mov/.m4v or an http(s) link) -> file.
+    function parseSource(input) {
+      if (!input) return null;
+      input = input.trim();
+      if (!input) return null;
+
+      const looksYouTube = /youtu\.?be/i.test(input) || /^[\w-]{11}$/.test(input);
+      if (looksYouTube) {
+        const id = parseVideoId(input);
+        if (id) return { kind: "yt", src: id };
+      }
+
+      // direct/file URL
+      let u;
+      try { u = new URL(input); } catch (_) { return null; }
+      if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+      return { kind: "file", src: input };
+    }
+
     // ============================================================
-    //  YouTube IFrame API
+    //  Players: YouTube IFrame API + native HTML5 <video>
     // ============================================================
     let player = null, playerReady = false, pendingState = null;
     let applyingRemote = false;     // guard so remote-driven changes don't echo
     let isLeader = false;           // who is steering
+    let currentKind = null;         // "yt" | "file"
+    let currentSrc = null;          // current yt id or file url
+
+    const fileVid = $("filevid");
+    const ytEl = $("ytplayer");
+
+    function showPlayer(kind) {
+      currentKind = kind;
+      ytEl.style.display    = kind === "yt"   ? "block" : "none";
+      fileVid.style.display = kind === "file" ? "block" : "none";
+    }
 
     window.onYouTubeIframeAPIReady = function () {
       player = new YT.Player("ytplayer", {
@@ -411,36 +506,92 @@
     })();
 
     function onPlayerStateChange(e) {
-      if (applyingRemote || !isLeader) return;
-      // Leader broadcasts on play/pause
+      if (applyingRemote || !isLeader || currentKind !== "yt") return;
       if (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.PAUSED) {
         broadcast(e.data === YT.PlayerState.PLAYING ? "playing" : "paused");
       }
     }
+
+    // native <video> -> broadcast on play/pause/seek when steering
+    function fileEvent() {
+      if (applyingRemote || !isLeader || currentKind !== "file") return;
+      broadcast(fileVid.paused ? "paused" : "playing");
+    }
+    fileVid.addEventListener("play",  fileEvent);
+    fileVid.addEventListener("pause", fileEvent);
+    fileVid.addEventListener("seeked", fileEvent);
+    fileVid.addEventListener("error", () => {
+      if (currentKind === "file") toast("Couldn't load that video link");
+    });
 
     // ============================================================
     //  Sync layer
     // ============================================================
     let db = null, stateRef = null;
 
+    // current playback position for whichever player is active
+    function getPos() {
+      try {
+        if (currentKind === "file") return fileVid.currentTime || 0;
+        if (currentKind === "yt" && player) return player.getCurrentTime() || 0;
+      } catch (_) {}
+      return 0;
+    }
+    function isPlayingNow() {
+      try {
+        if (currentKind === "file") return !fileVid.paused;
+        if (currentKind === "yt" && player) return player.getPlayerState() === 1;
+      } catch (_) {}
+      return false;
+    }
+
     function applyState(s, force) {
-      if (!s || !s.videoId) return;
-      if (!playerReady) { pendingState = s; return; }
+      if (!s) return;
+      // backwards-compat: old states only had videoId
+      const kind = s.kind || (s.videoId ? "yt" : null);
+      const src  = s.src  || s.videoId || null;
+      if (!kind || !src) return;
+
+      if (kind === "yt" && !playerReady) { pendingState = s; return; }
 
       applyingRemote = true;
       try {
-        const cur = player.getVideoData ? player.getVideoData().video_id : null;
-        if (cur !== s.videoId) {
+        if (kind === "yt") {
+          if (currentKind !== "yt") showPlayer("yt");
+          const cur = player.getVideoData ? player.getVideoData().video_id : null;
+          if (cur !== src) {
+            placeholder.style.display = "none";
+            nowPlaying.textContent = "▶ " + src;
+            currentSrc = src;
+            player.loadVideoById({ videoId: src, startSeconds: estimatePos(s) });
+            if (s.status !== "playing") setTimeout(() => { try{player.pauseVideo();}catch(_){} }, 350);
+          } else {
+            const target = estimatePos(s);
+            if (force || Math.abs((player.getCurrentTime() || 0) - target) > 1.4) player.seekTo(target, true);
+            if (s.status === "playing") player.playVideo(); else player.pauseVideo();
+          }
+        } else { // file
+          if (currentKind !== "file") showPlayer("file");
           placeholder.style.display = "none";
-          nowPlaying.textContent = "▶ " + s.videoId;
-          player.loadVideoById({ videoId: s.videoId, startSeconds: estimatePos(s) });
-          if (s.status !== "playing") setTimeout(() => { try{player.pauseVideo();}catch(_){} }, 350);
-        } else {
-          const target = estimatePos(s);
-          const drift = Math.abs((player.getCurrentTime() || 0) - target);
-          if (force || drift > 1.4) player.seekTo(target, true);
-          if (s.status === "playing") player.playVideo();
-          else player.pauseVideo();
+          if (currentSrc !== src) {
+            currentSrc = src;
+            nowPlaying.textContent = "▶ " + shortName(src);
+            fileVid.src = src;
+            const start = estimatePos(s);
+            const onMeta = () => {
+              try { fileVid.currentTime = start; } catch(_) {}
+              if (s.status === "playing") fileVid.play().catch(()=>{}); else fileVid.pause();
+              fileVid.removeEventListener("loadedmetadata", onMeta);
+            };
+            fileVid.addEventListener("loadedmetadata", onMeta);
+            fileVid.load();
+          } else {
+            const target = estimatePos(s);
+            if (force || Math.abs((fileVid.currentTime || 0) - target) > 1.4) {
+              try { fileVid.currentTime = target; } catch(_) {}
+            }
+            if (s.status === "playing") fileVid.play().catch(()=>{}); else fileVid.pause();
+          }
         }
       } catch (_) {}
       setTimeout(() => { applyingRemote = false; }, 600);
@@ -456,15 +607,18 @@
       return Math.max(0, pos);
     }
 
+    function shortName(url) {
+      try { return decodeURIComponent(new URL(url).pathname.split("/").pop()) || url; }
+      catch (_) { return url; }
+    }
+
     function broadcast(status) {
-      if (!FIREBASE_READY || !stateRef || !player) return;
-      let videoId = null;
-      try { videoId = player.getVideoData().video_id; } catch(_) {}
-      if (!videoId) return;
+      if (!FIREBASE_READY || !stateRef || !currentKind || !currentSrc) return;
       set(stateRef, {
-        videoId,
+        kind: currentKind,
+        src: currentSrc,
         status,
-        position: player.getCurrentTime() || 0,
+        position: getPos(),
         updatedAt: Date.now(),
         by: clientId,
       });
@@ -536,27 +690,40 @@
     startFirebase();
 
     // periodic drift-correct from leader so seeks stay tight
-    setInterval(() => { if (isLeader && player && playerReady) {
-      try { if (player.getPlayerState() === YT.PlayerState.PLAYING) broadcast("playing"); } catch(_){}
+    setInterval(() => { if (isLeader && currentKind) {
+      try { if (isPlayingNow()) broadcast("playing"); } catch(_){}
     }}, 5000);
 
     // ============================================================
     //  UI wiring
     // ============================================================
     function loadFromInput() {
-      const id = parseVideoId(urlInput.value);
-      if (!id) { toast("Couldn't read that link — try a full YouTube URL"); return; }
+      const parsed = parseSource(urlInput.value);
+      if (!parsed) { toast("Couldn't read that link — paste a YouTube link or a direct video URL"); return; }
+      startSource(parsed);
+      toast("Loaded — your partner will catch up ✨");
+    }
+
+    // shared loader used by the URL box and the queue
+    function startSource(parsed) {
       isLeader = true; leaderBtn.classList.add("violet");
       placeholder.style.display = "none";
-      nowPlaying.textContent = "▶ " + id;
-      if (playerReady) {
-        applyingRemote = false;
-        player.loadVideoById(id);
+      currentSrc = parsed.src;
+      applyingRemote = false;
+
+      if (parsed.kind === "yt") {
+        showPlayer("yt");
+        nowPlaying.textContent = "▶ " + parsed.src;
+        if (playerReady) player.loadVideoById(parsed.src);
+        else pendingState = { kind: "yt", src: parsed.src, status: "playing", position: 0, updatedAt: Date.now() };
       } else {
-        pendingState = { videoId: id, status: "playing", position: 0, updatedAt: Date.now() };
+        showPlayer("file");
+        nowPlaying.textContent = "▶ " + shortName(parsed.src);
+        fileVid.src = parsed.src;
+        fileVid.load();
+        fileVid.play().catch(()=>{});
       }
       setTimeout(() => broadcast("playing"), 800);
-      toast("Loaded — your partner will catch up ✨");
     }
 
     loadBtn.addEventListener("click", loadFromInput);
@@ -576,7 +743,7 @@
       isLeader = !isLeader;
       leaderBtn.classList.toggle("violet", isLeader);
       toast(isLeader ? "You're steering 🎬" : "Following your partner");
-      if (isLeader) broadcast(player && player.getPlayerState && player.getPlayerState() === 1 ? "playing" : "paused");
+      if (isLeader) broadcast(isPlayingNow() ? "playing" : "paused");
     });
 
     copyRoomBtn.addEventListener("click", async () => {
@@ -586,12 +753,47 @@
     });
 
     // ============================================================
-    //  Chat
+    //  Chat (floating popup)
     // ============================================================
+    let chatOpen = false;
+    let unread = 0;
+    let lastSeenCount = 0;   // how many messages existed last time chat was open
+
+    function setBadge() {
+      if (unread > 0) {
+        chatBadge.textContent = unread > 99 ? "99+" : String(unread);
+        chatBadge.hidden = false;
+      } else {
+        chatBadge.hidden = true;
+      }
+    }
+    function openChat() {
+      chatOpen = true;
+      chatPop.hidden = false;
+      unread = 0; setBadge();
+      chatLog.scrollTop = chatLog.scrollHeight;
+      setTimeout(() => chatInput.focus(), 50);
+    }
+    function closeChat() { chatOpen = false; chatPop.hidden = true; }
+    chatFab.addEventListener("click", () => chatOpen ? closeChat() : openChat());
+    chatClose.addEventListener("click", closeChat);
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && chatOpen) closeChat(); });
+
     function renderChat(msgs) {
       const entries = Object.values(msgs).sort((a, b) => (a.t || 0) - (b.t || 0));
-      if (!entries.length) { chatEmpty.style.display = "block"; return; }
+      if (!entries.length) { chatEmpty.style.display = "block"; lastSeenCount = 0; return; }
       chatEmpty.style.display = "none";
+
+      // count new partner messages since we last had chat open
+      if (chatOpen) {
+        lastSeenCount = entries.length;
+      } else {
+        const fresh = entries.slice(lastSeenCount);
+        const fromPartner = fresh.filter(m => m.cid !== clientId).length;
+        if (fromPartner > 0) { unread += fromPartner; setBadge(); }
+        lastSeenCount = entries.length;
+      }
+
       const wasNearBottom = chatLog.scrollHeight - chatLog.scrollTop - chatLog.clientHeight < 80;
       chatLog.innerHTML = "";
       for (const m of entries) {
@@ -603,7 +805,7 @@
           `<div class="who">${mine ? "you" : escapeHtml(m.name || "partner")}</div>`;
         chatLog.appendChild(wrap);
       }
-      if (wasNearBottom) chatLog.scrollTop = chatLog.scrollHeight;
+      if (chatOpen || wasNearBottom) chatLog.scrollTop = chatLog.scrollHeight;
     }
 
     function sendChat() {
@@ -627,44 +829,48 @@
       queueEmpty.style.display = "none";
       queueList.innerHTML = "";
       for (const [key, it] of entries) {
+        // backward-compat with older queue items that only had videoId
+        const kind = it.kind || (it.videoId ? "yt" : "file");
+        const src  = it.src  || it.videoId || "";
+        const thumb = kind === "yt"
+          ? `<img class="qThumb" src="https://i.ytimg.com/vi/${src}/mqdefault.jpg" alt="" />`
+          : `<div class="qThumb" style="display:grid;place-items:center;font-size:16px">🎬</div>`;
+        const label = kind === "yt" ? src : shortName(src);
         const row = document.createElement("div");
         row.className = "qItem";
         row.innerHTML =
-          `<img class="qThumb" src="https://i.ytimg.com/vi/${it.videoId}/mqdefault.jpg" alt="" />` +
-          `<div class="qTitle">${escapeHtml(it.videoId)}</div>` +
+          thumb +
+          `<div class="qTitle">${escapeHtml(label)}</div>` +
           `<div class="qBtns">` +
-            `<button class="qMini play" data-play="${it.videoId}" title="Play now">▶</button>` +
+            `<button class="qMini play" data-key="${key}" title="Play now">▶</button>` +
             `<button class="qMini" data-del="${key}" title="Remove">✕</button>` +
           `</div>`;
         queueList.appendChild(row);
       }
-      queueList.querySelectorAll("[data-play]").forEach(b =>
-        b.addEventListener("click", () => playQueued(b.dataset.play)));
+      queueList.querySelectorAll("[data-key]").forEach(b =>
+        b.addEventListener("click", () => playQueued(b.dataset.key)));
       queueList.querySelectorAll("[data-del]").forEach(b =>
         b.addEventListener("click", () => removeQueued(b.dataset.del)));
     }
 
     function addToQueue() {
-      const id = parseVideoId(queueInput.value);
-      if (!id) { toast("Couldn't read that link"); return; }
+      const parsed = parseSource(queueInput.value);
+      if (!parsed) { toast("Couldn't read that link"); return; }
       if (!FIREBASE_READY || !queueRef) { toast("Queue needs Firebase set up first"); return; }
-      push(queueRef, { videoId: id, t: Date.now(), by: myName });
+      push(queueRef, { kind: parsed.kind, src: parsed.src, t: Date.now(), by: myName });
       queueInput.value = "";
       toast("Added to queue 🎞️");
     }
     queueAddBtn.addEventListener("click", addToQueue);
     queueInput.addEventListener("keydown", (e) => { if (e.key === "Enter") addToQueue(); });
 
-    function playQueued(videoId) {
-      isLeader = true; leaderBtn.classList.add("violet");
-      placeholder.style.display = "none";
-      nowPlaying.textContent = "▶ " + videoId;
-      if (playerReady) { applyingRemote = false; player.loadVideoById(videoId); }
-      else pendingState = { videoId, status: "playing", position: 0, updatedAt: Date.now() };
-      setTimeout(() => broadcast("playing"), 800);
-      // remove the one we just started from the queue
-      const found = Object.entries(queueCache).find(([, v]) => v.videoId === videoId);
-      if (found) removeQueued(found[0]);
+    function playQueued(key) {
+      const it = queueCache[key];
+      if (!it) return;
+      const kind = it.kind || (it.videoId ? "yt" : "file");
+      const src  = it.src  || it.videoId;
+      startSource({ kind, src });
+      removeQueued(key);
     }
 
     function removeQueued(key) {
