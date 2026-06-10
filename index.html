@@ -606,12 +606,8 @@ footer {
           <div class="server-side-card">
             <h3>📺 Watch Together</h3>
             <p>Create a room — public for anyone to join, or private with a password — and watch YouTube or videos in sync, with chat, a shared queue, and playlists.</p>
-            <div class="wt-launch">
-              <input id="wtRoom" class="wt-room-input" type="text" placeholder="room name (optional)" autocomplete="off" spellcheck="false" maxlength="40" />
-              <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                <button class="link-pill primary" id="wtStartBtn" type="button">Start Room</button>
-                <a href="watch.html" class="link-pill">Browse Rooms</a>
-              </div>
+            <div>
+              <a href="watch.html" class="link-pill primary">Open Lobby</a>
             </div>
           </div>
         </div>
@@ -766,22 +762,6 @@ footer {
       setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
     });
   }
-
-  // ── Watch Together room launcher ──
-  (function () {
-    const btn = document.getElementById('wtStartBtn');
-    const input = document.getElementById('wtRoom');
-    if (!btn || !input) return;
-    function go() {
-      const room = (input.value || '').replace(/[.#$\[\]\/]/g, '').trim().slice(0, 40);
-      // send to the lobby; prefill the create field if they typed a name
-      window.location.href = room
-        ? 'watch.html?create=' + encodeURIComponent(room)
-        : 'watch.html';
-    }
-    btn.addEventListener('click', go);
-    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
-  })();
 
   // ── Scroll reveal ──
   const observer = new IntersectionObserver(entries => {

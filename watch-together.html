@@ -276,7 +276,7 @@
       color:inherit; transition:filter .12s ease, background .12s ease;
     }
     .miniGhost:hover{ background:rgba(255,255,255,.10); }
-    .playlistPanel h2, .roomsPanel h2, .queuePanel h2{ display:flex; align-items:center; gap:8px; }
+    .playlistPanel h2, .queuePanel h2{ display:flex; align-items:center; gap:8px; }
 
     /* playlists */
     .playlistPanel{ display:flex; flex-direction:column; }
@@ -304,24 +304,6 @@
     .plRow .t{ flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; opacity:.85; }
     .plAdd{ display:flex; gap:8px; margin-top:8px; }
     .plAdd .input{ flex:1 1 auto; font-size:13px; padding:8px 12px; }
-
-    /* saved rooms */
-    .roomsPanel{ display:flex; flex-direction:column; }
-    .roomsList{ display:flex; flex-wrap:wrap; gap:8px; }
-    .roomChip{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:7px 8px 7px 13px; border-radius:999px;
-      border:1px solid rgba(167,139,250,.24); background:rgba(167,139,250,.12);
-      font-size:13px;
-    }
-    .roomChip.current{ border-color:rgba(52,211,153,.3); background:rgba(52,211,153,.12); }
-    .roomChip a{ color:inherit; }
-    .roomChip .x{
-      width:20px; height:20px; border-radius:50%; display:grid; place-items:center;
-      border:1px solid rgba(255,255,255,.16); background:rgba(0,0,0,.2);
-      cursor:pointer; font-size:11px; opacity:.7;
-    }
-    .roomChip .x:hover{ opacity:1; }
 
     .toast{
       position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px);
@@ -385,6 +367,7 @@
                    autocomplete="off" spellcheck="false" />
             <button class="btn primary" id="loadBtn">▶ Load &amp; Sync</button>
             <button class="btn link" id="copyRoomBtn">🔗 Copy room link</button>
+            <a class="btn link" href="watch.html">🏠 Lobby</a>
           </div>
 
           <div class="stage">
@@ -439,13 +422,6 @@
             </div>
             <div class="plList" id="plList">
               <p class="queueEmpty" id="plEmpty">No playlists yet — create one or save your queue.</p>
-            </div>
-          </div>
-
-          <div class="panel roomsPanel" style="margin-top:16px">
-            <h2>⭐ Saved Rooms <button class="miniGhost" id="roomSaveBtn" title="Save the current room">💾 Save this room</button></h2>
-            <div class="roomsList" id="roomsList">
-              <p class="queueEmpty" id="roomsEmpty">No saved rooms yet — save this one to come back to it.</p>
             </div>
           </div>
 
@@ -564,13 +540,10 @@
     const ytImportBtn = $("ytImportBtn");
     const plList = $("plList");
     const plEmpty = $("plEmpty");
-    const roomSaveBtn = $("roomSaveBtn");
-    const roomsList = $("roomsList");
-    const roomsEmpty = $("roomsEmpty");
 
     // ---- Room ----
     const params = new URLSearchParams(location.search);
-    const ROOM = (params.get("room") || "cozy").replace(/[.#$\[\]\/]/g, "").slice(0, 40) || "cozy";
+    const ROOM = (params.get("room") || "cozy").toLowerCase().replace(/[.#$\[\]\/]/g, "").slice(0, 40) || "cozy";
     roomNameEl.textContent = ROOM;
 
     // ---- helpers ----
@@ -923,7 +896,7 @@
     let myId = localStorage.getItem("wt_id");
     if (!myId) { myId = "u" + Math.random().toString(36).slice(2, 10); localStorage.setItem("wt_id", myId); }
     let chatRef = null, queueRef = null;
-    let playlistsRef = null, roomIndexRef = null;
+    let playlistsRef = null;
     let playlistsCache = {};
 
     // a friendly name so you can tell who's who — editable from the page
@@ -1012,11 +985,6 @@
           renderPlaylists(snap.val() || {});
         });
 
-        // --- saved rooms (global index, visible from any room) ---
-        roomIndexRef = ref(db, `watch/_rooms`);
-        onValue(roomIndexRef, (snap) => {
-          renderRooms(snap.val() || {});
-        });
       } catch (err) {
         console.error(err);
         setConn("off", "Connection failed");
@@ -1482,37 +1450,6 @@
     }
     ytImportBtn.addEventListener("click", () => { importYouTubePlaylist(ytImportInput.value); ytImportInput.value = ""; });
     ytImportInput.addEventListener("keydown", (e) => { if (e.key === "Enter") ytImportBtn.click(); });
-
-    // ============================================================
-    //  Saved rooms (global index)
-    // ============================================================
-    function renderRooms(data) {
-      const entries = Object.entries(data || {}).sort((a, b) => (a[1].t || 0) - (b[1].t || 0));
-      roomsList.innerHTML = "";
-      if (!entries.length) { roomsList.appendChild(roomsEmpty); roomsEmpty.style.display = "block"; return; }
-      roomsEmpty.style.display = "none";
-      for (const [name, info] of entries) {
-        const isCurrent = name === ROOM;
-        const chip = document.createElement("div");
-        chip.className = "roomChip" + (isCurrent ? " current" : "");
-        const link = location.pathname + "?room=" + encodeURIComponent(name);
-        chip.innerHTML =
-          `<a href="${link}">${isCurrent ? "● " : ""}${escapeHtml(info.name || name)}</a>` +
-          `<span class="x" data-del-room="${escapeHtml(name)}" title="Remove">✕</span>`;
-        roomsList.appendChild(chip);
-      }
-      roomsList.querySelectorAll("[data-del-room]").forEach(x =>
-        x.addEventListener("click", () => {
-          remove(ref(db, `watch/_rooms/${x.dataset.delRoom}`));
-          toast("Removed from saved rooms");
-        }));
-    }
-
-    roomSaveBtn.addEventListener("click", () => {
-      if (!FIREBASE_READY || !roomIndexRef) { toast("Needs Firebase set up first"); return; }
-      set(ref(db, `watch/_rooms/${ROOM}`), { name: ROOM, t: Date.now() });
-      toast("Room saved ⭐");
-    });
   </script>
 </body>
 </html>

@@ -231,7 +231,7 @@
     let toastTimer;
     function toast(msg){ toastEl.textContent = msg; toastEl.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(()=>toastEl.classList.remove("show"), 2400); }
 
-    function cleanName(s){ return (s||"").replace(/[.#$\[\]\/]/g, "").trim().slice(0, 40); }
+    function cleanName(s){ return (s||"").toLowerCase().replace(/[.#$\[\]\/]/g, "").trim().slice(0, 40); }
     function goToRoom(room){ window.location.href = "watch-together.html?room=" + encodeURIComponent(room); }
 
     let db = null, lobbyRef = null;
