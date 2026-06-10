@@ -957,6 +957,19 @@
       try {
         const app = initializeApp(firebaseConfig);
         db = getDatabase(app);
+
+        // Private-room gate: if this room is private and we don't hold the
+        // password from this session, send the visitor to the lobby to enter it.
+        get(ref(db, `lobby/${ROOM}`)).then((snap) => {
+          const entry = snap.val();
+          if (entry && entry.visibility === "private") {
+            const held = sessionStorage.getItem("wt_pass_" + ROOM);
+            if (!held || held !== (entry.pass || "")) {
+              window.location.href = "watch.html?join=" + encodeURIComponent(ROOM);
+            }
+          }
+        }).catch(() => {});
+
         stateRef = ref(db, `watch/${ROOM}/state`);
         const presRef = ref(db, `watch/${ROOM}/presence/${clientId}`);
         myPresRef = presRef;
