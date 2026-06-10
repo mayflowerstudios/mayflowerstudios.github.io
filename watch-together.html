@@ -1,0 +1,487 @@
+<!-- watch-together.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Watch Together — Mayflower Studios</title>
+  <link rel="stylesheet" href="/style.css" />
+
+  <style>
+    .wtWrap{max-width:1100px;margin:0 auto;padding:22px}
+    .glass{
+      background: rgba(255,255,255,.045);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 22px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.45);
+      overflow:hidden;
+      position:relative;
+    }
+    .glass::before{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        radial-gradient(900px 380px at 20% 0%, rgba(251,113,133,.10), transparent 60%),
+        radial-gradient(700px 320px at 90% 10%, rgba(167,139,250,.08), transparent 55%),
+        radial-gradient(700px 320px at 50% 115%, rgba(34,197,94,.06), transparent 60%);
+      pointer-events:none;
+    }
+    .content{position:relative; z-index:1; padding:22px}
+
+    .topRow{
+      display:flex; align-items:flex-start; justify-content:space-between;
+      gap:14px; flex-wrap:wrap;
+    }
+    .kicker{
+      display:inline-flex; gap:10px; align-items:center;
+      padding:7px 12px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      backdrop-filter: blur(6px);
+      font-size:13px; opacity:.9;
+    }
+    .title{ margin:10px 0 6px; font-size:44px; letter-spacing:.2px; line-height:1.05; }
+    .sub{ margin:0; opacity:.78; line-height:1.6; max-width:70ch; }
+
+    .roomBar{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+      margin-top:6px; justify-content:flex-end;
+    }
+    .pillStat{
+      font-size:13px; opacity:.85;
+      padding:7px 12px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      display:inline-flex; align-items:center; gap:8px;
+    }
+    .dot{ width:9px;height:9px;border-radius:50%; background:#facc15; box-shadow:0 0 8px rgba(250,204,21,.6); }
+    .dot.on{ background:#34d399; box-shadow:0 0 8px rgba(52,211,153,.7); }
+    .dot.off{ background:#fb7185; box-shadow:0 0 8px rgba(251,113,133,.6); }
+
+    .divider{ height:1px; background: rgba(255,255,255,.10); margin:18px 0; }
+
+    .controls{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .input{
+      flex:1 1 320px; min-width:0;
+      padding:12px 14px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.25); color:inherit;
+      font-size:15px;
+    }
+    .input::placeholder{ opacity:.5 }
+    .input:focus{ outline:none; border-color: rgba(167,139,250,.45); }
+
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      padding:12px 16px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      text-decoration:none; color:inherit; cursor:pointer;
+      background:rgba(255,255,255,.06);
+      transition: transform .12s ease, filter .12s ease, background .12s ease;
+      backdrop-filter: blur(6px); white-space:nowrap; font-size:15px;
+    }
+    .btn:hover{transform:translateY(-1px);filter:brightness(1.08)}
+    .btn.primary{ background: rgba(251,113,133,.18); border-color: rgba(251,113,133,.30); }
+    .btn.violet{ background: rgba(167,139,250,.16); border-color: rgba(167,139,250,.28); }
+    .btn.link{ background: transparent; border-color: rgba(255,255,255,.10); opacity:.92; }
+    .btn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
+
+    .stage{
+      margin-top:16px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.12);
+      overflow:hidden;
+      background: rgba(0,0,0,.35);
+      position:relative;
+    }
+    .videoBox{ position:relative; width:100%; aspect-ratio:16/9; background:#000; }
+    .videoBox > #ytplayer, .videoBox > iframe{
+      position:absolute; inset:0; width:100%; height:100%; border:0;
+    }
+    .placeholder{
+      position:absolute; inset:0; display:grid; place-items:center; text-align:center;
+      padding:24px; gap:8px;
+    }
+    .placeholder .big{ font-size:40px; }
+    .placeholder p{ opacity:.7; margin:6px 0 0; max-width:46ch; }
+
+    .syncBar{
+      display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+      padding:12px 14px; border-top:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+    }
+    .syncBar .grp{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .nowPlaying{ font-size:13px; opacity:.85; max-width:60ch; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-top:16px; }
+    @media (max-width:900px){ .grid2{grid-template-columns:1fr} }
+    .panel{
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 18px; padding:16px;
+      backdrop-filter: blur(8px);
+    }
+    .panel h2{ margin:0 0 10px; font-size:18px; letter-spacing:.2px; }
+    .steps{ display:grid; gap:10px; margin-top:4px; }
+    .step{ display:flex; gap:10px; align-items:flex-start; }
+    .num{
+      width:26px;height:26px;border-radius:10px; display:grid; place-items:center;
+      border:1px solid rgba(255,255,255,.16); background: rgba(167,139,250,.14);
+      flex:0 0 auto; font-size:13px;
+    }
+    .tiny{font-size:13px;opacity:.72;margin:10px 0 0;line-height:1.55}
+
+    .toast{
+      position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px);
+      padding:11px 16px; border-radius:14px;
+      background: rgba(20,16,28,.92); border:1px solid rgba(255,255,255,.14);
+      box-shadow:0 12px 40px rgba(0,0,0,.5);
+      opacity:0; pointer-events:none; transition: all .25s ease; z-index:50; font-size:14px;
+    }
+    .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  </style>
+
+  <!-- OG:START -->
+  <meta name="description" content="A cozy private space to watch YouTube and videos together, perfectly in sync." />
+  <meta property="og:title" content="Watch Together — Mayflower Studios" />
+  <meta property="og:description" content="A cozy private space to watch YouTube and videos together, perfectly in sync." />
+  <meta property="og:url" content="https://mayflowerstudios.net/watch-together.html" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Watch Together — Mayflower Studios" />
+  <meta name="twitter:description" content="A cozy private space to watch YouTube and videos together, perfectly in sync." />
+  <!-- OG:END -->
+</head>
+
+<body data-nav="server">
+  <div class="wrap">
+    <div id="shared-nav"></div>
+
+    <div class="wtWrap">
+      <section class="glass">
+        <div class="content">
+
+          <div class="topRow">
+            <div>
+              <div class="kicker">🌙 Just the two of us • 📺 Watch Together</div>
+              <h1 class="title">Watch Together</h1>
+              <p class="sub">
+                Paste a YouTube link, hit play, and you'll both stay perfectly in sync —
+                play, pause, and skip carry across to the other person automatically.
+              </p>
+            </div>
+
+            <div class="roomBar">
+              <span class="pillStat"><span class="dot" id="connDot"></span><span id="connText">Connecting…</span></span>
+              <span class="pillStat" id="roomStat">Room: <strong id="roomName" style="margin-left:4px">cozy</strong></span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="controls">
+            <input class="input" id="urlInput" type="text"
+                   placeholder="Paste a YouTube link or video ID…"
+                   autocomplete="off" spellcheck="false" />
+            <button class="btn primary" id="loadBtn">▶ Load &amp; Sync</button>
+            <button class="btn link" id="copyRoomBtn">🔗 Copy room link</button>
+          </div>
+
+          <div class="stage">
+            <div class="videoBox" id="videoBox">
+              <div id="ytplayer"></div>
+              <div class="placeholder" id="placeholder">
+                <div class="big">🌸</div>
+                <strong>Nothing playing yet</strong>
+                <p>Paste a YouTube link above and hit <strong>Load &amp; Sync</strong>. Whatever one of you starts, the other sees too.</p>
+              </div>
+            </div>
+
+            <div class="syncBar">
+              <div class="grp">
+                <button class="btn violet" id="resyncBtn" title="Snap to the other person's position">🔄 Resync to partner</button>
+                <button class="btn link" id="leaderBtn" title="Take control of playback">🎬 I'm steering</button>
+              </div>
+              <div class="nowPlaying" id="nowPlaying">No video loaded</div>
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div class="panel">
+              <h2>How it works</h2>
+              <div class="steps">
+                <div class="step"><div class="num">1</div><div>Open this page on both your devices — same room (it's <strong>cozy</strong> by default).</div></div>
+                <div class="step"><div class="num">2</div><div>One of you pastes a YouTube link and hits <strong>Load &amp; Sync</strong>.</div></div>
+                <div class="step"><div class="num">3</div><div>Play / pause / seek — it mirrors to the other side within a second.</div></div>
+                <div class="step"><div class="num">4</div><div>Drifted apart? Either of you taps <strong>Resync</strong> to snap back together.</div></div>
+              </div>
+              <p class="tiny">Hop on a Discord call too if you want to chat while you watch 💬</p>
+            </div>
+
+            <div class="panel">
+              <h2>Private rooms</h2>
+              <p class="sub" style="font-size:14px">
+                Want a room that's just yours? Add <code>?room=</code> and any name to the URL — for example
+                <code>watch-together.html?room=us</code>. Share that exact link with each other and you'll meet there.
+              </p>
+              <p class="tiny">
+                Tip: the <strong>Copy room link</strong> button copies your current room so you can send it over.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+    </div>
+
+    <div id="shared-footer"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="/shared.js"></script>
+  <script src="fireflies.js"></script>
+
+  <!-- Firebase (Realtime Database) for lightweight room sync -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getDatabase, ref, onValue, set, onDisconnect, serverTimestamp, get
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    /* ============================================================
+       CONFIG — replace with your own Firebase project's config.
+       Realtime Database (free Spark plan is plenty for 2 people).
+       Create one at https://console.firebase.google.com
+       ============================================================ */
+    const firebaseConfig = {
+      apiKey: "AIzaSyDVJ0Tiq0gimaB-epcD9HQlVBrOWHq-IXI",
+      authDomain: "watchtogether-95d7d.firebaseapp.com",
+      databaseURL: "https://watchtogether-95d7d-default-rtdb.firebaseio.com",
+      projectId: "watchtogether-95d7d",
+    };
+
+    const FIREBASE_READY = !firebaseConfig.apiKey.startsWith("REPLACE");
+
+    // ---- DOM ----
+    const $ = (id) => document.getElementById(id);
+    const urlInput = $("urlInput");
+    const loadBtn = $("loadBtn");
+    const copyRoomBtn = $("copyRoomBtn");
+    const resyncBtn = $("resyncBtn");
+    const leaderBtn = $("leaderBtn");
+    const placeholder = $("placeholder");
+    const nowPlaying = $("nowPlaying");
+    const connDot = $("connDot");
+    const connText = $("connText");
+    const roomNameEl = $("roomName");
+    const toastEl = $("toast");
+
+    // ---- Room ----
+    const params = new URLSearchParams(location.search);
+    const ROOM = (params.get("room") || "cozy").replace(/[.#$\[\]\/]/g, "").slice(0, 40) || "cozy";
+    roomNameEl.textContent = ROOM;
+
+    // ---- helpers ----
+    let toastTimer;
+    function toast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2400);
+    }
+    function setConn(state, text) {
+      connDot.className = "dot " + (state === "on" ? "on" : state === "off" ? "off" : "");
+      connText.textContent = text;
+    }
+    function parseVideoId(input) {
+      if (!input) return null;
+      input = input.trim();
+      // bare 11-char id
+      if (/^[\w-]{11}$/.test(input)) return input;
+      try {
+        const u = new URL(input);
+        if (u.hostname.includes("youtu.be")) return u.pathname.slice(1, 12) || null;
+        if (u.searchParams.get("v")) return u.searchParams.get("v");
+        const m = u.pathname.match(/\/(embed|shorts|live)\/([\w-]{11})/);
+        if (m) return m[2];
+      } catch (_) {}
+      const m = input.match(/([\w-]{11})/);
+      return m ? m[1] : null;
+    }
+
+    // ============================================================
+    //  YouTube IFrame API
+    // ============================================================
+    let player = null, playerReady = false, pendingState = null;
+    let applyingRemote = false;     // guard so remote-driven changes don't echo
+    let isLeader = false;           // who is steering
+
+    window.onYouTubeIframeAPIReady = function () {
+      player = new YT.Player("ytplayer", {
+        width: "100%", height: "100%",
+        playerVars: { rel: 0, modestbranding: 1, playsinline: 1 },
+        events: {
+          onReady: () => { playerReady = true; if (pendingState) applyState(pendingState, true); },
+          onStateChange: onPlayerStateChange,
+        },
+      });
+    };
+    (function loadYT(){
+      const t = document.createElement("script");
+      t.src = "https://www.youtube.com/iframe_api";
+      document.head.appendChild(t);
+    })();
+
+    function onPlayerStateChange(e) {
+      if (applyingRemote || !isLeader) return;
+      // Leader broadcasts on play/pause
+      if (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.PAUSED) {
+        broadcast(e.data === YT.PlayerState.PLAYING ? "playing" : "paused");
+      }
+    }
+
+    // ============================================================
+    //  Sync layer
+    // ============================================================
+    let db = null, stateRef = null;
+
+    function applyState(s, force) {
+      if (!s || !s.videoId) return;
+      if (!playerReady) { pendingState = s; return; }
+
+      applyingRemote = true;
+      try {
+        const cur = player.getVideoData ? player.getVideoData().video_id : null;
+        if (cur !== s.videoId) {
+          placeholder.style.display = "none";
+          nowPlaying.textContent = "▶ " + s.videoId;
+          player.loadVideoById({ videoId: s.videoId, startSeconds: estimatePos(s) });
+          if (s.status !== "playing") setTimeout(() => { try{player.pauseVideo();}catch(_){} }, 350);
+        } else {
+          const target = estimatePos(s);
+          const drift = Math.abs((player.getCurrentTime() || 0) - target);
+          if (force || drift > 1.4) player.seekTo(target, true);
+          if (s.status === "playing") player.playVideo();
+          else player.pauseVideo();
+        }
+      } catch (_) {}
+      setTimeout(() => { applyingRemote = false; }, 600);
+    }
+
+    // estimate partner's current position accounting for time since their update
+    function estimatePos(s) {
+      let pos = s.position || 0;
+      if (s.status === "playing" && s.updatedAt) {
+        const elapsed = (Date.now() - s.updatedAt) / 1000;
+        if (elapsed > 0 && elapsed < 3600) pos += elapsed;
+      }
+      return Math.max(0, pos);
+    }
+
+    function broadcast(status) {
+      if (!FIREBASE_READY || !stateRef || !player) return;
+      let videoId = null;
+      try { videoId = player.getVideoData().video_id; } catch(_) {}
+      if (!videoId) return;
+      set(stateRef, {
+        videoId,
+        status,
+        position: player.getCurrentTime() || 0,
+        updatedAt: Date.now(),
+        by: clientId,
+      });
+    }
+
+    // ---- presence + state listeners ----
+    const clientId = Math.random().toString(36).slice(2, 9);
+
+    function startFirebase() {
+      if (!FIREBASE_READY) {
+        setConn("off", "Offline (set up Firebase)");
+        return;
+      }
+      try {
+        const app = initializeApp(firebaseConfig);
+        db = getDatabase(app);
+        stateRef = ref(db, `watch/${ROOM}/state`);
+        const presRef = ref(db, `watch/${ROOM}/presence/${clientId}`);
+
+        set(presRef, true);
+        onDisconnect(presRef).remove();
+
+        onValue(ref(db, ".info/connected"), (snap) => {
+          if (snap.val() === true) { set(presRef, true); onDisconnect(presRef).remove(); }
+        });
+
+        onValue(ref(db, `watch/${ROOM}/presence`), (snap) => {
+          const n = snap.exists() ? Object.keys(snap.val()).length : 0;
+          if (n <= 1) setConn("on", "Connected · waiting for partner");
+          else setConn("on", `Connected · ${n} here`);
+        });
+
+        onValue(stateRef, (snap) => {
+          const s = snap.val();
+          if (!s) return;
+          if (s.by === clientId) return;      // ignore our own writes
+          applyState(s, false);
+        });
+      } catch (err) {
+        console.error(err);
+        setConn("off", "Connection failed");
+      }
+    }
+    startFirebase();
+
+    // periodic drift-correct from leader so seeks stay tight
+    setInterval(() => { if (isLeader && player && playerReady) {
+      try { if (player.getPlayerState() === YT.PlayerState.PLAYING) broadcast("playing"); } catch(_){}
+    }}, 5000);
+
+    // ============================================================
+    //  UI wiring
+    // ============================================================
+    function loadFromInput() {
+      const id = parseVideoId(urlInput.value);
+      if (!id) { toast("Couldn't read that link — try a full YouTube URL"); return; }
+      isLeader = true; leaderBtn.classList.add("violet");
+      placeholder.style.display = "none";
+      nowPlaying.textContent = "▶ " + id;
+      if (playerReady) {
+        applyingRemote = false;
+        player.loadVideoById(id);
+      } else {
+        pendingState = { videoId: id, status: "playing", position: 0, updatedAt: Date.now() };
+      }
+      setTimeout(() => broadcast("playing"), 800);
+      toast("Loaded — your partner will catch up ✨");
+    }
+
+    loadBtn.addEventListener("click", loadFromInput);
+    urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") loadFromInput(); });
+
+    resyncBtn.addEventListener("click", async () => {
+      if (!FIREBASE_READY || !stateRef) { toast("Sync isn't set up yet"); return; }
+      const snap = await get(stateRef);
+      const s = snap.val();
+      if (!s) { toast("Nothing to resync to yet"); return; }
+      isLeader = false; leaderBtn.classList.remove("violet");
+      applyState(s, true);
+      toast("Snapped to your partner 🔄");
+    });
+
+    leaderBtn.addEventListener("click", () => {
+      isLeader = !isLeader;
+      leaderBtn.classList.toggle("violet", isLeader);
+      toast(isLeader ? "You're steering 🎬" : "Following your partner");
+      if (isLeader) broadcast(player && player.getPlayerState && player.getPlayerState() === 1 ? "playing" : "paused");
+    });
+
+    copyRoomBtn.addEventListener("click", async () => {
+      const link = location.origin + location.pathname + "?room=" + encodeURIComponent(ROOM);
+      try { await navigator.clipboard.writeText(link); toast("Room link copied 🔗"); }
+      catch { toast(link); }
+    });
+  </script>
+</body>
+</html>
