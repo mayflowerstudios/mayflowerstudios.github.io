@@ -730,9 +730,32 @@
       if (awakeTag) awakeTag.hidden = !wakeLock;
     }
 
-    // re-evaluate when the tab returns to the foreground (the OS drops the lock
-    // automatically when hidden, so we re-acquire if still playing)
-    document.addEventListener("visibilitychange", syncWakeLock);
+    // Tracks whether our tab is backgrounded. While hidden we suppress
+    // broadcasts (see broadcast()) so leaving doesn't pause our partner.
+    let pageHidden = (document.visibilityState === "hidden");
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") {
+        pageHidden = true;
+        syncWakeLock();   // release the screen lock; nothing to broadcast
+      } else {
+        // back in the foreground: re-sync to wherever the room is now, rather
+        // than pushing our stale (paused-by-OS) position onto everyone else
+        pageHidden = false;
+        syncWakeLock();
+        resyncToRoom();
+      }
+    });
+
+    // pull the room's current state and snap to it without becoming host
+    async function resyncToRoom() {
+      if (!FIREBASE_READY || !stateRef) return;
+      try {
+        const snap = await get(stateRef);
+        const s = snap.val();
+        if (s && s.by !== clientId) applyState(s, true);
+      } catch (_) {}
+    }
 
     function applyState(s, force) {
       if (!s) return;
@@ -844,6 +867,10 @@
 
     function broadcast(status) {
       if (!FIREBASE_READY || !stateRef || !currentKind || !currentSrc) return;
+      // When the tab is backgrounded/closed on mobile, the OS pauses our video
+      // and fires a pause event. Don't push that to the room — it would drag the
+      // other person's playback down with us. Their video keeps going regardless.
+      if (pageHidden) return;
       lastHostId = clientId;
       updateHostTag(myName, true);
       set(stateRef, {
@@ -891,7 +918,10 @@
     }
 
     // ---- presence + state listeners ----
-    const clientId = Math.random().toString(36).slice(2, 9);
+    const clientId = Math.random().toString(36).slice(2, 9);   // per-session (presence/sync)
+    // stable per-device id so YOUR messages stay recognized as yours after reload
+    let myId = localStorage.getItem("wt_id");
+    if (!myId) { myId = "u" + Math.random().toString(36).slice(2, 10); localStorage.setItem("wt_id", myId); }
     let chatRef = null, queueRef = null;
     let playlistsRef = null, roomIndexRef = null;
     let playlistsCache = {};
@@ -1064,25 +1094,60 @@
     chatClose.addEventListener("click", closeChat);
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && chatOpen) closeChat(); });
 
+    let chatStarted = false;   // becomes true after the first render so existing msgs aren't "new"
+
+    // soft notification chime via Web Audio (no asset file needed)
+    let audioCtx = null;
+    function playPing() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const now = audioCtx.currentTime;
+        // two quick gentle notes
+        [[880, 0], [1175, 0.12]].forEach(([freq, at]) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = "sine";
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.0001, now + at);
+          gain.gain.exponentialRampToValueAtTime(0.18, now + at + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + at + 0.22);
+          osc.connect(gain).connect(audioCtx.destination);
+          osc.start(now + at);
+          osc.stop(now + at + 0.24);
+        });
+      } catch (_) {}
+    }
+
     function renderChat(msgs) {
       const entries = Object.values(msgs).sort((a, b) => (a.t || 0) - (b.t || 0));
-      if (!entries.length) { chatEmpty.style.display = "block"; lastSeenCount = 0; return; }
+      if (!entries.length) { chatEmpty.style.display = "block"; lastSeenCount = 0; chatStarted = true; return; }
       chatEmpty.style.display = "none";
 
-      // count new partner messages since we last had chat open
-      if (chatOpen) {
+      const mineMsg = (m) => (m.uid && m.uid === myId) || (!m.uid && m.cid === clientId);
+
+      if (!chatStarted) {
+        // first load: show history, but don't treat any of it as new
+        lastSeenCount = entries.length;
+        chatStarted = true;
+      } else if (chatOpen) {
+        const fresh = entries.slice(lastSeenCount);
+        if (fresh.some(m => !mineMsg(m))) playPing();
         lastSeenCount = entries.length;
       } else {
         const fresh = entries.slice(lastSeenCount);
-        const fromPartner = fresh.filter(m => m.cid !== clientId).length;
-        if (fromPartner > 0) { unread += fromPartner; setBadge(); }
+        const fromPartner = fresh.filter(m => !mineMsg(m));
+        if (fromPartner.length > 0) {
+          unread += fromPartner.length; setBadge();
+          playPing();   // sound for incoming partner messages
+        }
         lastSeenCount = entries.length;
       }
 
       const wasNearBottom = chatLog.scrollHeight - chatLog.scrollTop - chatLog.clientHeight < 80;
       chatLog.innerHTML = "";
       for (const m of entries) {
-        const mine = m.cid === clientId;
+        const mine = mineMsg(m);
         const wrap = document.createElement("div");
         wrap.className = "msg" + (mine ? " mine" : "");
         wrap.innerHTML =
@@ -1097,7 +1162,7 @@
       const text = chatInput.value.trim();
       if (!text) return;
       if (!FIREBASE_READY || !chatRef) { toast("Chat needs Firebase set up first"); return; }
-      push(chatRef, { text, name: myName, cid: clientId, t: Date.now() });
+      push(chatRef, { text, name: myName, uid: myId, cid: clientId, t: Date.now() });
       chatInput.value = "";
     }
     chatSend.addEventListener("click", sendChat);
