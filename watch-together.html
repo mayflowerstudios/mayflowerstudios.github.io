@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Watch Together — Mayflower Studios</title>
   <link rel="stylesheet" href="/style.css" />
- 
+
   <style>
     .wtWrap{max-width:1100px;margin:0 auto;padding:22px}
     .glass{
@@ -27,7 +27,7 @@
       pointer-events:none;
     }
     .content{position:relative; z-index:1; padding:22px}
- 
+
     .topRow{
       display:flex; align-items:flex-start; justify-content:space-between;
       gap:14px; flex-wrap:wrap;
@@ -42,7 +42,7 @@
     }
     .title{ margin:10px 0 6px; font-size:44px; letter-spacing:.2px; line-height:1.05; }
     .sub{ margin:0; opacity:.78; line-height:1.6; max-width:70ch; }
- 
+
     .roomBar{
       display:flex; align-items:center; gap:10px; flex-wrap:wrap;
       margin-top:6px; justify-content:flex-end;
@@ -57,9 +57,9 @@
     .dot{ width:9px;height:9px;border-radius:50%; background:#facc15; box-shadow:0 0 8px rgba(250,204,21,.6); }
     .dot.on{ background:#34d399; box-shadow:0 0 8px rgba(52,211,153,.7); }
     .dot.off{ background:#fb7185; box-shadow:0 0 8px rgba(251,113,133,.6); }
- 
+
     .divider{ height:1px; background: rgba(255,255,255,.10); margin:18px 0; }
- 
+
     .controls{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
     .input{
       flex:1 1 320px; min-width:0;
@@ -70,7 +70,7 @@
     }
     .input::placeholder{ opacity:.5 }
     .input:focus{ outline:none; border-color: rgba(167,139,250,.45); }
- 
+
     .btn{
       display:inline-flex; align-items:center; justify-content:center; gap:10px;
       padding:12px 16px; border-radius:14px;
@@ -85,7 +85,7 @@
     .btn.violet{ background: rgba(167,139,250,.16); border-color: rgba(167,139,250,.28); }
     .btn.link{ background: transparent; border-color: rgba(255,255,255,.10); opacity:.92; }
     .btn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
- 
+
     .stage{
       margin-top:16px;
       border-radius:18px;
@@ -107,7 +107,7 @@
     }
     .placeholder .big{ font-size:40px; }
     .placeholder p{ opacity:.7; margin:6px 0 0; max-width:46ch; }
- 
+
     .syncBar{
       display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
       padding:12px 14px; border-top:1px solid rgba(255,255,255,.10);
@@ -115,7 +115,7 @@
     }
     .syncBar .grp{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
     .nowPlaying{ font-size:13px; opacity:.85; max-width:60ch; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
- 
+
     .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-top:16px; }
     @media (max-width:900px){ .grid2{grid-template-columns:1fr} }
     .panel{
@@ -133,7 +133,7 @@
       flex:0 0 auto; font-size:13px;
     }
     .tiny{font-size:13px;opacity:.72;margin:10px 0 0;line-height:1.55}
- 
+
     /* chat — floating popup */
     .chatFab{
       position:fixed; right:22px; bottom:22px; z-index:60;
@@ -154,7 +154,7 @@
       font-size:12px; font-weight:600; line-height:20px; text-align:center;
       border:2px solid rgba(20,16,28,.9);
     }
- 
+
     .chatPop{
       display:none;
       position:fixed; right:22px; bottom:92px; z-index:60;
@@ -183,7 +183,7 @@
       font-size:16px; opacity:.7; padding:4px 6px; border-radius:8px;
     }
     .chatClose:hover{ opacity:1; background:rgba(255,255,255,.06); }
- 
+
     .chatLog{
       flex:1 1 auto; min-height:0; overflow-y:auto;
       display:flex; flex-direction:column; gap:8px;
@@ -204,7 +204,7 @@
     @media (max-width:560px){
       .chatPop{ right:12px; left:12px; width:auto; bottom:86px; }
     }
- 
+
     /* queue */
     .queuePanel{ display:flex; flex-direction:column; }
     .queueAdd{ display:flex; gap:8px; margin-bottom:12px; }
@@ -226,7 +226,7 @@
     }
     .qMini:hover{ filter:brightness(1.15); }
     .qMini.play{ background: rgba(34,197,94,.16); border-color:rgba(34,197,94,.26); }
- 
+
     .toast{
       position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px);
       padding:11px 16px; border-radius:14px;
@@ -236,31 +236,27 @@
     }
     .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
   </style>
- 
+
   <!-- OG:START -->
-<meta name="description" content="A cozy private space to watch YouTube and videos together, perfectly in sync." />
-<meta property="og:title" content="Watch Together — Mayflower Studios" />
-<meta property="og:description" content="A cozy private space to watch YouTube and videos together, perfectly in sync." />
-<meta property="og:url" content="https://mayflowerstudios.net/watch-together.html" />
-<meta property="og:type" content="website" />
-<meta property="og:image" content="https://mayflowerstudios.net/assets/og/watch-together.png" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="Watch Together — Mayflower Studios" />
-<meta name="twitter:description" content="A cozy private space to watch YouTube and videos together, perfectly in sync." />
-<meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/watch-together.png" />
-<!-- OG:END -->
+  <meta name="description" content="A cozy private space to watch YouTube and videos together, perfectly in sync." />
+  <meta property="og:title" content="Watch Together — Mayflower Studios" />
+  <meta property="og:description" content="A cozy private space to watch YouTube and videos together, perfectly in sync." />
+  <meta property="og:url" content="https://mayflowerstudios.net/watch-together.html" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Watch Together — Mayflower Studios" />
+  <meta name="twitter:description" content="A cozy private space to watch YouTube and videos together, perfectly in sync." />
+  <!-- OG:END -->
 </head>
- 
+
 <body data-nav="server">
   <div class="wrap">
     <div id="shared-nav"></div>
- 
+
     <div class="wtWrap">
       <section class="glass">
         <div class="content">
- 
+
           <div class="topRow">
             <div>
               <div class="kicker">🌙 Just the two of us • 📺 Watch Together</div>
@@ -270,15 +266,15 @@
                 play, pause, and skip carry across to the other person automatically.
               </p>
             </div>
- 
+
             <div class="roomBar">
               <span class="pillStat"><span class="dot" id="connDot"></span><span id="connText">Connecting…</span></span>
               <span class="pillStat" id="roomStat">Room: <strong id="roomName" style="margin-left:4px">cozy</strong></span>
             </div>
           </div>
- 
+
           <div class="divider"></div>
- 
+
           <div class="controls">
             <input class="input" id="urlInput" type="text"
                    placeholder="Paste a YouTube link or video URL…"
@@ -286,7 +282,7 @@
             <button class="btn primary" id="loadBtn">▶ Load &amp; Sync</button>
             <button class="btn link" id="copyRoomBtn">🔗 Copy room link</button>
           </div>
- 
+
           <div class="stage">
             <div class="videoBox" id="videoBox">
               <div id="ytplayer"></div>
@@ -297,7 +293,7 @@
                 <p>Paste a YouTube link or a direct video URL above and hit <strong>Load &amp; Sync</strong>. Whatever one of you starts, the other sees too.</p>
               </div>
             </div>
- 
+
             <div class="syncBar">
               <div class="grp">
                 <button class="btn violet" id="resyncBtn" title="Snap to the other person's position">🔄 Resync to partner</button>
@@ -306,7 +302,7 @@
               <div class="nowPlaying" id="nowPlaying">No video loaded</div>
             </div>
           </div>
- 
+
           <div class="panel queuePanel" style="margin-top:16px">
             <h2>🎞️ Up Next</h2>
             <div class="queueAdd">
@@ -318,7 +314,7 @@
               <p class="queueEmpty" id="queueEmpty">Queue's empty — add something to watch next.</p>
             </div>
           </div>
- 
+
           <div class="grid2">
             <div class="panel">
               <h2>How it works</h2>
@@ -330,7 +326,7 @@
               </div>
               <p class="tiny">Hop on a Discord call too if you want to chat while you watch 💬</p>
             </div>
- 
+
             <div class="panel">
               <h2>Private rooms</h2>
               <p class="sub" style="font-size:14px">
@@ -342,21 +338,21 @@
               </p>
             </div>
           </div>
- 
+
         </div>
       </section>
     </div>
- 
+
     <div id="shared-footer"></div>
   </div>
- 
+
   <div class="toast" id="toast"></div>
- 
+
   <!-- Floating chat -->
   <button class="chatFab" id="chatFab" aria-label="Open chat">
     💬<span class="chatBadge" id="chatBadge" hidden>0</span>
   </button>
- 
+
   <div class="chatPop" id="chatPop">
     <div class="chatPopHead">
       <strong>💬 Chat</strong>
@@ -371,7 +367,7 @@
       <button class="btn violet" id="chatSend">Send</button>
     </div>
   </div>
- 
+
   <script src="/shared.js"></script>
   <script src="fireflies.js"></script>
 
@@ -775,12 +771,12 @@
     }
     function openChat() {
       chatOpen = true;
-      chatPop.hidden = false;
+      chatPop.classList.add("open");
       unread = 0; setBadge();
       chatLog.scrollTop = chatLog.scrollHeight;
       setTimeout(() => chatInput.focus(), 50);
     }
-    function closeChat() { chatOpen = false; chatPop.hidden = true; }
+    function closeChat() { chatOpen = false; chatPop.classList.remove("open"); }
     chatFab.addEventListener("click", () => chatOpen ? closeChat() : openChat());
     chatClose.addEventListener("click", closeChat);
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && chatOpen) closeChat(); });
