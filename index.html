@@ -293,6 +293,16 @@ section + section { padding-top: 40px; }
 .server-side-card h3 { font-size: 20px; margin-bottom: 4px; }
 .server-side-card p { font-size: 13.5px; color: var(--text-2); flex: 1; }
 
+.wt-launch { display: flex; flex-direction: column; gap: 10px; }
+.wt-room-input {
+  font-family: var(--font-body); font-size: 13px;
+  padding: 9px 14px; border-radius: var(--r-md);
+  border: 1px solid var(--border-2); background: rgba(0,0,0,.2);
+  color: var(--text); width: 100%;
+}
+.wt-room-input::placeholder { color: var(--text-3); }
+.wt-room-input:focus { outline: none; border-color: rgba(196,181,253,.45); }
+
 /* ── COMMUNITY ── */
 .community-grid {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
@@ -593,6 +603,17 @@ footer {
               <a href="calendar.html" class="link-pill primary">View Calendar</a>
             </div>
           </div>
+          <div class="server-side-card">
+            <h3>📺 Watch Together</h3>
+            <p>Start a private room and watch YouTube or videos in sync — with chat, a shared queue, and who's watching. Just you and whoever you invite.</p>
+            <div class="wt-launch">
+              <input id="wtRoom" class="wt-room-input" type="text" placeholder="room name (optional)" autocomplete="off" spellcheck="false" maxlength="40" />
+              <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                <button class="link-pill primary" id="wtStartBtn" type="button">Start Room</button>
+                <a href="watch-together.html" class="link-pill">Open</a>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -618,6 +639,12 @@ footer {
           <h3>Movie Nights</h3>
           <p>Cozy SyncPlay watch parties. Guest access — no account needed. Show up and vibe.</p>
           <a href="movienight.html" class="btn-ghost">See Info</a>
+        </div>
+        <div class="comm-card">
+          <div class="comm-card-icon">📺</div>
+          <h3>Watch Together</h3>
+          <p>Start a private room to watch YouTube or videos perfectly in sync — with chat and a shared queue.</p>
+          <a href="watch-together.html" class="btn-ghost">Start a Room</a>
         </div>
         <div class="comm-card">
           <div class="comm-card-icon">🌙</div>
@@ -739,6 +766,23 @@ footer {
       setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
     });
   }
+
+  // ── Watch Together room launcher ──
+  (function () {
+    const btn = document.getElementById('wtStartBtn');
+    const input = document.getElementById('wtRoom');
+    if (!btn || !input) return;
+    function go() {
+      let room = (input.value || '').replace(/[.#$\[\]\/]/g, '').trim().slice(0, 40);
+      if (!room) {
+        // fresh private room if none given
+        room = 'r-' + Math.random().toString(36).slice(2, 8);
+      }
+      window.location.href = 'watch-together.html?room=' + encodeURIComponent(room);
+    }
+    btn.addEventListener('click', go);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+  })();
 
   // ── Scroll reveal ──
   const observer = new IntersectionObserver(entries => {
