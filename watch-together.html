@@ -58,6 +58,22 @@
     .dot.on{ background:#34d399; box-shadow:0 0 8px rgba(52,211,153,.7); }
     .dot.off{ background:#fb7185; box-shadow:0 0 8px rgba(251,113,133,.6); }
 
+    .namePill{ padding-top:3px; padding-bottom:3px; }
+    .nameInput{
+      width:96px; background:transparent; border:0; color:inherit;
+      font-size:13px; padding:2px 0; border-bottom:1px solid rgba(255,255,255,.18);
+    }
+    .nameInput:focus{ outline:none; border-bottom-color: rgba(167,139,250,.6); }
+    .nameInput::placeholder{ opacity:.5 }
+
+    .hostTag{
+      font-size:13px; opacity:.9;
+      padding:7px 12px; border-radius:999px;
+      border:1px solid rgba(167,139,250,.26);
+      background: rgba(167,139,250,.14);
+      display:inline-flex; align-items:center; gap:6px;
+    }
+
     .divider{ height:1px; background: rgba(255,255,255,.10); margin:18px 0; }
 
     .controls{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
@@ -205,6 +221,23 @@
       .chatPop{ right:12px; left:12px; width:auto; bottom:86px; }
     }
 
+    /* watching now */
+    .watchingPanel h2{ display:flex; align-items:center; gap:8px; }
+    .whoCount{ font-size:12px; opacity:.6; font-weight:normal; }
+    .whoList{ display:flex; flex-wrap:wrap; gap:8px; }
+    .whoItem{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:7px 12px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      font-size:14px;
+    }
+    .whoDot{
+      width:8px; height:8px; border-radius:50%;
+      background:#34d399; box-shadow:0 0 8px rgba(52,211,153,.7);
+    }
+    .whoName{ opacity:.92; }
+
     /* queue */
     .queuePanel{ display:flex; flex-direction:column; }
     .queueAdd{ display:flex; gap:8px; margin-bottom:12px; }
@@ -274,6 +307,10 @@
             <div class="roomBar">
               <span class="pillStat"><span class="dot" id="connDot"></span><span id="connText">Connecting…</span></span>
               <span class="pillStat" id="roomStat">Room: <strong id="roomName" style="margin-left:4px">cozy</strong></span>
+              <span class="pillStat namePill">You:
+                <input id="nameInput" class="nameInput" type="text" maxlength="24"
+                       placeholder="your name" autocomplete="off" spellcheck="false" />
+              </span>
             </div>
           </div>
 
@@ -300,11 +337,16 @@
 
             <div class="syncBar">
               <div class="grp">
-                <button class="btn violet" id="resyncBtn" title="Snap to the other person's position">🔄 Resync to partner</button>
-                <button class="btn link" id="leaderBtn" title="Take control of playback">🎬 I'm steering</button>
+                <button class="btn violet" id="resyncBtn" title="Snap to the other person's position">🔄 Resync</button>
+                <span class="hostTag" id="hostTag" hidden>🎬 <span id="hostName"></span> is hosting</span>
               </div>
               <div class="nowPlaying" id="nowPlaying">No video loaded</div>
             </div>
+          </div>
+
+          <div class="panel watchingPanel" style="margin-top:16px">
+            <h2>👥 Watching now <span class="whoCount" id="presenceCount">…</span></h2>
+            <div class="whoList" id="presenceList"></div>
           </div>
 
           <div class="panel queuePanel" style="margin-top:16px">
@@ -323,9 +365,9 @@
             <div class="panel">
               <h2>How it works</h2>
               <div class="steps">
-                <div class="step"><div class="num">1</div><div>Open this page on both your devices — same room (it's <strong>cozy</strong> by default).</div></div>
-                <div class="step"><div class="num">2</div><div>One of you pastes a YouTube link and hits <strong>Load &amp; Sync</strong>.</div></div>
-                <div class="step"><div class="num">3</div><div>Play / pause / seek — it mirrors to the other side within a second.</div></div>
+                <div class="step"><div class="num">1</div><div>Set your name (top right) and open this page on both devices — same room (it's <strong>cozy</strong> by default).</div></div>
+                <div class="step"><div class="num">2</div><div>Either of you pastes a link and hits <strong>Load &amp; Sync</strong>.</div></div>
+                <div class="step"><div class="num">3</div><div>Either person can play / pause / seek — it mirrors to the other side, and shows who's hosting.</div></div>
                 <div class="step"><div class="num">4</div><div>Drifted apart? Either of you taps <strong>Resync</strong> to snap back together.</div></div>
               </div>
               <p class="tiny">Hop on a Discord call too if you want to chat while you watch 💬</p>
@@ -403,7 +445,9 @@
     const loadBtn = $("loadBtn");
     const copyRoomBtn = $("copyRoomBtn");
     const resyncBtn = $("resyncBtn");
-    const leaderBtn = $("leaderBtn");
+    const hostTag = $("hostTag");
+    const hostName = $("hostName");
+    const nameInput = $("nameInput");
     const placeholder = $("placeholder");
     const nowPlaying = $("nowPlaying");
     const connDot = $("connDot");
@@ -422,6 +466,8 @@
     const queueAddBtn = $("queueAddBtn");
     const queueList = $("queueList");
     const queueEmpty = $("queueEmpty");
+    const presenceList = $("presenceList");
+    const presenceCount = $("presenceCount");
 
     // ---- Room ----
     const params = new URLSearchParams(location.search);
@@ -482,9 +528,10 @@
     // ============================================================
     let player = null, playerReady = false, pendingState = null;
     let applyingRemote = false;     // guard so remote-driven changes don't echo
-    let isLeader = false;           // who is steering
+    let lastHostId = null;          // clientId of whoever last drove playback
     let currentKind = null;         // "yt" | "file"
     let currentSrc = null;          // current yt id or file url
+    let currentTitle = null;        // resolved display title
 
     const fileVid = $("filevid");
     const ytEl = $("ytplayer");
@@ -512,15 +559,15 @@
     })();
 
     function onPlayerStateChange(e) {
-      if (applyingRemote || !isLeader || currentKind !== "yt") return;
+      if (applyingRemote || currentKind !== "yt") return;
       if (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.PAUSED) {
         broadcast(e.data === YT.PlayerState.PLAYING ? "playing" : "paused");
       }
     }
 
-    // native <video> -> broadcast on play/pause/seek when steering
+    // native <video> -> broadcast on play/pause/seek (anyone can control)
     function fileEvent() {
-      if (applyingRemote || !isLeader || currentKind !== "file") return;
+      if (applyingRemote || currentKind !== "file") return;
       broadcast(fileVid.paused ? "paused" : "playing");
     }
     fileVid.addEventListener("play",  fileEvent);
@@ -534,6 +581,7 @@
     //  Sync layer
     // ============================================================
     let db = null, stateRef = null;
+    let presenceRef = null, myPresRef = null;
 
     // current playback position for whichever player is active
     function getPos() {
@@ -560,6 +608,12 @@
 
       if (kind === "yt" && !playerReady) { pendingState = s; return; }
 
+      // update who's hosting (the partner, since this is a remote state)
+      if (s.by && s.by !== clientId) {
+        lastHostId = s.by;
+        updateHostTag(s.byName || "Partner", false);
+      }
+
       applyingRemote = true;
       try {
         if (kind === "yt") {
@@ -567,8 +621,8 @@
           const cur = player.getVideoData ? player.getVideoData().video_id : null;
           if (cur !== src) {
             placeholder.style.display = "none";
-            nowPlaying.textContent = "▶ " + src;
             currentSrc = src;
+            setNowPlaying("yt", src, s.title);
             player.loadVideoById({ videoId: src, startSeconds: estimatePos(s) });
             if (s.status !== "playing") setTimeout(() => { try{player.pauseVideo();}catch(_){} }, 350);
           } else {
@@ -581,7 +635,7 @@
           placeholder.style.display = "none";
           if (currentSrc !== src) {
             currentSrc = src;
-            nowPlaying.textContent = "▶ " + shortName(src);
+            setNowPlaying("file", src, s.title);
             fileVid.src = src;
             const start = estimatePos(s);
             const onMeta = () => {
@@ -614,32 +668,114 @@
     }
 
     function shortName(url) {
-      try { return decodeURIComponent(new URL(url).pathname.split("/").pop()) || url; }
-      catch (_) { return url; }
+      try {
+        let f = decodeURIComponent(new URL(url).pathname.split("/").pop()) || url;
+        f = f.replace(/\.[a-z0-9]{2,4}$/i, "");        // drop extension
+        f = f.replace(/[._-]+/g, " ").trim();          // tidy separators
+        return f || url;
+      } catch (_) { return url; }
+    }
+
+    // set the "now playing" line; for YouTube, look up the real title async
+    const titleCache = {};
+    function setNowPlaying(kind, src, knownTitle) {
+      if (knownTitle) { currentTitle = knownTitle; nowPlaying.textContent = "▶ " + knownTitle; return; }
+      if (kind === "file") {
+        currentTitle = shortName(src);
+        nowPlaying.textContent = "▶ " + currentTitle;
+        return;
+      }
+      // YouTube: temporary fallback, then resolve
+      currentTitle = null;
+      nowPlaying.textContent = "▶ Loading…";
+      if (titleCache[src]) {
+        currentTitle = titleCache[src];
+        nowPlaying.textContent = "▶ " + currentTitle;
+        return;
+      }
+      fetch("https://www.youtube.com/oembed?format=json&url=https://www.youtube.com/watch?v=" + encodeURIComponent(src))
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          if (d && d.title && currentSrc === src) {
+            titleCache[src] = d.title;
+            currentTitle = d.title;
+            nowPlaying.textContent = "▶ " + d.title;
+          } else if (currentSrc === src) {
+            nowPlaying.textContent = "▶ " + src;
+          }
+        })
+        .catch(() => { if (currentSrc === src) nowPlaying.textContent = "▶ " + src; });
     }
 
     function broadcast(status) {
       if (!FIREBASE_READY || !stateRef || !currentKind || !currentSrc) return;
+      lastHostId = clientId;
+      updateHostTag(myName, true);
       set(stateRef, {
         kind: currentKind,
         src: currentSrc,
+        title: currentTitle || null,
         status,
         position: getPos(),
         updatedAt: Date.now(),
         by: clientId,
+        byName: myName,
       });
+    }
+
+    function updateHostTag(name, isMe) {
+      if (!name) { hostTag.hidden = true; return; }
+      hostTag.hidden = false;
+      hostName.textContent = isMe ? "You" : name;
+    }
+
+    function renderPresence(val) {
+      const ids = Object.keys(val || {});
+      const n = ids.length;
+      if (n <= 1) setConn("on", "Connected · waiting for partner");
+      else setConn("on", `Connected · ${n} here`);
+
+      // sort: you first, then by join time
+      const people = ids.map(id => ({
+        id,
+        name: (val[id] && val[id].name) || "Guest",
+        t: (val[id] && val[id].t) || 0,
+        me: id === clientId,
+      })).sort((a, b) => (b.me - a.me) || (a.t - b.t));
+
+      presenceList.innerHTML = "";
+      for (const p of people) {
+        const row = document.createElement("div");
+        row.className = "whoItem";
+        row.innerHTML =
+          `<span class="whoDot"></span>` +
+          `<span class="whoName">${escapeHtml(p.name)}${p.me ? " (you)" : ""}</span>`;
+        presenceList.appendChild(row);
+      }
+      presenceCount.textContent = n === 1 ? "1 here" : n + " here";
     }
 
     // ---- presence + state listeners ----
     const clientId = Math.random().toString(36).slice(2, 9);
     let chatRef = null, queueRef = null;
 
-    // a friendly name so you can tell who's who in chat
-    let myName = localStorage.getItem("wt_name");
-    if (!myName) {
-      myName = (prompt("What name should show in chat?") || "").trim().slice(0, 24) || "Guest";
+    // a friendly name so you can tell who's who — editable from the page
+    let myName = (localStorage.getItem("wt_name") || "").slice(0, 24) || "Guest";
+    nameInput.value = myName === "Guest" ? "" : myName;
+
+    function saveName() {
+      const v = (nameInput.value || "").trim().slice(0, 24);
+      myName = v || "Guest";
       localStorage.setItem("wt_name", myName);
     }
+    nameInput.addEventListener("input", saveName);
+    nameInput.addEventListener("blur", () => {
+      saveName();
+      // reflect the new name in the presence list for everyone
+      if (myPresRef) set(myPresRef, { name: myName, t: Date.now() });
+      // if we're currently the host, refresh the broadcast so partner sees the new name
+      if (lastHostId === clientId && currentKind) broadcast(isPlayingNow() ? "playing" : "paused");
+    });
 
     function escapeHtml(s) {
       return String(s).replace(/[&<>"']/g, c =>
@@ -656,18 +792,19 @@
         db = getDatabase(app);
         stateRef = ref(db, `watch/${ROOM}/state`);
         const presRef = ref(db, `watch/${ROOM}/presence/${clientId}`);
+        myPresRef = presRef;
 
-        set(presRef, true);
+        set(presRef, { name: myName, t: Date.now() });
         onDisconnect(presRef).remove();
 
         onValue(ref(db, ".info/connected"), (snap) => {
-          if (snap.val() === true) { set(presRef, true); onDisconnect(presRef).remove(); }
+          if (snap.val() === true) { set(presRef, { name: myName, t: Date.now() }); onDisconnect(presRef).remove(); }
         });
 
-        onValue(ref(db, `watch/${ROOM}/presence`), (snap) => {
-          const n = snap.exists() ? Object.keys(snap.val()).length : 0;
-          if (n <= 1) setConn("on", "Connected · waiting for partner");
-          else setConn("on", `Connected · ${n} here`);
+        presenceRef = ref(db, `watch/${ROOM}/presence`);
+        onValue(presenceRef, (snap) => {
+          const val = snap.exists() ? snap.val() : {};
+          renderPresence(val);
         });
 
         onValue(stateRef, (snap) => {
@@ -695,8 +832,8 @@
     }
     startFirebase();
 
-    // periodic drift-correct from leader so seeks stay tight
-    setInterval(() => { if (isLeader && currentKind) {
+    // periodic drift-correct from the active host so seeks stay tight
+    setInterval(() => { if (lastHostId === clientId && currentKind) {
       try { if (isPlayingNow()) broadcast("playing"); } catch(_){}
     }}, 5000);
 
@@ -712,19 +849,20 @@
 
     // shared loader used by the URL box and the queue
     function startSource(parsed) {
-      isLeader = true; leaderBtn.classList.add("violet");
       placeholder.style.display = "none";
       currentSrc = parsed.src;
       applyingRemote = false;
+      lastHostId = clientId;
+      updateHostTag(myName, true);
 
       if (parsed.kind === "yt") {
         showPlayer("yt");
-        nowPlaying.textContent = "▶ " + parsed.src;
+        setNowPlaying("yt", parsed.src);
         if (playerReady) player.loadVideoById(parsed.src);
         else pendingState = { kind: "yt", src: parsed.src, status: "playing", position: 0, updatedAt: Date.now() };
       } else {
         showPlayer("file");
-        nowPlaying.textContent = "▶ " + shortName(parsed.src);
+        setNowPlaying("file", parsed.src);
         fileVid.src = parsed.src;
         fileVid.load();
         fileVid.play().catch(()=>{});
@@ -740,16 +878,8 @@
       const snap = await get(stateRef);
       const s = snap.val();
       if (!s) { toast("Nothing to resync to yet"); return; }
-      isLeader = false; leaderBtn.classList.remove("violet");
       applyState(s, true);
-      toast("Snapped to your partner 🔄");
-    });
-
-    leaderBtn.addEventListener("click", () => {
-      isLeader = !isLeader;
-      leaderBtn.classList.toggle("violet", isLeader);
-      toast(isLeader ? "You're steering 🎬" : "Following your partner");
-      if (isLeader) broadcast(isPlayingNow() ? "playing" : "paused");
+      toast("Snapped to the latest 🔄");
     });
 
     copyRoomBtn.addEventListener("click", async () => {
