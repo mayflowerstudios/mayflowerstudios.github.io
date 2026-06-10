@@ -260,6 +260,61 @@
     .qMini:hover{ filter:brightness(1.15); }
     .qMini.play{ background: rgba(34,197,94,.16); border-color:rgba(34,197,94,.26); }
 
+    /* mini ghost button used in panel headers */
+    .miniGhost{
+      font-size:12px; font-weight:500; margin-left:auto;
+      padding:5px 11px; border-radius:999px; cursor:pointer;
+      border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05);
+      color:inherit; transition:filter .12s ease, background .12s ease;
+    }
+    .miniGhost:hover{ background:rgba(255,255,255,.10); }
+    .playlistPanel h2, .roomsPanel h2, .queuePanel h2{ display:flex; align-items:center; gap:8px; }
+
+    /* playlists */
+    .playlistPanel{ display:flex; flex-direction:column; }
+    .plList{ display:flex; flex-direction:column; gap:8px; }
+    .plItem{
+      border:1px solid rgba(255,255,255,.10); border-radius:14px;
+      background: rgba(255,255,255,.04); overflow:hidden;
+    }
+    .plHead{
+      display:flex; align-items:center; gap:10px; padding:10px 12px; cursor:pointer;
+    }
+    .plHead:hover{ background:rgba(255,255,255,.03); }
+    .plCaret{ flex:0 0 auto; opacity:.6; transition:transform .15s ease; font-size:12px; }
+    .plItem.open .plCaret{ transform:rotate(90deg); }
+    .plName{ flex:1 1 auto; min-width:0; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .plCount{ font-size:12px; opacity:.55; flex:0 0 auto; }
+    .plBtns{ display:flex; gap:6px; flex:0 0 auto; }
+    .plBody{ display:none; padding:4px 12px 12px; border-top:1px solid rgba(255,255,255,.08); }
+    .plItem.open .plBody{ display:block; }
+    .plRow{
+      display:flex; align-items:center; gap:8px; padding:6px 0;
+      font-size:13px; border-bottom:1px solid rgba(255,255,255,.05);
+    }
+    .plRow:last-child{ border-bottom:0; }
+    .plRow .t{ flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; opacity:.85; }
+    .plAdd{ display:flex; gap:8px; margin-top:8px; }
+    .plAdd .input{ flex:1 1 auto; font-size:13px; padding:8px 12px; }
+
+    /* saved rooms */
+    .roomsPanel{ display:flex; flex-direction:column; }
+    .roomsList{ display:flex; flex-wrap:wrap; gap:8px; }
+    .roomChip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:7px 8px 7px 13px; border-radius:999px;
+      border:1px solid rgba(167,139,250,.24); background:rgba(167,139,250,.12);
+      font-size:13px;
+    }
+    .roomChip.current{ border-color:rgba(52,211,153,.3); background:rgba(52,211,153,.12); }
+    .roomChip a{ color:inherit; }
+    .roomChip .x{
+      width:20px; height:20px; border-radius:50%; display:grid; place-items:center;
+      border:1px solid rgba(255,255,255,.16); background:rgba(0,0,0,.2);
+      cursor:pointer; font-size:11px; opacity:.7;
+    }
+    .roomChip .x:hover{ opacity:1; }
+
     .toast{
       position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px);
       padding:11px 16px; border-radius:14px;
@@ -350,7 +405,7 @@
           </div>
 
           <div class="panel queuePanel" style="margin-top:16px">
-            <h2>🎞️ Up Next</h2>
+            <h2>🎞️ Up Next <button class="miniGhost" id="queueSaveBtn" title="Save this queue as a playlist">💾 Save as playlist</button></h2>
             <div class="queueAdd">
               <input class="input" id="queueInput" type="text"
                      placeholder="Paste a YouTube or video link to queue…" autocomplete="off" spellcheck="false" />
@@ -358,6 +413,30 @@
             </div>
             <div class="queueList" id="queueList">
               <p class="queueEmpty" id="queueEmpty">Queue's empty — add something to watch next.</p>
+            </div>
+          </div>
+
+          <div class="panel playlistPanel" style="margin-top:16px">
+            <h2>📚 Playlists</h2>
+            <div class="queueAdd">
+              <input class="input" id="playlistName" type="text"
+                     placeholder="New playlist name…" autocomplete="off" maxlength="60" />
+              <button class="btn" id="playlistCreateBtn">＋ Create</button>
+            </div>
+            <div class="queueAdd" style="margin-top:-4px">
+              <input class="input" id="ytImportInput" type="text"
+                     placeholder="Import a YouTube playlist URL…" autocomplete="off" spellcheck="false" />
+              <button class="btn" id="ytImportBtn">⬇ Import</button>
+            </div>
+            <div class="plList" id="plList">
+              <p class="queueEmpty" id="plEmpty">No playlists yet — create one or save your queue.</p>
+            </div>
+          </div>
+
+          <div class="panel roomsPanel" style="margin-top:16px">
+            <h2>⭐ Saved Rooms <button class="miniGhost" id="roomSaveBtn" title="Save the current room">💾 Save this room</button></h2>
+            <div class="roomsList" id="roomsList">
+              <p class="queueEmpty" id="roomsEmpty">No saved rooms yet — save this one to come back to it.</p>
             </div>
           </div>
 
@@ -468,6 +547,16 @@
     const queueEmpty = $("queueEmpty");
     const presenceList = $("presenceList");
     const presenceCount = $("presenceCount");
+    const queueSaveBtn = $("queueSaveBtn");
+    const playlistName = $("playlistName");
+    const playlistCreateBtn = $("playlistCreateBtn");
+    const ytImportInput = $("ytImportInput");
+    const ytImportBtn = $("ytImportBtn");
+    const plList = $("plList");
+    const plEmpty = $("plEmpty");
+    const roomSaveBtn = $("roomSaveBtn");
+    const roomsList = $("roomsList");
+    const roomsEmpty = $("roomsEmpty");
 
     // ---- Room ----
     const params = new URLSearchParams(location.search);
@@ -758,6 +847,8 @@
     // ---- presence + state listeners ----
     const clientId = Math.random().toString(36).slice(2, 9);
     let chatRef = null, queueRef = null;
+    let playlistsRef = null, roomIndexRef = null;
+    let playlistsCache = {};
 
     // a friendly name so you can tell who's who — editable from the page
     let myName = (localStorage.getItem("wt_name") || "").slice(0, 24) || "Guest";
@@ -824,6 +915,18 @@
         queueRef = ref(db, `watch/${ROOM}/queue`);
         onValue(queueRef, (snap) => {
           renderQueue(snap.val() || {});
+        });
+
+        // --- playlists (per room) ---
+        playlistsRef = ref(db, `watch/${ROOM}/playlists`);
+        onValue(playlistsRef, (snap) => {
+          renderPlaylists(snap.val() || {});
+        });
+
+        // --- saved rooms (global index, visible from any room) ---
+        roomIndexRef = ref(db, `roomIndex`);
+        onValue(roomIndexRef, (snap) => {
+          renderRooms(snap.val() || {});
         });
       } catch (err) {
         console.error(err);
@@ -1013,6 +1116,238 @@
       if (!queueRef) return;
       remove(ref(db, `watch/${ROOM}/queue/${key}`));
     }
+
+    // ============================================================
+    //  Playlists (saved per room, shared)
+    // ============================================================
+    // Optional: paste a YouTube Data API key here to enable importing
+    // full YouTube playlists by URL. Without it, single videos still work.
+    const YT_API_KEY = "";
+
+    function renderPlaylists(data) {
+      playlistsCache = data || {};
+      const entries = Object.entries(playlistsCache).sort((a, b) => (a[1].t || 0) - (b[1].t || 0));
+      plList.innerHTML = "";
+      if (!entries.length) { plList.appendChild(plEmpty); plEmpty.style.display = "block"; return; }
+      plEmpty.style.display = "none";
+
+      for (const [pid, pl] of entries) {
+        const items = pl.items || {};
+        const itemEntries = Object.entries(items).sort((a, b) => (a[1].t || 0) - (b[1].t || 0));
+        const wrap = document.createElement("div");
+        wrap.className = "plItem";
+        const itemRows = itemEntries.map(([iid, it]) => {
+          const kind = it.kind || "yt";
+          const label = it.title || (kind === "yt" ? it.src : shortName(it.src));
+          return `<div class="plRow">
+              <span class="t">${escapeHtml(label)}</span>
+              <button class="qMini play" data-play-item="${pid}:${iid}" title="Play now">▶</button>
+              <button class="qMini" data-del-item="${pid}:${iid}" title="Remove">✕</button>
+            </div>`;
+        }).join("") || `<p class="tiny" style="margin:6px 0">Empty — add links below.</p>`;
+
+        wrap.innerHTML =
+          `<div class="plHead" data-toggle="${pid}">
+             <span class="plCaret">▶</span>
+             <span class="plName">${escapeHtml(pl.name || "Untitled")}</span>
+             <span class="plCount">${itemEntries.length}</span>
+             <span class="plBtns">
+               <button class="qMini play" data-load="${pid}" title="Load into queue & play">⏵ Play all</button>
+               <button class="qMini" data-queue="${pid}" title="Add all to queue">＋</button>
+               <button class="qMini" data-del-pl="${pid}" title="Delete playlist">🗑</button>
+             </span>
+           </div>
+           <div class="plBody">
+             ${itemRows}
+             <div class="plAdd">
+               <input class="input" type="text" placeholder="Add a link to this playlist…" data-add-input="${pid}" autocomplete="off" spellcheck="false" />
+               <button class="btn" data-add-btn="${pid}">＋ Add</button>
+             </div>
+           </div>`;
+        plList.appendChild(wrap);
+      }
+
+      // wire interactions
+      plList.querySelectorAll("[data-toggle]").forEach(h =>
+        h.addEventListener("click", (e) => {
+          if (e.target.closest(".plBtns")) return; // don't toggle when clicking buttons
+          h.parentElement.classList.toggle("open");
+        }));
+      plList.querySelectorAll("[data-load]").forEach(b =>
+        b.addEventListener("click", () => loadPlaylist(b.dataset.load, true)));
+      plList.querySelectorAll("[data-queue]").forEach(b =>
+        b.addEventListener("click", () => loadPlaylist(b.dataset.queue, false)));
+      plList.querySelectorAll("[data-del-pl]").forEach(b =>
+        b.addEventListener("click", () => deletePlaylist(b.dataset.delPl)));
+      plList.querySelectorAll("[data-play-item]").forEach(b =>
+        b.addEventListener("click", () => { const [pid, iid] = b.dataset.playItem.split(":"); playPlaylistItem(pid, iid); }));
+      plList.querySelectorAll("[data-del-item]").forEach(b =>
+        b.addEventListener("click", () => { const [pid, iid] = b.dataset.delItem.split(":"); removePlaylistItem(pid, iid); }));
+      plList.querySelectorAll("[data-add-btn]").forEach(b =>
+        b.addEventListener("click", () => {
+          const pid = b.dataset.addBtn;
+          const input = plList.querySelector(`[data-add-input="${pid}"]`);
+          addToPlaylist(pid, input.value); input.value = "";
+        }));
+      plList.querySelectorAll("[data-add-input]").forEach(inp =>
+        inp.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") { addToPlaylist(inp.dataset.addInput, inp.value); inp.value = ""; }
+        }));
+    }
+
+    function createPlaylist(name, initialItems) {
+      if (!FIREBASE_READY || !playlistsRef) { toast("Needs Firebase set up first"); return null; }
+      const name2 = (name || "").trim().slice(0, 60) || "Playlist";
+      const items = {};
+      (initialItems || []).forEach(it => {
+        const id = "i" + Math.random().toString(36).slice(2, 9);
+        items[id] = { kind: it.kind, src: it.src, title: it.title || null, t: Date.now() + Object.keys(items).length };
+      });
+      const node = push(playlistsRef, { name: name2, t: Date.now(), items });
+      return node.key;
+    }
+
+    function deletePlaylist(pid) {
+      if (!playlistsRef) return;
+      remove(ref(db, `watch/${ROOM}/playlists/${pid}`));
+      toast("Playlist deleted");
+    }
+
+    function addToPlaylist(pid, link, title) {
+      const parsed = parseSource(link);
+      if (!parsed) { toast("Couldn't read that link"); return; }
+      const id = "i" + Math.random().toString(36).slice(2, 9);
+      set(ref(db, `watch/${ROOM}/playlists/${pid}/items/${id}`),
+          { kind: parsed.kind, src: parsed.src, title: title || null, t: Date.now() });
+      toast("Added to playlist 📚");
+    }
+
+    function removePlaylistItem(pid, iid) {
+      remove(ref(db, `watch/${ROOM}/playlists/${pid}/items/${iid}`));
+    }
+
+    function playlistItemsSorted(pid) {
+      const pl = playlistsCache[pid];
+      if (!pl || !pl.items) return [];
+      return Object.values(pl.items).sort((a, b) => (a.t || 0) - (b.t || 0));
+    }
+
+    // load a playlist into the queue; if play=true, start the first item now
+    function loadPlaylist(pid, play) {
+      const items = playlistItemsSorted(pid);
+      if (!items.length) { toast("That playlist is empty"); return; }
+      if (!queueRef) { toast("Needs Firebase set up first"); return; }
+      let list = items.slice();
+      if (play) {
+        const first = list.shift();
+        startSource({ kind: first.kind, src: first.src });
+      }
+      // push the rest onto the queue
+      list.forEach((it, i) =>
+        push(queueRef, { kind: it.kind, src: it.src, title: it.title || null, t: Date.now() + i, by: myName }));
+      toast(play ? "Playing playlist ▶" : "Added playlist to queue 🎞️");
+    }
+
+    function playPlaylistItem(pid, iid) {
+      const it = (playlistsCache[pid] && playlistsCache[pid].items || {})[iid];
+      if (!it) return;
+      startSource({ kind: it.kind, src: it.src });
+    }
+
+    // header buttons
+    playlistCreateBtn.addEventListener("click", () => {
+      const n = playlistName.value.trim();
+      if (!n) { toast("Give the playlist a name"); return; }
+      createPlaylist(n, []);
+      playlistName.value = "";
+      toast("Playlist created 📚");
+    });
+    playlistName.addEventListener("keydown", (e) => { if (e.key === "Enter") playlistCreateBtn.click(); });
+
+    queueSaveBtn.addEventListener("click", () => {
+      const items = Object.values(queueCache)
+        .sort((a, b) => (a.t || 0) - (b.t || 0))
+        .map(it => ({ kind: it.kind || (it.videoId ? "yt" : "file"), src: it.src || it.videoId, title: it.title || null }));
+      if (!items.length) { toast("Queue is empty"); return; }
+      const name = (prompt("Name this playlist:", "My playlist") || "").trim();
+      if (!name) return;
+      createPlaylist(name, items);
+      toast("Saved queue as playlist 📚");
+    });
+
+    // ============================================================
+    //  YouTube playlist import
+    // ============================================================
+    function parsePlaylistId(input) {
+      if (!input) return null;
+      try { const u = new URL(input.trim()); const l = u.searchParams.get("list"); if (l) return l; } catch (_) {}
+      const m = String(input).match(/[?&]list=([\w-]+)/);
+      return m ? m[1] : null;
+    }
+
+    async function importYouTubePlaylist(url) {
+      const listId = parsePlaylistId(url);
+      if (!listId) { toast("That doesn't look like a YouTube playlist URL"); return; }
+      if (!YT_API_KEY) {
+        toast("YouTube import needs an API key — see the note in the code");
+        return;
+      }
+      toast("Importing playlist…");
+      try {
+        let items = [], pageToken = "", playlistTitle = "Imported playlist", guard = 0;
+        do {
+          const u = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId="
+            + encodeURIComponent(listId) + "&key=" + YT_API_KEY + (pageToken ? "&pageToken=" + pageToken : "");
+          const r = await fetch(u);
+          if (!r.ok) throw new Error("api");
+          const d = await r.json();
+          (d.items || []).forEach(it => {
+            const vid = it.snippet && it.snippet.resourceId && it.snippet.resourceId.videoId;
+            if (vid) items.push({ kind: "yt", src: vid, title: (it.snippet && it.snippet.title) || null });
+          });
+          pageToken = d.nextPageToken || "";
+        } while (pageToken && ++guard < 20);
+
+        if (!items.length) { toast("No videos found in that playlist"); return; }
+        createPlaylist(playlistTitle, items);
+        toast(`Imported ${items.length} videos 📚`);
+      } catch (_) {
+        toast("Couldn't import that playlist");
+      }
+    }
+    ytImportBtn.addEventListener("click", () => { importYouTubePlaylist(ytImportInput.value); ytImportInput.value = ""; });
+    ytImportInput.addEventListener("keydown", (e) => { if (e.key === "Enter") ytImportBtn.click(); });
+
+    // ============================================================
+    //  Saved rooms (global index)
+    // ============================================================
+    function renderRooms(data) {
+      const entries = Object.entries(data || {}).sort((a, b) => (a[1].t || 0) - (b[1].t || 0));
+      roomsList.innerHTML = "";
+      if (!entries.length) { roomsList.appendChild(roomsEmpty); roomsEmpty.style.display = "block"; return; }
+      roomsEmpty.style.display = "none";
+      for (const [name, info] of entries) {
+        const isCurrent = name === ROOM;
+        const chip = document.createElement("div");
+        chip.className = "roomChip" + (isCurrent ? " current" : "");
+        const link = location.pathname + "?room=" + encodeURIComponent(name);
+        chip.innerHTML =
+          `<a href="${link}">${isCurrent ? "● " : ""}${escapeHtml(info.name || name)}</a>` +
+          `<span class="x" data-del-room="${escapeHtml(name)}" title="Remove">✕</span>`;
+        roomsList.appendChild(chip);
+      }
+      roomsList.querySelectorAll("[data-del-room]").forEach(x =>
+        x.addEventListener("click", () => {
+          remove(ref(db, `roomIndex/${x.dataset.delRoom}`));
+          toast("Removed from saved rooms");
+        }));
+    }
+
+    roomSaveBtn.addEventListener("click", () => {
+      if (!FIREBASE_READY || !roomIndexRef) { toast("Needs Firebase set up first"); return; }
+      set(ref(db, `roomIndex/${ROOM}`), { name: ROOM, t: Date.now() });
+      toast("Room saved ⭐");
+    });
   </script>
 </body>
 </html>
