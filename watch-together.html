@@ -131,6 +131,48 @@
     }
     .tiny{font-size:13px;opacity:.72;margin:10px 0 0;line-height:1.55}
 
+    /* chat */
+    .chatPanel{ display:flex; flex-direction:column; }
+    .chatLog{
+      flex:1 1 auto; min-height:200px; max-height:300px; overflow-y:auto;
+      display:flex; flex-direction:column; gap:8px;
+      padding:6px 4px; margin:4px 0 12px;
+    }
+    .chatEmpty{ opacity:.5; font-size:14px; text-align:center; margin:auto 0; }
+    .msg{ display:flex; flex-direction:column; max-width:85%; }
+    .msg.mine{ align-self:flex-end; align-items:flex-end; }
+    .msg .bubble{
+      padding:8px 12px; border-radius:14px; font-size:14px; line-height:1.45;
+      background: rgba(167,139,250,.14); border:1px solid rgba(167,139,250,.22);
+      word-break:break-word;
+    }
+    .msg.mine .bubble{ background: rgba(251,113,133,.16); border-color: rgba(251,113,133,.26); }
+    .msg .who{ font-size:11px; opacity:.55; margin:2px 6px 0; }
+    .chatRow{ display:flex; gap:8px; }
+    .chatRow .input{ flex:1 1 auto; }
+
+    /* queue */
+    .queuePanel{ display:flex; flex-direction:column; }
+    .queueAdd{ display:flex; gap:8px; margin-bottom:12px; }
+    .queueAdd .input{ flex:1 1 auto; }
+    .queueList{ display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto; }
+    .queueEmpty{ opacity:.5; font-size:14px; text-align:center; margin:14px 0; }
+    .qItem{
+      display:flex; align-items:center; gap:10px;
+      padding:8px 10px; border-radius:14px;
+      background: rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.10);
+    }
+    .qThumb{ width:64px; height:36px; border-radius:8px; object-fit:cover; flex:0 0 auto; background:#000; }
+    .qTitle{ flex:1 1 auto; min-width:0; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .qBtns{ display:flex; gap:6px; flex:0 0 auto; }
+    .qMini{
+      width:30px; height:30px; border-radius:9px; display:grid; place-items:center;
+      border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06);
+      cursor:pointer; font-size:13px; transition:filter .12s ease;
+    }
+    .qMini:hover{ filter:brightness(1.15); }
+    .qMini.play{ background: rgba(34,197,94,.16); border-color:rgba(34,197,94,.26); }
+
     .toast{
       position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px);
       padding:11px 16px; border-radius:14px;
@@ -206,6 +248,32 @@
             </div>
           </div>
 
+          <div class="grid2" style="margin-top:16px">
+            <div class="panel chatPanel">
+              <h2>💬 Chat</h2>
+              <div class="chatLog" id="chatLog">
+                <p class="chatEmpty" id="chatEmpty">Say hi 🌸</p>
+              </div>
+              <div class="chatRow">
+                <input class="input" id="chatInput" type="text" maxlength="500"
+                       placeholder="Type a message…" autocomplete="off" />
+                <button class="btn violet" id="chatSend">Send</button>
+              </div>
+            </div>
+
+            <div class="panel queuePanel">
+              <h2>🎞️ Up Next</h2>
+              <div class="queueAdd">
+                <input class="input" id="queueInput" type="text"
+                       placeholder="Paste a YouTube link to queue…" autocomplete="off" spellcheck="false" />
+                <button class="btn" id="queueAddBtn">＋ Add</button>
+              </div>
+              <div class="queueList" id="queueList">
+                <p class="queueEmpty" id="queueEmpty">Queue's empty — add something to watch next.</p>
+              </div>
+            </div>
+          </div>
+
           <div class="grid2">
             <div class="panel">
               <h2>How it works</h2>
@@ -246,7 +314,8 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
-      getDatabase, ref, onValue, set, onDisconnect, serverTimestamp, get
+      getDatabase, ref, onValue, set, onDisconnect, serverTimestamp, get,
+      push, remove, query, limitToLast
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     /* ============================================================
@@ -276,6 +345,14 @@
     const connText = $("connText");
     const roomNameEl = $("roomName");
     const toastEl = $("toast");
+    const chatLog = $("chatLog");
+    const chatEmpty = $("chatEmpty");
+    const chatInput = $("chatInput");
+    const chatSend = $("chatSend");
+    const queueInput = $("queueInput");
+    const queueAddBtn = $("queueAddBtn");
+    const queueList = $("queueList");
+    const queueEmpty = $("queueEmpty");
 
     // ---- Room ----
     const params = new URLSearchParams(location.search);
@@ -395,6 +472,19 @@
 
     // ---- presence + state listeners ----
     const clientId = Math.random().toString(36).slice(2, 9);
+    let chatRef = null, queueRef = null;
+
+    // a friendly name so you can tell who's who in chat
+    let myName = localStorage.getItem("wt_name");
+    if (!myName) {
+      myName = (prompt("What name should show in chat?") || "").trim().slice(0, 24) || "Guest";
+      localStorage.setItem("wt_name", myName);
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c =>
+        ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+    }
 
     function startFirebase() {
       if (!FIREBASE_READY) {
@@ -425,6 +515,18 @@
           if (!s) return;
           if (s.by === clientId) return;      // ignore our own writes
           applyState(s, false);
+        });
+
+        // --- chat ---
+        chatRef = ref(db, `watch/${ROOM}/chat`);
+        onValue(query(chatRef, limitToLast(100)), (snap) => {
+          renderChat(snap.val() || {});
+        });
+
+        // --- queue ---
+        queueRef = ref(db, `watch/${ROOM}/queue`);
+        onValue(queueRef, (snap) => {
+          renderQueue(snap.val() || {});
         });
       } catch (err) {
         console.error(err);
@@ -482,6 +584,93 @@
       try { await navigator.clipboard.writeText(link); toast("Room link copied 🔗"); }
       catch { toast(link); }
     });
+
+    // ============================================================
+    //  Chat
+    // ============================================================
+    function renderChat(msgs) {
+      const entries = Object.values(msgs).sort((a, b) => (a.t || 0) - (b.t || 0));
+      if (!entries.length) { chatEmpty.style.display = "block"; return; }
+      chatEmpty.style.display = "none";
+      const wasNearBottom = chatLog.scrollHeight - chatLog.scrollTop - chatLog.clientHeight < 80;
+      chatLog.innerHTML = "";
+      for (const m of entries) {
+        const mine = m.cid === clientId;
+        const wrap = document.createElement("div");
+        wrap.className = "msg" + (mine ? " mine" : "");
+        wrap.innerHTML =
+          `<div class="bubble">${escapeHtml(m.text)}</div>` +
+          `<div class="who">${mine ? "you" : escapeHtml(m.name || "partner")}</div>`;
+        chatLog.appendChild(wrap);
+      }
+      if (wasNearBottom) chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function sendChat() {
+      const text = chatInput.value.trim();
+      if (!text) return;
+      if (!FIREBASE_READY || !chatRef) { toast("Chat needs Firebase set up first"); return; }
+      push(chatRef, { text, name: myName, cid: clientId, t: Date.now() });
+      chatInput.value = "";
+    }
+    chatSend.addEventListener("click", sendChat);
+    chatInput.addEventListener("keydown", (e) => { if (e.key === "Enter") sendChat(); });
+
+    // ============================================================
+    //  Queue
+    // ============================================================
+    let queueCache = {};
+    function renderQueue(items) {
+      queueCache = items;
+      const entries = Object.entries(items).sort((a, b) => (a[1].t || 0) - (b[1].t || 0));
+      if (!entries.length) { queueEmpty.style.display = "block"; queueList.innerHTML = ""; queueList.appendChild(queueEmpty); return; }
+      queueEmpty.style.display = "none";
+      queueList.innerHTML = "";
+      for (const [key, it] of entries) {
+        const row = document.createElement("div");
+        row.className = "qItem";
+        row.innerHTML =
+          `<img class="qThumb" src="https://i.ytimg.com/vi/${it.videoId}/mqdefault.jpg" alt="" />` +
+          `<div class="qTitle">${escapeHtml(it.videoId)}</div>` +
+          `<div class="qBtns">` +
+            `<button class="qMini play" data-play="${it.videoId}" title="Play now">▶</button>` +
+            `<button class="qMini" data-del="${key}" title="Remove">✕</button>` +
+          `</div>`;
+        queueList.appendChild(row);
+      }
+      queueList.querySelectorAll("[data-play]").forEach(b =>
+        b.addEventListener("click", () => playQueued(b.dataset.play)));
+      queueList.querySelectorAll("[data-del]").forEach(b =>
+        b.addEventListener("click", () => removeQueued(b.dataset.del)));
+    }
+
+    function addToQueue() {
+      const id = parseVideoId(queueInput.value);
+      if (!id) { toast("Couldn't read that link"); return; }
+      if (!FIREBASE_READY || !queueRef) { toast("Queue needs Firebase set up first"); return; }
+      push(queueRef, { videoId: id, t: Date.now(), by: myName });
+      queueInput.value = "";
+      toast("Added to queue 🎞️");
+    }
+    queueAddBtn.addEventListener("click", addToQueue);
+    queueInput.addEventListener("keydown", (e) => { if (e.key === "Enter") addToQueue(); });
+
+    function playQueued(videoId) {
+      isLeader = true; leaderBtn.classList.add("violet");
+      placeholder.style.display = "none";
+      nowPlaying.textContent = "▶ " + videoId;
+      if (playerReady) { applyingRemote = false; player.loadVideoById(videoId); }
+      else pendingState = { videoId, status: "playing", position: 0, updatedAt: Date.now() };
+      setTimeout(() => broadcast("playing"), 800);
+      // remove the one we just started from the queue
+      const found = Object.entries(queueCache).find(([, v]) => v.videoId === videoId);
+      if (found) removeQueued(found[0]);
+    }
+
+    function removeQueued(key) {
+      if (!queueRef) return;
+      remove(ref(db, `watch/${ROOM}/queue/${key}`));
+    }
   </script>
 </body>
 </html>
