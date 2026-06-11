@@ -386,11 +386,11 @@
 
           <div class="topRow">
             <div>
-              <div class="kicker">🌙 Just the two of us • 📺 Watch Together</div>
+              <div class="kicker">🌙 Cozy together • 📺 Watch Together</div>
               <h1 class="title">Watch Together</h1>
               <p class="sub">
-                Paste a YouTube link or a direct video URL, hit play, and you'll both stay perfectly in sync —
-                play, pause, and skip carry across to the other person automatically.
+                Paste a YouTube link or a direct video URL, hit play, and everyone stays perfectly in sync —
+                play, pause, and skip carry across to the whole room automatically.
               </p>
             </div>
 
@@ -422,13 +422,13 @@
               <div class="placeholder" id="placeholder">
                 <div class="big">🌸</div>
                 <strong>Nothing playing yet</strong>
-                <p>Paste a YouTube link or a direct video URL above and hit <strong>Load &amp; Sync</strong>. Whatever one of you starts, the other sees too.</p>
+                <p>Paste a YouTube link or a direct video URL above and hit <strong>Load &amp; Sync</strong>. Whatever anyone starts, the whole room sees too.</p>
               </div>
             </div>
 
             <div class="syncBar">
               <div class="grp">
-                <button class="btn violet" id="resyncBtn" title="Snap to the other person's position">🔄 Resync</button>
+                <button class="btn violet" id="resyncBtn" title="Snap to the host's position">🔄 Resync</button>
                 <span class="hostTag" id="hostTag" hidden>🎬 <span id="hostName"></span> is hosting</span>
                 <span class="awakeTag" id="awakeTag" hidden>☀️ Screen staying on</span>
               </div>
@@ -492,10 +492,10 @@
             <div class="panel">
               <h2>How it works</h2>
               <div class="steps">
-                <div class="step"><div class="num">1</div><div>Set your name (top right) and open this page on both devices — same room (it's <strong>cozy</strong> by default).</div></div>
+                <div class="step"><div class="num">1</div><div>Set your name (top right) and open this page on each device — same room (it's <strong>cozy</strong> by default).</div></div>
                 <div class="step"><div class="num">2</div><div>Either of you pastes a link and hits <strong>Load &amp; Sync</strong>.</div></div>
-                <div class="step"><div class="num">3</div><div>Either person can play / pause / seek — it mirrors to the other side, and shows who's hosting.</div></div>
-                <div class="step"><div class="num">4</div><div>Drifted apart? Either of you taps <strong>Resync</strong> to snap back together.</div></div>
+                <div class="step"><div class="num">3</div><div>Anyone can play / pause / seek — it mirrors to everyone else, and shows who's hosting.</div></div>
+                <div class="step"><div class="num">4</div><div>Drifted apart? Anyone can tap <strong>Resync</strong> to snap back together.</div></div>
               </div>
               <p class="tiny">Hop on a Discord call too if you want to chat while you watch 💬</p>
             </div>
@@ -504,7 +504,7 @@
               <h2>Private rooms</h2>
               <p class="sub" style="font-size:14px">
                 Want a room that's just yours? Add <code>?room=</code> and any name to the URL — for example
-                <code>watch-together.html?room=us</code>. Share that exact link with each other and you'll meet there.
+                <code>watch-together.html?room=us</code>. Share that exact link with everyone and you'll all meet there.
               </p>
               <p class="tiny">
                 Tip: the <strong>Copy room link</strong> button copies your current room so you can send it over.
@@ -571,7 +571,7 @@
 
     /* ============================================================
        CONFIG — replace with your own Firebase project's config.
-       Realtime Database (free Spark plan is plenty for 2 people).
+       Realtime Database (free Spark plan is plenty for a small group).
        Create one at https://console.firebase.google.com
        ============================================================ */
     const firebaseConfig = {
@@ -956,7 +956,7 @@
     function renderPresence(val) {
       const ids = Object.keys(val || {});
       const n = ids.length;
-      if (n <= 1) setConn("on", "Connected · waiting for partner");
+      if (n <= 1) setConn("on", "Connected · waiting for others");
       else setConn("on", `Connected · ${n} here`);
 
       // sort: you first, then by join time
@@ -1108,7 +1108,7 @@
       const parsed = parseSource(urlInput.value);
       if (!parsed) { toast("Couldn't read that link — paste a YouTube link or a direct video URL"); return; }
       startSource(parsed);
-      toast("Loaded — your partner will catch up ✨");
+      toast("Loaded — everyone will catch up ✨");
     }
 
     // shared loader used by the URL box and the queue
@@ -1426,7 +1426,7 @@
         wrap.innerHTML =
           `<div class="bubble" data-text="${escapeHtml(m.text)}">${escapeHtml(m.text)}</div>` +
           hint +
-          `<div class="who">${mine ? "you" : escapeHtml(m.name || "partner")}</div>`;
+          `<div class="who">${mine ? "you" : escapeHtml(m.name || "guest")}</div>`;
         chatLog.appendChild(wrap);
       }
       if (chatOpen || wasNearBottom) chatLog.scrollTop = chatLog.scrollHeight;
