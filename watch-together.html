@@ -268,6 +268,41 @@
     .qMini.play{ background: rgba(34,197,94,.16); border-color:rgba(34,197,94,.26); }
     .qMini.wide{ width:auto; padding:0 12px; gap:5px; font-size:12px; }
 
+    /* queue tools cluster in panel headers */
+    .qTools{ display:inline-flex; gap:6px; margin-left:auto; flex-wrap:wrap; }
+    .miniGhost.active{
+      background: rgba(167,139,250,.20); border-color: rgba(167,139,250,.35);
+    }
+    .qMini.up, .qMini.down{ font-size:12px; }
+    .qMini:disabled{ opacity:.3; cursor:default; }
+    .qMini.repeatGlow{ background: rgba(52,211,153,.16); border-color: rgba(52,211,153,.26); }
+
+    /* the item currently playing, highlighted in history */
+    .qItem.nowItem{ border-color: rgba(52,211,153,.4); background: rgba(52,211,153,.08); }
+
+    /* drag state for reorderable queue rows */
+    .qItem.draggable{ cursor:grab; }
+    .qItem.dragging{ opacity:.45; }
+    .qItem.dropTarget{ border-color: rgba(167,139,250,.6); }
+
+    /* tiny add-to-playlist popover */
+    .addPlWrap{ position:relative; }
+    .addPlMenu{
+      position:absolute; right:0; top:calc(100% + 6px); z-index:30;
+      min-width:180px; max-height:240px; overflow-y:auto;
+      background: rgba(20,16,28,.97); border:1px solid rgba(255,255,255,.14);
+      border-radius:12px; box-shadow:0 14px 40px rgba(0,0,0,.5); padding:6px;
+      display:none;
+    }
+    .addPlMenu.open{ display:block; }
+    .addPlMenu button{
+      display:block; width:100%; text-align:left; cursor:pointer;
+      background:transparent; border:0; color:inherit; font-size:13px;
+      padding:8px 10px; border-radius:8px;
+    }
+    .addPlMenu button:hover{ background: rgba(255,255,255,.07); }
+    .addPlMenu .sep{ height:1px; background:rgba(255,255,255,.08); margin:5px 4px; }
+
     /* mini ghost button used in panel headers */
     .miniGhost{
       font-size:12px; font-weight:500; margin-left:auto;
@@ -397,7 +432,13 @@
           </div>
 
           <div class="panel queuePanel" style="margin-top:16px">
-            <h2>🎞️ Up Next <button class="miniGhost" id="queueSaveBtn" title="Save this queue as a playlist">💾 Save as playlist</button></h2>
+            <h2>🎞️ Up Next
+              <span class="qTools">
+                <button class="miniGhost" id="shuffleBtn" title="Shuffle the queue">🔀 Shuffle</button>
+                <button class="miniGhost" id="repeatBtn" title="Repeat mode">🔁 Repeat: Off</button>
+                <button class="miniGhost" id="queueSaveBtn" title="Save this queue as a playlist">💾 Save</button>
+              </span>
+            </h2>
             <div class="queueAdd">
               <input class="input" id="queueInput" type="text"
                      placeholder="Paste a YouTube or video link to queue…" autocomplete="off" spellcheck="false" />
@@ -405,6 +446,18 @@
             </div>
             <div class="queueList" id="queueList">
               <p class="queueEmpty" id="queueEmpty">Queue's empty — add something to watch next.</p>
+            </div>
+          </div>
+
+          <div class="panel historyPanel" style="margin-top:16px">
+            <h2>🕘 Watch History
+              <span class="qTools">
+                <button class="miniGhost" id="historySaveBtn" title="Save history as a playlist">💾 Save</button>
+                <button class="miniGhost" id="historyClearBtn" title="Clear watch history">🗑 Clear</button>
+              </span>
+            </h2>
+            <div class="queueList" id="historyList">
+              <p class="queueEmpty" id="historyEmpty">Nothing watched yet — it'll show up here as you play.</p>
             </div>
           </div>
 
@@ -534,6 +587,12 @@
     const presenceList = $("presenceList");
     const presenceCount = $("presenceCount");
     const queueSaveBtn = $("queueSaveBtn");
+    const shuffleBtn = $("shuffleBtn");
+    const repeatBtn = $("repeatBtn");
+    const historyList = $("historyList");
+    const historyEmpty = $("historyEmpty");
+    const historySaveBtn = $("historySaveBtn");
+    const historyClearBtn = $("historyClearBtn");
     const playlistName = $("playlistName");
     const playlistCreateBtn = $("playlistCreateBtn");
     const ytImportInput = $("ytImportInput");
@@ -898,6 +957,8 @@
     let chatRef = null, queueRef = null;
     let playlistsRef = null;
     let playlistsCache = {};
+    let historyRef = null, historyCache = {};
+    let repeatRef = null, repeatMode = "off";   // "off" | "one" | "all"
 
     // a friendly name so you can tell who's who — editable from the page
     let myName = (localStorage.getItem("wt_name") || "").slice(0, 24) || "Guest";
@@ -985,6 +1046,19 @@
           renderPlaylists(snap.val() || {});
         });
 
+        // --- watch history (shared, per room) ---
+        historyRef = ref(db, `watch/${ROOM}/history`);
+        onValue(query(historyRef, limitToLast(50)), (snap) => {
+          renderHistory(snap.val() || {});
+        });
+
+        // --- repeat mode (shared, so both sides agree) ---
+        repeatRef = ref(db, `watch/${ROOM}/repeat`);
+        onValue(repeatRef, (snap) => {
+          repeatMode = snap.val() || "off";
+          updateRepeatBtn();
+        });
+
       } catch (err) {
         console.error(err);
         setConn("off", "Connection failed");
@@ -1028,6 +1102,20 @@
         fileVid.play().catch(()=>{});
       }
       setTimeout(() => broadcast("playing"), 800);
+      recordHistory(parsed);
+    }
+
+    // Log a played item to shared history. De-dupes the immediately-previous
+    // entry so re-syncs / repeat-one don't spam the list.
+    let lastHistoryKey = null;
+    function recordHistory(parsed) {
+      if (!FIREBASE_READY || !historyRef) return;
+      const sig = parsed.kind + ":" + parsed.src;
+      if (sig === lastHistoryKey) return;
+      lastHistoryKey = sig;
+      // resolve a nice title: reuse what we know, else let setNowPlaying's lookup fill in
+      const title = currentTitle || (parsed.kind === "yt" ? null : shortName(parsed.src));
+      push(historyRef, { kind: parsed.kind, src: parsed.src, title: title || null, t: Date.now(), by: myName });
     }
 
     loadBtn.addEventListener("click", loadFromInput);
@@ -1159,29 +1247,75 @@
       if (!entries.length) { queueEmpty.style.display = "block"; queueList.innerHTML = ""; queueList.appendChild(queueEmpty); return; }
       queueEmpty.style.display = "none";
       queueList.innerHTML = "";
-      for (const [key, it] of entries) {
-        // backward-compat with older queue items that only had videoId
+      entries.forEach(([key, it], idx) => {
         const kind = it.kind || (it.videoId ? "yt" : "file");
         const src  = it.src  || it.videoId || "";
         const thumb = kind === "yt"
           ? `<img class="qThumb" src="https://i.ytimg.com/vi/${src}/mqdefault.jpg" alt="" />`
           : `<div class="qThumb" style="display:grid;place-items:center;font-size:16px">🎬</div>`;
-        const label = kind === "yt" ? src : shortName(src);
+        const label = it.title || (kind === "yt" ? src : shortName(src));
         const row = document.createElement("div");
-        row.className = "qItem";
+        row.className = "qItem draggable";
+        row.draggable = true;
+        row.dataset.key = key;
         row.innerHTML =
           thumb +
           `<div class="qTitle">${escapeHtml(label)}</div>` +
           `<div class="qBtns">` +
+            `<button class="qMini up" data-up="${key}" title="Move up" ${idx === 0 ? "disabled" : ""}>↑</button>` +
+            `<button class="qMini down" data-down="${key}" title="Move down" ${idx === entries.length - 1 ? "disabled" : ""}>↓</button>` +
             `<button class="qMini play" data-key="${key}" title="Play now">▶</button>` +
+            `<span class="addPlWrap">` +
+              `<button class="qMini" data-addpl="${key}" title="Add to a playlist">＋📚</button>` +
+              `<div class="addPlMenu" data-menu="${key}"></div>` +
+            `</span>` +
             `<button class="qMini" data-del="${key}" title="Remove">✕</button>` +
           `</div>`;
         queueList.appendChild(row);
-      }
+      });
+
       queueList.querySelectorAll("[data-key]").forEach(b =>
         b.addEventListener("click", () => playQueued(b.dataset.key)));
       queueList.querySelectorAll("[data-del]").forEach(b =>
         b.addEventListener("click", () => removeQueued(b.dataset.del)));
+      queueList.querySelectorAll("[data-up]").forEach(b =>
+        b.addEventListener("click", () => moveQueued(b.dataset.up, "up")));
+      queueList.querySelectorAll("[data-down]").forEach(b =>
+        b.addEventListener("click", () => moveQueued(b.dataset.down, "down")));
+      queueList.querySelectorAll("[data-addpl]").forEach(b =>
+        b.addEventListener("click", (e) => { e.stopPropagation(); openAddPlMenu(b.dataset.addpl, "queue"); }));
+
+      wireQueueDrag();
+    }
+
+    // --- drag-and-drop reordering for the queue ---
+    let dragKey = null;
+    function wireQueueDrag() {
+      queueList.querySelectorAll(".qItem").forEach(row => {
+        row.addEventListener("dragstart", (e) => {
+          dragKey = row.dataset.key;
+          row.classList.add("dragging");
+          e.dataTransfer.effectAllowed = "move";
+        });
+        row.addEventListener("dragend", () => {
+          dragKey = null;
+          queueList.querySelectorAll(".qItem").forEach(r => r.classList.remove("dragging", "dropTarget"));
+        });
+        row.addEventListener("dragover", (e) => { e.preventDefault(); row.classList.add("dropTarget"); });
+        row.addEventListener("dragleave", () => row.classList.remove("dropTarget"));
+        row.addEventListener("drop", (e) => {
+          e.preventDefault();
+          row.classList.remove("dropTarget");
+          const targetKey = row.dataset.key;
+          if (!dragKey || dragKey === targetKey) return;
+          const keys = orderedQueueKeys();
+          const from = keys.indexOf(dragKey);
+          const to = keys.indexOf(targetKey);
+          if (from < 0 || to < 0) return;
+          keys.splice(to, 0, keys.splice(from, 1)[0]);
+          reorderByKeys(keys);
+        });
+      });
     }
 
     function addToQueue() {
@@ -1209,21 +1343,253 @@
       remove(ref(db, `watch/${ROOM}/queue/${key}`));
     }
 
-    // Auto-advance to the next queued item when the current one ends.
-    // Only the current host advances, so both sides don't skip two at once.
+    // ---- Shuffle / reorder ----
+    // The queue is ordered purely by each item's `t` value, so reordering is just
+    // rewriting those numbers. We keep them spaced out (steps of 1000) so single
+    // moves can slot between neighbors without rewriting everything.
+    function orderedQueueKeys() {
+      return Object.entries(queueCache)
+        .sort((a, b) => (a[1].t || 0) - (b[1].t || 0))
+        .map(([k]) => k);
+    }
+
+    function shuffleQueue() {
+      const keys = orderedQueueKeys();
+      if (keys.length < 2) { toast("Need at least two items to shuffle"); return; }
+      // Fisher–Yates
+      for (let i = keys.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [keys[i], keys[j]] = [keys[j], keys[i]];
+      }
+      const base = Date.now();
+      keys.forEach((k, i) => set(ref(db, `watch/${ROOM}/queue/${k}/t`), base + i * 1000));
+      toast("Queue shuffled 🔀");
+    }
+
+    function moveQueued(key, dir) {
+      const keys = orderedQueueKeys();
+      const i = keys.indexOf(key);
+      if (i < 0) return;
+      const j = i + (dir === "up" ? -1 : 1);
+      if (j < 0 || j >= keys.length) return;
+      [keys[i], keys[j]] = [keys[j], keys[i]];
+      const base = Date.now();
+      keys.forEach((k, idx) => set(ref(db, `watch/${ROOM}/queue/${k}/t`), base + idx * 1000));
+    }
+
+    // drag reorder writes the same spaced `t` values after a drop
+    function reorderByKeys(keys) {
+      const base = Date.now();
+      keys.forEach((k, idx) => set(ref(db, `watch/${ROOM}/queue/${k}/t`), base + idx * 1000));
+    }
+
+    shuffleBtn.addEventListener("click", shuffleQueue);
+
+    // ---- Repeat mode ----
+    function updateRepeatBtn() {
+      const label = repeatMode === "one" ? "Repeat: One"
+                  : repeatMode === "all" ? "Repeat: All"
+                  : "Repeat: Off";
+      const icon = repeatMode === "one" ? "🔂" : "🔁";
+      repeatBtn.textContent = icon + " " + label;
+      repeatBtn.classList.toggle("active", repeatMode !== "off");
+    }
+    function cycleRepeat() {
+      const next = repeatMode === "off" ? "all" : repeatMode === "all" ? "one" : "off";
+      if (FIREBASE_READY && repeatRef) set(repeatRef, next);
+      else { repeatMode = next; updateRepeatBtn(); }   // local fallback
+    }
+    repeatBtn.addEventListener("click", cycleRepeat);
+    updateRepeatBtn();
+
+    // Auto-advance when the current item ends. Honors repeat mode, and uses a
+    // short-lived shared "claim" so both screens' end events don't double-skip.
     let advancing = false;
-    function advanceQueue() {
+    async function advanceQueue() {
       if (advancing) return;
-      if (lastHostId && lastHostId !== clientId) return;  // only host drives forward
-      const entries = Object.entries(queueCache).sort((a, b) => (a[1].t || 0) - (b[1].t || 0));
-      if (!entries.length) return;
       advancing = true;
-      const [key, it] = entries[0];
-      const kind = it.kind || (it.videoId ? "yt" : "file");
-      const src  = it.src  || it.videoId;
-      removeQueued(key);
-      startSource({ kind, src });
-      setTimeout(() => { advancing = false; }, 1500);
+      try {
+        // Repeat-one: just replay what's playing, ignore the queue.
+        if (repeatMode === "one" && currentKind && currentSrc) {
+          replayCurrent();
+          return;
+        }
+
+        const entries = Object.entries(queueCache).sort((a, b) => (a[1].t || 0) - (b[1].t || 0));
+
+        // Nothing queued.
+        if (!entries.length) {
+          // Repeat-all with an empty queue but a current item -> just loop it.
+          if (repeatMode === "all" && currentKind && currentSrc) replayCurrent();
+          return;
+        }
+
+        // Claim the advance so the partner's end event stands down.
+        if (FIREBASE_READY && db) {
+          const claimRef = ref(db, `watch/${ROOM}/advance`);
+          const now = Date.now();
+          let claimed = true;
+          try {
+            const snap = await get(claimRef);
+            const prev = snap.val();
+            if (prev && prev.by !== clientId && (now - (prev.t || 0)) < 4000) claimed = false;
+          } catch (_) {}
+          if (!claimed) return;
+          try { await set(claimRef, { by: clientId, t: now }); } catch (_) {}
+        }
+
+        const [key, it] = entries[0];
+        const kind = it.kind || (it.videoId ? "yt" : "file");
+        const src  = it.src  || it.videoId;
+
+        // Repeat-all: send the finished item to the back of the queue instead of
+        // dropping it, so the whole list loops.
+        if (repeatMode === "all" && currentKind && currentSrc) {
+          push(queueRef, { kind: currentKind, src: currentSrc, title: currentTitle || null, t: Date.now(), by: myName });
+        }
+
+        removeQueued(key);
+        startSource({ kind, src });
+      } finally {
+        setTimeout(() => { advancing = false; }, 1500);
+      }
+    }
+
+    // Restart the currently-playing source from the top (used by repeat-one/all).
+    function replayCurrent() {
+      try {
+        if (currentKind === "yt" && player) { player.seekTo(0, true); player.playVideo(); }
+        else if (currentKind === "file") { fileVid.currentTime = 0; fileVid.play().catch(()=>{}); }
+        setTimeout(() => broadcast("playing"), 300);
+      } catch (_) {}
+    }
+
+    // ============================================================
+    //  Watch history (shared, per room)
+    // ============================================================
+    function renderHistory(items) {
+      historyCache = items || {};
+      // newest first
+      const entries = Object.entries(historyCache).sort((a, b) => (b[1].t || 0) - (a[1].t || 0));
+      if (!entries.length) {
+        historyEmpty.style.display = "block";
+        historyList.innerHTML = "";
+        historyList.appendChild(historyEmpty);
+        return;
+      }
+      historyEmpty.style.display = "none";
+      historyList.innerHTML = "";
+      for (const [key, it] of entries) {
+        const kind = it.kind || (it.videoId ? "yt" : "file");
+        const src  = it.src  || it.videoId || "";
+        const thumb = kind === "yt"
+          ? `<img class="qThumb" src="https://i.ytimg.com/vi/${src}/mqdefault.jpg" alt="" />`
+          : `<div class="qThumb" style="display:grid;place-items:center;font-size:16px">🎬</div>`;
+        const label = it.title || (kind === "yt" ? src : shortName(src));
+        const isNow = currentKind === kind && currentSrc === src;
+        const row = document.createElement("div");
+        row.className = "qItem" + (isNow ? " nowItem" : "");
+        row.innerHTML =
+          thumb +
+          `<div class="qTitle">${escapeHtml(label)}</div>` +
+          `<div class="qBtns">` +
+            `<button class="qMini play" data-h-play="${key}" title="Play again">▶</button>` +
+            `<button class="qMini" data-h-queue="${key}" title="Add to queue">＋</button>` +
+            `<span class="addPlWrap">` +
+              `<button class="qMini" data-h-addpl="${key}" title="Add to a playlist">＋📚</button>` +
+              `<div class="addPlMenu" data-menu="h:${key}"></div>` +
+            `</span>` +
+          `</div>`;
+        historyList.appendChild(row);
+      }
+      historyList.querySelectorAll("[data-h-play]").forEach(b =>
+        b.addEventListener("click", () => { const it = historyCache[b.dataset.hPlay]; if (it) startSource({ kind: it.kind || "yt", src: it.src || it.videoId }); }));
+      historyList.querySelectorAll("[data-h-queue]").forEach(b =>
+        b.addEventListener("click", () => {
+          const it = historyCache[b.dataset.hQueue]; if (!it || !queueRef) return;
+          push(queueRef, { kind: it.kind || "yt", src: it.src || it.videoId, title: it.title || null, t: Date.now(), by: myName });
+          toast("Added to queue 🎞️");
+        }));
+      historyList.querySelectorAll("[data-h-addpl]").forEach(b =>
+        b.addEventListener("click", (e) => { e.stopPropagation(); openAddPlMenu(b.dataset.hAddpl, "history"); }));
+    }
+
+    historyClearBtn.addEventListener("click", () => {
+      if (!FIREBASE_READY || !historyRef) { toast("Needs Firebase set up first"); return; }
+      if (!confirm("Clear the shared watch history?")) return;
+      remove(historyRef);
+      lastHistoryKey = null;
+      toast("History cleared 🗑");
+    });
+
+    historySaveBtn.addEventListener("click", () => {
+      const entries = Object.values(historyCache).sort((a, b) => (a.t || 0) - (b.t || 0));
+      if (!entries.length) { toast("Nothing in history yet"); return; }
+      const items = entries.map(it => ({ kind: it.kind || "yt", src: it.src || it.videoId, title: it.title || null }));
+      const name = (prompt("Name this playlist:", "From history") || "").trim();
+      if (!name) return;
+      createPlaylist(name, items);
+      toast("Saved history as playlist 📚");
+    });
+
+    // ============================================================
+    //  "Add to playlist" popover (shared by queue + history rows)
+    // ============================================================
+    function closeAllAddPlMenus() {
+      document.querySelectorAll(".addPlMenu.open").forEach(m => { m.classList.remove("open"); m.innerHTML = ""; });
+    }
+    document.addEventListener("click", () => closeAllAddPlMenus());
+
+    // source: "queue" -> key is a queue key; "history" -> key is a history key
+    function openAddPlMenu(key, source) {
+      const selector = source === "history" ? `[data-menu="h:${key}"]` : `[data-menu="${key}"]`;
+      const menu = document.querySelector(selector);
+      if (!menu) return;
+      const alreadyOpen = menu.classList.contains("open");
+      closeAllAddPlMenus();
+      if (alreadyOpen) return;
+
+      // resolve the item being added
+      const it = source === "history" ? historyCache[key] : queueCache[key];
+      if (!it) return;
+      const payload = { kind: it.kind || "yt", src: it.src || it.videoId, title: it.title || null };
+
+      const pls = Object.entries(playlistsCache).sort((a, b) => (a[1].t || 0) - (b[1].t || 0));
+      let html = "";
+      if (pls.length) {
+        html += pls.map(([pid, pl]) =>
+          `<button data-pl-target="${pid}">${escapeHtml(pl.name || "Untitled")}</button>`).join("");
+        html += `<div class="sep"></div>`;
+      }
+      html += `<button data-pl-new="1">＋ New playlist…</button>`;
+      menu.innerHTML = html;
+      menu.classList.add("open");
+
+      menu.querySelectorAll("[data-pl-target]").forEach(b =>
+        b.addEventListener("click", (e) => {
+          e.stopPropagation();
+          addItemToPlaylist(b.dataset.plTarget, payload);
+          closeAllAddPlMenus();
+        }));
+      const newBtn = menu.querySelector("[data-pl-new]");
+      if (newBtn) newBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const name = (prompt("New playlist name:", payload.title || "New playlist") || "").trim();
+        closeAllAddPlMenus();
+        if (!name) return;
+        const pid = createPlaylist(name, [payload]);
+        if (pid) toast("Added to new playlist 📚");
+      });
+    }
+
+    // add a resolved {kind,src,title} straight into a playlist (no link parsing)
+    function addItemToPlaylist(pid, payload) {
+      if (!FIREBASE_READY) { toast("Needs Firebase set up first"); return; }
+      const id = "i" + Math.random().toString(36).slice(2, 9);
+      set(ref(db, `watch/${ROOM}/playlists/${pid}/items/${id}`),
+          { kind: payload.kind, src: payload.src, title: payload.title || null, t: Date.now() });
+      if (payload.kind === "yt" && !payload.title) resolveItemTitle(pid, id, payload.src);
+      toast("Added to playlist 📚");
     }
 
     // ============================================================
