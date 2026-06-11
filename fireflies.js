@@ -22,7 +22,22 @@ if (!canvas) {
   window.addEventListener("mouseleave", () => (mouse.active = false));
 
   function getMaxFireflies() {
-    return Math.min(85, Math.floor(window.innerWidth / 16));
+    // Far fewer on phones: each firefly draws a radial-gradient halo with
+    // additive blending every frame, which is heavy on mobile GPUs and a real
+    // battery cost. Cap low on small/touch screens, normal on desktop.
+    const w = window.innerWidth;
+    const coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+    if (coarse || w < 700) return Math.min(28, Math.floor(w / 26));
+    return Math.min(85, Math.floor(w / 16));
+  }
+
+  // On phones the device-pixel-ratio is often 2.5–3×, which means the canvas
+  // is enormous and every gradient fill covers 6–9× the pixels. Cap the DPR we
+  // render at to keep fill cost sane without looking blurry.
+  function effectiveDPR() {
+    const real = window.devicePixelRatio || 1;
+    const coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+    return coarse ? Math.min(real, 1.5) : Math.min(real, 2);
   }
 
   // Warm firefly colors
@@ -37,7 +52,7 @@ if (!canvas) {
   const lerp = (a, b, t) => a + (b - a) * t;
 
   function resize() {
-    DPR = window.devicePixelRatio || 1;
+    DPR = effectiveDPR();
     width = window.innerWidth;
     height = window.innerHeight;
 
@@ -276,8 +291,17 @@ if (!canvas) {
     }
   }
 
+  // Ambient drift doesn't need 60fps. Throttle to ~30fps, which halves the
+  // per-second draw work (and battery) with no visible difference for a slow
+  // floating effect.
+  const FRAME_MS = 1000 / 30;
   let last = performance.now();
+  let lastDraw = 0;
   function animate(now) {
+    rafId = requestAnimationFrame(animate);
+    if (now - lastDraw < FRAME_MS) return;   // skip this frame
+    lastDraw = now;
+
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
 
@@ -292,7 +316,6 @@ if (!canvas) {
     }
 
     ctx.globalCompositeOperation = "source-over";
-    rafId = requestAnimationFrame(animate);
   }
 
   function start() {
@@ -311,6 +334,15 @@ if (!canvas) {
   init();
   start();
 
+  // External pause control. Other pages (e.g. Watch Together) can call
+  // window.fireflies.pause() while a video is playing so the ambient canvas
+  // isn't burning battery behind the player, then .resume() afterward.
+  let externallyPaused = false;
+  window.fireflies = {
+    pause() { externallyPaused = true; stop(); },
+    resume() { externallyPaused = false; if (!document.hidden) start(); },
+  };
+
   window.addEventListener("resize", () => {
     resize();
     init();
@@ -318,6 +350,6 @@ if (!canvas) {
 
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) stop();
-    else start();
+    else if (!externallyPaused) start();
   });
 }

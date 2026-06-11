@@ -429,6 +429,7 @@
             <div class="syncBar">
               <div class="grp">
                 <button class="btn violet" id="resyncBtn" title="Snap to the host's position">🔄 Resync</button>
+                <button class="btn link" id="awakeBtn" title="Keep your screen from sleeping while watching (uses more battery)">🌙 Keep screen awake: Off</button>
                 <span class="hostTag" id="hostTag" hidden>🎬 <span id="hostName"></span> is hosting</span>
                 <span class="awakeTag" id="awakeTag" hidden>☀️ Screen staying on</span>
               </div>
@@ -588,6 +589,7 @@
     const loadBtn = $("loadBtn");
     const copyRoomBtn = $("copyRoomBtn");
     const resyncBtn = $("resyncBtn");
+    const awakeBtn = $("awakeBtn");
     const hostTag = $("hostTag");
     const hostName = $("hostName");
     const awakeTag = $("awakeTag");
@@ -773,9 +775,27 @@
     let wakeLock = null;
     const wakeLockSupported = ("wakeLock" in navigator);
 
+    // Off by default — keeping the screen lit is the single biggest battery
+    // drain on a phone, so it's opt-in and remembered per device.
+    let keepAwake = false;
+    try { keepAwake = localStorage.getItem("wt_keep_awake") === "1"; } catch (_) {}
+
+    function updateAwakeBtn() {
+      if (!awakeBtn) return;
+      if (!wakeLockSupported) {
+        awakeBtn.textContent = "🌙 Keep screen awake: n/a";
+        awakeBtn.disabled = true;
+        awakeBtn.title = "Your browser doesn't support keeping the screen awake";
+        return;
+      }
+      awakeBtn.textContent = keepAwake ? "☀️ Keep screen awake: On" : "🌙 Keep screen awake: Off";
+      awakeBtn.classList.toggle("violet", keepAwake);
+      awakeBtn.classList.toggle("link", !keepAwake);
+    }
+
     async function syncWakeLock() {
       if (!wakeLockSupported) return;
-      const wantLock = isPlayingNow() && document.visibilityState === "visible";
+      const wantLock = keepAwake && isPlayingNow() && document.visibilityState === "visible";
       try {
         if (wantLock && !wakeLock) {
           wakeLock = await navigator.wakeLock.request("screen");
@@ -789,7 +809,27 @@
         wakeLock = null;
       }
       if (awakeTag) awakeTag.hidden = !wakeLock;
+
+      // Quiet the ambient firefly canvas while a video is actually playing —
+      // no need to spend GPU/battery animating particles behind the player.
+      try {
+        if (window.fireflies) {
+          if (isPlayingNow() && document.visibilityState === "visible") window.fireflies.pause();
+          else window.fireflies.resume();
+        }
+      } catch (_) {}
     }
+
+    if (awakeBtn) {
+      awakeBtn.addEventListener("click", () => {
+        keepAwake = !keepAwake;
+        try { localStorage.setItem("wt_keep_awake", keepAwake ? "1" : "0"); } catch (_) {}
+        updateAwakeBtn();
+        syncWakeLock();
+        toast(keepAwake ? "Screen will stay on while playing ☀️" : "Screen can sleep normally 🌙");
+      });
+    }
+    updateAwakeBtn();
 
     // Tracks whether our tab is backgrounded. While hidden we suppress
     // broadcasts (see broadcast()) so leaving doesn't pause our partner.
@@ -1113,10 +1153,15 @@
     }
     startFirebase();
 
-    // periodic drift-correct from the active host so seeks stay tight
-    setInterval(() => { if (lastHostId === clientId && currentKind) {
-      try { if (isPlayingNow()) broadcast("playing"); } catch(_){}
-    }}, 5000);
+    // periodic drift-correct from the active host so seeks stay tight.
+    // Skips entirely while backgrounded (broadcast no-ops there anyway) so the
+    // phone isn't woken up every few seconds for nothing.
+    setInterval(() => {
+      if (pageHidden) return;
+      if (lastHostId === clientId && currentKind) {
+        try { if (isPlayingNow()) broadcast("playing"); } catch(_){}
+      }
+    }, 8000);
 
     // ============================================================
     //  UI wiring
