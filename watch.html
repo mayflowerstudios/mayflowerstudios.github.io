@@ -317,11 +317,17 @@
     async function joinByName(rawName) {
       const name = cleanName(rawName);
       if (!name) { toast("Enter a room name"); return; }
-      if (!FIREBASE_READY) { goToRoom(name); return; }
+      if (!FIREBASE_READY) { toast("Firebase isn't set up yet"); return; }
       let entry = null;
       try { entry = (await get(ref(db, `lobby/${name}`))).val(); } catch (_) {}
-      // unlisted/unknown name → just go (room gets created on arrival; treated as ad-hoc)
-      if (!entry || entry.visibility !== "private") { goToRoom(name); return; }
+      // unknown room → don't create it here; point them at the create panel
+      if (!entry) {
+        toast(`"${name}" isn't a room yet — create it below`);
+        $("newRoomName").value = name;
+        $("newRoomName").focus();
+        return;
+      }
+      if (entry.visibility !== "private") { goToRoom(name); return; }
       promptPassword(name, entry.pass || "");
     }
     $("joinBtn").addEventListener("click", () => joinByName($("joinName").value));
@@ -356,6 +362,15 @@
       const qp = new URLSearchParams(location.search);
       const c = cleanName(qp.get("create") || "");
       if (c) { $("newRoomName").value = c; $("newRoomName").focus(); }
+
+      // bounced back from a room link that doesn't exist
+      const miss = cleanName(qp.get("missing") || "");
+      if (miss) {
+        toast(`"${miss}" isn't a room — create it below`);
+        $("newRoomName").value = miss;
+        $("newRoomName").focus();
+      }
+
       const j = cleanName(qp.get("join") || "");
       if (!j) return;
       $("joinName").value = j;
