@@ -86,12 +86,17 @@
   }
 
   function buildNav() {
-    const key = document.body.dataset.nav || '';
+    // Normalize legacy data-nav values to the canonical six groups
+    const ALIAS = { lore: 'server', eras: 'server', license: 'projects' };
+    const raw = document.body.dataset.nav || '';
+    const key = ALIAS[raw] || raw;
     const links = [
-      { href: '/',               label: 'Home',     key: 'home'    },
-      { href: '/projects.html',  label: 'Projects', key: 'projects'},
-      { href: '/server-info.html', label: 'Server', key: 'server'  },
-      { href: '/sakari.html',    label: 'Stories',  key: 'stories' },
+      { href: '/',                 label: 'Home',     key: 'home'     },
+      { href: '/projects.html',    label: 'Projects', key: 'projects' },
+      { href: '/projects.html#bots', label: 'Bots',  key: 'bots'     },
+      { href: '/projects.html#mods', label: 'Mods',  key: 'mods'     },
+      { href: '/sakari.html',      label: 'Stories',  key: 'stories'  },
+      { href: '/server-info.html', label: 'Server',   key: 'server'   },
     ];
     const linksHtml = links.map(l =>
       `<a href="${l.href}"${l.key === key ? ' class="nav-active"' : ''}>${l.label}</a>`
