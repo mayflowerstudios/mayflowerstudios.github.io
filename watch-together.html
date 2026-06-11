@@ -530,6 +530,7 @@
     <div class="chatPopHead">
       <strong>💬 Chat</strong>
       <span class="chatHeadTools">
+        <button class="miniGhost" id="soundToggle" title="Notification sound">🔔</button>
         <button class="miniGhost" id="translateToggle" title="Translate incoming messages">🌐 Translate: Off</button>
         <select class="langSelect" id="langSelect" title="Translate messages into…" hidden>
           <option value="en">English</option>
@@ -607,6 +608,7 @@
     const chatClose = $("chatClose");
     const chatBadge = $("chatBadge");
     const translateToggle = $("translateToggle");
+    const soundToggle = $("soundToggle");
     const langSelect = $("langSelect");
     const queueInput = $("queueInput");
     const queueAddBtn = $("queueAddBtn");
@@ -1195,7 +1197,37 @@
 
     // soft notification chime via Web Audio (no asset file needed)
     let audioCtx = null;
+    let soundOn = true;
+    try { soundOn = localStorage.getItem("wt_sound_off") !== "1"; } catch (_) {}
+
+    function updateSoundUI() {
+      soundToggle.textContent = soundOn ? "🔔" : "🔕";
+      soundToggle.title = soundOn ? "Notification sound: on" : "Notification sound: off";
+      soundToggle.classList.toggle("active", soundOn);
+    }
+
+    // Browsers start an AudioContext "suspended" until a user gesture. Create and
+    // resume it on the first interaction so the very first ping isn't swallowed.
+    function primeAudio() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+      } catch (_) {}
+    }
+    ["pointerdown", "keydown"].forEach(ev =>
+      window.addEventListener(ev, primeAudio, { once: true, passive: true }));
+
+    soundToggle.addEventListener("click", () => {
+      soundOn = !soundOn;
+      try { localStorage.setItem("wt_sound_off", soundOn ? "0" : "1"); } catch (_) {}
+      primeAudio();                 // also counts as a gesture
+      updateSoundUI();
+      if (soundOn) playPing();      // quick confirmation when turning it on
+    });
+    updateSoundUI();
+
     function playPing() {
+      if (!soundOn) return;
       try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === "suspended") audioCtx.resume();
@@ -1360,6 +1392,11 @@
       chatEmpty.style.display = "none";
 
       const mineMsg = (m) => (m.uid && m.uid === myId) || (!m.uid && m.cid === clientId);
+
+      // If the list shrank (history cap dropped old messages, or a delete),
+      // lastSeenCount could be stale and mis-slice. Clamp it so we never treat
+      // already-seen messages as fresh.
+      if (lastSeenCount > entries.length) lastSeenCount = entries.length;
 
       if (!chatStarted) {
         // first load: show history, but don't treat any of it as new
