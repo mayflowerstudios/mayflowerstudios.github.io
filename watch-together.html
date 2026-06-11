@@ -1217,45 +1217,53 @@
     }
 
     // ============================================================
-    //  Chat translation (per-reader, toggleable)
+    //  Chat translation (per-reader, toggleable, on-device)
     // ============================================================
     // Each message is stored once in its original language. Translation happens
-    // locally per reader: we translate into the reader's chosen language and cache
-    // the result keyed by (targetLang + original text), so each string is only
-    // translated once. Engine preference: Chrome's on-device Translator API (free,
-    // offline, no key); if unavailable, fall back to a Claude API call.
+    // entirely locally per reader using the browser's built-in on-device
+    // Translator API (Chromium 138+: Edge 148+, recent Chrome/Opera). It's free,
+    // private, needs no key/login, and works when self-hosted. If the browser
+    // doesn't support it, the toggle says so instead of failing silently.
+    //
+    // Note: the API is desktop-only — it does not exist on mobile browsers.
     let translateOn = false;
     let targetLang = "en";
-    let lastChatMsgs = {};                         // last msgs object, for re-render on toggle
-    const translationCache = new Map();            // key: lang||text -> translated string|null
-    const chromeTranslators = new Map();           // key: src->tgt -> Promise<Translator|null>
+    let lastChatMsgs = {};                         // last msgs, for re-render on toggle
+    const translationCache = new Map();            // key: lang||text -> translated|null
+    const translatorPool = new Map();              // key: src->tgt -> Promise<Translator|null>
+
+    const LANG_NAMES = { en:"English", es:"Spanish", de:"German", fr:"French", pt:"Portuguese",
+                         it:"Italian", nl:"Dutch", ja:"Japanese", ko:"Korean", zh:"Chinese", ru:"Russian" };
+
+    function guessLang() {
+      const l = (navigator.language || "en").slice(0, 2).toLowerCase();
+      return LANG_NAMES[l] ? l : "en";
+    }
 
     try {
       translateOn = localStorage.getItem("wt_translate_on") === "1";
       targetLang = localStorage.getItem("wt_translate_lang") || guessLang();
     } catch (_) { targetLang = guessLang(); }
 
-    function guessLang() {
-      const l = (navigator.language || "en").slice(0, 2).toLowerCase();
-      return ["en","es","de","fr","pt","it","nl","ja","ko","zh","ru"].includes(l) ? l : "en";
-    }
-
-    function chromeTranslationSupported() {
+    // Capability check: the global Translator (and LanguageDetector) must exist.
+    function translationSupported() {
       return (typeof self !== "undefined") && ("Translator" in self);
     }
+    const TRANSLATE_OK = translationSupported();
 
-    async function getChromeTranslator(src, tgt) {
+    async function getTranslator(src, tgt) {
       const key = src + "->" + tgt;
-      if (chromeTranslators.has(key)) return chromeTranslators.get(key);
+      if (translatorPool.has(key)) return translatorPool.get(key);
       const p = (async () => {
         try {
           const avail = await self.Translator.availability({ sourceLanguage: src, targetLanguage: tgt });
           if (avail === "unavailable") return null;
-          // 'downloadable'/'downloading' still allow create(); it fetches the model.
+          // 'downloadable' / 'downloading' still allow create(); the model
+          // downloads on first use (can take a moment), then it's cached.
           return await self.Translator.create({ sourceLanguage: src, targetLanguage: tgt });
         } catch (_) { return null; }
       })();
-      chromeTranslators.set(key, p);
+      translatorPool.set(key, p);
       return p;
     }
 
@@ -1272,9 +1280,6 @@
       return null;
     }
 
-    const LANG_NAMES = { en:"English", es:"Spanish", de:"German", fr:"French", pt:"Portuguese",
-                         it:"Italian", nl:"Dutch", ja:"Japanese", ko:"Korean", zh:"Chinese", ru:"Russian" };
-
     // Returns translated text, or null if it couldn't / didn't need translating.
     async function translateText(text, tgt) {
       const cacheKey = tgt + "||" + text;
@@ -1284,39 +1289,21 @@
       if (src && src === tgt) { translationCache.set(cacheKey, null); return null; }
 
       let out = null;
-      if (chromeTranslationSupported()) {
-        const t = await getChromeTranslator(src || "en", tgt);
-        if (t) { try { out = await t.translate(text); } catch (_) { out = null; } }
-      }
-      if (!out) out = await translateViaClaude(text, tgt);
+      const t = await getTranslator(src || "en", tgt);
+      if (t) { try { out = await t.translate(text); } catch (_) { out = null; } }
 
       translationCache.set(cacheKey, out || null);
       return out || null;
     }
 
-    async function translateViaClaude(text, tgt) {
-      try {
-        const res = await fetch("https://api.anthropic.com/v1/messages", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "claude-sonnet-4-20250514",
-            max_tokens: 1000,
-            messages: [{
-              role: "user",
-              content: "Translate the following chat message into " + (LANG_NAMES[tgt] || tgt)
-                     + ". Reply with ONLY the translation — no quotes, no notes. "
-                     + "If it is already in that language, repeat it unchanged.\n\n" + text
-            }]
-          })
-        });
-        const data = await res.json();
-        const txt = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("").trim();
-        return txt || null;
-      } catch (_) { return null; }
-    }
-
     function updateTranslateUI() {
+      if (!TRANSLATE_OK) {
+        translateToggle.textContent = "🌐 Translate: n/a";
+        translateToggle.classList.remove("active");
+        translateToggle.title = "Your browser doesn't support on-device translation (needs a recent Chromium browser — Edge 148+ or Chrome/Opera 138+, desktop only)";
+        langSelect.hidden = true;
+        return;
+      }
       translateToggle.textContent = "🌐 Translate: " + (translateOn ? (LANG_NAMES[targetLang] || targetLang) : "Off");
       translateToggle.classList.toggle("active", translateOn);
       langSelect.hidden = !translateOn;
@@ -1324,11 +1311,12 @@
     }
 
     translateToggle.addEventListener("click", () => {
+      if (!TRANSLATE_OK) {
+        toast("This browser can't translate on-device — try a recent Edge, Chrome, or Opera (desktop)");
+        return;
+      }
       translateOn = !translateOn;
       try { localStorage.setItem("wt_translate_on", translateOn ? "1" : "0"); } catch (_) {}
-      if (translateOn && !chromeTranslationSupported()) {
-        toast("On-device translation needs Chrome 138+ — using Claude as fallback");
-      }
       updateTranslateUI();
       renderChat(lastChatMsgs);
     });
@@ -1342,7 +1330,7 @@
 
     // Translate visible bubbles that don't yet show a translation for targetLang.
     async function applyTranslations() {
-      if (!translateOn) return;
+      if (!translateOn || !TRANSLATE_OK) return;
       const bubbles = chatLog.querySelectorAll(".msg .bubble[data-text]");
       for (const b of bubbles) {
         if (b.dataset.translatedFor === targetLang) continue;
