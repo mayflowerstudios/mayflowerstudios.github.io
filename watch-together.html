@@ -1490,15 +1490,17 @@
     }
 
     // ============================================================
-    //  Chat translation (per-reader, toggleable, on-device)
+    //  Chat translation (per-reader, toggleable)
     // ============================================================
-    // Each message is stored once in its original language. Translation happens
-    // entirely locally per reader using the browser's built-in on-device
-    // Translator API (Chromium 138+: Edge 148+, recent Chrome/Opera). It's free,
-    // private, needs no key/login, and works when self-hosted. If the browser
-    // doesn't support it, the toggle says so instead of failing silently.
-    //
-    // Note: the API is desktop-only — it does not exist on mobile browsers.
+    // Each message is stored once in its original language; translation happens
+    // per reader. Two tiers:
+    //   1. On-device Translator API (desktop Edge/Chrome) — local, private,
+    //      free, offline after a one-time model download.
+    //   2. A free public translation endpoint as a fallback for browsers
+    //      without the on-device API (Opera, Firefox, Safari, mobile). This
+    //      sends the message text over the network to translate it.
+    // The toggle reflects which mode is active, and says "n/a" only if neither
+    // is available (e.g. offline with no on-device support).
     let translateOn = false;
     let targetLang = "en";
     let lastChatMsgs = {};                         // last msgs, for re-render on toggle
@@ -1518,13 +1520,21 @@
       targetLang = localStorage.getItem("wt_translate_lang") || guessLang();
     } catch (_) { targetLang = guessLang(); }
 
-    // Capability check: translation needs the Translator API, and because we
-    // must detect each message's source language before translating, it also
-    // needs the LanguageDetector API. Both ship together in desktop Chromium.
-    function translationSupported() {
+    // Capability:
+    //  - "device": Chromium on-device Translator API (Edge/Chrome, desktop) —
+    //    fast, private, free, offline after model download.
+    //  - "server": a free public translation endpoint used as a fallback for
+    //    browsers without the on-device API (e.g. Opera, Firefox, Safari, and
+    //    mobile). Needs a network round-trip; messages leave the device.
+    //  - "none": neither available.
+    function deviceTranslationSupported() {
       return (typeof self !== "undefined") && ("Translator" in self) && ("LanguageDetector" in self);
     }
-    const TRANSLATE_OK = translationSupported();
+    const HAS_DEVICE = deviceTranslationSupported();
+    // Server fallback only makes sense over http(s), not file://
+    const HAS_SERVER = /^https?:$/.test(location.protocol);
+    const TRANSLATE_MODE = HAS_DEVICE ? "device" : (HAS_SERVER ? "server" : "none");
+    const TRANSLATE_OK = TRANSLATE_MODE !== "none";
 
     async function getTranslator(src, tgt) {
       const key = src + "->" + tgt;
@@ -1548,10 +1558,9 @@
           const d = await self.LanguageDetector.create();
           const res = await d.detect(text);
           if (res && res.length) {
-            // Prefer a confident result, but fall back to the top guess so we
-            // don't mislabel everything as the target language on a miss.
             const top = res.find(r => r.detectedLanguage && r.detectedLanguage !== "und");
-            if (top && top.confidence > 0.5) return top.detectedLanguage.slice(0, 2);
+            // accept a confident hit, else the best low-confidence guess, so we
+            // don't mislabel short messages as the target and skip them.
             if (top && top.confidence > 0.15) return top.detectedLanguage.slice(0, 2);
           }
         }
@@ -1559,23 +1568,55 @@
       return null;
     }
 
+    // --- server fallback (no API key; free public endpoint) ---
+    // Returns { text, src } or null. Detects source automatically (sl=auto).
+    async function serverTranslate(text, tgt) {
+      const url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl="
+        + encodeURIComponent(tgt) + "&dt=t&q=" + encodeURIComponent(text);
+      try {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 8000);
+        const r = await fetch(url, { signal: ctrl.signal });
+        clearTimeout(timer);
+        if (!r.ok) return null;
+        const data = await r.json();
+        // shape: [ [ [translatedChunk, originalChunk, ...], ... ], ..., detectedSrc ]
+        const out = (data[0] || []).map(seg => seg[0]).join("");
+        const src = (data[2] || "").slice(0, 2);
+        if (!out) return null;
+        return { text: out, src };
+      } catch (_) { return null; }
+    }
+
     // Returns translated text, or null if it couldn't / didn't need translating.
     async function translateText(text, tgt) {
       const cacheKey = tgt + "||" + text;
       if (translationCache.has(cacheKey)) return translationCache.get(cacheKey);
 
-      const src = await detectLang(text);
-
-      // Already in the target language → nothing to do.
-      if (src && src === tgt) { translationCache.set(cacheKey, null); return null; }
-
-      // If we genuinely can't tell the source language, don't guess "en" — that
-      // both no-ops English targets and mistranslates other text. Skip instead.
-      if (!src) { translationCache.set(cacheKey, null); return null; }
-
       let out = null;
-      const t = await getTranslator(src, tgt);
-      if (t) { try { out = await t.translate(text); } catch (_) { out = null; } }
+
+      if (TRANSLATE_MODE === "device") {
+        const src = await detectLang(text);
+        if (src && src === tgt) { translationCache.set(cacheKey, null); return null; }
+        // Don't assume "en" when detection fails — that no-ops English targets
+        // and mistranslates everything else. Skip the on-device attempt and let
+        // the server fallback (if any) try with its own auto-detection.
+        if (src) {
+          const t = await getTranslator(src, tgt);
+          if (t) { try { out = await t.translate(text); } catch (_) { out = null; } }
+        }
+        // If on-device couldn't do it and a server fallback exists, try that.
+        if (!out && HAS_SERVER) {
+          const r = await serverTranslate(text, tgt);
+          if (r) { if (r.src && r.src === tgt) { translationCache.set(cacheKey, null); return null; } out = r.text; }
+        }
+      } else if (TRANSLATE_MODE === "server") {
+        const r = await serverTranslate(text, tgt);
+        if (r) {
+          if (r.src && r.src === tgt) { translationCache.set(cacheKey, null); return null; }
+          out = r.text;
+        }
+      }
 
       translationCache.set(cacheKey, out || null);
       return out || null;
@@ -1585,23 +1626,30 @@
       if (!TRANSLATE_OK) {
         translateToggle.textContent = "🌐 Translate: n/a";
         translateToggle.classList.remove("active");
-        translateToggle.title = "Your browser doesn't support on-device translation (needs a recent Chromium browser — Edge 148+ or Chrome/Opera 138+, desktop only)";
+        translateToggle.title = "Translation isn't available here (needs a recent desktop browser or an internet connection)";
         langSelect.hidden = true;
         return;
       }
       translateToggle.textContent = "🌐 Translate: " + (translateOn ? (LANG_NAMES[targetLang] || targetLang) : "Off");
       translateToggle.classList.toggle("active", translateOn);
+      translateToggle.title = TRANSLATE_MODE === "device"
+        ? "On-device translation (private, runs locally)"
+        : "Translation via a free online service (messages are sent to it to translate)";
       langSelect.hidden = !translateOn;
       langSelect.value = targetLang;
     }
 
     translateToggle.addEventListener("click", () => {
       if (!TRANSLATE_OK) {
-        toast("This browser can't translate on-device — try a recent Edge, Chrome, or Opera (desktop)");
+        toast("Translation isn't available in this browser");
         return;
       }
       translateOn = !translateOn;
       try { localStorage.setItem("wt_translate_on", translateOn ? "1" : "0"); } catch (_) {}
+      // Let people know the first server translation makes a network call.
+      if (translateOn && TRANSLATE_MODE === "server") {
+        toast("Translating via a free online service 🌐");
+      }
       updateTranslateUI();
       renderChat(lastChatMsgs);
     });
