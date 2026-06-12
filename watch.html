@@ -583,6 +583,7 @@
 
     // ---- password modal ----
     let pendingRoom = null, pendingPass = "";
+    let joinRetryTimer = null;   // interval that polls for the lobby on ?join= arrival
     function promptPassword(room, pass) {
       pendingRoom = room; pendingPass = pass;
       $("passModalText").textContent = `"${room}" needs a password to enter.`;
@@ -593,18 +594,37 @@
       $("passModal").classList.add("open");
       setTimeout(()=>$("passModalInput").focus(), 50);
     }
+    function closePassModal() {
+      $("passModal").classList.remove("open");
+      $("passModalInput").value = "";
+      pendingRoom = null; pendingPass = "";
+      // Stop any pending auto-reopen from a ?join= arrival, and drop the param
+      // from the URL so a reload/back doesn't immediately re-prompt.
+      if (joinRetryTimer) { clearInterval(joinRetryTimer); joinRetryTimer = null; }
+      try {
+        const u = new URL(location.href);
+        if (u.searchParams.has("join")) {
+          u.searchParams.delete("join");
+          history.replaceState(null, "", u.pathname + u.search + u.hash);
+        }
+      } catch (_) {}
+    }
     function tryPassword() {
       if (($("passModalInput").value || "").trim() === pendingPass) {
-        sessionStorage.setItem("wt_pass_" + pendingRoom, pendingPass);
-        $("passModal").classList.remove("open");
-        goToRoom(pendingRoom);
+        const room = pendingRoom;
+        sessionStorage.setItem("wt_pass_" + room, pendingPass);
+        closePassModal();
+        goToRoom(room);
       } else {
         toast("Wrong password");
       }
     }
     $("passModalGo").addEventListener("click", tryPassword);
     $("passModalInput").addEventListener("keydown", (e)=>{ if(e.key==="Enter") tryPassword(); });
-    $("passModalCancel").addEventListener("click", ()=> $("passModal").classList.remove("open"));
+    $("passModalCancel").addEventListener("click", closePassModal);
+    // Esc closes, clicking the dark backdrop (outside the modal) closes too.
+    document.addEventListener("keydown", (e)=>{ if(e.key==="Escape" && $("passModal").classList.contains("open")) closePassModal(); });
+    $("passModal").addEventListener("click", (e)=>{ if(e.target === $("passModal")) closePassModal(); });
 
     function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
 
@@ -635,7 +655,9 @@
         // lobby may not be loaded yet; retry briefly
         if (!tryOpen()) {
           let tries = 0;
-          const iv = setInterval(() => { if (tryOpen() || ++tries > 20) clearInterval(iv); }, 150);
+          joinRetryTimer = setInterval(() => {
+            if (tryOpen() || ++tries > 20) { clearInterval(joinRetryTimer); joinRetryTimer = null; }
+          }, 150);
         }
       }
     })();
