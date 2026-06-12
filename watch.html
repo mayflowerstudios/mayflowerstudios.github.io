@@ -33,6 +33,11 @@
     }
     .title{ margin:10px 0 6px; font-size:42px; letter-spacing:.2px; line-height:1.05; }
     .sub{ margin:0; opacity:.78; line-height:1.6; max-width:68ch; }
+    .featChips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+    .featChips .chip{
+      font-size:12.5px; padding:6px 12px; border-radius:999px; opacity:.9;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05);
+    }
     .divider{ height:1px; background: rgba(255,255,255,.10); margin:20px 0; }
 
     .input{
@@ -77,28 +82,62 @@
     }
     .passEye:hover{ opacity:1; background:rgba(255,255,255,.08); }
     .field label{ display:block; font-size:13px; opacity:.8; margin:0 0 6px; }
-    .toggleRow{ display:flex; gap:8px; }
-    .toggleRow .opt{
-      flex:1 1 0; text-align:center; cursor:pointer; user-select:none;
-      padding:11px 8px; border-radius:13px; font-size:14px;
-      border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.04);
-      transition: background .12s ease, border-color .12s ease;
+    .optTag{ font-size:11px; opacity:.55; font-weight:400; }
+    .optTag.req{ color:#fda4af; opacity:.85; }
+
+    /* visibility picker — stacked option cards */
+    .visGrid{ display:flex; flex-direction:column; gap:8px; }
+    .visOpt{
+      display:grid; grid-template-columns: 26px 1fr; grid-template-rows:auto auto;
+      column-gap:11px; align-items:center; cursor:pointer; user-select:none;
+      padding:11px 13px; border-radius:14px; outline:none;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.035);
+      transition: background .14s ease, border-color .14s ease, transform .1s ease;
     }
-    .toggleRow .opt.active{ background:rgba(167,139,250,.18); border-color:rgba(167,139,250,.4); }
-    .toggleRow .opt small{ display:block; opacity:.6; font-size:11px; margin-top:2px; }
+    .visOpt:hover{ background:rgba(255,255,255,.06); border-color:rgba(167,139,250,.25); }
+    .visOpt:focus-visible{ border-color:rgba(167,139,250,.55); box-shadow:0 0 0 3px rgba(167,139,250,.18); }
+    .visOpt.active{ background:rgba(167,139,250,.16); border-color:rgba(167,139,250,.5); }
+    .visOpt .visIcon{ grid-row:1 / span 2; font-size:20px; text-align:center; }
+    .visOpt .visName{ font-size:14px; font-weight:600; }
+    .visOpt .visDesc{ font-size:12px; opacity:.62; line-height:1.4; }
+    .visOpt.active .visDesc{ opacity:.8; }
+
+    /* panel header with live badge */
+    .panelHead{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .panelHead h2{ margin:0; }
+    .liveBadge{
+      display:inline-flex; align-items:center; font-size:12px; font-weight:600;
+      padding:4px 10px; border-radius:999px; white-space:nowrap;
+      border:1px solid rgba(52,211,153,.3); background:rgba(52,211,153,.12); color:#86efac;
+    }
+
+    .joinRow{ display:flex; gap:8px; }
 
     .roomList{ display:flex; flex-direction:column; gap:10px; min-height:60px; }
     .roomCard{
       display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit;
+      position:relative; overflow:hidden;
       padding:13px 15px; border-radius:14px;
       border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.04);
       transition: transform .12s ease, background .12s ease, border-color .12s ease;
     }
+    .roomCard::before{
+      content:""; position:absolute; left:0; top:0; bottom:0; width:3px;
+      background:#34d399; opacity:.0; transition:opacity .12s ease;
+    }
     .roomCard:hover{ transform:translateY(-1px); background:rgba(255,255,255,.07); border-color:rgba(167,139,250,.25); }
+    .roomCard:hover::before{ opacity:.7; }
+    .roomCard.locked::before{ background:#fcd34d; }
+    .roomCard.locked{ border-color:rgba(253,230,138,.18); }
+    .roomCard.locked:hover{ border-color:rgba(253,230,138,.4); }
     .roomCard .rIcon{ font-size:22px; flex:0 0 auto; }
     .roomCard .rMain{ flex:1 1 auto; min-width:0; }
     .roomCard .rName{ font-size:15px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .roomCard .rMeta{ font-size:12px; opacity:.6; margin-top:2px; }
+    .roomCard .rMeta{ font-size:12px; opacity:.6; margin-top:2px; display:flex; align-items:center; }
+    .rLockTag{
+      font-size:11px; padding:1px 8px; border-radius:999px;
+      border:1px solid rgba(253,230,138,.3); background:rgba(253,230,138,.12); color:#fde68a;
+    }
     .roomCard .rGo{ font-size:13px; opacity:.55; flex:0 0 auto; }
     .roomCard .rCopy{
       flex:0 0 auto; cursor:pointer; font-size:14px; line-height:1;
@@ -118,11 +157,6 @@
       100%{ box-shadow:0 0 0 0 rgba(52,211,153,0); }
     }
     .roomEmpty{ opacity:.55; font-size:14px; text-align:center; padding:20px 0; }
-
-    .lockTag{
-      font-size:11px; padding:2px 8px; border-radius:999px; margin-left:8px;
-      border:1px solid rgba(253,230,138,.3); background:rgba(253,230,138,.12);
-    }
 
     /* password modal */
     .modalBack{
@@ -174,7 +208,14 @@
         <div class="content">
           <div class="kicker">🌙 Watch Together • Lobby</div>
           <h1 class="title">Watch Together</h1>
-          <p class="sub">Spin up a room and watch YouTube or videos perfectly in sync — with chat, a shared queue, and playlists. Make it public so anyone can drop in, or private with a password for just your people.</p>
+          <p class="sub">Spin up a room and watch YouTube or videos perfectly in sync — with chat, a shared queue, and playlists. Keep it <b>public</b> for anyone, <b>locked</b> with a password but still listed, or <b>hidden</b> for just the people you send the link to.</p>
+
+          <div class="featChips">
+            <span class="chip">▶ Synced playback</span>
+            <span class="chip">💬 Live chat</span>
+            <span class="chip">📋 Shared queue</span>
+            <span class="chip">📚 Playlists</span>
+          </div>
 
           <div class="divider"></div>
 
@@ -192,14 +233,27 @@
 
               <div class="field">
                 <label>Who can join?</label>
-                <div class="toggleRow" id="visToggle">
-                  <div class="opt active" data-vis="public">🌐 Public<small>listed in the lobby</small></div>
-                  <div class="opt" data-vis="private">🔒 Private<small>password to enter</small></div>
+                <div class="visGrid" id="visToggle">
+                  <div class="visOpt active" data-vis="public" tabindex="0" role="button" aria-pressed="true">
+                    <span class="visIcon">🌐</span>
+                    <span class="visName">Public</span>
+                    <span class="visDesc">Listed in the lobby. Anyone can drop in.</span>
+                  </div>
+                  <div class="visOpt" data-vis="locked" tabindex="0" role="button" aria-pressed="false">
+                    <span class="visIcon">🔒</span>
+                    <span class="visName">Locked</span>
+                    <span class="visDesc">Listed, but needs a password to enter.</span>
+                  </div>
+                  <div class="visOpt" data-vis="hidden" tabindex="0" role="button" aria-pressed="false">
+                    <span class="visIcon">🌑</span>
+                    <span class="visName">Hidden</span>
+                    <span class="visDesc">Unlisted. Only reachable by link or name.</span>
+                  </div>
                 </div>
               </div>
 
               <div class="field" id="passField" style="display:none;">
-                <label for="newRoomPass">Password</label>
+                <label for="newRoomPass">Password <span class="optTag" id="passOptTag">(optional)</span></label>
                 <div class="passWrap">
                   <input class="input" id="newRoomPass" type="password" maxlength="40" placeholder="choose a password" autocomplete="off" />
                   <button type="button" class="passEye" id="newRoomPassEye" aria-label="Show password" title="Show password">👁️</button>
@@ -209,19 +263,22 @@
               <button class="btn primary full" id="createBtn">Create &amp; Enter</button>
             </div>
 
-            <!-- Public list + quick join -->
+            <!-- Room list + quick join -->
             <div class="panel">
-              <h2>🌐 Public rooms</h2>
-              <p class="hint" id="pubHint">Open rooms anyone can join. Tap one to hop in.</p>
+              <div class="panelHead">
+                <h2>🛋️ Rooms</h2>
+                <span class="liveBadge" id="liveBadge" hidden></span>
+              </div>
+              <p class="hint" id="pubHint">Open and locked rooms show up here. Tap one to hop in — locked rooms ask for a password.</p>
               <div class="roomList" id="publicList">
-                <p class="roomEmpty" id="publicEmpty">No public rooms right now — create one!</p>
+                <p class="roomEmpty" id="publicEmpty">No rooms here yet — create one to get started!</p>
               </div>
 
-              <div class="divider" style="margin:16px 0;"></div>
+              <div class="divider" style="margin:18px 0;"></div>
 
               <h2 style="font-size:16px;">🔗 Join by name</h2>
-              <p class="hint">Know a room's name? Enter it (you'll be asked for a password if it's private).</p>
-              <div style="display:flex; gap:8px;">
+              <p class="hint">Got a room name or link? Enter it here. Hidden and locked rooms both work — you'll be asked for a password if there is one.</p>
+              <div class="joinRow">
                 <input class="input" id="joinName" type="text" maxlength="40" placeholder="room name" autocomplete="off" spellcheck="false" />
                 <button class="btn violet" id="joinBtn">Join</button>
               </div>
@@ -237,7 +294,7 @@
   <!-- password modal -->
   <div class="modalBack" id="passModal">
     <div class="modal">
-      <h3>🔒 Private room</h3>
+      <h3>🔒 Password needed</h3>
       <p id="passModalText">This room needs a password.</p>
       <div class="passWrap">
         <input class="input" id="passModalInput" type="password" placeholder="password" autocomplete="off" />
@@ -289,12 +346,24 @@
 
     // ---- create ----
     let visibility = "public";
-    $("visToggle").querySelectorAll(".opt").forEach(opt => {
-      opt.addEventListener("click", () => {
-        $("visToggle").querySelectorAll(".opt").forEach(o => o.classList.remove("active"));
-        opt.classList.add("active");
-        visibility = opt.dataset.vis;
-        $("passField").style.display = visibility === "private" ? "block" : "none";
+    function selectVis(opt) {
+      $("visToggle").querySelectorAll(".visOpt").forEach(o => {
+        o.classList.remove("active");
+        o.setAttribute("aria-pressed", "false");
+      });
+      opt.classList.add("active");
+      opt.setAttribute("aria-pressed", "true");
+      visibility = opt.dataset.vis;
+      // Password field: shown for locked (required) and hidden (optional).
+      const needsPass = visibility === "locked" || visibility === "hidden";
+      $("passField").style.display = needsPass ? "block" : "none";
+      $("passOptTag").textContent = visibility === "locked" ? "(required)" : "(optional)";
+      $("passOptTag").className = "optTag" + (visibility === "locked" ? " req" : "");
+    }
+    $("visToggle").querySelectorAll(".visOpt").forEach(opt => {
+      opt.addEventListener("click", () => selectVis(opt));
+      opt.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectVis(opt); }
       });
     });
 
@@ -302,22 +371,26 @@
       if (!FIREBASE_READY) { toast("Firebase isn't set up yet"); return; }
       const name = cleanName($("newRoomName").value);
       if (!name) { toast("Give the room a name"); return; }
-      const pass = visibility === "private" ? ($("newRoomPass").value || "").trim() : "";
-      if (visibility === "private" && !pass) { toast("Private rooms need a password"); return; }
 
-      // don't clobber an existing room of a different visibility silently
+      const needsPass = visibility === "locked" || visibility === "hidden";
+      const pass = needsPass ? ($("newRoomPass").value || "").trim() : "";
+      if (visibility === "locked" && !pass) { toast("Locked rooms need a password"); return; }
+
+      // Don't silently clobber an existing room — names are the shared key, so
+      // warn if one already exists (any type) rather than overwriting it.
       try {
         const existing = (await get(ref(db, `lobby/${name}`))).val();
-        if (existing && existing.visibility === "private" && visibility === "public") {
-          toast("A private room with that name already exists"); return;
+        if (existing) {
+          toast(`A room named "${name}" already exists — pick another name`);
+          return;
         }
       } catch (_) {}
 
       const entry = { name, visibility, t: Date.now(), lastActive: Date.now() };
-      if (visibility === "private") entry.pass = pass;
+      if (pass) entry.pass = pass;
       try {
         await set(ref(db, `lobby/${name}`), entry);
-        if (visibility === "private") sessionStorage.setItem("wt_pass_" + name, pass); // skip re-prompt on arrival
+        if (pass) sessionStorage.setItem("wt_pass_" + name, pass); // skip re-prompt on arrival
         goToRoom(name);
       } catch (_) { toast("Couldn't create the room"); }
     }
@@ -355,14 +428,23 @@
     wireEye("newRoomPassEye", "newRoomPass");
     wireEye("passModalEye", "passModalInput");
 
-    // ---- public list ----
-    // We keep a live viewer count per public room by subscribing to its
-    // presence node, and use each room's lastActive stamp to hide/prune rooms
-    // that have gone quiet. Counts and activity drive both ordering and display.
-    const STALE_HIDE_MS  = 1000 * 60 * 30;   // 30 min quiet → hidden from list
-    const STALE_PRUNE_MS = 1000 * 60 * 60 * 24; // 24 h quiet & empty → removed
-    const liveCounts = {};        // room name -> current viewer count
+    // ---- room list ----
+    // Public rooms show a live viewer count; locked rooms are listed by name +
+    // lock only (we don't subscribe to their presence, so the count stays
+    // private). Hidden rooms never appear here. lastActive drives hide/prune.
+    const STALE_HIDE_MS  = 1000 * 60 * 30;       // 30 min quiet → hidden from list
+    const STALE_PRUNE_MS = 1000 * 60 * 60 * 24;  // 24 h quiet & empty → removed
+    const liveCounts = {};        // room name -> current viewer count (public only)
     const presSubs = {};          // room name -> unsubscribe fn
+
+    // Normalize legacy "private" rooms (old two-type model) to "hidden".
+    function visType(r) {
+      const v = r && r.visibility;
+      if (v === "public" || v === "locked" || v === "hidden") return v;
+      if (v === "private") return "hidden";   // legacy
+      return "public";                        // very old entries with no field
+    }
+    function isListed(r) { const v = visType(r); return v === "public" || v === "locked"; }
 
     function subscribePresence(name) {
       if (presSubs[name] || !db) return;
@@ -378,50 +460,70 @@
       const list = $("publicList"), empty = $("publicEmpty");
       const now = Date.now();
 
-      const allPublic = Object.values(lobbyCache).filter(r => r && r.visibility === "public");
+      const listed = Object.values(lobbyCache).filter(r => r && isListed(r));
 
-      // Make sure we're watching presence for every public room we know about.
-      allPublic.forEach(r => subscribePresence(r.name));
+      // Watch presence only for public rooms (locked rooms keep their count private).
+      listed.filter(r => visType(r) === "public").forEach(r => subscribePresence(r.name));
 
-      // Best-effort prune of long-dead, empty rooms (anyone in the lobby can do
-      // this; it's idempotent). Only touches rooms with no viewers.
-      allPublic.forEach(r => {
+      // Best-effort prune of long-dead, empty rooms. For locked rooms we can't
+      // see the count, so only prune on the activity stamp.
+      listed.forEach(r => {
         const quiet = now - (r.lastActive || r.t || 0);
-        if (quiet > STALE_PRUNE_MS && (liveCounts[r.name] || 0) === 0) {
+        const empty = visType(r) === "public" ? (liveCounts[r.name] || 0) === 0 : true;
+        if (quiet > STALE_PRUNE_MS && empty) {
           try { remove(ref(db, `lobby/${r.name}`)); } catch (_) {}
         }
       });
 
-      // Visible = has viewers, or was active recently.
-      const pub = allPublic
-        .filter(r => (liveCounts[r.name] || 0) > 0 || (now - (r.lastActive || r.t || 0)) < STALE_HIDE_MS)
+      const rooms = listed
+        .filter(r => {
+          if (visType(r) === "public" && (liveCounts[r.name] || 0) > 0) return true;
+          return (now - (r.lastActive || r.t || 0)) < STALE_HIDE_MS;
+        })
         .sort((a, b) => {
-          const ca = liveCounts[a.name] || 0, cb = liveCounts[b.name] || 0;
-          if (cb !== ca) return cb - ca;                       // busier first
-          return (b.lastActive || b.t || 0) - (a.lastActive || a.t || 0); // then fresher
+          // public-with-viewers first, then by recency
+          const ca = visType(a) === "public" ? (liveCounts[a.name] || 0) : 0;
+          const cb = visType(b) === "public" ? (liveCounts[b.name] || 0) : 0;
+          if (cb !== ca) return cb - ca;
+          return (b.lastActive || b.t || 0) - (a.lastActive || a.t || 0);
         });
 
+      // Live badge: total people across public rooms.
+      const totalLive = Object.values(liveCounts).reduce((s, n) => s + (n || 0), 0);
+      const badge = $("liveBadge");
+      if (totalLive > 0) {
+        badge.hidden = false;
+        badge.innerHTML = `<span class="liveDot"></span>${totalLive} watching`;
+      } else { badge.hidden = true; }
+
       list.innerHTML = "";
-      if (!pub.length) { list.appendChild(empty); empty.style.display = "block"; return; }
+      if (!rooms.length) { list.appendChild(empty); empty.style.display = "block"; return; }
       empty.style.display = "none";
-      for (const r of pub) {
-        const count = liveCounts[r.name] || 0;
-        const meta = count > 0
-          ? `<span class="liveDot"></span>${count} watching now`
-          : "public room";
+
+      for (const r of rooms) {
+        const type = visType(r);
+        const locked = type === "locked";
+        const count = locked ? 0 : (liveCounts[r.name] || 0);
+
+        const icon = locked ? "🔒" : "📺";
+        const meta = locked
+          ? `<span class="rLockTag">password to enter</span>`
+          : (count > 0
+              ? `<span class="liveDot"></span>${count} watching now`
+              : `quiet right now`);
+
         const a = document.createElement("a");
-        a.className = "roomCard";
+        a.className = "roomCard" + (locked ? " locked" : "");
         a.href = "watch-together.html?room=" + encodeURIComponent(r.name);
         a.innerHTML =
-          `<span class="rIcon">📺</span>
+          `<span class="rIcon">${icon}</span>
            <span class="rMain"><span class="rName">${escapeHtml(r.name)}</span>
            <span class="rMeta">${meta}</span></span>
            <button class="rCopy" data-room="${escapeHtml(r.name)}" title="Copy room link" aria-label="Copy room link">🔗</button>
-           <span class="rGo">Join →</span>`;
+           <span class="rGo">${locked ? "Unlock →" : "Join →"}</span>`;
         list.appendChild(a);
       }
 
-      // Copy-link buttons (stop the click from following the card's link).
       list.querySelectorAll(".rCopy").forEach(btn => {
         btn.addEventListener("click", (e) => {
           e.preventDefault(); e.stopPropagation();
@@ -450,7 +552,7 @@
       }
     }
 
-    // ---- join by name (handles private password) ----
+    // ---- join by name (handles any room that has a password) ----
     async function joinByName(rawName) {
       const name = cleanName(rawName);
       if (!name) { toast("Enter a room name"); return; }
@@ -462,10 +564,13 @@
         toast(`"${name}" isn't a room yet — create it below`);
         $("newRoomName").value = name;
         $("newRoomName").focus();
+        updateNamePreview();
         return;
       }
-      if (entry.visibility !== "private") { goToRoom(name); return; }
-      promptPassword(name, entry.pass || "");
+      // A password is required whenever the room has one — true for locked
+      // rooms, password-protected hidden rooms, and legacy private rooms.
+      if (entry.pass) { promptPassword(name, entry.pass); return; }
+      goToRoom(name);
     }
     $("joinBtn").addEventListener("click", () => joinByName($("joinName").value));
     $("joinName").addEventListener("keydown", (e)=>{ if(e.key==="Enter") joinByName($("joinName").value); });
@@ -474,7 +579,7 @@
     let pendingRoom = null, pendingPass = "";
     function promptPassword(room, pass) {
       pendingRoom = room; pendingPass = pass;
-      $("passModalText").textContent = `"${room}" is private. Enter the password to join.`;
+      $("passModalText").textContent = `"${room}" needs a password to enter.`;
       $("passModalInput").value = "";
       $("passModalInput").type = "password";
       const eye = $("passModalEye");
@@ -517,7 +622,8 @@
       if (FIREBASE_READY) {
         const tryOpen = () => {
           const entry = lobbyCache[j];
-          if (entry && entry.visibility === "private") { promptPassword(j, entry.pass || ""); return true; }
+          if (entry && entry.pass) { promptPassword(j, entry.pass); return true; }
+          if (entry && !entry.pass) { goToRoom(j); return true; } // open room, just go
           return false;
         };
         // lobby may not be loaded yet; retry briefly

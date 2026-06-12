@@ -1168,18 +1168,18 @@
         db = getDatabase(app);
 
         // Room gate: a room only exists if it was made in the lobby's create
-        // panel. If there's no lobby entry, don't spin up a session here —
-        // bounce back to the lobby so the visitor can create it. Private rooms
-        // also require the session-held password.
+        // panel. If there's no lobby entry, bounce back to the lobby so the
+        // visitor can create it. Any room carrying a password (locked, or a
+        // password-protected hidden/legacy room) requires the session-held one.
         get(ref(db, `lobby/${ROOM}`)).then((snap) => {
           const entry = snap.val();
           if (!entry) {
             window.location.href = "watch.html?missing=" + encodeURIComponent(ROOM);
             return;
           }
-          if (entry.visibility === "private") {
+          if (entry.pass) {
             const held = sessionStorage.getItem("wt_pass_" + ROOM);
-            if (!held || held !== (entry.pass || "")) {
+            if (!held || held !== entry.pass) {
               window.location.href = "watch.html?join=" + encodeURIComponent(ROOM);
               return;
             }
