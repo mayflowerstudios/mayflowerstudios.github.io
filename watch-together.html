@@ -292,6 +292,28 @@
     .nowTag{ display:inline-block; font-size:10px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:#34d399; background:rgba(52,211,153,.14); border-radius:5px; padding:1px 6px; margin-right:6px; vertical-align:middle; }
     .nowBars{ color:#34d399; font-size:13px; }
 
+    /* "play next" mini button */
+    .qMini.playnext{ font-size:13px; }
+
+    /* let pointer-drag work without the list scrolling under the finger */
+    .qItem.draggable{ touch-action: pan-y; }
+
+    /* buffering / waiting overlay over the video stage */
+    .waitOverlay{
+      position:absolute; inset:0; z-index:40;
+      display:flex; align-items:center; justify-content:center; gap:12px;
+      background: rgba(10,8,16,.55); backdrop-filter: blur(2px);
+      color:#e7e2f0; font-size:15px; font-weight:500;
+      opacity:0; pointer-events:none; transition:opacity .18s ease;
+    }
+    .waitOverlay.show{ opacity:1; }
+    .waitSpin{
+      width:22px; height:22px; border-radius:50%;
+      border:3px solid rgba(167,139,250,.3); border-top-color:#a78bfa;
+      animation: waitspin .8s linear infinite;
+    }
+    @keyframes waitspin{ to { transform: rotate(360deg); } }
+
     /* drag state for reorderable queue rows */
     .qItem.draggable{ cursor:grab; }
     .qItem.dragging{ opacity:.45; }
@@ -696,6 +718,9 @@
     let currentKind = null;         // "yt" | "file"
     let currentSrc = null;          // current yt id or file url
     let currentTitle = null;        // resolved display title
+    let localBuffering = false;     // are we stalled/buffering right now?
+    let partnerWaiting = false;     // is the other side stalled?
+    let waitingRef = null;          // shared "who's buffering" node
 
     const fileVid = $("filevid");
     const ytEl = $("ytplayer");
@@ -727,7 +752,9 @@
       if (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.PAUSED || e.data === YT.PlayerState.ENDED) {
         syncWakeLock();
       }
-      if (e.data === YT.PlayerState.ENDED) { advanceQueue(); return; }
+      if (e.data === YT.PlayerState.BUFFERING) { setBuffering(true); return; }
+      if (e.data === YT.PlayerState.PLAYING) setBuffering(false);
+      if (e.data === YT.PlayerState.ENDED) { setBuffering(false); advanceQueue(); return; }
       if (applyingRemote) return;
       if (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.PAUSED) {
         broadcast(e.data === YT.PlayerState.PLAYING ? "playing" : "paused");
@@ -742,7 +769,11 @@
     fileVid.addEventListener("play",  () => { syncWakeLock(); fileEvent(); });
     fileVid.addEventListener("pause", () => { syncWakeLock(); fileEvent(); });
     fileVid.addEventListener("seeked", fileEvent);
-    fileVid.addEventListener("ended", () => { syncWakeLock(); if (currentKind === "file") advanceQueue(); });
+    fileVid.addEventListener("waiting", () => { if (currentKind === "file") setBuffering(true); });
+    fileVid.addEventListener("stalled", () => { if (currentKind === "file") setBuffering(true); });
+    fileVid.addEventListener("playing", () => { if (currentKind === "file") setBuffering(false); });
+    fileVid.addEventListener("canplay", () => { if (currentKind === "file") setBuffering(false); });
+    fileVid.addEventListener("ended", () => { syncWakeLock(); setBuffering(false); if (currentKind === "file") advanceQueue(); });
     fileVid.addEventListener("error", () => {
       if (currentKind === "file") toast("Couldn't load that video link");
     });
@@ -888,7 +919,7 @@
             if (s.status !== "playing") setTimeout(() => { try{player.pauseVideo();}catch(_){} }, 350);
           } else {
             const target = estimatePos(s);
-            if (force || Math.abs((player.getCurrentTime() || 0) - target) > 1.4) player.seekTo(target, true);
+            if (force || Math.abs((player.getCurrentTime() || 0) - target) > driftThreshold()) player.seekTo(target, true);
             if (s.status === "playing") player.playVideo(); else player.pauseVideo();
           }
         } else { // file
@@ -908,7 +939,7 @@
             fileVid.load();
           } else {
             const target = estimatePos(s);
-            if (force || Math.abs((fileVid.currentTime || 0) - target) > 1.4) {
+            if (force || Math.abs((fileVid.currentTime || 0) - target) > driftThreshold()) {
               try { fileVid.currentTime = target; } catch(_) {}
             }
             if (s.status === "playing") fileVid.play().catch(()=>{}); else fileVid.pause();
@@ -926,6 +957,13 @@
         if (elapsed > 0 && elapsed < 3600) pos += elapsed;
       }
       return Math.max(0, pos);
+    }
+
+    // How far out of sync we tolerate before snapping. Looser while either side
+    // is buffering, so we don't yank playback around a stall that's about to
+    // resolve on its own.
+    function driftThreshold() {
+      return (localBuffering || partnerWaiting) ? 4.0 : 1.4;
     }
 
     function shortName(url) {
@@ -957,19 +995,34 @@
         refreshQueueNow();
         return;
       }
-      fetch("https://www.youtube.com/oembed?format=json&url=https://www.youtube.com/watch?v=" + encodeURIComponent(src))
+      lookupYtTitle(src, 2);
+    }
+
+    // Resolve a YouTube title via oEmbed, with a timeout and a retry so a slow
+    // or flaky request doesn't leave the row stuck on its fallback label.
+    function lookupYtTitle(src, attemptsLeft) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 5000);
+      fetch("https://www.youtube.com/oembed?format=json&url=https://www.youtube.com/watch?v=" + encodeURIComponent(src), { signal: ctrl.signal })
         .then(r => r.ok ? r.json() : null)
         .then(d => {
-          if (d && d.title && currentSrc === src) {
+          clearTimeout(timer);
+          if (currentSrc !== src) return;        // user moved on
+          if (d && d.title) {
             titleCache[src] = d.title;
             currentTitle = d.title;
             nowPlaying.textContent = "▶ " + d.title;
             refreshQueueNow();
-          } else if (currentSrc === src) {
+          } else {
             nowPlaying.textContent = "▶ " + src;
           }
         })
-        .catch(() => { if (currentSrc === src) nowPlaying.textContent = "▶ " + src; });
+        .catch(() => {
+          clearTimeout(timer);
+          if (currentSrc !== src) return;
+          if (attemptsLeft > 1) { setTimeout(() => lookupYtTitle(src, attemptsLeft - 1), 800); }
+          else { nowPlaying.textContent = "▶ " + src; }
+        });
     }
 
     // Re-render the queue so its pinned "now playing" row reflects current state.
@@ -993,6 +1046,38 @@
         by: clientId,
         byName: myName,
       });
+    }
+
+    // Share our buffering/stalled state so the partner can ease off sync nudges
+    // and (optionally) show a "waiting for you" hint. Cleared on disconnect.
+    function setBuffering(isBuffering) {
+      if (localBuffering === isBuffering) return;
+      localBuffering = isBuffering;
+      updateWaitingOverlay();
+      if (!FIREBASE_READY || !waitingRef || !db) return;
+      const myWaitRef = ref(db, `watch/${ROOM}/waiting/${clientId}`);
+      if (isBuffering) {
+        safeWrite(() => set(myWaitRef, { name: myName, t: Date.now() }));
+        try { onDisconnect(myWaitRef).remove(); } catch(_) {}
+      } else {
+        safeWrite(() => remove(myWaitRef));
+      }
+    }
+
+    function updateWaitingOverlay() {
+      const show = localBuffering || partnerWaiting;
+      let el = $("waitOverlay");
+      if (!el) {
+        el = document.createElement("div");
+        el.id = "waitOverlay";
+        el.className = "waitOverlay";
+        el.innerHTML = `<span class="waitSpin"></span><span class="waitMsg"></span>`;
+        const stage = document.querySelector(".stage") || document.body;
+        stage.appendChild(el);
+      }
+      el.querySelector(".waitMsg").textContent =
+        localBuffering ? "Buffering…" : "Waiting for the other side…";
+      el.classList.toggle("show", show);
     }
 
     function updateHostTag(name, isMe) {
@@ -1136,6 +1221,15 @@
           renderQueue(snap.val() || {});
         });
 
+        // --- buffering / waiting (shared, per room) ---
+        waitingRef = ref(db, `watch/${ROOM}/waiting`);
+        onValue(waitingRef, (snap) => {
+          const val = snap.val() || {};
+          // Anyone other than us currently marked as waiting?
+          partnerWaiting = Object.keys(val).some(id => id !== clientId);
+          updateWaitingOverlay();
+        });
+
         // --- playlists (per room) ---
         playlistsRef = ref(db, `watch/${ROOM}/playlists`);
         onValue(playlistsRef, (snap) => {
@@ -1185,6 +1279,7 @@
     // shared loader used by the URL box and the queue
     function startSource(parsed) {
       placeholder.style.display = "none";
+      setBuffering(false);
       currentSrc = parsed.src;
       applyingRemote = false;
       lastHostId = clientId;
@@ -1263,6 +1358,53 @@
     chatFab.addEventListener("click", () => chatOpen ? closeChat() : openChat());
     chatClose.addEventListener("click", closeChat);
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && chatOpen) closeChat(); });
+
+    // ---- Keyboard shortcuts ----
+    // Space / K: play-pause · ← →: seek 5s · J / L: seek 10s · M: mute.
+    // Ignored while typing in a field so chat and the URL box still work.
+    function seekBy(delta) {
+      try {
+        if (currentKind === "file") {
+          const d = fileVid.duration || Infinity;
+          fileVid.currentTime = Math.max(0, Math.min(d, (fileVid.currentTime || 0) + delta));
+        } else if (currentKind === "yt" && player) {
+          const t = player.getCurrentTime() || 0;
+          player.seekTo(Math.max(0, t + delta), true);
+        }
+        setTimeout(() => broadcast(isPlayingNow() ? "playing" : "paused"), 120);
+      } catch (_) {}
+    }
+    function togglePlayPause() {
+      try {
+        if (currentKind === "file") {
+          if (fileVid.paused) fileVid.play().catch(()=>{}); else fileVid.pause();
+        } else if (currentKind === "yt" && player) {
+          if (player.getPlayerState() === 1) player.pauseVideo(); else player.playVideo();
+        }
+      } catch (_) {}
+    }
+    function toggleMute() {
+      try {
+        if (currentKind === "file") { fileVid.muted = !fileVid.muted; }
+        else if (currentKind === "yt" && player) { player.isMuted() ? player.unMute() : player.mute(); }
+      } catch (_) {}
+    }
+    document.addEventListener("keydown", (e) => {
+      const t = e.target;
+      const typing = t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable);
+      if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (!currentKind) return;
+      switch (e.key) {
+        case " ":
+        case "k": case "K":
+          e.preventDefault(); togglePlayPause(); break;
+        case "ArrowLeft":  e.preventDefault(); seekBy(-5); break;
+        case "ArrowRight": e.preventDefault(); seekBy(5); break;
+        case "j": case "J": e.preventDefault(); seekBy(-10); break;
+        case "l": case "L": e.preventDefault(); seekBy(10); break;
+        case "m": case "M": e.preventDefault(); toggleMute(); break;
+      }
+    });
 
     let chatStarted = false;   // becomes true after the first render so existing msgs aren't "new"
 
@@ -1520,6 +1662,21 @@
     //  Queue
     // ============================================================
     let queueCache = {};
+
+    // Wrap Firebase writes so a dropped connection surfaces a toast instead of
+    // failing silently. Accepts a function returning the write's promise.
+    function safeWrite(fn, failMsg) {
+      try {
+        const p = fn();
+        if (p && typeof p.catch === "function") {
+          p.catch(() => toast(failMsg || "That didn't save — check your connection"));
+        }
+        return p;
+      } catch (_) {
+        toast(failMsg || "That didn't save — check your connection");
+      }
+    }
+
     function renderQueue(items) {
       queueCache = items;
       const entries = Object.entries(items).sort((a, b) => (a[1].t || 0) - (b[1].t || 0));
@@ -1558,14 +1715,15 @@
           thumb +
           `<div class="qTitle">${escapeHtml(label)}</div>` +
           `<div class="qBtns">` +
-            `<button class="qMini up" data-up="${key}" title="Move up" ${idx === 0 ? "disabled" : ""}>↑</button>` +
-            `<button class="qMini down" data-down="${key}" title="Move down" ${idx === entries.length - 1 ? "disabled" : ""}>↓</button>` +
-            `<button class="qMini play" data-key="${key}" title="Play now">▶</button>` +
+            `<button class="qMini up" data-up="${key}" title="Move up" aria-label="Move up" ${idx === 0 ? "disabled" : ""}>↑</button>` +
+            `<button class="qMini down" data-down="${key}" title="Move down" aria-label="Move down" ${idx === entries.length - 1 ? "disabled" : ""}>↓</button>` +
+            `<button class="qMini playnext" data-next="${key}" title="Play next" aria-label="Play next" ${idx === 0 ? "disabled" : ""}>⤴</button>` +
+            `<button class="qMini play" data-key="${key}" title="Play now" aria-label="Play now">▶</button>` +
             `<span class="addPlWrap">` +
-              `<button class="qMini" data-addpl="${key}" title="Add to a playlist">＋📚</button>` +
+              `<button class="qMini" data-addpl="${key}" title="Add to a playlist" aria-label="Add to a playlist">＋📚</button>` +
               `<div class="addPlMenu" data-menu="${key}"></div>` +
             `</span>` +
-            `<button class="qMini" data-del="${key}" title="Remove">✕</button>` +
+            `<button class="qMini" data-del="${key}" title="Remove" aria-label="Remove from queue">✕</button>` +
           `</div>`;
         queueList.appendChild(row);
       });
@@ -1578,6 +1736,8 @@
         b.addEventListener("click", () => moveQueued(b.dataset.up, "up")));
       queueList.querySelectorAll("[data-down]").forEach(b =>
         b.addEventListener("click", () => moveQueued(b.dataset.down, "down")));
+      queueList.querySelectorAll("[data-next]").forEach(b =>
+        b.addEventListener("click", () => playNextQueued(b.dataset.next)));
       queueList.querySelectorAll("[data-addpl]").forEach(b =>
         b.addEventListener("click", (e) => { e.stopPropagation(); openAddPlMenu(b.dataset.addpl, "queue"); }));
 
@@ -1587,7 +1747,8 @@
     // --- drag-and-drop reordering for the queue ---
     let dragKey = null;
     function wireQueueDrag() {
-      queueList.querySelectorAll(".qItem").forEach(row => {
+      queueList.querySelectorAll(".qItem.draggable").forEach(row => {
+        // Native HTML5 drag (mouse / desktop)
         row.addEventListener("dragstart", (e) => {
           dragKey = row.dataset.key;
           row.classList.add("dragging");
@@ -1604,13 +1765,75 @@
           row.classList.remove("dropTarget");
           const targetKey = row.dataset.key;
           if (!dragKey || dragKey === targetKey) return;
-          const keys = orderedQueueKeys();
-          const from = keys.indexOf(dragKey);
-          const to = keys.indexOf(targetKey);
-          if (from < 0 || to < 0) return;
-          keys.splice(to, 0, keys.splice(from, 1)[0]);
-          reorderByKeys(keys);
+          reorderAround(dragKey, targetKey);
         });
+
+        // Touch / pointer drag (mobile). Long-press the grip, then drag.
+        wirePointerDrag(row);
+      });
+    }
+
+    function reorderAround(movingKey, targetKey) {
+      const keys = orderedQueueKeys();
+      const from = keys.indexOf(movingKey);
+      const to = keys.indexOf(targetKey);
+      if (from < 0 || to < 0) return;
+      keys.splice(to, 0, keys.splice(from, 1)[0]);
+      reorderByKeys(keys);
+    }
+
+    // Pointer-based dragging for touch devices, which don't fire HTML5 drag
+    // events. We start after a short hold so normal taps/scrolls still work,
+    // then drop onto whichever queue row sits under the finger.
+    let ptrState = null;
+    function wirePointerDrag(row) {
+      row.addEventListener("pointerdown", (e) => {
+        if (e.pointerType === "mouse") return;            // mouse uses native drag
+        if (e.target.closest("button, .addPlWrap")) return; // let buttons work
+        const key = row.dataset.key;
+        const holdTimer = setTimeout(() => {
+          ptrState = { key, row };
+          row.classList.add("dragging");
+          if (navigator.vibrate) { try { navigator.vibrate(15); } catch(_){} }
+        }, 220);
+        const cancel = () => { clearTimeout(holdTimer); };
+        row.addEventListener("pointerup", cancel, { once: true });
+        row.addEventListener("pointercancel", cancel, { once: true });
+        row.addEventListener("pointermove", function moveOnce(ev) {
+          // if they move before the hold fires, treat it as a scroll, not a drag
+          if (!ptrState) { clearTimeout(holdTimer); row.removeEventListener("pointermove", moveOnce); }
+        });
+      });
+
+      row.addEventListener("pointermove", (e) => {
+        if (!ptrState) return;
+        e.preventDefault();
+        const el = document.elementFromPoint(e.clientX, e.clientY);
+        const overRow = el && el.closest(".qItem.draggable");
+        queueList.querySelectorAll(".qItem").forEach(r => r.classList.remove("dropTarget"));
+        if (overRow && overRow.dataset.key !== ptrState.key) overRow.classList.add("dropTarget");
+      }, { passive: false });
+
+      row.addEventListener("pointerup", (e) => {
+        if (!ptrState) return;
+        const el = document.elementFromPoint(e.clientX, e.clientY);
+        const overRow = el && el.closest(".qItem.draggable");
+        const movingKey = ptrState.key;
+        ptrState.row.classList.remove("dragging");
+        queueList.querySelectorAll(".qItem").forEach(r => r.classList.remove("dropTarget"));
+        ptrState = null;
+        if (overRow && overRow.dataset.key && overRow.dataset.key !== movingKey) {
+          reorderAround(movingKey, overRow.dataset.key);
+        }
+      });
+    }
+
+    // Is this kind+src already sitting in the queue?
+    function isInQueue(kind, src) {
+      return Object.values(queueCache).some(it => {
+        const k = it.kind || (it.videoId ? "yt" : "file");
+        const s = it.src || it.videoId || "";
+        return k === kind && s === src;
       });
     }
 
@@ -1618,7 +1841,8 @@
       const parsed = parseSource(queueInput.value);
       if (!parsed) { toast("Couldn't read that link"); return; }
       if (!FIREBASE_READY || !queueRef) { toast("Queue needs Firebase set up first"); return; }
-      push(queueRef, { kind: parsed.kind, src: parsed.src, t: Date.now(), by: myName });
+      if (isInQueue(parsed.kind, parsed.src)) { toast("That's already in the queue"); return; }
+      safeWrite(() => push(queueRef, { kind: parsed.kind, src: parsed.src, t: Date.now(), by: myName }), "Couldn't add to queue");
       queueInput.value = "";
       toast("Added to queue 🎞️");
     }
@@ -1636,7 +1860,7 @@
 
     function removeQueued(key) {
       if (!queueRef) return;
-      remove(ref(db, `watch/${ROOM}/queue/${key}`));
+      safeWrite(() => remove(ref(db, `watch/${ROOM}/queue/${key}`)), "Couldn't remove that item");
     }
 
     // ---- Shuffle / reorder ----
@@ -1657,8 +1881,7 @@
         const j = Math.floor(Math.random() * (i + 1));
         [keys[i], keys[j]] = [keys[j], keys[i]];
       }
-      const base = Date.now();
-      keys.forEach((k, i) => set(ref(db, `watch/${ROOM}/queue/${k}/t`), base + i * 1000));
+      reorderByKeys(keys);
       toast("Queue shuffled 🔀");
     }
 
@@ -1669,14 +1892,26 @@
       const j = i + (dir === "up" ? -1 : 1);
       if (j < 0 || j >= keys.length) return;
       [keys[i], keys[j]] = [keys[j], keys[i]];
-      const base = Date.now();
-      keys.forEach((k, idx) => set(ref(db, `watch/${ROOM}/queue/${k}/t`), base + idx * 1000));
+      reorderByKeys(keys);
+    }
+
+    // Move an item to the very front so it plays after the current video ends.
+    function playNextQueued(key) {
+      const keys = orderedQueueKeys();
+      const i = keys.indexOf(key);
+      if (i <= 0) return;          // already first, or not found
+      keys.splice(0, 0, keys.splice(i, 1)[0]);
+      reorderByKeys(keys);
+      toast("Up next ⤴");
     }
 
     // drag reorder writes the same spaced `t` values after a drop
     function reorderByKeys(keys) {
       const base = Date.now();
-      keys.forEach((k, idx) => set(ref(db, `watch/${ROOM}/queue/${k}/t`), base + idx * 1000));
+      safeWrite(
+        () => Promise.all(keys.map((k, idx) => set(ref(db, `watch/${ROOM}/queue/${k}/t`), base + idx * 1000))),
+        "Couldn't reorder the queue"
+      );
     }
 
     shuffleBtn.addEventListener("click", shuffleQueue);
@@ -1720,15 +1955,18 @@
           return;
         }
 
-        // Claim the advance so the partner's end event stands down.
+        // Claim the advance so the partner's end event stands down. The claim
+        // self-expires after 2.5s, so if whoever claimed it crashes or drops,
+        // the other side can take over on the next end/retry instead of stalling.
+        let claimRef = null;
         if (FIREBASE_READY && db) {
-          const claimRef = ref(db, `watch/${ROOM}/advance`);
+          claimRef = ref(db, `watch/${ROOM}/advance`);
           const now = Date.now();
           let claimed = true;
           try {
             const snap = await get(claimRef);
             const prev = snap.val();
-            if (prev && prev.by !== clientId && (now - (prev.t || 0)) < 4000) claimed = false;
+            if (prev && prev.by !== clientId && (now - (prev.t || 0)) < 2500) claimed = false;
           } catch (_) {}
           if (!claimed) return;
           try { await set(claimRef, { by: clientId, t: now }); } catch (_) {}
@@ -1746,6 +1984,8 @@
 
         removeQueued(key);
         startSource({ kind, src });
+        // Release the claim now that we've actually moved on.
+        if (claimRef) { try { await remove(claimRef); } catch (_) {} }
       } finally {
         setTimeout(() => { advancing = false; }, 1500);
       }
@@ -1789,10 +2029,10 @@
           thumb +
           `<div class="qTitle">${escapeHtml(label)}</div>` +
           `<div class="qBtns">` +
-            `<button class="qMini play" data-h-play="${key}" title="Play again">▶</button>` +
-            `<button class="qMini" data-h-queue="${key}" title="Add to queue">＋</button>` +
+            `<button class="qMini play" data-h-play="${key}" title="Play again" aria-label="Play again">▶</button>` +
+            `<button class="qMini" data-h-queue="${key}" title="Add to queue" aria-label="Add to queue">＋</button>` +
             `<span class="addPlWrap">` +
-              `<button class="qMini" data-h-addpl="${key}" title="Add to a playlist">＋📚</button>` +
+              `<button class="qMini" data-h-addpl="${key}" title="Add to a playlist" aria-label="Add to a playlist">＋📚</button>` +
               `<div class="addPlMenu" data-menu="h:${key}"></div>` +
             `</span>` +
           `</div>`;
@@ -1803,7 +2043,10 @@
       historyList.querySelectorAll("[data-h-queue]").forEach(b =>
         b.addEventListener("click", () => {
           const it = historyCache[b.dataset.hQueue]; if (!it || !queueRef) return;
-          push(queueRef, { kind: it.kind || "yt", src: it.src || it.videoId, title: it.title || null, t: Date.now(), by: myName });
+          const kind = it.kind || "yt";
+          const src = it.src || it.videoId;
+          if (isInQueue(kind, src)) { toast("That's already in the queue"); return; }
+          safeWrite(() => push(queueRef, { kind, src, title: it.title || null, t: Date.now(), by: myName }), "Couldn't add to queue");
           toast("Added to queue 🎞️");
         }));
       historyList.querySelectorAll("[data-h-addpl]").forEach(b =>
