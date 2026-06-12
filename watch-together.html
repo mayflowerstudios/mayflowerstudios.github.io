@@ -229,6 +229,18 @@
     }
     .msg.mine .bubble{ background: rgba(251,113,133,.16); border-color: rgba(251,113,133,.26); }
     .msg .who{ font-size:11px; opacity:.55; margin:2px 6px 0; }
+    .msg .who .time{ opacity:.8; }
+    .dateDivider{
+      align-self:center; display:flex; align-items:center; gap:10px;
+      width:100%; margin:10px 0 4px; opacity:.5;
+    }
+    .dateDivider::before, .dateDivider::after{
+      content:""; flex:1; height:1px; background:rgba(255,255,255,.12);
+    }
+    .dateDivider span{
+      font-size:11px; font-weight:600; letter-spacing:.04em;
+      text-transform:uppercase; white-space:nowrap;
+    }
     .msg .orig{ display:block; font-size:12px; opacity:.5; margin-top:4px; font-style:italic; }
     .msg .translating{ display:block; font-size:11px; opacity:.45; margin-top:3px; }
     .miniGhost.active{ background: rgba(167,139,250,.20); border-color: rgba(167,139,250,.35); }
@@ -1598,6 +1610,31 @@
       }
     }
 
+    // Short clock time for a message, e.g. "3:07 PM".
+    function fmtTime(t) {
+      if (!t) return "";
+      try { return new Date(t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); }
+      catch (_) { return ""; }
+    }
+    // Date-divider label: "Today", "Yesterday", or e.g. "Mon, Jun 9".
+    function fmtDateDivider(t) {
+      const d = new Date(t);
+      const today = new Date();
+      const yest = new Date(); yest.setDate(today.getDate() - 1);
+      const sameDay = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+      if (sameDay(d, today)) return "Today";
+      if (sameDay(d, yest)) return "Yesterday";
+      const opts = { weekday: "short", month: "short", day: "numeric" };
+      if (d.getFullYear() !== today.getFullYear()) opts.year = "numeric";
+      try { return d.toLocaleDateString([], opts); } catch (_) { return d.toDateString(); }
+    }
+    // Are two timestamps on different calendar days?
+    function isNewDay(prevT, curT) {
+      if (!prevT) return true;
+      const a = new Date(prevT), b = new Date(curT);
+      return a.getFullYear() !== b.getFullYear() || a.getMonth() !== b.getMonth() || a.getDate() !== b.getDate();
+    }
+
     function renderChat(msgs) {
       lastChatMsgs = msgs || {};
       const entries = Object.values(msgs).sort((a, b) => (a.t || 0) - (b.t || 0));
@@ -1631,15 +1668,27 @@
 
       const wasNearBottom = chatLog.scrollHeight - chatLog.scrollTop - chatLog.clientHeight < 80;
       chatLog.innerHTML = "";
+      let prevT = null;
       for (const m of entries) {
+        if (isNewDay(prevT, m.t)) {
+          const div = document.createElement("div");
+          div.className = "dateDivider";
+          div.innerHTML = `<span>${escapeHtml(fmtDateDivider(m.t))}</span>`;
+          chatLog.appendChild(div);
+        }
+        prevT = m.t;
+
         const mine = mineMsg(m);
         const wrap = document.createElement("div");
         wrap.className = "msg" + (mine ? " mine" : "");
         const hint = translateOn ? `<span class="translating">translating…</span>` : "";
+        const time = fmtTime(m.t);
+        const timeTag = time ? `<span class="time" title="${escapeHtml(time)}">${escapeHtml(time)}</span>` : "";
+        const whoLabel = mine ? "you" : escapeHtml(m.name || "guest");
         wrap.innerHTML =
           `<div class="bubble" data-text="${escapeHtml(m.text)}">${escapeHtml(m.text)}</div>` +
           hint +
-          `<div class="who">${mine ? "you" : escapeHtml(m.name || "guest")}</div>`;
+          `<div class="who">${whoLabel}${timeTag ? ` · ${timeTag}` : ""}</div>`;
         chatLog.appendChild(wrap);
       }
       if (chatOpen || wasNearBottom) chatLog.scrollTop = chatLog.scrollHeight;
