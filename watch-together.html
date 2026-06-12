@@ -1214,6 +1214,10 @@
           renderPresence(val);
         });
 
+        // Heartbeat the lobby so it can show this room as live and prune it once
+        // it goes quiet. Written here on connect and refreshed on the interval.
+        touchLobbyActivity();
+
         onValue(stateRef, (snap) => {
           const s = snap.val();
           if (!s) return;
@@ -1276,7 +1280,19 @@
       if (lastHostId === clientId && currentKind) {
         try { if (isPlayingNow()) broadcast("playing"); } catch(_){}
       }
+      touchLobbyActivity();
     }, 8000);
+
+    // Stamp the room's lobby entry as recently active. The lobby uses this to
+    // show "live" rooms and to hide/prune ones that have gone quiet. Best-effort.
+    let lastTouch = 0;
+    function touchLobbyActivity() {
+      if (!FIREBASE_READY || !db || pageHidden) return;
+      const now = Date.now();
+      if (now - lastTouch < 7000) return;   // throttle
+      lastTouch = now;
+      try { set(ref(db, `lobby/${ROOM}/lastActive`), now); } catch (_) {}
+    }
 
     // ============================================================
     //  UI wiring

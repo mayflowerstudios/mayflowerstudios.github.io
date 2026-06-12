@@ -66,6 +66,16 @@
     .panel .hint{ font-size:13px; opacity:.7; margin:0 0 14px; line-height:1.5; }
 
     .field{ margin-bottom:12px; }
+    .namePreview{ font-size:12px; opacity:.6; margin:6px 2px 0; min-height:15px; }
+    .namePreview b{ font-weight:600; opacity:.9; }
+    .passWrap{ position:relative; }
+    .passWrap .input{ padding-right:44px; }
+    .passEye{
+      position:absolute; right:6px; top:50%; transform:translateY(-50%);
+      background:transparent; border:0; cursor:pointer; font-size:15px;
+      padding:6px 8px; border-radius:10px; color:inherit; opacity:.7;
+    }
+    .passEye:hover{ opacity:1; background:rgba(255,255,255,.08); }
     .field label{ display:block; font-size:13px; opacity:.8; margin:0 0 6px; }
     .toggleRow{ display:flex; gap:8px; }
     .toggleRow .opt{
@@ -90,6 +100,23 @@
     .roomCard .rName{ font-size:15px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .roomCard .rMeta{ font-size:12px; opacity:.6; margin-top:2px; }
     .roomCard .rGo{ font-size:13px; opacity:.55; flex:0 0 auto; }
+    .roomCard .rCopy{
+      flex:0 0 auto; cursor:pointer; font-size:14px; line-height:1;
+      padding:7px 9px; border-radius:10px; color:inherit;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05);
+      transition: background .12s ease, filter .12s ease;
+    }
+    .roomCard .rCopy:hover{ background:rgba(167,139,250,.18); filter:brightness(1.1); }
+    .liveDot{
+      display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px;
+      background:#34d399; box-shadow:0 0 0 0 rgba(52,211,153,.6); vertical-align:middle;
+      animation: livePulse 1.8s ease-out infinite;
+    }
+    @keyframes livePulse{
+      0%{ box-shadow:0 0 0 0 rgba(52,211,153,.5); }
+      70%{ box-shadow:0 0 0 6px rgba(52,211,153,0); }
+      100%{ box-shadow:0 0 0 0 rgba(52,211,153,0); }
+    }
     .roomEmpty{ opacity:.55; font-size:14px; text-align:center; padding:20px 0; }
 
     .lockTag{
@@ -160,6 +187,7 @@
               <div class="field">
                 <label for="newRoomName">Room name</label>
                 <input class="input" id="newRoomName" type="text" maxlength="40" placeholder="movie-night" autocomplete="off" spellcheck="false" />
+                <div class="namePreview" id="namePreview"></div>
               </div>
 
               <div class="field">
@@ -172,7 +200,10 @@
 
               <div class="field" id="passField" style="display:none;">
                 <label for="newRoomPass">Password</label>
-                <input class="input" id="newRoomPass" type="text" maxlength="40" placeholder="choose a password" autocomplete="off" />
+                <div class="passWrap">
+                  <input class="input" id="newRoomPass" type="password" maxlength="40" placeholder="choose a password" autocomplete="off" />
+                  <button type="button" class="passEye" id="newRoomPassEye" aria-label="Show password" title="Show password">👁️</button>
+                </div>
               </div>
 
               <button class="btn primary full" id="createBtn">Create &amp; Enter</button>
@@ -208,7 +239,10 @@
     <div class="modal">
       <h3>🔒 Private room</h3>
       <p id="passModalText">This room needs a password.</p>
-      <input class="input" id="passModalInput" type="password" placeholder="password" autocomplete="off" />
+      <div class="passWrap">
+        <input class="input" id="passModalInput" type="password" placeholder="password" autocomplete="off" />
+        <button type="button" class="passEye" id="passModalEye" aria-label="Show password" title="Show password">👁️</button>
+      </div>
       <div class="modalBtns">
         <button class="btn full violet" id="passModalGo">Enter</button>
         <button class="btn" id="passModalCancel">Cancel</button>
@@ -223,7 +257,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getDatabase, ref, onValue, set, get, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDVJ0Tiq0gimaB-epcD9HQlVBrOWHq-IXI",
@@ -279,7 +313,7 @@
         }
       } catch (_) {}
 
-      const entry = { name, visibility, t: Date.now() };
+      const entry = { name, visibility, t: Date.now(), lastActive: Date.now() };
       if (visibility === "private") entry.pass = pass;
       try {
         await set(ref(db, `lobby/${name}`), entry);
@@ -291,25 +325,128 @@
     $("newRoomName").addEventListener("keydown", (e)=>{ if(e.key==="Enter") createRoom(); });
     $("newRoomPass").addEventListener("keydown", (e)=>{ if(e.key==="Enter") createRoom(); });
 
+    // Live preview of the normalized room name, so "Movie Night" visibly
+    // becomes "movie night" before they commit.
+    const namePreview = $("namePreview");
+    function updateNamePreview() {
+      const raw = $("newRoomName").value;
+      const clean = cleanName(raw);
+      if (!raw.trim()) { namePreview.innerHTML = ""; return; }
+      if (clean === raw.trim()) { namePreview.innerHTML = ""; return; }
+      namePreview.innerHTML = clean
+        ? `Will be created as <b>${escapeHtml(clean)}</b>`
+        : `That name has no usable characters`;
+    }
+    $("newRoomName").addEventListener("input", updateNamePreview);
+
+    // Password show/hide toggles.
+    function wireEye(eyeId, inputId) {
+      const eye = $(eyeId), inp = $(inputId);
+      if (!eye || !inp) return;
+      eye.addEventListener("click", () => {
+        const show = inp.type === "password";
+        inp.type = show ? "text" : "password";
+        eye.textContent = show ? "🙈" : "👁️";
+        eye.setAttribute("aria-label", show ? "Hide password" : "Show password");
+        eye.setAttribute("title", show ? "Hide password" : "Show password");
+        inp.focus();
+      });
+    }
+    wireEye("newRoomPassEye", "newRoomPass");
+    wireEye("passModalEye", "passModalInput");
+
     // ---- public list ----
+    // We keep a live viewer count per public room by subscribing to its
+    // presence node, and use each room's lastActive stamp to hide/prune rooms
+    // that have gone quiet. Counts and activity drive both ordering and display.
+    const STALE_HIDE_MS  = 1000 * 60 * 30;   // 30 min quiet → hidden from list
+    const STALE_PRUNE_MS = 1000 * 60 * 60 * 24; // 24 h quiet & empty → removed
+    const liveCounts = {};        // room name -> current viewer count
+    const presSubs = {};          // room name -> unsubscribe fn
+
+    function subscribePresence(name) {
+      if (presSubs[name] || !db) return;
+      const unsub = onValue(ref(db, `watch/${name}/presence`), (snap) => {
+        const v = snap.val() || {};
+        liveCounts[name] = Object.keys(v).length;
+        renderPublic();
+      });
+      presSubs[name] = unsub;
+    }
+
     function renderPublic() {
       const list = $("publicList"), empty = $("publicEmpty");
-      const pub = Object.values(lobbyCache)
-        .filter(r => r && r.visibility === "public")
-        .sort((a,b) => (b.t||0) - (a.t||0));
+      const now = Date.now();
+
+      const allPublic = Object.values(lobbyCache).filter(r => r && r.visibility === "public");
+
+      // Make sure we're watching presence for every public room we know about.
+      allPublic.forEach(r => subscribePresence(r.name));
+
+      // Best-effort prune of long-dead, empty rooms (anyone in the lobby can do
+      // this; it's idempotent). Only touches rooms with no viewers.
+      allPublic.forEach(r => {
+        const quiet = now - (r.lastActive || r.t || 0);
+        if (quiet > STALE_PRUNE_MS && (liveCounts[r.name] || 0) === 0) {
+          try { remove(ref(db, `lobby/${r.name}`)); } catch (_) {}
+        }
+      });
+
+      // Visible = has viewers, or was active recently.
+      const pub = allPublic
+        .filter(r => (liveCounts[r.name] || 0) > 0 || (now - (r.lastActive || r.t || 0)) < STALE_HIDE_MS)
+        .sort((a, b) => {
+          const ca = liveCounts[a.name] || 0, cb = liveCounts[b.name] || 0;
+          if (cb !== ca) return cb - ca;                       // busier first
+          return (b.lastActive || b.t || 0) - (a.lastActive || a.t || 0); // then fresher
+        });
+
       list.innerHTML = "";
       if (!pub.length) { list.appendChild(empty); empty.style.display = "block"; return; }
       empty.style.display = "none";
       for (const r of pub) {
+        const count = liveCounts[r.name] || 0;
+        const meta = count > 0
+          ? `<span class="liveDot"></span>${count} watching now`
+          : "public room";
         const a = document.createElement("a");
         a.className = "roomCard";
         a.href = "watch-together.html?room=" + encodeURIComponent(r.name);
         a.innerHTML =
           `<span class="rIcon">📺</span>
            <span class="rMain"><span class="rName">${escapeHtml(r.name)}</span>
-           <span class="rMeta">public room</span></span>
+           <span class="rMeta">${meta}</span></span>
+           <button class="rCopy" data-room="${escapeHtml(r.name)}" title="Copy room link" aria-label="Copy room link">🔗</button>
            <span class="rGo">Join →</span>`;
         list.appendChild(a);
+      }
+
+      // Copy-link buttons (stop the click from following the card's link).
+      list.querySelectorAll(".rCopy").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.preventDefault(); e.stopPropagation();
+          copyRoomLink(btn.dataset.room);
+        });
+      });
+    }
+
+    function roomUrl(name) {
+      return location.origin + location.pathname.replace(/watch\.html$/, "") +
+             "watch-together.html?room=" + encodeURIComponent(name);
+    }
+    async function copyRoomLink(name) {
+      const url = roomUrl(name);
+      try {
+        await navigator.clipboard.writeText(url);
+        toast("Room link copied 🔗");
+      } catch (_) {
+        // Fallback for older/permission-restricted browsers
+        const ta = document.createElement("textarea");
+        ta.value = url; ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand("copy"); toast("Room link copied 🔗"); }
+        catch (_) { toast("Couldn't copy — here it is: " + url); }
+        document.body.removeChild(ta);
       }
     }
 
@@ -339,6 +476,9 @@
       pendingRoom = room; pendingPass = pass;
       $("passModalText").textContent = `"${room}" is private. Enter the password to join.`;
       $("passModalInput").value = "";
+      $("passModalInput").type = "password";
+      const eye = $("passModalEye");
+      if (eye) { eye.textContent = "👁️"; eye.setAttribute("aria-label", "Show password"); eye.setAttribute("title", "Show password"); }
       $("passModal").classList.add("open");
       setTimeout(()=>$("passModalInput").focus(), 50);
     }
