@@ -289,6 +289,8 @@
 
     /* the item currently playing, highlighted in history */
     .qItem.nowItem{ border-color: rgba(52,211,153,.4); background: rgba(52,211,153,.08); }
+    .nowTag{ display:inline-block; font-size:10px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:#34d399; background:rgba(52,211,153,.14); border-radius:5px; padding:1px 6px; margin-right:6px; vertical-align:middle; }
+    .nowBars{ color:#34d399; font-size:13px; }
 
     /* drag state for reorderable queue rows */
     .qItem.draggable{ cursor:grab; }
@@ -938,18 +940,21 @@
     // set the "now playing" line; for YouTube, look up the real title async
     const titleCache = {};
     function setNowPlaying(kind, src, knownTitle) {
-      if (knownTitle) { currentTitle = knownTitle; nowPlaying.textContent = "▶ " + knownTitle; return; }
+      if (knownTitle) { currentTitle = knownTitle; nowPlaying.textContent = "▶ " + knownTitle; refreshQueueNow(); return; }
       if (kind === "file") {
         currentTitle = shortName(src);
         nowPlaying.textContent = "▶ " + currentTitle;
+        refreshQueueNow();
         return;
       }
       // YouTube: temporary fallback, then resolve
       currentTitle = null;
       nowPlaying.textContent = "▶ Loading…";
+      refreshQueueNow();
       if (titleCache[src]) {
         currentTitle = titleCache[src];
         nowPlaying.textContent = "▶ " + currentTitle;
+        refreshQueueNow();
         return;
       }
       fetch("https://www.youtube.com/oembed?format=json&url=https://www.youtube.com/watch?v=" + encodeURIComponent(src))
@@ -959,12 +964,16 @@
             titleCache[src] = d.title;
             currentTitle = d.title;
             nowPlaying.textContent = "▶ " + d.title;
+            refreshQueueNow();
           } else if (currentSrc === src) {
             nowPlaying.textContent = "▶ " + src;
           }
         })
         .catch(() => { if (currentSrc === src) nowPlaying.textContent = "▶ " + src; });
     }
+
+    // Re-render the queue so its pinned "now playing" row reflects current state.
+    function refreshQueueNow() { try { renderQueue(queueCache); } catch (_) {} }
 
     function broadcast(status) {
       if (!FIREBASE_READY || !stateRef || !currentKind || !currentSrc) return;
@@ -1514,9 +1523,26 @@
     function renderQueue(items) {
       queueCache = items;
       const entries = Object.entries(items).sort((a, b) => (a[1].t || 0) - (b[1].t || 0));
-      if (!entries.length) { queueEmpty.style.display = "block"; queueList.innerHTML = ""; queueList.appendChild(queueEmpty); return; }
+      const hasNow = !!(currentKind && currentSrc);
+      if (!entries.length && !hasNow) { queueEmpty.style.display = "block"; queueList.innerHTML = ""; queueList.appendChild(queueEmpty); return; }
       queueEmpty.style.display = "none";
       queueList.innerHTML = "";
+
+      // Pinned "now playing" row at the very top of the queue.
+      if (hasNow) {
+        const nowThumb = currentKind === "yt"
+          ? `<img class="qThumb" src="https://i.ytimg.com/vi/${currentSrc}/mqdefault.jpg" alt="" />`
+          : `<div class="qThumb" style="display:grid;place-items:center;font-size:16px">🎬</div>`;
+        const nowLabel = currentTitle || (currentKind === "yt" ? currentSrc : shortName(currentSrc));
+        const nowRow = document.createElement("div");
+        nowRow.className = "qItem nowItem";
+        nowRow.innerHTML =
+          nowThumb +
+          `<div class="qTitle"><span class="nowTag">Now playing</span>${escapeHtml(nowLabel)}</div>` +
+          `<div class="qBtns"><span class="nowBars" title="Currently playing">▶</span></div>`;
+        queueList.appendChild(nowRow);
+      }
+
       entries.forEach(([key, it], idx) => {
         const kind = it.kind || (it.videoId ? "yt" : "file");
         const src  = it.src  || it.videoId || "";
