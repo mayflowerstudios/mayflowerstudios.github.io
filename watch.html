@@ -392,7 +392,13 @@
         await set(ref(db, `lobby/${name}`), entry);
         if (pass) sessionStorage.setItem("wt_pass_" + name, pass); // skip re-prompt on arrival
         goToRoom(name);
-      } catch (_) { toast("Couldn't create the room"); }
+      } catch (err) {
+        console.error("Room create failed:", err);
+        // A permission_denied here almost always means the database rules are
+        // out of date and don't allow this room's visibility value yet.
+        const denied = err && (err.code === "PERMISSION_DENIED" || /permission/i.test(err.message || ""));
+        toast(denied ? "Couldn't create the room — check the database rules" : "Couldn't create the room");
+      }
     }
     $("createBtn").addEventListener("click", createRoom);
     $("newRoomName").addEventListener("keydown", (e)=>{ if(e.key==="Enter") createRoom(); });
