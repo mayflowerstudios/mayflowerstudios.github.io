@@ -1518,9 +1518,11 @@
       targetLang = localStorage.getItem("wt_translate_lang") || guessLang();
     } catch (_) { targetLang = guessLang(); }
 
-    // Capability check: the global Translator (and LanguageDetector) must exist.
+    // Capability check: translation needs the Translator API, and because we
+    // must detect each message's source language before translating, it also
+    // needs the LanguageDetector API. Both ship together in desktop Chromium.
     function translationSupported() {
-      return (typeof self !== "undefined") && ("Translator" in self);
+      return (typeof self !== "undefined") && ("Translator" in self) && ("LanguageDetector" in self);
     }
     const TRANSLATE_OK = translationSupported();
 
@@ -1545,8 +1547,12 @@
         if ("LanguageDetector" in self) {
           const d = await self.LanguageDetector.create();
           const res = await d.detect(text);
-          if (res && res[0] && res[0].detectedLanguage && res[0].confidence > 0.5) {
-            return res[0].detectedLanguage.slice(0, 2);
+          if (res && res.length) {
+            // Prefer a confident result, but fall back to the top guess so we
+            // don't mislabel everything as the target language on a miss.
+            const top = res.find(r => r.detectedLanguage && r.detectedLanguage !== "und");
+            if (top && top.confidence > 0.5) return top.detectedLanguage.slice(0, 2);
+            if (top && top.confidence > 0.15) return top.detectedLanguage.slice(0, 2);
           }
         }
       } catch (_) {}
@@ -1559,10 +1565,16 @@
       if (translationCache.has(cacheKey)) return translationCache.get(cacheKey);
 
       const src = await detectLang(text);
+
+      // Already in the target language → nothing to do.
       if (src && src === tgt) { translationCache.set(cacheKey, null); return null; }
 
+      // If we genuinely can't tell the source language, don't guess "en" — that
+      // both no-ops English targets and mistranslates other text. Skip instead.
+      if (!src) { translationCache.set(cacheKey, null); return null; }
+
       let out = null;
-      const t = await getTranslator(src || "en", tgt);
+      const t = await getTranslator(src, tgt);
       if (t) { try { out = await t.translate(text); } catch (_) { out = null; } }
 
       translationCache.set(cacheKey, out || null);
