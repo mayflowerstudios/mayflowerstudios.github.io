@@ -410,7 +410,8 @@
             authUid = user ? user.uid : null;
             authName = user ? ((profile && profile.displayName) || user.displayName ||
                                (user.email ? user.email.split("@")[0] : null)) : null;
-            try { renderPublic(); } catch (_) {}
+            try { renderPublic(); }
+            catch (e) { console.error("[lobby] renderPublic threw on auth change:", e); }
           });
         } else if (++tries > 50) { clearInterval(iv); }
       }, 100);
@@ -581,36 +582,50 @@
         badge.innerHTML = `<span class="liveDot"></span>${totalLive} watching`;
       } else { badge.hidden = true; }
 
-      list.innerHTML = "";
-      if (!rooms.length) { list.appendChild(empty); empty.style.display = "block"; return; }
-      empty.style.display = "none";
-
+      // Build into a fragment, then swap in one go. This guarantees we never
+      // leave the list blanked if something throws mid-render (which was making
+      // rooms flash then vanish). Each card is also guarded individually so one
+      // malformed room can't wipe the rest.
+      const frag = document.createDocumentFragment();
+      let rendered = 0;
       for (const r of rooms) {
-        const type = visType(r);
-        const locked = type === "locked";
-        const count = locked ? 0 : (liveCounts[r.name] || 0);
-        const mine = r.owner && r.owner === ownerId();
+        try {
+          const name = r && r.name;
+          if (!name) continue;   // skip malformed entries with no name/key
+          const type = visType(r);
+          const locked = type === "locked";
+          const count = locked ? 0 : (liveCounts[name] || 0);
+          const mine = r.owner && r.owner === ownerId();
 
-        const icon = locked ? "🔒" : "📺";
-        // Public rooms expose a live viewer count; locked rooms never do.
-        const meta = locked
-          ? `<span class="rLockTag">password to enter</span>`
-          : (count > 0
-              ? `<span class="liveDot"></span>${count} watching now`
-              : `quiet right now`);
+          const icon = locked ? "🔒" : "📺";
+          // Public rooms expose a live viewer count; locked rooms never do.
+          const meta = locked
+            ? `<span class="rLockTag">password to enter</span>`
+            : (count > 0
+                ? `<span class="liveDot"></span>${count} watching now`
+                : `quiet right now`);
 
-        const a = document.createElement("a");
-        a.className = "roomCard" + (locked ? " locked" : "");
-        a.href = "watch-together.html?room=" + encodeURIComponent(r.name);
-        a.innerHTML =
-          `<span class="rIcon">${icon}</span>
-           <span class="rMain"><span class="rName">${escapeHtml(r.name)}</span>
-           <span class="rMeta">${meta}</span></span>
-           ${mine ? `<button class="rEdit" data-room="${escapeHtml(r.name)}" title="Edit room details" aria-label="Edit room details">✏️</button>` : ""}
-           <button class="rCopy" data-room="${escapeHtml(r.name)}" title="Copy room link" aria-label="Copy room link">🔗</button>
-           <span class="rGo">${locked ? "Unlock →" : "Join →"}</span>`;
-        list.appendChild(a);
+          const a = document.createElement("a");
+          a.className = "roomCard" + (locked ? " locked" : "");
+          a.href = "watch-together.html?room=" + encodeURIComponent(name);
+          a.innerHTML =
+            `<span class="rIcon">${icon}</span>
+             <span class="rMain"><span class="rName">${escapeHtml(name)}</span>
+             <span class="rMeta">${meta}</span></span>
+             ${mine ? `<button class="rEdit" data-room="${escapeHtml(name)}" title="Edit room details" aria-label="Edit room details">✏️</button>` : ""}
+             <button class="rCopy" data-room="${escapeHtml(name)}" title="Copy room link" aria-label="Copy room link">🔗</button>
+             <span class="rGo">${locked ? "Unlock →" : "Join →"}</span>`;
+          frag.appendChild(a);
+          rendered++;
+        } catch (e) {
+          console.error("[lobby] skipped a room card:", e, r);
+        }
       }
+
+      list.innerHTML = "";
+      if (!rendered) { list.appendChild(empty); empty.style.display = "block"; return; }
+      empty.style.display = "none";
+      list.appendChild(frag);
 
       list.querySelectorAll(".rCopy").forEach(btn => {
         btn.addEventListener("click", (e) => {
