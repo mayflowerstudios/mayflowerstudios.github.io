@@ -421,7 +421,12 @@
       const app = initializeApp(firebaseConfig);
       db = getDatabase(app);
       lobbyRef = ref(db, "lobby");
-      onValue(lobbyRef, (snap) => { lobbyCache = snap.val() || {}; renderPublic(); });
+      onValue(lobbyRef, (snap) => {
+        const val = snap.val() || {};
+        console.log("[lobby] onValue fired. rooms in snapshot:", Object.keys(val).length, val);
+        lobbyCache = val;
+        renderPublic();
+      });
     } else {
       $("pubHint").textContent = "Set up Firebase to see and create rooms.";
     }
@@ -549,19 +554,23 @@
       const now = Date.now();
 
       const listed = Object.values(lobbyCache).filter(r => r && isListed(r));
+      console.log("[lobby] renderPublic: cache=" + Object.keys(lobbyCache).length +
+                  " listed=" + listed.length +
+                  " (public/locked shown, hidden excluded)");
 
       // Watch presence only for public rooms (locked rooms keep their count private).
       listed.filter(r => visType(r) === "public").forEach(r => subscribePresence(r.name));
 
-      // Best-effort prune of long-dead, empty rooms. For locked rooms we can't
-      // see the count, so only prune on the activity stamp.
-      listed.forEach(r => {
-        const quiet = now - (r.lastActive || r.t || 0);
-        const empty = visType(r) === "public" ? (liveCounts[r.name] || 0) === 0 : true;
-        if (quiet > STALE_PRUNE_MS && empty) {
-          try { remove(ref(db, `lobby/${r.name}`)); } catch (_) {}
-        }
-      });
+      // NOTE: auto-prune disabled. It was deleting rooms whose lobby entry
+      // lacked a timestamp (older rooms), since (lastActive||t||0) === 0 makes
+      // "quiet" effectively infinite. Cleanup, if wanted, should be explicit.
+      // listed.forEach(r => {
+      //   const quiet = now - (r.lastActive || r.t || 0);
+      //   const empty = visType(r) === "public" ? (liveCounts[r.name] || 0) === 0 : true;
+      //   if (quiet > STALE_PRUNE_MS && empty) {
+      //     try { remove(ref(db, `lobby/${r.name}`)); } catch (_) {}
+      //   }
+      // });
 
       // Every non-hidden room always shows — no activity-based hiding. Hidden
       // rooms are already excluded by isListed(). Sort public-with-viewers
