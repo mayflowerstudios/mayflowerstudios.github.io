@@ -179,7 +179,7 @@
     // Ensure auth.js is loaded (pages don't all include it explicitly).
     function whenAuth(cb) {
       if (window.MFAuth) return cb();
-      if (!document.querySelector('script[data-mf-auth]')) {
+      if (!document.querySelector('script[data-mf-auth], script[src$="/auth.js"], script[src="auth.js"]')) {
         const s = document.createElement('script');
         s.src = '/auth.js'; s.setAttribute('data-mf-auth', '1');
         document.body.appendChild(s);

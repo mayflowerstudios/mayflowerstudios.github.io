@@ -595,6 +595,7 @@
   </div>
 
   <script src="/shared.js"></script>
+  <script src="/auth.js"></script>
   <script src="fireflies.js"></script>
 
   <!-- Firebase (Realtime Database) for lightweight room sync -->
@@ -1138,6 +1139,37 @@
     // a friendly name so you can tell who's who — editable from the page
     let myName = (localStorage.getItem("wt_name") || "").slice(0, 24) || "Guest";
     nameInput.value = myName === "Guest" ? "" : myName;
+
+    // When signed in via the account system, prefer the account's identity:
+    // its uid for message ownership, its display name for presence/chat. Falls
+    // back to the per-device id + locally-typed name when signed out, so the
+    // page works exactly as before for guests.
+    let authUid = null;
+    function identityId() { return authUid || myId; }
+    (function trackAuth() {
+      let tries = 0;
+      const iv = setInterval(() => {
+        if (window.MFAuth) {
+          clearInterval(iv);
+          if (!MFAuth.isConfigured()) return;
+          MFAuth.onChange((user, profile) => {
+            authUid = user ? user.uid : null;
+            const accountName = user
+              ? ((profile && profile.displayName) || user.displayName ||
+                 (user.email ? user.email.split("@")[0] : null))
+              : null;
+            // Only override the typed name if the user hasn't set their own
+            // local name (still "Guest" / blank), so manual names are respected.
+            if (accountName && (myName === "Guest" || !myName)) {
+              myName = accountName.slice(0, 24);
+              nameInput.value = myName;
+              if (myPresRef) set(myPresRef, { name: myName, t: Date.now() });
+              if (lastHostId === clientId && currentKind) broadcast(isPlayingNow() ? "playing" : "paused");
+            }
+          });
+        } else if (++tries > 50) { clearInterval(iv); }
+      }, 100);
+    })();
 
     function saveName() {
       const v = (nameInput.value || "").trim().slice(0, 24);
@@ -1717,7 +1749,7 @@
       if (!entries.length) { chatEmpty.style.display = "block"; lastSeenCount = 0; chatStarted = true; return; }
       chatEmpty.style.display = "none";
 
-      const mineMsg = (m) => (m.uid && m.uid === myId) || (!m.uid && m.cid === clientId);
+      const mineMsg = (m) => (m.uid && m.uid === identityId()) || (!m.uid && m.cid === clientId);
 
       // If the list shrank (history cap dropped old messages, or a delete),
       // lastSeenCount could be stale and mis-slice. Clamp it so we never treat
@@ -1777,7 +1809,7 @@
       const text = chatInput.value.trim();
       if (!text) return;
       if (!FIREBASE_READY || !chatRef) { toast("Chat needs Firebase set up first"); return; }
-      push(chatRef, { text, name: myName, uid: myId, cid: clientId, t: Date.now() });
+      push(chatRef, { text, name: myName, uid: identityId(), cid: clientId, t: Date.now() });
       chatInput.value = "";
     }
     chatSend.addEventListener("click", sendChat);

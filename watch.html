@@ -359,6 +359,7 @@
   <div class="toast" id="toast"></div>
 
   <script src="/shared.js"></script>
+  <script src="/auth.js"></script>
   <script src="fireflies.js"></script>
 
   <script type="module">
@@ -384,10 +385,36 @@
     let db = null, lobbyRef = null;
     let lobbyCache = {};
 
-    // Stable per-device id — used to mark room ownership so the creator can
-    // edit a room's details later. Shared with the room page via the same key.
+    // ---- identity ----
+    // Stable per-device id, used as a fallback when signed out so anonymous
+    // co-watchers can still own/edit the rooms they make.
     let myId = localStorage.getItem("wt_id");
     if (!myId) { myId = "u" + Math.random().toString(36).slice(2, 10); localStorage.setItem("wt_id", myId); }
+
+    // When signed in via the account system, ownership uses the real Firebase
+    // Auth uid (stable across devices, and verifiable by the security rules).
+    let authUid = null;          // null when signed out
+    let authName = null;         // display name from the account, if any
+    function ownerId() { return authUid || myId; }
+
+    // shared.js auto-loads auth.js; wait briefly for window.MFAuth, then track
+    // sign-in state. Re-render the room list whenever it changes so edit
+    // buttons appear/disappear for the right owner.
+    (function trackAuth() {
+      let tries = 0;
+      const iv = setInterval(() => {
+        if (window.MFAuth) {
+          clearInterval(iv);
+          if (!MFAuth.isConfigured()) return;
+          MFAuth.onChange((user, profile) => {
+            authUid = user ? user.uid : null;
+            authName = user ? ((profile && profile.displayName) || user.displayName ||
+                               (user.email ? user.email.split("@")[0] : null)) : null;
+            try { renderPublic(); } catch (_) {}
+          });
+        } else if (++tries > 50) { clearInterval(iv); }
+      }, 100);
+    })();
 
     if (FIREBASE_READY) {
       const app = initializeApp(firebaseConfig);
@@ -440,7 +467,7 @@
         }
       } catch (_) {}
 
-      const entry = { name, visibility, t: Date.now(), lastActive: Date.now(), owner: myId };
+      const entry = { name, visibility, t: Date.now(), lastActive: Date.now(), owner: ownerId() };
       if (pass) entry.pass = pass;
       try {
         await set(ref(db, `lobby/${name}`), entry);
@@ -562,7 +589,7 @@
         const type = visType(r);
         const locked = type === "locked";
         const count = locked ? 0 : (liveCounts[r.name] || 0);
-        const mine = r.owner && r.owner === myId;
+        const mine = r.owner && r.owner === ownerId();
 
         const icon = locked ? "🔒" : "📺";
         // Public rooms expose a live viewer count; locked rooms never do.
@@ -650,7 +677,7 @@
     function openEditRoom(name) {
       const r = lobbyCache[name];
       if (!r) { toast("That room is gone"); return; }
-      if (r.owner !== myId) { toast("You don't own this room"); return; }
+      if (r.owner !== ownerId()) { toast("You don't own this room"); return; }
       editingRoom = name;
       const v = visType(r);
       const opt = $("editVisToggle").querySelector(`.visOpt[data-vis="${v}"]`) ||
@@ -674,7 +701,7 @@
       let live = null;
       try { live = (await get(ref(db, `lobby/${name}`))).val(); } catch (_) {}
       if (!live) { toast("That room is gone"); closeEditModal(); return; }
-      if (live.owner !== myId) { toast("You don't own this room"); closeEditModal(); return; }
+      if (live.owner !== ownerId()) { toast("You don't own this room"); closeEditModal(); return; }
 
       const needsPass = editVis === "locked" || editVis === "hidden";
       const pass = needsPass ? ($("editRoomPass").value || "").trim() : "";
