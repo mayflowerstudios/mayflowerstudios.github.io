@@ -146,6 +146,13 @@
       transition: background .12s ease, filter .12s ease;
     }
     .roomCard .rCopy:hover{ background:rgba(167,139,250,.18); filter:brightness(1.1); }
+    .roomCard .rEdit{
+      flex:0 0 auto; cursor:pointer; font-size:14px; line-height:1;
+      padding:7px 9px; border-radius:10px; color:inherit;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05);
+      transition: background .12s ease, filter .12s ease;
+    }
+    .roomCard .rEdit:hover{ background:rgba(167,139,250,.18); filter:brightness(1.1); }
     .liveDot{
       display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:6px;
       background:#34d399; box-shadow:0 0 0 0 rgba(52,211,153,.6); vertical-align:middle;
@@ -307,6 +314,48 @@
     </div>
   </div>
 
+  <!-- edit room modal (owner only) -->
+  <div class="modalBack" id="editModal">
+    <div class="modal">
+      <h3>✏️ Edit room</h3>
+      <p id="editModalText">Update who can join and the password.</p>
+
+      <div class="field">
+        <label>Who can join?</label>
+        <div class="visGrid" id="editVisToggle">
+          <div class="visOpt" data-vis="public" tabindex="0" role="button" aria-pressed="false">
+            <span class="visIcon">🌐</span>
+            <span class="visName">Public</span>
+            <span class="visDesc">Listed in the lobby. Anyone can drop in.</span>
+          </div>
+          <div class="visOpt" data-vis="locked" tabindex="0" role="button" aria-pressed="false">
+            <span class="visIcon">🔒</span>
+            <span class="visName">Locked</span>
+            <span class="visDesc">Listed, but needs a password to enter.</span>
+          </div>
+          <div class="visOpt" data-vis="hidden" tabindex="0" role="button" aria-pressed="false">
+            <span class="visIcon">🌑</span>
+            <span class="visName">Hidden</span>
+            <span class="visDesc">Unlisted. Only reachable by link or name.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field" id="editPassField" style="display:none;">
+        <label for="editRoomPass">Password <span class="optTag" id="editPassOptTag">(optional)</span></label>
+        <div class="passWrap">
+          <input class="input" id="editRoomPass" type="password" maxlength="40" placeholder="choose a password" autocomplete="off" />
+          <button type="button" class="passEye" id="editRoomPassEye" aria-label="Show password" title="Show password">👁️</button>
+        </div>
+      </div>
+
+      <div class="modalBtns">
+        <button class="btn full violet" id="editModalSave">Save changes</button>
+        <button class="btn" id="editModalCancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script src="/shared.js"></script>
@@ -314,7 +363,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, onValue, set, get, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getDatabase, ref, onValue, set, get, remove, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDVJ0Tiq0gimaB-epcD9HQlVBrOWHq-IXI",
@@ -334,6 +383,11 @@
 
     let db = null, lobbyRef = null;
     let lobbyCache = {};
+
+    // Stable per-device id — used to mark room ownership so the creator can
+    // edit a room's details later. Shared with the room page via the same key.
+    let myId = localStorage.getItem("wt_id");
+    if (!myId) { myId = "u" + Math.random().toString(36).slice(2, 10); localStorage.setItem("wt_id", myId); }
 
     if (FIREBASE_READY) {
       const app = initializeApp(firebaseConfig);
@@ -386,7 +440,7 @@
         }
       } catch (_) {}
 
-      const entry = { name, visibility, t: Date.now(), lastActive: Date.now() };
+      const entry = { name, visibility, t: Date.now(), lastActive: Date.now(), owner: myId };
       if (pass) entry.pass = pass;
       try {
         await set(ref(db, `lobby/${name}`), entry);
@@ -437,8 +491,8 @@
     // ---- room list ----
     // Public rooms show a live viewer count; locked rooms are listed by name +
     // lock only (we don't subscribe to their presence, so the count stays
-    // private). Hidden rooms never appear here. lastActive drives hide/prune.
-    const STALE_HIDE_MS  = 1000 * 60 * 30;       // 30 min quiet → hidden from list
+    // private). Hidden rooms never appear here. All non-hidden rooms always show
+    // regardless of activity; lastActive only drives best-effort pruning.
     const STALE_PRUNE_MS = 1000 * 60 * 60 * 24;  // 24 h quiet & empty → removed
     const liveCounts = {};        // room name -> current viewer count (public only)
     const presSubs = {};          // room name -> unsubscribe fn
@@ -481,13 +535,11 @@
         }
       });
 
+      // Every non-hidden room always shows — no activity-based hiding. Hidden
+      // rooms are already excluded by isListed(). Sort public-with-viewers
+      // first, then by recency.
       const rooms = listed
-        .filter(r => {
-          if (visType(r) === "public" && (liveCounts[r.name] || 0) > 0) return true;
-          return (now - (r.lastActive || r.t || 0)) < STALE_HIDE_MS;
-        })
         .sort((a, b) => {
-          // public-with-viewers first, then by recency
           const ca = visType(a) === "public" ? (liveCounts[a.name] || 0) : 0;
           const cb = visType(b) === "public" ? (liveCounts[b.name] || 0) : 0;
           if (cb !== ca) return cb - ca;
@@ -510,8 +562,10 @@
         const type = visType(r);
         const locked = type === "locked";
         const count = locked ? 0 : (liveCounts[r.name] || 0);
+        const mine = r.owner && r.owner === myId;
 
         const icon = locked ? "🔒" : "📺";
+        // Public rooms expose a live viewer count; locked rooms never do.
         const meta = locked
           ? `<span class="rLockTag">password to enter</span>`
           : (count > 0
@@ -525,6 +579,7 @@
           `<span class="rIcon">${icon}</span>
            <span class="rMain"><span class="rName">${escapeHtml(r.name)}</span>
            <span class="rMeta">${meta}</span></span>
+           ${mine ? `<button class="rEdit" data-room="${escapeHtml(r.name)}" title="Edit room details" aria-label="Edit room details">✏️</button>` : ""}
            <button class="rCopy" data-room="${escapeHtml(r.name)}" title="Copy room link" aria-label="Copy room link">🔗</button>
            <span class="rGo">${locked ? "Unlock →" : "Join →"}</span>`;
         list.appendChild(a);
@@ -534,6 +589,12 @@
         btn.addEventListener("click", (e) => {
           e.preventDefault(); e.stopPropagation();
           copyRoomLink(btn.dataset.room);
+        });
+      });
+      list.querySelectorAll(".rEdit").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.preventDefault(); e.stopPropagation();
+          openEditRoom(btn.dataset.room);
         });
       });
     }
@@ -557,6 +618,90 @@
         document.body.removeChild(ta);
       }
     }
+
+    // ---- edit room (owner only) ----
+    // Reuses the visibility-picker UI. We re-check ownership against the live
+    // lobby entry on save so a stale card can't be used to edit someone else's
+    // room.
+    let editingRoom = null;
+    let editVis = "public";
+
+    function selectEditVis(opt) {
+      $("editVisToggle").querySelectorAll(".visOpt").forEach(o => {
+        o.classList.remove("active");
+        o.setAttribute("aria-pressed", "false");
+      });
+      opt.classList.add("active");
+      opt.setAttribute("aria-pressed", "true");
+      editVis = opt.dataset.vis;
+      const needsPass = editVis === "locked" || editVis === "hidden";
+      $("editPassField").style.display = needsPass ? "block" : "none";
+      $("editPassOptTag").textContent = editVis === "locked" ? "(required)" : "(optional)";
+      $("editPassOptTag").className = "optTag" + (editVis === "locked" ? " req" : "");
+    }
+    $("editVisToggle").querySelectorAll(".visOpt").forEach(opt => {
+      opt.addEventListener("click", () => selectEditVis(opt));
+      opt.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectEditVis(opt); }
+      });
+    });
+    wireEye("editRoomPassEye", "editRoomPass");
+
+    function openEditRoom(name) {
+      const r = lobbyCache[name];
+      if (!r) { toast("That room is gone"); return; }
+      if (r.owner !== myId) { toast("You don't own this room"); return; }
+      editingRoom = name;
+      const v = visType(r);
+      const opt = $("editVisToggle").querySelector(`.visOpt[data-vis="${v}"]`) ||
+                  $("editVisToggle").querySelector('.visOpt[data-vis="public"]');
+      selectEditVis(opt);
+      $("editRoomPass").value = r.pass || "";
+      $("editRoomPass").type = "password";
+      const eye = $("editRoomPassEye");
+      if (eye) { eye.textContent = "👁️"; eye.setAttribute("aria-label","Show password"); eye.setAttribute("title","Show password"); }
+      $("editModalText").textContent = `Editing "${name}".`;
+      $("editModal").classList.add("open");
+    }
+    function closeEditModal() {
+      $("editModal").classList.remove("open");
+      editingRoom = null;
+    }
+    async function saveEditRoom() {
+      if (!editingRoom || !FIREBASE_READY) return;
+      const name = editingRoom;
+      // Re-verify ownership against the live entry before writing.
+      let live = null;
+      try { live = (await get(ref(db, `lobby/${name}`))).val(); } catch (_) {}
+      if (!live) { toast("That room is gone"); closeEditModal(); return; }
+      if (live.owner !== myId) { toast("You don't own this room"); closeEditModal(); return; }
+
+      const needsPass = editVis === "locked" || editVis === "hidden";
+      const pass = needsPass ? ($("editRoomPass").value || "").trim() : "";
+      if (editVis === "locked" && !pass) { toast("Locked rooms need a password"); return; }
+
+      // Apply the changes. Clearing the password (e.g. switching to public, or a
+      // hidden room with no password) requires removing the field entirely.
+      const updates = { visibility: editVis };
+      try {
+        await update(ref(db, `lobby/${name}`), updates);
+        if (pass) await set(ref(db, `lobby/${name}/pass`), pass);
+        else await remove(ref(db, `lobby/${name}/pass`));
+        // Keep our own session unlock in sync so we aren't locked out of our room.
+        if (pass) sessionStorage.setItem("wt_pass_" + name, pass);
+        else sessionStorage.removeItem("wt_pass_" + name);
+        toast("Room updated ✨");
+        closeEditModal();
+      } catch (err) {
+        console.error("Room edit failed:", err);
+        const denied = err && (err.code === "PERMISSION_DENIED" || /permission/i.test(err.message || ""));
+        toast(denied ? "Couldn't save — check the database rules" : "Couldn't save changes");
+      }
+    }
+    $("editModalSave").addEventListener("click", saveEditRoom);
+    $("editModalCancel").addEventListener("click", closeEditModal);
+    $("editModal").addEventListener("click", (e)=>{ if(e.target === $("editModal")) closeEditModal(); });
+    document.addEventListener("keydown", (e)=>{ if(e.key==="Escape" && $("editModal").classList.contains("open")) closeEditModal(); });
 
     // ---- join by name (handles any room that has a password) ----
     async function joinByName(rawName) {
