@@ -733,6 +733,7 @@
     let currentKind = null;         // "yt" | "file"
     let currentSrc = null;          // current yt id or file url
     let currentTitle = null;        // resolved display title
+    let currentIsLive = false;      // true once the active YT video is detected as a live stream
     let localBuffering = false;     // are we stalled/buffering right now?
     let partnerWaiting = false;     // is the other side stalled?
     let waitingRef = null;          // shared "who's buffering" node
@@ -764,6 +765,12 @@
 
     function onPlayerStateChange(e) {
       if (currentKind !== "yt") return;
+      // Detect live streams: YouTube reports duration 0 for an active live
+      // broadcast. We check on the first PLAYING/BUFFERING after a load, since
+      // duration isn't known until the stream is rolling.
+      if (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.BUFFERING) {
+        detectLive();
+      }
       if (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.PAUSED || e.data === YT.PlayerState.ENDED) {
         syncWakeLock();
       }
@@ -774,6 +781,38 @@
       if (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.PAUSED) {
         broadcast(e.data === YT.PlayerState.PLAYING ? "playing" : "paused");
       }
+    }
+
+    // A YouTube live stream reports getDuration()===0 while live. Once we know,
+    // flip currentIsLive and surface the LIVE badge. Position-based sync is
+    // skipped for lives (see estimatePos/applyState/the drift loop).
+    function detectLive() {
+      if (currentKind !== "yt" || !player || !player.getDuration) return;
+      try {
+        const dur = player.getDuration() || 0;
+        const live = dur === 0;
+        if (live !== currentIsLive) {
+          currentIsLive = live;
+          updateLiveBadge();
+        }
+      } catch (_) {}
+    }
+
+    // Toggle a small "🔴 LIVE" indicator near the now-playing line.
+    function updateLiveBadge() {
+      let badge = $("liveStreamBadge");
+      if (!badge) {
+        badge = document.createElement("span");
+        badge.id = "liveStreamBadge";
+        badge.textContent = "🔴 LIVE";
+        badge.style.cssText = "margin-left:8px;font-size:11px;font-weight:700;letter-spacing:.5px;" +
+          "padding:1px 7px;border-radius:999px;background:rgba(239,68,68,.18);" +
+          "color:#fca5a5;border:1px solid rgba(239,68,68,.4);vertical-align:middle;";
+        if (nowPlaying && nowPlaying.parentNode) nowPlaying.parentNode.insertBefore(badge, nowPlaying.nextSibling);
+      }
+      badge.style.display = currentIsLive ? "inline-block" : "none";
+      // For lives, the Resync button means "jump to the live edge".
+      try { if (resyncBtn) resyncBtn.title = currentIsLive ? "Jump to the live edge" : "Snap to the host's position"; } catch (_) {}
     }
 
     // native <video> -> broadcast on play/pause/seek (anyone can control)
@@ -803,7 +842,10 @@
     function getPos() {
       try {
         if (currentKind === "file") return fileVid.currentTime || 0;
-        if (currentKind === "yt" && player) return player.getCurrentTime() || 0;
+        if (currentKind === "yt" && player) {
+          if (currentIsLive) return 0;   // live streams have no stable position
+          return player.getCurrentTime() || 0;
+        }
       } catch (_) {}
       return 0;
     }
@@ -925,13 +967,26 @@
       try {
         if (kind === "yt") {
           if (currentKind !== "yt") showPlayer("yt");
+          // Trust the host's live flag if present, so we skip position sync from
+          // the first frame instead of waiting for local detection.
+          if (typeof s.live === "boolean") {
+            if (s.live !== currentIsLive) { currentIsLive = s.live; updateLiveBadge(); }
+          }
           const cur = player.getVideoData ? player.getVideoData().video_id : null;
           if (cur !== src) {
             placeholder.style.display = "none";
             currentSrc = src;
+            currentIsLive = (typeof s.live === "boolean") ? s.live : false;  // re-detect for the new video
+            updateLiveBadge();
             setNowPlaying("yt", src, s.title);
-            player.loadVideoById({ videoId: src, startSeconds: estimatePos(s) });
+            // Lives have no meaningful start offset — load at the live edge.
+            if (s.live) player.loadVideoById({ videoId: src });
+            else player.loadVideoById({ videoId: src, startSeconds: estimatePos(s) });
             if (s.status !== "playing") setTimeout(() => { try{player.pauseVideo();}catch(_){} }, 350);
+          } else if (currentIsLive || s.live) {
+            // Live: never seek to a computed timestamp (the timeline isn't stable
+            // and seekTo gets clamped to the DVR edge anyway). Only match play/pause.
+            if (s.status === "playing") player.playVideo(); else player.pauseVideo();
           } else {
             const target = estimatePos(s);
             if (force || Math.abs((player.getCurrentTime() || 0) - target) > driftThreshold()) player.seekTo(target, true);
@@ -966,6 +1021,7 @@
 
     // estimate partner's current position accounting for time since their update
     function estimatePos(s) {
+      if (s && s.live) return 0;        // live streams: no meaningful offset
       let pos = s.position || 0;
       if (s.status === "playing" && s.updatedAt) {
         const elapsed = (Date.now() - s.updatedAt) / 1000;
@@ -1068,6 +1124,7 @@
         title: currentTitle || null,
         status,
         position: getPos(),
+        live: currentIsLive,
         updatedAt: Date.now(),
         by: clientId,
         byName: myName,
@@ -1375,6 +1432,8 @@
       placeholder.style.display = "none";
       setBuffering(false);
       currentSrc = parsed.src;
+      currentIsLive = false;          // re-detect for the new source
+      updateLiveBadge();
       applyingRemote = false;
       lastHostId = clientId;
       updateHostTag(myName, true);
@@ -1413,6 +1472,16 @@
 
     resyncBtn.addEventListener("click", async () => {
       if (!FIREBASE_READY || !stateRef) { toast("Sync isn't set up yet"); return; }
+      // For a live stream there's no host position to snap to — jump to the
+      // live edge instead. Seeking far past the buffer clamps to "now".
+      if (currentIsLive && currentKind === "yt" && player) {
+        try {
+          player.seekTo((player.getCurrentTime() || 0) + 1e7, true);
+          player.playVideo();
+          toast("Jumped to live 🔴");
+        } catch (_) { toast("Couldn't jump to live"); }
+        return;
+      }
       const snap = await get(stateRef);
       const s = snap.val();
       if (!s) { toast("Nothing to resync to yet"); return; }
