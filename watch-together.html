@@ -65,6 +65,8 @@
     }
     .nameInput:focus{ outline:none; border-bottom-color: rgba(167,139,250,.6); }
     .nameInput::placeholder{ opacity:.5 }
+    .nameInput[readonly]{ border-bottom-color: transparent; cursor: default; opacity:.95; }
+    .nameInput[readonly]:focus{ border-bottom-color: transparent; }
 
     .hostTag{
       font-size:13px; opacity:.9;
@@ -1147,16 +1149,34 @@
     let historyRef = null, historyCache = {};
     let repeatRef = null, repeatMode = "off";   // "off" | "one" | "all"
 
-    // a friendly name so you can tell who's who — editable from the page
-    let myName = (localStorage.getItem("wt_name") || "").slice(0, 24) || "Guest";
+    // ---- identity & display name ----
+    // When signed in via the website account, the ACCOUNT is the source of
+    // truth: its display name is used everywhere (presence, chat, host tag) on
+    // every device, and the name field is locked (change it on the account
+    // page). When signed out, fall back to a per-device typed name so guests
+    // still work.
+    let authUid = null;
+    let accountName = null;     // display name from the signed-in account
+    const deviceName = (localStorage.getItem("wt_name") || "").slice(0, 24) || "Guest";
+    let myName = deviceName;    // effective name actually used
     nameInput.value = myName === "Guest" ? "" : myName;
 
-    // When signed in via the account system, prefer the account's identity:
-    // its uid for message ownership, its display name for presence/chat. Falls
-    // back to the per-device id + locally-typed name when signed out, so the
-    // page works exactly as before for guests.
-    let authUid = null;
     function identityId() { return authUid || myId; }
+
+    // Re-apply the effective name to the UI + broadcast it to the room.
+    function applyName(newName, { lock }) {
+      myName = (newName || "Guest").slice(0, 24);
+      nameInput.value = myName === "Guest" ? "" : myName;
+      nameInput.readOnly = !!lock;
+      nameInput.title = lock ? "Using your account name — change it on your account page" : "";
+      nameInput.placeholder = lock ? "" : "your name";
+      // push to everyone
+      if (myPresRef) set(myPresRef, { name: myName, t: Date.now() });
+      if (lastHostId === clientId && currentKind) {
+        try { broadcast(isPlayingNow() ? "playing" : "paused"); } catch (_) {}
+      }
+    }
+
     (function trackAuth() {
       let tries = 0;
       const iv = setInterval(() => {
@@ -1165,17 +1185,17 @@
           if (!MFAuth.isConfigured()) return;
           MFAuth.onChange((user, profile) => {
             authUid = user ? user.uid : null;
-            const accountName = user
+            accountName = user
               ? ((profile && profile.displayName) || user.displayName ||
-                 (user.email ? user.email.split("@")[0] : null))
+                 (user.email ? user.email.split("@")[0] : "Member"))
               : null;
-            // Only override the typed name if the user hasn't set their own
-            // local name (still "Guest" / blank), so manual names are respected.
-            if (accountName && (myName === "Guest" || !myName)) {
-              myName = accountName.slice(0, 24);
-              nameInput.value = myName;
-              if (myPresRef) set(myPresRef, { name: myName, t: Date.now() });
-              if (lastHostId === clientId && currentKind) broadcast(isPlayingNow() ? "playing" : "paused");
+            if (accountName) {
+              // Signed in: account name wins, field locked.
+              applyName(accountName, { lock: true });
+            } else {
+              // Signed out: revert to the per-device typed name, editable.
+              const local = (localStorage.getItem("wt_name") || "").slice(0, 24) || "Guest";
+              applyName(local, { lock: false });
             }
           });
         } else if (++tries > 50) { clearInterval(iv); }
@@ -1183,12 +1203,15 @@
     })();
 
     function saveName() {
+      // Only meaningful when signed out; signed-in names live on the account.
+      if (authUid) return;
       const v = (nameInput.value || "").trim().slice(0, 24);
       myName = v || "Guest";
       localStorage.setItem("wt_name", myName);
     }
     nameInput.addEventListener("input", saveName);
     nameInput.addEventListener("blur", () => {
+      if (authUid) return;   // locked when signed in
       saveName();
       // reflect the new name in the presence list for everyone
       if (myPresRef) set(myPresRef, { name: myName, t: Date.now() });
