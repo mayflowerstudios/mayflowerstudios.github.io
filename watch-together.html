@@ -851,14 +851,37 @@
     fileVid.addEventListener("play",  () => { syncWakeLock(); fileEvent(); });
     fileVid.addEventListener("pause", () => { syncWakeLock(); fileEvent(); });
     fileVid.addEventListener("seeked", fileEvent);
-    fileVid.addEventListener("waiting", () => { if (currentKind === "file") setBuffering(true); });
-    fileVid.addEventListener("stalled", () => { if (currentKind === "file") setBuffering(true); });
-    fileVid.addEventListener("playing", () => { if (currentKind === "file") setBuffering(false); });
-    fileVid.addEventListener("canplay", () => { if (currentKind === "file") setBuffering(false); });
+    fileVid.addEventListener("waiting", () => { if (currentKind === "file") { setBuffering(true); armStallWatch(); } });
+    fileVid.addEventListener("stalled", () => { if (currentKind === "file") { setBuffering(true); armStallWatch(); } });
+    fileVid.addEventListener("playing", () => { if (currentKind === "file") { setBuffering(false); clearTimeout(stallTimer); } });
+    fileVid.addEventListener("canplay", () => { if (currentKind === "file") { setBuffering(false); clearTimeout(stallTimer); } });
     fileVid.addEventListener("ended", () => { syncWakeLock(); setBuffering(false); if (currentKind === "file") advanceQueue(); });
     fileVid.addEventListener("error", () => {
-      if (currentKind === "file") toast("Couldn't load that video link");
+      if (currentKind !== "file") return;
+      setBuffering(false);   // don't leave the overlay spinning forever
+      const err = fileVid.error;
+      const code = err ? err.code : 0;
+      // 1 ABORTED · 2 NETWORK · 3 DECODE · 4 SRC_NOT_SUPPORTED
+      let msg = "Couldn't load that video";
+      if (code === 4) msg = "Browser can't play this video format (try MP4/H.264)";
+      else if (code === 3) msg = "Video decode failed — likely an unsupported codec";
+      else if (code === 2) msg = "Network error loading the video (check Storage CORS)";
+      console.error("[video] error", code, err && err.message, "src=", fileVid.currentSrc);
+      toast(msg);
     });
+    // A stall that never resolves is the classic CORS/range-request symptom.
+    // Warn (once) if we've been buffering a file for a while with no progress.
+    let stallTimer = null;
+    function armStallWatch() {
+      clearTimeout(stallTimer);
+      stallTimer = setTimeout(() => {
+        if (currentKind === "file" && localBuffering && fileVid.readyState < 3) {
+          toast("Still buffering — if it never starts, Storage CORS likely needs setup");
+          console.warn("[video] long stall. readyState=", fileVid.readyState,
+                       "networkState=", fileVid.networkState, "src=", fileVid.currentSrc);
+        }
+      }, 12000);
+    }
 
     // ============================================================
     //  Sync layer
@@ -1520,7 +1543,14 @@
         setNowPlaying("file", parsed.src);
         fileVid.src = parsed.src;
         fileVid.load();
-        fileVid.play().catch(()=>{});
+        fileVid.play().catch((err) => {
+          // Autoplay (esp. with sound) can be blocked until the user interacts.
+          // That leaves the video paused, which looks like an endless buffer.
+          // Clear the overlay and nudge the user to tap play.
+          console.warn("[video] autoplay blocked:", err && err.name);
+          setBuffering(false);
+          toast("Tap the video to start playing ▶");
+        });
       }
       setTimeout(() => broadcast("playing"), 800);
       recordHistory(parsed);
@@ -1584,6 +1614,21 @@
         return;
       }
       if (uploadTask) { toast("An upload's already running"); return; }
+
+      // Heads-up for formats browsers generally can't decode (mkv/avi, and often
+      // mov/quicktime). They upload fine but then hang on "buffering" because the
+      // <video> element can't play them. MP4 (H.264/AAC) and WebM are safe.
+      const ct = file.type || "";
+      const playable = ct && fileVid.canPlayType && fileVid.canPlayType(ct);
+      const riskyExt = /\.(mkv|avi|flv|wmv|mov|m4v)$/i.test(file.name);
+      if ((ct && playable === "") || (!ct && riskyExt)) {
+        const ok = confirm(
+          "This file's format (" + (ct || extOf(file.name)) + ") may not play in the browser — " +
+          "it could upload but then get stuck buffering.\n\n" +
+          "MP4 (H.264) works best. Upload anyway?"
+        );
+        if (!ok) return;
+      }
 
       // Fixed per-room path = inherently one slot. A short token in the name
       // busts any cache/CDN holdover from a previous upload at the same path.
