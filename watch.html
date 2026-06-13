@@ -632,9 +632,11 @@
       }
 
       list.innerHTML = "";
-      if (!rendered) { list.appendChild(empty); empty.style.display = "block"; return; }
+      console.log("[lobby] render outcome: list el?", !!list, "rendered cards:", rendered);
+      if (!rendered) { list.appendChild(empty); empty.style.display = "block"; console.log("[lobby] -> showing EMPTY state"); return; }
       empty.style.display = "none";
       list.appendChild(frag);
+      console.log("[lobby] -> appended", rendered, "cards. list now has", list.children.length, "children");
 
       list.querySelectorAll(".rCopy").forEach(btn => {
         btn.addEventListener("click", (e) => {
