@@ -765,6 +765,9 @@
     let localBuffering = false;     // are we stalled/buffering right now?
     let partnerWaiting = false;     // is the other side stalled?
     let waitingRef = null;          // shared "who's buffering" node
+    const WAIT_STALE_MS = 20000;    // ignore "waiting" entries older than this
+    const presentClientIds = new Set();  // clientIds currently present (from presence)
+    let waitHeartbeat = null;       // keeps our "waiting" timestamp fresh while buffering
 
     const fileVid = $("filevid");
     const ytEl = $("ytplayer");
@@ -1197,7 +1200,16 @@
       if (isBuffering) {
         safeWrite(() => set(myWaitRef, { name: myName, t: Date.now() }));
         try { onDisconnect(myWaitRef).remove(); } catch(_) {}
+        // Refresh the timestamp while we're still buffering, so a long-but-real
+        // buffer isn't mistaken for a stale/crashed entry (WAIT_STALE_MS) and
+        // cleared out from under us by the other client.
+        clearInterval(waitHeartbeat);
+        waitHeartbeat = setInterval(() => {
+          if (!localBuffering) { clearInterval(waitHeartbeat); return; }
+          safeWrite(() => set(myWaitRef, { name: myName, t: Date.now() }));
+        }, WAIT_STALE_MS / 2);
       } else {
+        clearInterval(waitHeartbeat);
         safeWrite(() => remove(myWaitRef));
       }
     }
@@ -1228,6 +1240,15 @@
       const ids = Object.keys(val || {});
       const n = ids.length;
       lastPresenceCount = n;
+      // Track who's actually here, so stale "waiting" entries from clients that
+      // already left can be ignored (and cleaned up).
+      presentClientIds.clear();
+      ids.forEach(id => presentClientIds.add(id));
+      // A partner who just left should immediately stop showing as "waiting".
+      if (partnerWaiting && !ids.some(id => id !== clientId)) {
+        partnerWaiting = false;
+        updateWaitingOverlay();
+      }
       if (n <= 1) setConn("on", "Connected · waiting for others");
       else setConn("on", `Connected · ${n} here`);
 
@@ -1456,8 +1477,23 @@
         waitingRef = ref(db, `watch/${ROOM}/waiting`);
         onValue(waitingRef, (snap) => {
           const val = snap.val() || {};
-          // Anyone other than us currently marked as waiting?
-          partnerWaiting = Object.keys(val).some(id => id !== clientId);
+          const now = Date.now();
+          // Only count someone as "waiting" if their entry is (a) not ours,
+          // (b) recent (stale entries from crashed/force-closed sessions are
+          // ignored — onDisconnect doesn't always fire), and (c) belongs to a
+          // client that's actually still present in the room.
+          partnerWaiting = Object.entries(val).some(([id, w]) => {
+            if (id === clientId) return false;
+            const fresh = w && w.t && (now - w.t) < WAIT_STALE_MS;
+            const present = presentClientIds.has(id);
+            return fresh && present;
+          });
+          // Best-effort cleanup of stale entries so they don't linger in the DB.
+          for (const [id, w] of Object.entries(val)) {
+            const stale = !w || !w.t || (now - w.t) >= WAIT_STALE_MS;
+            const gone = !presentClientIds.has(id) && id !== clientId;
+            if (stale || gone) { try { remove(ref(db, `watch/${ROOM}/waiting/${id}`)); } catch (_) {} }
+          }
           updateWaitingOverlay();
         });
 
