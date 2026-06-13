@@ -180,6 +180,20 @@ function renderHub(){
 }
 
 /* ── STORY OPEN / LOAD ─────────────────────────────── */
+/* Fields that a meta.<lang>.js patch is allowed to overwrite in place.
+   We snapshot the original (English) values once so we can restore them
+   when switching back to English (or any language without a patch). */
+var SK_META_PATCHABLE=['title','subtitle','desc','note','cw','epilogue'];
+function snapshotMeta(m){
+  if(m._enMeta)return;
+  var snap={};SK_META_PATCHABLE.forEach(function(k){snap[k]=m[k];});
+  m._enMeta=snap;
+}
+function restoreMeta(m){
+  if(!m._enMeta)return;
+  SK_META_PATCHABLE.forEach(function(k){m[k]=m._enMeta[k];});
+}
+
 function openStory(id){
   var m=SAKARI.stories[id];if(!m)return;
   var lang=SAKARI.lang||'en';
@@ -191,6 +205,10 @@ function openStory(id){
   document.getElementById('sk-loading').style.display='flex';
   document.getElementById('sk-player-title').textContent=m.title;
   SCENES={};SPIRALS={};GLOSSARY={};
+  /* preserve the pristine English metadata before any patch runs, then
+     restore it so a previously-loaded patch doesn't leak across languages */
+  snapshotMeta(m);
+  restoreMeta(m);
   var files=[];
   if(lang!=='en'&&m.langs&&m.langs.some(function(l){return l.code===lang;})){
     files.push('sakari/'+id+'/meta.'+lang+'.js');
