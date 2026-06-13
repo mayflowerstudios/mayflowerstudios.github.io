@@ -424,7 +424,14 @@
       onValue(lobbyRef, (snap) => {
         const val = snap.val() || {};
         console.log("[lobby] onValue fired. rooms in snapshot:", Object.keys(val).length, val);
-        lobbyCache = val;
+        // Key the cache by room name AND guarantee each entry carries its key as
+        // `name`. Older/manually-written entries may lack the field, and
+        // renderPublic() skips name-less rooms (made them flash then vanish).
+        const normalized = {};
+        for (const [key, entry] of Object.entries(val)) {
+          if (entry && typeof entry === "object") normalized[key] = { ...entry, name: entry.name || key };
+        }
+        lobbyCache = normalized;
         renderPublic();
       });
     } else {
@@ -550,7 +557,17 @@
     }
 
     function renderPublic() {
-      const list = $("publicList"), empty = $("publicEmpty");
+      const list = $("publicList");
+      // The empty-state node lives inside #publicList, so list.innerHTML="" below
+      // destroys it. Keep a stable reference and recreate it if it's gone, so a
+      // later empty render can't crash on appendChild(null) (which blanked the list).
+      let empty = $("publicEmpty");
+      if (!empty) {
+        empty = document.createElement("p");
+        empty.className = "roomEmpty";
+        empty.id = "publicEmpty";
+        empty.textContent = "No rooms here yet — create one to get started!";
+      }
       const now = Date.now();
 
       const listed = Object.values(lobbyCache).filter(r => r && isListed(r));
