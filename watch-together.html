@@ -111,6 +111,15 @@
     .btn.link{ background: transparent; border-color: rgba(255,255,255,.10); opacity:.92; }
     .btn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
 
+    /* upload progress */
+    .uploadRow{ display:flex; align-items:center; gap:10px; margin-top:10px; }
+    .uploadBar{ flex:1 1 auto; height:8px; border-radius:999px; overflow:hidden;
+      background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.10); }
+    .uploadFill{ height:100%; width:0%; border-radius:999px;
+      background:linear-gradient(90deg, rgba(251,113,133,.85), rgba(167,139,250,.85));
+      transition:width .2s ease; }
+    .uploadMsg{ font-size:12px; opacity:.75; flex:0 0 auto; min-width:96px; }
+
     .stage{
       margin-top:16px;
       border-radius:18px;
@@ -449,8 +458,15 @@
                    placeholder="Paste a YouTube link or video URL…"
                    autocomplete="off" spellcheck="false" />
             <button class="btn primary" id="loadBtn">▶ Load &amp; Sync</button>
+            <button class="btn" id="uploadBtn" title="Upload a video file to watch together">📁 Upload</button>
+            <input type="file" id="uploadInput" accept="video/*" hidden />
             <button class="btn link" id="copyRoomBtn">🔗 Copy room link</button>
             <a class="btn link" href="watch.html">🏠 Lobby</a>
+          </div>
+          <div class="uploadRow" id="uploadRow" hidden>
+            <div class="uploadBar"><div class="uploadFill" id="uploadFill"></div></div>
+            <span class="uploadMsg" id="uploadMsg"></span>
+            <button class="btn link" id="uploadCancel" title="Cancel upload">✕</button>
           </div>
 
           <div class="stage">
@@ -607,6 +623,9 @@
       getDatabase, ref, onValue, set, onDisconnect, serverTimestamp, get,
       push, remove, query, limitToLast
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import {
+      getStorage, ref as sref, uploadBytesResumable, getDownloadURL, deleteObject
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
     /* ============================================================
        CONFIG — replace with your own Firebase project's config.
@@ -618,6 +637,9 @@
       authDomain: "watchtogether-95d7d.firebaseapp.com",
       databaseURL: "https://watchtogether-95d7d-default-rtdb.firebaseio.com",
       projectId: "watchtogether-95d7d",
+      // Storage (Blaze plan) — used for the per-room "upload a video" slot.
+      // If your bucket is the older style, use "watchtogether-95d7d.appspot.com".
+      storageBucket: "watchtogether-95d7d.firebasestorage.app",
     };
 
     const FIREBASE_READY = !firebaseConfig.apiKey.startsWith("REPLACE");
@@ -626,6 +648,12 @@
     const $ = (id) => document.getElementById(id);
     const urlInput = $("urlInput");
     const loadBtn = $("loadBtn");
+    const uploadBtn = $("uploadBtn");
+    const uploadInput = $("uploadInput");
+    const uploadRow = $("uploadRow");
+    const uploadFill = $("uploadFill");
+    const uploadMsg = $("uploadMsg");
+    const uploadCancel = $("uploadCancel");
     const copyRoomBtn = $("copyRoomBtn");
     const resyncBtn = $("resyncBtn");
     const awakeBtn = $("awakeBtn");
@@ -837,6 +865,10 @@
     // ============================================================
     let db = null, stateRef = null;
     let presenceRef = null, myPresRef = null;
+    let storage = null;          // Firebase Storage (Blaze) for uploaded videos
+    let uploadTask = null;       // in-flight upload, so it can be cancelled
+    let uploadRef = null;        // RTDB pointer at watch/{ROOM}/upload (storage path of current upload)
+    let lastPresenceCount = 0;   // most recent count of people in the room
 
     // current playback position for whichever player is active
     function getPos() {
@@ -1172,6 +1204,7 @@
     function renderPresence(val) {
       const ids = Object.keys(val || {});
       const n = ids.length;
+      lastPresenceCount = n;
       if (n <= 1) setConn("on", "Connected · waiting for others");
       else setConn("on", `Connected · ${n} here`);
 
@@ -1289,6 +1322,7 @@
       try {
         const app = initializeApp(firebaseConfig);
         db = getDatabase(app);
+        try { storage = getStorage(app); } catch (_) { storage = null; }
 
         // Room gate: a room only exists if it was made in the lobby's create
         // panel. If there's no lobby entry, bounce back to the lobby so the
@@ -1327,6 +1361,19 @@
         set(presRef, { name: myName, t: Date.now() });
         onDisconnect(presRef).remove();
 
+        // Last-one-out safety: if we're closing the tab and no one else is here,
+        // delete the upload now (Storage deletes can't be armed via onDisconnect,
+        // so we do a synchronous best-effort here). pagehide covers mobile.
+        const unloadCleanup = () => {
+          try {
+            if (!currentUpload) return;
+            const others = presenceRef && lastPresenceCount > 1;
+            if (!others) deleteUploadByPath(currentUpload.path);
+          } catch (_) {}
+        };
+        window.addEventListener("pagehide", unloadCleanup);
+        window.addEventListener("beforeunload", unloadCleanup);
+
         onValue(ref(db, ".info/connected"), (snap) => {
           if (snap.val() === true) { set(presRef, { name: myName, t: Date.now() }); onDisconnect(presRef).remove(); }
         });
@@ -1335,6 +1382,28 @@
         onValue(presenceRef, (snap) => {
           const val = snap.exists() ? snap.val() : {};
           renderPresence(val);
+
+          // Empty-room cleanup: when the last person leaves, delete the room's
+          // uploaded video. Every still-connected client runs this check, but
+          // delete is idempotent (not-found is ignored) so a double-delete is
+          // harmless. If presence is empty we're mid-teardown ourselves; the
+          // onDisconnect handler below is the real safety net for that case.
+          const others = Object.keys(val).filter(id => id !== clientId).length;
+          if (others === 0 && currentUpload) {
+            const stale = currentUpload;
+            currentUpload = null;
+            if (uploadRef) { try { remove(uploadRef); } catch (_) {} }
+            deleteUploadByPath(stale.path);
+          }
+        });
+
+        // Room upload pointer: tells every client the storage path of the
+        // single uploaded video, so anyone can clean it up (on replace/empty)
+        // and late joiners know what's currently playing came from an upload.
+        uploadRef = ref(db, `watch/${ROOM}/upload`);
+        onValue(uploadRef, (snap) => {
+          const u = snap.val();
+          currentUpload = (u && u.path) ? { path: u.path, url: u.url || null } : null;
         });
 
         // Heartbeat the lobby so it can show this room as live and prune it once
@@ -1431,6 +1500,9 @@
     function startSource(parsed) {
       placeholder.style.display = "none";
       setBuffering(false);
+      // One upload per room: if a *different* source is starting, drop the
+      // previous uploaded file from Storage so we never accumulate them.
+      maybeClearUploadFor(parsed.src);
       currentSrc = parsed.src;
       currentIsLive = false;          // re-detect for the new source
       updateLiveBadge();
@@ -1469,6 +1541,146 @@
 
     loadBtn.addEventListener("click", loadFromInput);
     urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") loadFromInput(); });
+
+    // ============================================================
+    //  Upload a video (Firebase Storage, Blaze plan)
+    //  - One slot per room at uploads/{ROOM}/current.<ext>
+    //  - Deleted when a different source starts playing, or the room empties.
+    // ============================================================
+    const MAX_UPLOAD_BYTES = 2 * 1024 * 1024 * 1024;   // 2 GB ceiling (generous; tune to taste)
+
+    // Local record of what we currently have uploaded, so any client can delete
+    // it. Mirrored to RTDB at watch/{ROOM}/upload so every client agrees.
+    let currentUpload = null;   // { path, url } | null
+
+    function extOf(name) {
+      const m = /\.([a-z0-9]{2,5})$/i.exec(name || "");
+      return m ? m[1].toLowerCase() : "mp4";
+    }
+    function fmtBytes(b) {
+      if (b > 1e9) return (b / 1e9).toFixed(1) + " GB";
+      if (b > 1e6) return (b / 1e6).toFixed(0) + " MB";
+      return Math.max(1, Math.round(b / 1e3)) + " KB";
+    }
+
+    function showUploadRow(show) {
+      if (!uploadRow) return;
+      uploadRow.hidden = !show;
+      if (!show) { uploadFill.style.width = "0%"; uploadMsg.textContent = ""; }
+    }
+
+    function startUpload(file) {
+      if (!FIREBASE_READY || !storage) {
+        toast("Uploads need Firebase Storage — check the setup");
+        return;
+      }
+      if (!file) return;
+      if (!/^video\//i.test(file.type) && !/\.(mp4|webm|ogg|ogv|mov|m4v|mkv)$/i.test(file.name)) {
+        toast("That doesn't look like a video file");
+        return;
+      }
+      if (file.size > MAX_UPLOAD_BYTES) {
+        toast("That file's too big (limit " + fmtBytes(MAX_UPLOAD_BYTES) + ")");
+        return;
+      }
+      if (uploadTask) { toast("An upload's already running"); return; }
+
+      // Fixed per-room path = inherently one slot. A short token in the name
+      // busts any cache/CDN holdover from a previous upload at the same path.
+      const path = `uploads/${ROOM}/current-${Date.now().toString(36)}.${extOf(file.name)}`;
+      const storageRefObj = sref(storage, path);
+
+      uploadBtn.disabled = true;
+      loadBtn.disabled = true;
+      showUploadRow(true);
+      uploadMsg.textContent = "Starting…";
+
+      uploadTask = uploadBytesResumable(storageRefObj, file, {
+        contentType: file.type || "video/mp4",
+      });
+
+      uploadTask.on("state_changed",
+        (snap) => {
+          const pct = snap.totalBytes ? (snap.bytesTransferred / snap.totalBytes) * 100 : 0;
+          uploadFill.style.width = pct.toFixed(1) + "%";
+          uploadMsg.textContent = pct < 100
+            ? `${pct.toFixed(0)}% · ${fmtBytes(snap.bytesTransferred)} / ${fmtBytes(snap.totalBytes)}`
+            : "Finishing…";
+        },
+        (err) => {
+          console.error("[upload] failed:", err);
+          uploadTask = null;
+          uploadBtn.disabled = false;
+          loadBtn.disabled = false;
+          showUploadRow(false);
+          const denied = err && (err.code === "storage/unauthorized" || /unauthor/i.test(err.code || ""));
+          toast(denied ? "Upload blocked — check Storage rules" :
+                (err && err.code === "storage/canceled" ? "Upload cancelled" : "Upload failed"));
+        },
+        async () => {
+          try {
+            const url = await getDownloadURL(uploadTask.snapshot.ref);
+            uploadTask = null;
+            uploadBtn.disabled = false;
+            loadBtn.disabled = false;
+            showUploadRow(false);
+
+            // Before adopting this as the room's upload, remember the old one so
+            // startSource's maybeClearUploadFor (different src) cleans it up.
+            // Record the new upload as the room's single slot.
+            currentUpload = { path, url };
+            if (uploadRef) { try { set(uploadRef, { path, url, by: myName, t: Date.now() }); } catch (_) {} }
+
+            // Play it for everyone — this is a normal "file" source.
+            startSource({ kind: "file", src: url });
+            toast("Uploaded — everyone will catch up ✨");
+          } catch (e) {
+            console.error("[upload] url fetch failed:", e);
+            uploadTask = null;
+            uploadBtn.disabled = false;
+            loadBtn.disabled = false;
+            showUploadRow(false);
+            toast("Upload finished but couldn't start it");
+          }
+        }
+      );
+    }
+
+    // Delete an upload from Storage by its path. Best-effort; safe to call with
+    // a path that's already gone.
+    async function deleteUploadByPath(path) {
+      if (!storage || !path) return;
+      try { await deleteObject(sref(storage, path)); }
+      catch (e) {
+        // Not-found is fine (someone else already cleaned up).
+        if (!(e && e.code === "storage/object-not-found")) console.warn("[upload] delete:", e && e.code);
+      }
+    }
+
+    // If a new source is starting and it's NOT our current upload's URL, delete
+    // the old uploaded file and clear the room pointer. Keeps exactly one.
+    function maybeClearUploadFor(newSrc) {
+      if (!currentUpload) return;
+      if (newSrc && newSrc === currentUpload.url) return;   // same upload re-loading; keep it
+      const stale = currentUpload;
+      currentUpload = null;
+      if (uploadRef) { try { remove(uploadRef); } catch (_) {} }
+      deleteUploadByPath(stale.path);
+    }
+
+    uploadBtn.addEventListener("click", () => {
+      if (uploadTask) return;
+      uploadInput.value = "";       // allow re-picking the same file
+      uploadInput.click();
+    });
+    uploadInput.addEventListener("change", () => {
+      const f = uploadInput.files && uploadInput.files[0];
+      if (f) startUpload(f);
+    });
+    uploadCancel.addEventListener("click", () => {
+      if (uploadTask) { try { uploadTask.cancel(); } catch (_) {} }
+    });
+
 
     resyncBtn.addEventListener("click", async () => {
       if (!FIREBASE_READY || !stateRef) { toast("Sync isn't set up yet"); return; }
