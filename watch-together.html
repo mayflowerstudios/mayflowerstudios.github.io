@@ -59,6 +59,16 @@
     .dot.off{ background:#fb7185; box-shadow:0 0 8px rgba(251,113,133,.6); }
 
     .namePill{ padding-top:3px; padding-bottom:3px; }
+    .lobbyLink{
+      text-decoration:none; color:inherit; cursor:pointer;
+      border-color:rgba(167,139,250,.30);
+      background:rgba(167,139,250,.12);
+      transition:filter .12s ease, transform .12s ease, background .12s ease;
+      font-family:inherit; font-size:13px;   /* button needs explicit font */
+    }
+    .lobbyLink:hover{ filter:brightness(1.1); transform:translateY(-1px); background:rgba(167,139,250,.20); }
+    /* the last left-aligned pill pushes the status/room/name cluster to the right */
+    #copyRoomBtn{ margin-right:auto; }
     .nameInput{
       width:96px; background:transparent; border:0; color:inherit;
       font-size:13px; padding:2px 0; border-bottom:1px solid rgba(255,255,255,.18);
@@ -442,6 +452,8 @@
             </div>
 
             <div class="roomBar">
+              <a class="pillStat lobbyLink" href="watch.html" title="Back to the lobby">🏠 Lobby</a>
+              <button class="pillStat lobbyLink" id="copyRoomBtn" title="Copy room link">🔗 Copy link</button>
               <span class="pillStat"><span class="dot" id="connDot"></span><span id="connText">Connecting…</span></span>
               <span class="pillStat" id="roomStat">Room: <strong id="roomName" style="margin-left:4px">cozy</strong></span>
               <span class="pillStat namePill">You:
@@ -460,8 +472,6 @@
             <button class="btn primary" id="loadBtn">▶ Load &amp; Sync</button>
             <button class="btn" id="uploadBtn" title="Upload a video file to watch together">📁 Upload</button>
             <input type="file" id="uploadInput" accept="video/*" hidden />
-            <button class="btn link" id="copyRoomBtn">🔗 Copy room link</button>
-            <a class="btn link" href="watch.html">🏠 Lobby</a>
           </div>
           <div class="uploadRow" id="uploadRow" hidden>
             <div class="uploadBar"><div class="uploadFill" id="uploadFill"></div></div>
