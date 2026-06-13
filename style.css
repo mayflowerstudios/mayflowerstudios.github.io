@@ -110,6 +110,9 @@ code { font-family: var(--font-m); font-size: .9em; }
   box-shadow: 0 2px 14px rgba(249,168,212,.2);
 }
 .nav-links a.nav-cta:hover { box-shadow: 0 4px 22px rgba(249,168,212,.35) !important; transform: translateY(-1px); }
+.nav-links a.nav-account.nav-signed-in {
+  color: var(--violet); background: rgba(196,181,253,.08); border-color: rgba(196,181,253,.2);
+}
 .nav-mob-btn {
   display: none; align-items: center; justify-content: center;
   width: 34px; height: 34px; border: 1px solid var(--border-2);
@@ -499,4 +502,3 @@ hr.sep { border: 0; height: 1px; background: var(--border); margin: 14px 0; }
 /* Media block */
 .mediaBlock { display: flex; flex-wrap: wrap; gap: 12px; }
 .mediaBlock img { border-radius: var(--r-md); border: 1px solid var(--border); max-height: 280px; }
-
