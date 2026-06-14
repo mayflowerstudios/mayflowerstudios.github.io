@@ -1468,6 +1468,12 @@
       fileVid.srcObject = stream;
       fileVid.muted = true;
       fileVid.play().catch(()=>{});
+      // A live capture is never "buffering". Clear any stale flag left over
+      // from a previously-loaded YouTube/file clip, otherwise the overlay
+      // spinner gets stuck on over the live stream. (A srcObject stream never
+      // fires the playing/canplay events that would normally clear it.)
+      setBuffering(false);
+      clearTimeout(stallTimer);
       setNowPlayingShare(myName, true);
 
       // When the user clicks the browser's native "Stop sharing", end cleanly.
@@ -1681,7 +1687,10 @@
     }
 
     function updateWaitingOverlay() {
-      const show = localBuffering || partnerWaiting;
+      // While we're the one broadcasting, our local capture is the source —
+      // it can't be buffering, so never show the spinner over our own stream
+      // regardless of stale flags or a partner's waiting state.
+      const show = !isBroadcasting && (localBuffering || partnerWaiting);
       let el = $("waitOverlay");
       if (!el) {
         el = document.createElement("div");
