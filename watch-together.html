@@ -119,7 +119,32 @@
     .btn.primary{ background: rgba(251,113,133,.18); border-color: rgba(251,113,133,.30); }
     .btn.violet{ background: rgba(167,139,250,.16); border-color: rgba(167,139,250,.28); }
     .btn.link{ background: transparent; border-color: rgba(255,255,255,.10); opacity:.92; }
+    .btn.rose{ background: rgba(244,114,182,.16); border-color: rgba(244,114,182,.30); }
+    .btn.rose.active{ background: rgba(239,68,68,.22); border-color: rgba(239,68,68,.45); color:#fca5a5; }
     .btn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
+
+    /* live screen-share banner */
+    .shareBanner{
+      display:none; align-items:center; gap:8px; margin-top:10px;
+      padding:8px 12px; border-radius:12px; font-size:13px; font-weight:600;
+      background:rgba(239,68,68,.14); border:1px solid rgba(239,68,68,.35); color:#fca5a5;
+    }
+    .shareBanner.show{ display:flex; }
+    .shareBanner .liveDot{
+      width:9px; height:9px; border-radius:50%; background:#ef4444; flex:0 0 auto;
+      box-shadow:0 0 0 0 rgba(239,68,68,.6); animation:livePulse 1.6s infinite;
+    }
+    @keyframes livePulse{
+      0%{ box-shadow:0 0 0 0 rgba(239,68,68,.55); }
+      70%{ box-shadow:0 0 0 7px rgba(239,68,68,0); }
+      100%{ box-shadow:0 0 0 0 rgba(239,68,68,0); }
+    }
+    .shareBanner .stopShare{
+      margin-left:auto; padding:4px 10px; font-size:12px; border-radius:9px;
+      background:rgba(239,68,68,.22); border:1px solid rgba(239,68,68,.4);
+      color:#fecaca; cursor:pointer;
+    }
+    .shareBanner .stopShare:hover{ filter:brightness(1.12); }
 
     /* upload progress */
     .uploadRow{ display:flex; align-items:center; gap:10px; margin-top:10px; }
@@ -471,12 +496,19 @@
                    autocomplete="off" spellcheck="false" />
             <button class="btn primary" id="loadBtn">▶ Load &amp; Sync</button>
             <button class="btn" id="uploadBtn" title="Upload a video file to watch together">📁 Upload</button>
+            <button class="btn rose" id="shareBtn" title="Stream a game or your screen live to the room">🎮 Stream Game</button>
             <input type="file" id="uploadInput" accept="video/*" hidden />
           </div>
           <div class="uploadRow" id="uploadRow" hidden>
             <div class="uploadBar"><div class="uploadFill" id="uploadFill"></div></div>
             <span class="uploadMsg" id="uploadMsg"></span>
             <button class="btn link" id="uploadCancel" title="Cancel upload">✕</button>
+          </div>
+
+          <div class="shareBanner" id="shareBanner">
+            <span class="liveDot"></span>
+            <span id="shareBannerText">Live screen share</span>
+            <button class="stopShare" id="stopShareBtn">Stop sharing</button>
           </div>
 
           <div class="stage">
@@ -631,7 +663,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
       getDatabase, ref, onValue, set, onDisconnect, serverTimestamp, get,
-      push, remove, query, limitToLast
+      push, remove, query, limitToLast, child, onChildAdded, onChildRemoved, update
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
     import {
       getStorage, ref as sref, uploadBytesResumable, getDownloadURL, deleteObject
@@ -659,6 +691,10 @@
     const urlInput = $("urlInput");
     const loadBtn = $("loadBtn");
     const uploadBtn = $("uploadBtn");
+    const shareBtn = $("shareBtn");
+    const shareBanner = $("shareBanner");
+    const shareBannerText = $("shareBannerText");
+    const stopShareBtn = $("stopShareBtn");
     const uploadInput = $("uploadInput");
     const uploadRow = $("uploadRow");
     const uploadFill = $("uploadFill");
@@ -785,7 +821,8 @@
     function showPlayer(kind) {
       currentKind = kind;
       ytEl.style.display    = kind === "yt"   ? "block" : "none";
-      fileVid.style.display = kind === "file" ? "block" : "none";
+      // both "file" and "screen" render through the native <video> element
+      fileVid.style.display = (kind === "file" || kind === "screen") ? "block" : "none";
     }
 
     window.onYouTubeIframeAPIReady = function () {
@@ -1018,6 +1055,9 @@
 
     function applyState(s, force) {
       if (!s) return;
+      // A live screen share takes over the player; don't let a stale or
+      // concurrent YouTube/file state yank a viewer (or broadcaster) off it.
+      if (currentKind === "screen" || isBroadcasting || activeShare) return;
       // backwards-compat: old states only had videoId
       const kind = s.kind || (s.videoId ? "yt" : null);
       const src  = s.src  || s.videoId || null;
@@ -1199,6 +1239,297 @@
       });
     }
 
+    // ============================================================
+    //  Live screen / game share  (WebRTC over Firebase signaling)
+    // ------------------------------------------------------------
+    //  YouTube/file modes share a URL each browser loads on its own.
+    //  A live game capture has no URL — it's a realtime media stream
+    //  that travels browser-to-browser via WebRTC. Firebase only
+    //  carries the handshake (offers/answers/ICE), never the video.
+    //
+    //  Topology: ONE broadcaster, N viewers (mesh). The broadcaster
+    //  holds a "share lock" in RTDB; whoever claims it first owns the
+    //  stream and everyone else watches. Fine for a couple / small
+    //  group — it does NOT scale to a big public room because the
+    //  broadcaster's upload bandwidth multiplies per viewer.
+    //
+    //  RTDB layout under watch/${ROOM}/rtc:
+    //    share            -> { by, byName, t }            (the lock)
+    //    signals/{toId}/{fromId}/{pushKey} -> { type, data }
+    //      type: "offer" | "answer" | "ice" | "bye"
+    // ============================================================
+    const RTC_CONFIG = {
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302" },
+      ],
+    };
+    let rtcRoot = null;            // ref watch/${ROOM}/rtc
+    let shareLockRef = null;       // ref .../rtc/share
+    let mySignalsRef = null;       // ref .../rtc/signals/${clientId}
+    let localShareStream = null;   // MediaStream we're broadcasting (broadcaster only)
+    let isBroadcasting = false;    // are WE the one sharing?
+    let activeShare = null;        // { by, byName } of whoever is sharing (anyone)
+    const peers = new Map();       // peerClientId -> RTCPeerConnection
+    const pendingIce = new Map();   // peerClientId -> [candidate,...] queued before remoteDescription
+    let signalsBound = false;
+
+    function rtcInit() {
+      if (!FIREBASE_READY || !db) return;
+      rtcRoot = ref(db, `watch/${ROOM}/rtc`);
+      shareLockRef = ref(db, `watch/${ROOM}/rtc/share`);
+      mySignalsRef = ref(db, `watch/${ROOM}/rtc/signals/${clientId}`);
+
+      // Who's sharing right now? Drives the button state for everyone.
+      onValue(shareLockRef, (snap) => {
+        const s = snap.val();
+        const wasActive = !!activeShare;
+        activeShare = (s && s.by) ? { by: s.by, byName: s.byName || "Someone" } : null;
+
+        // The broadcaster left without cleanup, or stopped — tear our viewer side down.
+        if (wasActive && !activeShare && !isBroadcasting) {
+          stopWatchingShare();
+        }
+        // If someone else grabbed the lock while we thought we held it
+        // (shouldn't normally happen), yield gracefully.
+        if (activeShare && isBroadcasting && activeShare.by !== clientId) {
+          stopBroadcast(true);
+        }
+        updateShareUI();
+      });
+
+      // Inbound signaling messages addressed to us.
+      if (!signalsBound) {
+        signalsBound = true;
+        onChildAdded(mySignalsRef, (fromSnap) => {
+          const fromId = fromSnap.key;
+          onChildAdded(child(mySignalsRef, fromId), async (msgSnap) => {
+            const msg = msgSnap.val();
+            // consume it so the queue doesn't grow unbounded
+            try { remove(msgSnap.ref); } catch (_) {}
+            if (msg) await handleSignal(fromId, msg);
+          });
+        });
+      }
+    }
+
+    function sendSignal(toId, type, data) {
+      if (!db) return;
+      const out = ref(db, `watch/${ROOM}/rtc/signals/${toId}/${clientId}`);
+      push(out, { type, data: data || null, t: Date.now() });
+    }
+
+    // ---- Broadcaster side ----
+    async function startBroadcast() {
+      if (!FIREBASE_READY) { toast("Sharing needs the room connection to be live"); return; }
+      if (activeShare && activeShare.by !== clientId) {
+        toast(`${activeShare.byName} is already streaming — only one at a time`);
+        return;
+      }
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+        toast("Your browser can't capture the screen here (needs HTTPS + a desktop browser)");
+        return;
+      }
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getDisplayMedia({
+          video: { frameRate: { ideal: 30, max: 60 } },
+          audio: {
+            // best-effort: clean game audio without echo cancellation mangling it
+            echoCancellation: false, noiseSuppression: false, autoGainControl: false,
+          },
+        });
+      } catch (err) {
+        if (err && err.name === "NotAllowedError") toast("Screen share cancelled");
+        else { console.error("[share] getDisplayMedia failed", err); toast("Couldn't start screen capture"); }
+        return;
+      }
+
+      // Claim the share lock. Clear it automatically if we disconnect.
+      localShareStream = stream;
+      isBroadcasting = true;
+      set(shareLockRef, { by: clientId, byName: myName, t: Date.now() });
+      onDisconnect(shareLockRef).remove();
+
+      // Show our own capture locally (muted to avoid hearing ourselves).
+      showPlayer("screen");
+      placeholder.style.display = "none";
+      currentKind = "screen";
+      currentSrc = null;            // keeps broadcast()/sync loop inert
+      fileVid.srcObject = stream;
+      fileVid.muted = true;
+      fileVid.play().catch(()=>{});
+      setNowPlayingShare(myName, true);
+
+      // When the user clicks the browser's native "Stop sharing", end cleanly.
+      const vTrack = stream.getVideoTracks()[0];
+      if (vTrack) vTrack.addEventListener("ended", () => stopBroadcast());
+
+      // Open a peer connection to everyone currently present.
+      for (const id of presentClientIds) {
+        if (id !== clientId) openBroadcastPeer(id);
+      }
+      updateShareUI();
+      toast("You're live 🎮 — others in the room can see your screen");
+    }
+
+    function openBroadcastPeer(peerId) {
+      if (!localShareStream || peers.has(peerId)) return;
+      const pc = new RTCPeerConnection(RTC_CONFIG);
+      peers.set(peerId, pc);
+      localShareStream.getTracks().forEach(t => pc.addTrack(t, localShareStream));
+      pc.onicecandidate = (e) => { if (e.candidate) sendSignal(peerId, "ice", e.candidate.toJSON()); };
+      pc.onconnectionstatechange = () => {
+        if (["failed", "closed", "disconnected"].includes(pc.connectionState)) closePeer(peerId);
+      };
+      // Broadcaster initiates the offer.
+      pc.createOffer()
+        .then(offer => pc.setLocalDescription(offer).then(() => sendSignal(peerId, "offer", offer)))
+        .catch(err => console.error("[share] offer failed", err));
+    }
+
+    function stopBroadcast(yielded) {
+      if (!isBroadcasting) return;
+      isBroadcasting = false;
+      // tell viewers we're done, then tear down
+      for (const id of peers.keys()) sendSignal(id, "bye", null);
+      for (const id of Array.from(peers.keys())) closePeer(id);
+      if (localShareStream) { localShareStream.getTracks().forEach(t => t.stop()); localShareStream = null; }
+      try { fileVid.srcObject = null; } catch (_) {}
+      fileVid.muted = false;
+      if (shareLockRef) { try { onDisconnect(shareLockRef).cancel(); } catch (_) {} remove(shareLockRef); }
+      currentKind = null; currentSrc = null;
+      showPlayer("yt");
+      placeholder.style.display = "flex";
+      currentTitle = null; if (nowPlaying) nowPlaying.textContent = "No video loaded";
+      updateShareUI();
+      if (!yielded) toast("Stopped sharing");
+    }
+
+    // ---- Viewer side ----
+    async function handleSignal(fromId, msg) {
+      try {
+        if (msg.type === "bye") { closePeer(fromId); maybeEndViewing(); return; }
+
+        if (msg.type === "offer") {
+          // Someone is streaming TO us — set up a receive-only viewer peer.
+          let pc = peers.get(fromId);
+          if (!pc) {
+            pc = new RTCPeerConnection(RTC_CONFIG);
+            peers.set(fromId, pc);
+            pc.onicecandidate = (e) => { if (e.candidate) sendSignal(fromId, "ice", e.candidate.toJSON()); };
+            pc.ontrack = (e) => {
+              // First media from the broadcaster — show it.
+              showPlayer("screen");
+              placeholder.style.display = "none";
+              currentKind = "screen"; currentSrc = null;
+              fileVid.srcObject = e.streams[0];
+              fileVid.muted = false;
+              fileVid.play().catch(()=>{});
+              setNowPlayingShare(activeShare ? activeShare.byName : "Someone", false);
+              updateShareUI();
+            };
+            pc.onconnectionstatechange = () => {
+              if (["failed", "closed", "disconnected"].includes(pc.connectionState)) { closePeer(fromId); maybeEndViewing(); }
+            };
+          }
+          await pc.setRemoteDescription(new RTCSessionDescription(msg.data));
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          sendSignal(fromId, "answer", answer);
+          await flushPendingIce(fromId);
+        } else if (msg.type === "answer") {
+          const pc = peers.get(fromId);
+          if (pc && pc.signalingState !== "stable") {
+            await pc.setRemoteDescription(new RTCSessionDescription(msg.data));
+            await flushPendingIce(fromId);
+          }
+        } else if (msg.type === "ice") {
+          const pc = peers.get(fromId);
+          if (!msg.data) return;
+          // Queue candidates that arrive before the remote description is set.
+          if (!pc || !pc.remoteDescription || !pc.remoteDescription.type) {
+            const q = pendingIce.get(fromId) || [];
+            q.push(msg.data); pendingIce.set(fromId, q);
+            return;
+          }
+          try { await pc.addIceCandidate(new RTCIceCandidate(msg.data)); } catch (_) {}
+        }
+      } catch (err) {
+        console.error("[share] signal error", msg && msg.type, err);
+      }
+    }
+
+    async function flushPendingIce(peerId) {
+      const pc = peers.get(peerId);
+      const q = pendingIce.get(peerId);
+      if (!pc || !q) return;
+      for (const cand of q) { try { await pc.addIceCandidate(new RTCIceCandidate(cand)); } catch (_) {} }
+      pendingIce.delete(peerId);
+    }
+
+    function closePeer(peerId) {
+      const pc = peers.get(peerId);
+      if (pc) { try { pc.ontrack = null; pc.onicecandidate = null; pc.close(); } catch (_) {} peers.delete(peerId); }
+      pendingIce.delete(peerId);
+    }
+
+    // Viewer: if no peers remain and we're not broadcasting, drop back to idle.
+    function maybeEndViewing() {
+      if (isBroadcasting) return;
+      if (peers.size === 0 && currentKind === "screen") stopWatchingShare();
+    }
+
+    function stopWatchingShare() {
+      for (const id of Array.from(peers.keys())) closePeer(id);
+      try { fileVid.srcObject = null; } catch (_) {}
+      if (currentKind === "screen") {
+        currentKind = null; currentSrc = null;
+        showPlayer("yt");
+        placeholder.style.display = "flex";
+        currentTitle = null; if (nowPlaying) nowPlaying.textContent = "No video loaded";
+      }
+      updateShareUI();
+    }
+
+    function setNowPlayingShare(name, mine) {
+      currentTitle = mine ? "Your live screen" : `${name}'s live screen`;
+      if (nowPlaying) nowPlaying.textContent = "🎮 " + currentTitle;
+    }
+
+    function updateShareUI() {
+      const someoneElseSharing = activeShare && activeShare.by !== clientId;
+      if (shareBtn) {
+        shareBtn.classList.toggle("active", isBroadcasting);
+        shareBtn.textContent = isBroadcasting ? "⏹ Stop streaming" : "🎮 Stream Game";
+        shareBtn.disabled = someoneElseSharing;
+        shareBtn.title = someoneElseSharing
+          ? `${activeShare.byName} is streaming — only one at a time`
+          : "Stream a game or your screen live to the room";
+      }
+      if (shareBanner) {
+        if (isBroadcasting) {
+          shareBanner.classList.add("show");
+          shareBannerText.textContent = "You're live — streaming your screen to the room";
+          stopShareBtn.style.display = "";
+        } else if (someoneElseSharing) {
+          shareBanner.classList.add("show");
+          shareBannerText.textContent = `${activeShare.byName} is streaming live`;
+          stopShareBtn.style.display = "none";
+        } else {
+          shareBanner.classList.remove("show");
+        }
+      }
+    }
+
+    if (shareBtn) {
+      shareBtn.addEventListener("click", () => {
+        if (isBroadcasting) stopBroadcast();
+        else startBroadcast();
+      });
+    }
+    if (stopShareBtn) stopShareBtn.addEventListener("click", () => stopBroadcast());
+
     // Share our buffering/stalled state so the partner can ease off sync nudges
     // and (optionally) show a "waiting for you" hint. Cleared on disconnect.
     function setBuffering(isBuffering) {
@@ -1252,8 +1583,20 @@
       lastPresenceCount = n;
       // Track who's actually here, so stale "waiting" entries from clients that
       // already left can be ignored (and cleaned up).
+      const prevPresent = new Set(presentClientIds);
       presentClientIds.clear();
       ids.forEach(id => presentClientIds.add(id));
+
+      // Screen share: if we're broadcasting, open a peer to anyone who just
+      // joined, and drop peers for anyone who left. Viewers clean up departed
+      // peers too (the broadcaster leaving clears the lock separately).
+      for (const id of presentClientIds) {
+        if (id !== clientId && !prevPresent.has(id) && isBroadcasting) openBroadcastPeer(id);
+      }
+      for (const id of prevPresent) {
+        if (!presentClientIds.has(id) && peers.has(id)) { closePeer(id); maybeEndViewing(); }
+      }
+
       // A partner who just left should immediately stop showing as "waiting".
       if (partnerWaiting && !ids.some(id => id !== clientId)) {
         partnerWaiting = false;
@@ -1420,6 +1763,7 @@
         // so we do a synchronous best-effort here). pagehide covers mobile.
         const unloadCleanup = () => {
           try {
+            if (isBroadcasting) stopBroadcast(true);
             if (!currentUpload) return;
             const others = presenceRef && lastPresenceCount > 1;
             if (!others) deleteUploadByPath(currentUpload.path);
@@ -1518,6 +1862,9 @@
         onValue(query(historyRef, limitToLast(50)), (snap) => {
           renderHistory(snap.val() || {});
         });
+
+        // --- live screen / game share (WebRTC signaling) ---
+        rtcInit();
 
         // --- repeat mode (shared, so both sides agree) ---
         repeatRef = ref(db, `watch/${ROOM}/repeat`);
