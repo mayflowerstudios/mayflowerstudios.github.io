@@ -146,6 +146,52 @@
     }
     .shareBanner .stopShare:hover{ filter:brightness(1.12); }
 
+    /* stream settings popover */
+    .streamCfgWrap{ position:relative; display:inline-flex; }
+    .streamCfgBtn{
+      display:inline-flex; align-items:center; justify-content:center;
+      width:44px; padding:0; border-radius:14px;
+      border:1px solid rgba(167,139,250,.28); background:rgba(167,139,250,.16);
+      color:inherit; cursor:pointer; font-size:16px;
+      transition: transform .12s ease, filter .12s ease;
+      backdrop-filter: blur(6px);
+    }
+    .streamCfgBtn:hover{ transform:translateY(-1px); filter:brightness(1.1); }
+    .streamCfgBtn:disabled{ opacity:.4; cursor:not-allowed; transform:none; }
+    .streamCfgMenu{
+      position:absolute; right:0; top:calc(100% + 8px); z-index:60;
+      width:260px; padding:14px;
+      background:rgba(20,16,28,.98); border:1px solid rgba(167,139,250,.22);
+      border-radius:16px; box-shadow:0 18px 50px rgba(0,0,0,.55);
+      display:none;
+    }
+    .streamCfgMenu.open{ display:block; }
+    .streamCfgMenu h3{
+      margin:0 0 12px; font-size:13px; font-weight:700; letter-spacing:.3px;
+      color:#d7cdf0; text-transform:uppercase;
+    }
+    .cfgRow{ margin-bottom:13px; }
+    .cfgRow:last-child{ margin-bottom:0; }
+    .cfgRow label{
+      display:block; font-size:12px; font-weight:600; color:#b9aede; margin-bottom:6px;
+    }
+    .cfgRow label .val{ float:right; color:#e7e2f0; font-weight:500; }
+    .segGroup{ display:flex; gap:6px; }
+    .segGroup button{
+      flex:1; padding:7px 0; font-size:12px; font-weight:600; cursor:pointer;
+      border-radius:10px; color:#cdc4e8;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05);
+      transition: background .12s ease, border-color .12s ease;
+    }
+    .segGroup button:hover{ background:rgba(255,255,255,.09); }
+    .segGroup button.sel{
+      background:rgba(167,139,250,.26); border-color:rgba(167,139,250,.5); color:#f0ebff;
+    }
+    .cfgRow input[type=range]{ width:100%; accent-color:#a78bfa; cursor:pointer; }
+    .cfgHint{ font-size:11px; line-height:1.4; color:#8c83a8; margin-top:10px; }
+    .cfgLive{ font-size:11px; color:#fca5a5; margin-top:8px; display:none; }
+    .cfgLive.show{ display:block; }
+
     /* upload progress */
     .uploadRow{ display:flex; align-items:center; gap:10px; margin-top:10px; }
     .uploadBar{ flex:1 1 auto; height:8px; border-radius:999px; overflow:hidden;
@@ -558,6 +604,42 @@
             <button class="btn primary" id="loadBtn">▶ Load &amp; Sync</button>
             <button class="btn" id="uploadBtn" title="Upload a video file to watch together">📁 Upload</button>
             <button class="btn rose" id="shareBtn" title="Stream a game or your screen live to the room">🎮 Stream Game</button>
+            <div class="streamCfgWrap">
+              <button class="streamCfgBtn" id="streamCfgBtn" title="Streaming quality settings" aria-label="Streaming settings">⚙️</button>
+              <div class="streamCfgMenu" id="streamCfgMenu">
+                <h3>Stream quality</h3>
+                <div class="cfgRow">
+                  <label>Resolution</label>
+                  <div class="segGroup" id="cfgRes">
+                    <button data-res="720">720p</button>
+                    <button data-res="1080">1080p</button>
+                    <button data-res="0">Source</button>
+                  </div>
+                </div>
+                <div class="cfgRow">
+                  <label>Frame rate</label>
+                  <div class="segGroup" id="cfgFps">
+                    <button data-fps="24">24</button>
+                    <button data-fps="30">30</button>
+                    <button data-fps="60">60</button>
+                  </div>
+                </div>
+                <div class="cfgRow">
+                  <label>Max bitrate <span class="val" id="cfgBrVal">5.0 Mbps</span></label>
+                  <input type="range" id="cfgBitrate" min="1" max="12" step="0.5" value="5" />
+                </div>
+                <div class="cfgRow">
+                  <label>Priority</label>
+                  <div class="segGroup" id="cfgPrio">
+                    <button data-prio="maintain-framerate">Smooth</button>
+                    <button data-prio="maintain-resolution">Sharp</button>
+                    <button data-prio="balanced">Balanced</button>
+                  </div>
+                </div>
+                <div class="cfgHint">Higher settings need more upload bandwidth. For fast games, prefer 720p + 60fps + Smooth.</div>
+                <div class="cfgLive" id="cfgLive">Bitrate &amp; priority apply live. Resolution &amp; fps take effect next time you start streaming.</div>
+              </div>
+            </div>
             <input type="file" id="uploadInput" accept="video/*" hidden />
           </div>
           <div class="uploadRow" id="uploadRow" hidden>
@@ -777,6 +859,16 @@
     const shareBanner = $("shareBanner");
     const shareBannerText = $("shareBannerText");
     const stopShareBtn = $("stopShareBtn");
+
+    // Broadcaster-adjustable stream quality. Resolution/fps are applied at
+    // capture time (getDisplayMedia); bitrate/priority are applied to the
+    // RTP sender and can be changed live mid-stream.
+    const streamCfg = {
+      res: 720,                            // 720 | 1080 | 0 (source)
+      fps: 60,
+      bitrate: 5_000_000,                  // bits/sec
+      priority: "maintain-framerate",      // maintain-framerate | maintain-resolution | balanced
+    };
     const uploadInput = $("uploadInput");
     const uploadRow = $("uploadRow");
     const uploadFill = $("uploadFill");
@@ -1441,8 +1533,16 @@
       }
       let stream;
       try {
+        const videoConstraints = {
+          frameRate: { ideal: streamCfg.fps, max: streamCfg.fps },
+        };
+        // Resolution 0 = leave at source (no height cap).
+        if (streamCfg.res) {
+          videoConstraints.height = { ideal: streamCfg.res };
+          videoConstraints.width  = { ideal: Math.round(streamCfg.res * 16 / 9) };
+        }
         stream = await navigator.mediaDevices.getDisplayMedia({
-          video: { frameRate: { ideal: 30, max: 60 } },
+          video: videoConstraints,
           audio: {
             // best-effort: clean game audio without echo cancellation mangling it
             echoCancellation: false, noiseSuppression: false, autoGainControl: false,
@@ -1457,6 +1557,13 @@
       // Claim the share lock. Clear it automatically if we disconnect.
       localShareStream = stream;
       isBroadcasting = true;
+      // Tell the encoder this is motion content (a game), not a static slide
+      // deck. This biases it toward preserving framerate over crispness — the
+      // single biggest factor in whether gameplay looks smooth vs. choppy.
+      try {
+        const vt = stream.getVideoTracks()[0];
+        if (vt) vt.contentHint = "motion";
+      } catch (_) {}
       set(shareLockRef, { by: clientId, byName: myName, t: Date.now() });
       onDisconnect(shareLockRef).remove();
 
@@ -1499,14 +1606,7 @@
         // this, a busy frame can saturate a typical home upload and the viewer
         // buffers waiting for data.
         if (t.kind === "video") {
-          try {
-            const params = sender.getParameters();
-            if (!params.encodings || !params.encodings.length) params.encodings = [{}];
-            params.encodings[0].maxBitrate = 2_500_000;  // ~2.5 Mbps
-            params.encodings[0].maxFramerate = 30;
-            params.degradationPreference = "balanced";
-            sender.setParameters(params).catch(() => {});
-          } catch (_) {}
+          applyEncoderCfg(sender);
         }
       });
       pc.onicecandidate = (e) => { if (e.candidate) sendSignal(peerId, "ice", e.candidate.toJSON()); };
@@ -1517,6 +1617,29 @@
       pc.createOffer()
         .then(offer => pc.setLocalDescription(offer).then(() => sendSignal(peerId, "offer", offer)))
         .catch(err => console.error("[share] offer failed", err));
+    }
+
+    // Apply the current streamCfg bitrate/priority to one video sender. Caps
+    // the encoder so high-motion gameplay degrades quality gracefully instead
+    // of stalling when it outruns the uplink.
+    function applyEncoderCfg(sender) {
+      try {
+        const params = sender.getParameters();
+        if (!params.encodings || !params.encodings.length) params.encodings = [{}];
+        params.encodings[0].maxBitrate = streamCfg.bitrate;
+        params.encodings[0].maxFramerate = streamCfg.fps;
+        params.degradationPreference = streamCfg.priority;
+        sender.setParameters(params).catch(() => {});
+      } catch (_) {}
+    }
+
+    // Push live bitrate/priority changes to every connected viewer mid-stream.
+    function applyEncoderCfgToAll() {
+      for (const pc of peers.values()) {
+        try {
+          pc.getSenders().forEach(s => { if (s.track && s.track.kind === "video") applyEncoderCfg(s); });
+        } catch (_) {}
+      }
     }
 
     function stopBroadcast(yielded) {
@@ -1638,6 +1761,10 @@
           ? `${activeShare.byName} is streaming — only one at a time`
           : "Stream a game or your screen live to the room";
       }
+      const cfgBtn = $("streamCfgBtn");
+      if (cfgBtn) cfgBtn.disabled = someoneElseSharing;
+      const liveNote = $("cfgLive");
+      if (liveNote) liveNote.classList.toggle("show", isBroadcasting);
       if (shareBanner) {
         if (isBroadcasting) {
           shareBanner.classList.add("show");
@@ -1660,6 +1787,70 @@
       });
     }
     if (stopShareBtn) stopShareBtn.addEventListener("click", () => stopBroadcast());
+
+    // ---- Stream settings popover ----
+    (function initStreamCfg() {
+      const cfgBtn  = $("streamCfgBtn");
+      const menu    = $("streamCfgMenu");
+      const resGrp  = $("cfgRes");
+      const fpsGrp  = $("cfgFps");
+      const prioGrp = $("cfgPrio");
+      const brIn    = $("cfgBitrate");
+      const brVal   = $("cfgBrVal");
+      const liveNote= $("cfgLive");
+      if (!cfgBtn || !menu) return;
+
+      // Reflect current streamCfg onto the controls.
+      function syncUI() {
+        resGrp.querySelectorAll("button").forEach(b =>
+          b.classList.toggle("sel", Number(b.dataset.res) === streamCfg.res));
+        fpsGrp.querySelectorAll("button").forEach(b =>
+          b.classList.toggle("sel", Number(b.dataset.fps) === streamCfg.fps));
+        prioGrp.querySelectorAll("button").forEach(b =>
+          b.classList.toggle("sel", b.dataset.prio === streamCfg.priority));
+        brIn.value = (streamCfg.bitrate / 1_000_000).toString();
+        brVal.textContent = (streamCfg.bitrate / 1_000_000).toFixed(1) + " Mbps";
+        liveNote.classList.toggle("show", isBroadcasting);
+      }
+
+      function openMenu() { syncUI(); menu.classList.add("open"); }
+      function closeMenu() { menu.classList.remove("open"); }
+
+      cfgBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        menu.classList.contains("open") ? closeMenu() : openMenu();
+      });
+      // Click-away / Esc to dismiss.
+      document.addEventListener("click", (e) => {
+        if (menu.classList.contains("open") && !menu.contains(e.target) && e.target !== cfgBtn) closeMenu();
+      });
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMenu(); });
+
+      resGrp.addEventListener("click", (e) => {
+        const b = e.target.closest("button[data-res]"); if (!b) return;
+        streamCfg.res = Number(b.dataset.res); syncUI();
+      });
+      fpsGrp.addEventListener("click", (e) => {
+        const b = e.target.closest("button[data-fps]"); if (!b) return;
+        streamCfg.fps = Number(b.dataset.fps);
+        // fps feeds the encoder cap too — push live if streaming.
+        if (isBroadcasting) applyEncoderCfgToAll();
+        syncUI();
+      });
+      prioGrp.addEventListener("click", (e) => {
+        const b = e.target.closest("button[data-prio]"); if (!b) return;
+        streamCfg.priority = b.dataset.prio;
+        if (isBroadcasting) applyEncoderCfgToAll();   // applies live
+        syncUI();
+      });
+      brIn.addEventListener("input", () => {
+        streamCfg.bitrate = Math.round(parseFloat(brIn.value) * 1_000_000);
+        brVal.textContent = parseFloat(brIn.value).toFixed(1) + " Mbps";
+        if (isBroadcasting) applyEncoderCfgToAll();   // applies live
+      });
+
+      syncUI();
+    })();
 
     // Share our buffering/stalled state so the partner can ease off sync nudges
     // and (optionally) show a "waiting for you" hint. Cleared on disconnect.
