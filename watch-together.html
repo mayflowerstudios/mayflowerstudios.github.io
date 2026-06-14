@@ -2639,11 +2639,16 @@
         const timeTag = time ? `<span class="time" title="${escapeHtml(time)}">${escapeHtml(time)}</span>` : "";
         const whoLabel = mine ? "you" : escapeHtml(m.name || "guest");
 
-        if ((m.kind === "image" || m.kind === "gif") && m.url) {
+        // Media is encoded into the text field (see sendMedia); also support the
+        // older top-level kind/url shape for any messages sent before this change.
+        const media = decodeMedia(m.text) ||
+          ((m.kind === "image" || m.kind === "gif") && m.url ? { kind: m.kind, url: m.url, w: m.w, h: m.h } : null);
+
+        if (media) {
           // Media message — no translation, just show the picture/GIF.
-          const w = m.w && m.h ? ` width="${Math.min(230, m.w)}"` : "";
+          const w = Number.isFinite(media.w) && Number.isFinite(media.h) ? ` width="${Math.min(230, media.w)}"` : "";
           wrap.innerHTML =
-            `<div class="mediaBubble"><img src="${escapeHtml(m.url)}" alt="${m.kind === "gif" ? "GIF" : "image"}" loading="lazy"${w} /></div>` +
+            `<div class="mediaBubble"><img src="${escapeHtml(media.url)}" alt="${media.kind === "gif" ? "GIF" : "image"}" loading="lazy"${w} /></div>` +
             `<div class="who">${whoLabel}${timeTag ? ` · ${timeTag}` : ""}</div>`;
         } else {
           const hint = translateOn ? `<span class="translating">translating…</span>` : "";
@@ -2674,13 +2679,38 @@
     //  Rich chat: emoji · pictures · GIFs (Discord-style)
     // ============================================================
 
-    // Push a media message (image or GIF). Stored alongside text messages but
-    // with kind/url so renderChat shows it as a picture instead of text.
+    // Push a media message (image or GIF). To stay compatible with whatever
+    // Realtime Database rules already allow for *text* chat, we don't add new
+    // top-level fields (which a strict `.validate` rule would reject). Instead we
+    // encode the media into the normal `text` field with a marker prefix, so the
+    // message shape is byte-for-byte the same as a plain text message. renderChat
+    // decodes it back into a picture/GIF bubble.
+    const MEDIA_PREFIX = "\u0001wtmedia:";   // an invisible control char nobody types
+    function encodeMedia({ kind, url, w, h }) {
+      const payload = { k: kind, u: url };
+      if (Number.isFinite(w)) payload.w = w;
+      if (Number.isFinite(h)) payload.h = h;
+      return MEDIA_PREFIX + JSON.stringify(payload);
+    }
+    function decodeMedia(text) {
+      if (typeof text !== "string" || !text.startsWith(MEDIA_PREFIX)) return null;
+      try {
+        const p = JSON.parse(text.slice(MEDIA_PREFIX.length));
+        if (!p || !p.u) return null;
+        return { kind: p.k === "gif" ? "gif" : "image", url: p.u, w: p.w, h: p.h };
+      } catch (_) { return null; }
+    }
     function sendMedia({ kind, url, w, h }) {
-      if (!FIREBASE_READY || !chatRef) { toast("Chat needs Firebase set up first"); return; }
-      const msg = { kind, url, name: myName, uid: identityId(), cid: clientId, t: Date.now() };
-      if (w) msg.w = w; if (h) msg.h = h;
-      push(chatRef, msg);
+      if (!FIREBASE_READY || !chatRef) { toast("Chat needs Firebase set up first"); return Promise.reject(); }
+      if (!url) { toast("Couldn't read that image's link"); return Promise.reject(); }
+      const text = encodeMedia({ kind, url, w, h });
+      // Identical shape to sendChat() — just text/name/uid/cid/t.
+      return Promise.resolve(push(chatRef, { text, name: myName, uid: identityId(), cid: clientId, t: Date.now() }))
+        .catch((err) => {
+          console.error("[chat media] send failed:", err && err.code, err);
+          toast("Couldn't send that to the chat");
+          throw err;
+        });
     }
 
     // ---- close pickers when clicking elsewhere ----
@@ -2750,32 +2780,38 @@
       imgBtn.disabled = true;
       const oldTitle = imgBtn.title;
       imgBtn.title = "Uploading…";
+      // read natural size (best-effort, for nicer layout) before upload
+      let dims = {};
+      try { dims = await readImageDims(file); } catch (_) {}
+      const ext = (/\.([a-z0-9]{2,5})$/i.exec(file.name)?.[1] || (isGif ? "gif" : "png")).toLowerCase();
+      // Reuse the room's existing `uploads/{ROOM}/` prefix (already permitted by
+      // the Storage rules the video uploader relies on), kept flat as a single
+      // filename segment so it matches even a strict `uploads/{room}/{file}`
+      // rule. Prefixed `chat-` so it's easy to tell from the video slot.
+      const path = `uploads/${ROOM}/chat-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}.${ext}`;
+      let url;
       try {
-        // read natural size (best-effort, for nicer layout) before upload
-        let dims = {};
-        try { dims = await readImageDims(file); } catch (_) {}
-        const ext = (/\.([a-z0-9]{2,5})$/i.exec(file.name)?.[1] || (isGif ? "gif" : "png")).toLowerCase();
-        // Reuse the room's existing `uploads/{ROOM}/` prefix (already permitted by
-        // the Storage rules the video uploader relies on), kept flat as a single
-        // filename segment so it matches even a strict `uploads/{room}/{file}`
-        // rule. Prefixed `chat-` so it's easy to tell from the video slot.
-        const path = `uploads/${ROOM}/chat-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}.${ext}`;
-        const snap = await uploadBytes(sref(storage, path), file, { contentType: file.type || "image/png" });
-        const url = await getDownloadURL(snap.ref);
-        sendMedia({ kind: isGif ? "gif" : "image", url, w: dims.w, h: dims.h });
+        // Use the same resumable upload call the (working) video uploader uses,
+        // so chat images hit the identical Storage endpoint/CORS path.
+        const task = uploadBytesResumable(sref(storage, path), file, { contentType: file.type || "image/png" });
+        await new Promise((res, rej) => task.on("state_changed", null, rej, res));
+        url = await getDownloadURL(task.snapshot.ref);
       } catch (err) {
         console.error("[chat img] upload failed:", err && err.code, err);
         const code = (err && err.code) || "";
-        let why = "Couldn't send that picture";
-        if (/unauthor/i.test(code))            why = "Upload blocked — Storage rules don't allow chat/ yet";
+        let why = "Couldn't upload that picture";
+        if (/unauthor/i.test(code))            why = "Upload blocked — Storage rules don't allow this path";
         else if (/retry-limit|app-deleted/i.test(code)) why = "Upload timed out — likely a Storage CORS issue";
         else if (/quota/i.test(code))          why = "Storage quota exceeded";
         else if (/unauthenticated/i.test(code)) why = "Upload needs you to be signed in";
         toast(why);
-      } finally {
-        imgBtn.disabled = false;
-        imgBtn.title = oldTitle;
+        imgBtn.disabled = false; imgBtn.title = oldTitle;
+        return;
       }
+      // Upload worked — now post it to chat. sendMedia surfaces its own errors.
+      try { await sendMedia({ kind: isGif ? "gif" : "image", url, w: dims.w, h: dims.h }); }
+      catch (_) { /* already toasted */ }
+      finally { imgBtn.disabled = false; imgBtn.title = oldTitle; }
     });
     function readImageDims(file) {
       return new Promise((res, rej) => {
