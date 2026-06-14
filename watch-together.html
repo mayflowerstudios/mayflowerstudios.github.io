@@ -1282,14 +1282,25 @@
             if (s.status === "playing") player.playVideo(); else player.pauseVideo();
           } else {
             const target = estimatePos(s);
-            if (force || Math.abs((player.getCurrentTime() || 0) - target) > driftThreshold()) player.seekTo(target, true);
-            if (s.status === "playing") player.playVideo(); else player.pauseVideo();
+            const drift = Math.abs((player.getCurrentTime() || 0) - target);
+            if (force || drift > hardSeekThreshold()) {
+              // Large drift or an explicit (re)sync: jump.
+              if (force || drift > driftThreshold()) player.seekTo(target, true);
+              try { player.setPlaybackRate(1.0); } catch (_) {}
+            } else if (drift > driftThreshold()) {
+              // Small drift: nudge speed instead of stuttering.
+              softCorrectDrift(target,
+                () => player.getCurrentTime() || 0,
+                (r) => { try { player.setPlaybackRate(r); } catch (_) {} });
+            }
+            if (s.status === "playing") player.playVideo(); else { player.pauseVideo(); cancelDriftCorrection(); }
           }
         } else { // file
           if (currentKind !== "file") showPlayer("file");
           placeholder.style.display = "none";
           if (currentSrc !== src) {
             currentSrc = src;
+            cancelDriftCorrection();
             setNowPlaying("file", src, s.title);
             fileVid.src = src;
             const start = estimatePos(s);
@@ -1302,10 +1313,16 @@
             fileVid.load();
           } else {
             const target = estimatePos(s);
-            if (force || Math.abs((fileVid.currentTime || 0) - target) > driftThreshold()) {
+            const drift = Math.abs((fileVid.currentTime || 0) - target);
+            if (force || drift > hardSeekThreshold()) {
               try { fileVid.currentTime = target; } catch(_) {}
+              fileVid.playbackRate = 1.0;
+            } else if (drift > driftThreshold()) {
+              softCorrectDrift(target,
+                () => fileVid.currentTime || 0,
+                (r) => { fileVid.playbackRate = r; });
             }
-            if (s.status === "playing") fileVid.play().catch(()=>{}); else fileVid.pause();
+            if (s.status === "playing") fileVid.play().catch(()=>{}); else { fileVid.pause(); cancelDriftCorrection(); }
           }
         }
       } catch (_) {}
@@ -1328,6 +1345,47 @@
     // resolve on its own.
     function driftThreshold() {
       return (localBuffering || partnerWaiting) ? 4.0 : 1.4;
+    }
+
+    // Above this much drift we hard-seek (a visible jump). Below it, we nudge
+    // playbackRate so the player gently catches up / falls back with no stutter.
+    function hardSeekThreshold() {
+      return (localBuffering || partnerWaiting) ? 6.0 : 2.5;
+    }
+
+    // Gently correct small drift by briefly speeding up / slowing down playback
+    // instead of seeking. `getCur` returns current time, `setRate` sets the rate.
+    // The rate auto-reverts to 1.0 once we're back within ~120ms of target.
+    let _driftRateTimer = null;
+    function softCorrectDrift(target, getCur, setRate) {
+      try {
+        const cur = getCur();
+        const delta = target - cur;            // +ve: we're behind, need to speed up
+        if (Math.abs(delta) < 0.12) return;    // already close enough; nothing to do
+        if (_driftRateTimer) { clearInterval(_driftRateTimer); _driftRateTimer = null; }
+        // 5% rate change is inaudible/imperceptible for video; catches up ~0.05s
+        // per playback-second, so up to ~2.5s drift closes within a reasonable window.
+        const rate = delta > 0 ? 1.05 : 0.95;
+        setRate(rate);
+        _driftRateTimer = setInterval(() => {
+          const d = target + ((Date.now() - _driftAnchor) / 1000) - getCur();
+          // Once close enough (or direction flips), snap back to normal speed.
+          if (Math.abs(d) < 0.12 || (delta > 0) !== (d > 0)) {
+            setRate(1.0);
+            clearInterval(_driftRateTimer); _driftRateTimer = null;
+          }
+        }, 250);
+        _driftAnchor = Date.now();
+      } catch (_) { try { setRate(1.0); } catch (__) {} }
+    }
+    let _driftAnchor = Date.now();
+
+    // Stop any in-progress rate nudge and restore normal speed. Called on pause,
+    // source change, or stream takeover so a stale timer can't keep tweaking rate.
+    function cancelDriftCorrection() {
+      if (_driftRateTimer) { clearInterval(_driftRateTimer); _driftRateTimer = null; }
+      try { fileVid.playbackRate = 1.0; } catch (_) {}
+      try { if (player && player.setPlaybackRate) player.setPlaybackRate(1.0); } catch (_) {}
     }
 
     function shortName(url) {
@@ -1673,6 +1731,16 @@
             peers.set(fromId, pc);
             pc.onicecandidate = (e) => { if (e.candidate) sendSignal(fromId, "ice", e.candidate.toJSON()); };
             pc.ontrack = (e) => {
+              // Trim the receiver's jitter buffer toward low latency. A small
+              // hint (~150ms) keeps "watch together" feeling live; the browser
+              // still grows the buffer if the network is rough, so this is a
+              // floor, not a hard cap. Video gets a touch more headroom than
+              // audio to avoid frame drops on motion-heavy gameplay.
+              try {
+                if ("playoutDelayHint" in e.receiver) {
+                  e.receiver.playoutDelayHint = e.track.kind === "video" ? 0.15 : 0.1;
+                }
+              } catch (_) {}
               // First media from the broadcaster — show it.
               showPlayer("screen");
               placeholder.style.display = "none";
@@ -2143,7 +2211,15 @@
         // --- chat ---
         chatRef = ref(db, `watch/${ROOM}/chat`);
         onValue(query(chatRef, limitToLast(100)), (snap) => {
-          renderChat(snap.val() || {});
+          const val = snap.val() || {};
+          // RTDB can re-fire onValue when nothing visible changed. Re-rendering
+          // rebuilds the whole chat DOM, so skip when the message set is
+          // identical to what we last drew. (Toggle/language handlers call
+          // renderChat directly and intentionally bypass this guard.)
+          const sig = Object.keys(val).sort().join("|") + ":" + Object.keys(val).length;
+          if (sig === _lastChatSig) return;
+          _lastChatSig = sig;
+          renderChat(val);
         });
 
         // --- queue ---
@@ -2614,6 +2690,7 @@
     let translateOn = false;
     let targetLang = "en";
     let lastChatMsgs = {};                         // last msgs, for re-render on toggle
+    let _lastChatSig = null;                       // signature of last-drawn chat set (skip no-op re-renders)
     const translationCache = new Map();            // key: lang||text -> translated|null
     const translatorPool = new Map();              // key: src->tgt -> Promise<Translator|null>
 

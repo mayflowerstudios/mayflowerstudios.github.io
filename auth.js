@@ -25,6 +25,9 @@
     authDomain: "watchtogether-95d7d.firebaseapp.com",
     databaseURL: "https://watchtogether-95d7d-default-rtdb.firebaseio.com",
     projectId: "watchtogether-95d7d",
+    // Included so that if this file initializes the shared app before the
+    // Watch Together pages do, Storage (per-room uploads) still works.
+    storageBucket: "watchtogether-95d7d.firebasestorage.app",
   };
 
   const READY = !firebaseConfig.apiKey.startsWith("REPLACE");
@@ -56,6 +59,8 @@
         createUserWithEmailAndPassword: authMod.createUserWithEmailAndPassword,
         signInWithEmailAndPassword:     authMod.signInWithEmailAndPassword,
         signInWithPopup:                authMod.signInWithPopup,
+        signInWithRedirect:             authMod.signInWithRedirect,
+        getRedirectResult:              authMod.getRedirectResult,
         GoogleAuthProvider:             authMod.GoogleAuthProvider,
         signOut:                        authMod.signOut,
         updateProfile:                  authMod.updateProfile,
@@ -67,9 +72,28 @@
         serverTimestamp: fsMod.serverTimestamp,
       };
 
-      app  = appMod.initializeApp(firebaseConfig);
+      // Reuse the page's existing default Firebase app if one already exists
+      // (the Watch Together pages create it for the Realtime Database). Calling
+      // initializeApp twice for the default app throws "[DEFAULT] already
+      // exists", which breaks both auth and the DB connection depending on
+      // load order. getApps()/getApp() makes this order-independent.
+      app  = appMod.getApps().length ? appMod.getApp() : appMod.initializeApp(firebaseConfig);
       auth = authMod.getAuth(app);
       db   = fsMod.getFirestore(app);
+
+      // Keep the session across reloads/tabs. Without an explicit persistence
+      // the login can silently drop on refresh. Fall back gracefully if the
+      // browser blocks local storage (strict privacy mode / some in-app webviews).
+      try {
+        await authMod.setPersistence(auth, authMod.browserLocalPersistence);
+      } catch (e) {
+        console.warn("Auth persistence fallback:", e);
+      }
+
+      // If we're returning from a redirect-based Google sign-in (used on mobile
+      // browsers where popups are blocked), complete it here. Errors are
+      // non-fatal — onAuthStateChanged still fires for the popup path.
+      try { await authMod.getRedirectResult(auth); } catch (e) { console.warn("Redirect result:", e); }
 
       _fb.onAuthStateChanged(auth, async (user) => {
         currentUser = user || null;
@@ -158,11 +182,27 @@
 
     async signInGoogle() {
       if (!READY) throw new Error("Auth isn't configured yet.");
+      const provider = new _fb.GoogleAuthProvider();
       try {
-        const provider = new _fb.GoogleAuthProvider();
         const cred = await _fb.signInWithPopup(auth, provider);
         return cred.user;
-      } catch (err) { throw new Error(mapError(err)); }
+      } catch (err) {
+        // Popups are blocked or unsupported in many mobile/in-app browsers
+        // (iOS Safari, Discord/Instagram webviews). Fall back to a full-page
+        // redirect, which navigates away and resolves via getRedirectResult()
+        // on return — so there's no user to return synchronously here.
+        const code = (err && err.code) || "";
+        if (code === "auth/popup-blocked" ||
+            code === "auth/popup-closed-by-user" ||
+            code === "auth/cancelled-popup-request" ||
+            code === "auth/operation-not-supported-in-this-environment") {
+          try {
+            await _fb.signInWithRedirect(auth, provider);
+            return null; // page will navigate; result handled on return
+          } catch (err2) { throw new Error(mapError(err2)); }
+        }
+        throw new Error(mapError(err));
+      }
     },
 
     async resetPassword(email) {

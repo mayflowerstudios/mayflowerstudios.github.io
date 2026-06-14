@@ -363,7 +363,7 @@
   <script src="fireflies.js"></script>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, onValue, set, get, remove, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
@@ -418,7 +418,9 @@
     })();
 
     if (FIREBASE_READY) {
-      const app = initializeApp(firebaseConfig);
+      // Reuse the default app if auth.js already created it (avoids the
+      // "[DEFAULT] already exists" throw that broke the DB connection).
+      const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
       db = getDatabase(app);
       lobbyRef = ref(db, "lobby");
       onValue(lobbyRef, (snap) => {
