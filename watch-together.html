@@ -289,11 +289,72 @@
     }
     .msg .orig{ display:block; font-size:12px; opacity:.5; margin-top:4px; font-style:italic; }
     .msg .translating{ display:block; font-size:11px; opacity:.45; margin-top:3px; }
+    /* media bubbles (images / gifs) */
+    .msg .mediaBubble{
+      padding:3px; border-radius:14px; line-height:0;
+      background: rgba(167,139,250,.14); border:1px solid rgba(167,139,250,.22);
+      max-width:100%;
+    }
+    .msg.mine .mediaBubble{ background: rgba(251,113,133,.16); border-color: rgba(251,113,133,.26); }
+    .msg .mediaBubble img{
+      display:block; max-width:230px; max-height:230px; width:auto; height:auto;
+      border-radius:11px; cursor:pointer; object-fit:contain;
+    }
     .miniGhost.active{ background: rgba(167,139,250,.20); border-color: rgba(167,139,250,.35); }
-    .chatRow{ display:flex; gap:8px; padding:12px; border-top:1px solid rgba(255,255,255,.10); }
-    .chatRow .input{ flex:1 1 auto; }
+    .chatRow{ display:flex; gap:6px; padding:12px; border-top:1px solid rgba(255,255,255,.10); align-items:center; }
+    .chatRow .input{ flex:1 1 auto; min-width:0; }
+    .chatTool{
+      flex:0 0 auto; width:36px; height:36px; border-radius:10px; cursor:pointer;
+      display:inline-flex; align-items:center; justify-content:center; font-size:17px;
+      background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12);
+      color:inherit; transition:filter .15s, background .15s, transform .1s;
+    }
+    .chatTool:hover{ background:rgba(167,139,250,.18); transform:translateY(-1px); }
+    .chatTool:disabled{ opacity:.4; cursor:default; transform:none; }
+    .chatTool.active{ background:rgba(167,139,250,.22); border-color:rgba(167,139,250,.4); }
+    /* emoji + gif pickers share the popup shell */
+    .pickerPop{
+      position:absolute; bottom:64px; left:12px; right:12px;
+      max-height:248px; overflow-y:auto; z-index:5;
+      background:rgba(28,22,46,.97); border:1px solid rgba(167,139,250,.28);
+      border-radius:14px; padding:10px; display:none;
+      box-shadow:0 12px 30px rgba(0,0,0,.45); backdrop-filter:blur(6px);
+    }
+    .pickerPop.open{ display:block; }
+    .emojiGrid{ display:grid; grid-template-columns:repeat(8,1fr); gap:2px; }
+    .emojiGrid button{
+      background:none; border:none; cursor:pointer; font-size:20px; line-height:1;
+      padding:5px 0; border-radius:8px; transition:background .12s, transform .1s;
+    }
+    .emojiGrid button:hover{ background:rgba(167,139,250,.22); transform:scale(1.15); }
+    .emojiCat{ font-size:11px; opacity:.5; font-weight:600; letter-spacing:.04em;
+      text-transform:uppercase; margin:6px 2px 3px; }
+    .emojiCat:first-child{ margin-top:0; }
+    /* gif picker */
+    .gifSearchRow{ display:flex; gap:6px; margin-bottom:8px; position:sticky; top:0; }
+    .gifSearchRow input{
+      flex:1 1 auto; min-width:0; padding:7px 10px; border-radius:9px; font-size:13px;
+      background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); color:inherit;
+    }
+    .gifGrid{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+    .gifGrid img{
+      width:100%; border-radius:9px; cursor:pointer; display:block;
+      background:rgba(255,255,255,.04); transition:filter .12s, transform .1s;
+    }
+    .gifGrid img:hover{ filter:brightness(1.1); transform:scale(1.02); }
+    .gifMsg{ font-size:12px; opacity:.55; text-align:center; padding:14px 0; }
+    .gifAttribution{ font-size:10px; opacity:.35; text-align:center; margin-top:6px; }
+    /* lightbox for viewing full image */
+    .lightbox{
+      position:fixed; inset:0; z-index:60; display:none;
+      align-items:center; justify-content:center; padding:24px;
+      background:rgba(8,6,16,.82); backdrop-filter:blur(4px); cursor:zoom-out;
+    }
+    .lightbox.open{ display:flex; }
+    .lightbox img{ max-width:92vw; max-height:88vh; border-radius:14px; box-shadow:0 20px 60px rgba(0,0,0,.6); }
     @media (max-width:560px){
       .chatPop{ right:12px; left:12px; width:auto; bottom:86px; }
+      .msg .mediaBubble img{ max-width:200px; max-height:200px; }
     }
 
     /* watching now */
@@ -647,12 +708,33 @@
     <div class="chatLog" id="chatLog">
       <p class="chatEmpty" id="chatEmpty">Say hi 🌸</p>
     </div>
+
+    <!-- emoji picker -->
+    <div class="pickerPop" id="emojiPop"></div>
+
+    <!-- gif picker (Tenor) -->
+    <div class="pickerPop" id="gifPop">
+      <div class="gifSearchRow">
+        <input type="text" id="gifSearch" placeholder="Search GIFs…" autocomplete="off" />
+      </div>
+      <div class="gifGrid" id="gifGrid"></div>
+      <div class="gifMsg" id="gifMsg" hidden></div>
+      <div class="gifAttribution">Powered by Tenor</div>
+    </div>
+
     <div class="chatRow">
+      <button class="chatTool" id="emojiBtn" title="Emoji" aria-label="Emoji">😊</button>
+      <button class="chatTool" id="gifBtn" title="GIF" aria-label="Send a GIF">🎬</button>
+      <button class="chatTool" id="imgBtn" title="Send a picture" aria-label="Send a picture">📎</button>
+      <input type="file" id="chatImgInput" accept="image/*" hidden />
       <input class="input" id="chatInput" type="text" maxlength="500"
              placeholder="Type a message…" autocomplete="off" />
       <button class="btn violet" id="chatSend">Send</button>
     </div>
   </div>
+
+  <!-- full-size image viewer -->
+  <div class="lightbox" id="lightbox"><img id="lightboxImg" alt="" /></div>
 
   <script src="/shared.js"></script>
   <script src="/auth.js"></script>
@@ -666,7 +748,7 @@
       push, remove, query, limitToLast, child, onChildAdded, onChildRemoved, update
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
     import {
-      getStorage, ref as sref, uploadBytesResumable, getDownloadURL, deleteObject
+      getStorage, ref as sref, uploadBytes, uploadBytesResumable, getDownloadURL, deleteObject
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
     /* ============================================================
@@ -721,6 +803,17 @@
     const chatPop = $("chatPop");
     const chatClose = $("chatClose");
     const chatBadge = $("chatBadge");
+    const emojiBtn = $("emojiBtn");
+    const gifBtn = $("gifBtn");
+    const imgBtn = $("imgBtn");
+    const chatImgInput = $("chatImgInput");
+    const emojiPop = $("emojiPop");
+    const gifPop = $("gifPop");
+    const gifSearch = $("gifSearch");
+    const gifGrid = $("gifGrid");
+    const gifMsg = $("gifMsg");
+    const lightbox = $("lightbox");
+    const lightboxImg = $("lightboxImg");
     const translateToggle = $("translateToggle");
     const soundToggle = $("soundToggle");
     const langSelect = $("langSelect");
@@ -2542,14 +2635,23 @@
         const mine = mineMsg(m);
         const wrap = document.createElement("div");
         wrap.className = "msg" + (mine ? " mine" : "");
-        const hint = translateOn ? `<span class="translating">translating…</span>` : "";
         const time = fmtTime(m.t);
         const timeTag = time ? `<span class="time" title="${escapeHtml(time)}">${escapeHtml(time)}</span>` : "";
         const whoLabel = mine ? "you" : escapeHtml(m.name || "guest");
-        wrap.innerHTML =
-          `<div class="bubble" data-text="${escapeHtml(m.text)}">${escapeHtml(m.text)}</div>` +
-          hint +
-          `<div class="who">${whoLabel}${timeTag ? ` · ${timeTag}` : ""}</div>`;
+
+        if ((m.kind === "image" || m.kind === "gif") && m.url) {
+          // Media message — no translation, just show the picture/GIF.
+          const w = m.w && m.h ? ` width="${Math.min(230, m.w)}"` : "";
+          wrap.innerHTML =
+            `<div class="mediaBubble"><img src="${escapeHtml(m.url)}" alt="${m.kind === "gif" ? "GIF" : "image"}" loading="lazy"${w} /></div>` +
+            `<div class="who">${whoLabel}${timeTag ? ` · ${timeTag}` : ""}</div>`;
+        } else {
+          const hint = translateOn ? `<span class="translating">translating…</span>` : "";
+          wrap.innerHTML =
+            `<div class="bubble" data-text="${escapeHtml(m.text)}">${escapeHtml(m.text)}</div>` +
+            hint +
+            `<div class="who">${whoLabel}${timeTag ? ` · ${timeTag}` : ""}</div>`;
+        }
         chatLog.appendChild(wrap);
       }
       if (chatOpen || wasNearBottom) chatLog.scrollTop = chatLog.scrollHeight;
@@ -2567,6 +2669,192 @@
     }
     chatSend.addEventListener("click", sendChat);
     chatInput.addEventListener("keydown", (e) => { if (e.key === "Enter") sendChat(); });
+
+    // ============================================================
+    //  Rich chat: emoji · pictures · GIFs (Discord-style)
+    // ============================================================
+
+    // Push a media message (image or GIF). Stored alongside text messages but
+    // with kind/url so renderChat shows it as a picture instead of text.
+    function sendMedia({ kind, url, w, h }) {
+      if (!FIREBASE_READY || !chatRef) { toast("Chat needs Firebase set up first"); return; }
+      const msg = { kind, url, name: myName, uid: identityId(), cid: clientId, t: Date.now() };
+      if (w) msg.w = w; if (h) msg.h = h;
+      push(chatRef, msg);
+    }
+
+    // ---- close pickers when clicking elsewhere ----
+    function closePickers(except) {
+      if (except !== "emoji") { emojiPop.classList.remove("open"); emojiBtn.classList.remove("active"); }
+      if (except !== "gif")   { gifPop.classList.remove("open");   gifBtn.classList.remove("active"); }
+    }
+    document.addEventListener("click", (e) => {
+      if (emojiPop.contains(e.target) || emojiBtn.contains(e.target)) return;
+      if (gifPop.contains(e.target)   || gifBtn.contains(e.target))   return;
+      closePickers();
+    });
+
+    // ---- Emoji picker ----
+    const EMOJI = {
+      "Smileys": ["😀","😁","😂","🤣","😊","😇","🙂","😉","😍","🥰","😘","😋","😜","🤪","😎","🤩","🥳","😏","😴","🤤","😢","😭","😤","😡","🥺","😳","🤔","🤗","🤭","🫢","😬","🙄","😮‍💨","😩","😵‍💫","🤯","🥶","🥵","😱","🤫"],
+      "Hearts": ["❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💖","💗","💓","💞","💕","💔","❣️","💘","💝","💟","♥️"],
+      "Hands": ["👍","👎","👌","🤌","✌️","🤞","🫶","🙌","👏","🙏","💪","👀","🫂","🤝","👋","🤙","🫰","✊","👊","🤟"],
+      "Cozy": ["🌸","🌺","🌷","🌹","🌻","🌼","🌙","⭐","✨","💫","🔥","🦊","🐾","🍃","🌿","☕","🍵","🕯️","🫖","🍰","🎀","🎬","🍿","🎮","💌","🌈"],
+      "Misc": ["🎉","🎊","🥂","🍻","🎵","🎶","💤","💯","✅","❌","⚡","💥","💦","🫠","🌟","👻","💀","🤡","🎃","🐱"]
+    };
+    function buildEmojiPicker() {
+      let html = "";
+      for (const [cat, list] of Object.entries(EMOJI)) {
+        html += `<div class="emojiCat">${cat}</div><div class="emojiGrid">`;
+        html += list.map(e => `<button type="button" data-emoji="${e}">${e}</button>`).join("");
+        html += `</div>`;
+      }
+      emojiPop.innerHTML = html;
+    }
+    buildEmojiPicker();
+    emojiPop.addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-emoji]");
+      if (!b) return;
+      // insert at cursor position in the input
+      const emoji = b.dataset.emoji;
+      const start = chatInput.selectionStart ?? chatInput.value.length;
+      const end = chatInput.selectionEnd ?? chatInput.value.length;
+      chatInput.value = chatInput.value.slice(0, start) + emoji + chatInput.value.slice(end);
+      const pos = start + emoji.length;
+      chatInput.focus();
+      try { chatInput.setSelectionRange(pos, pos); } catch (_) {}
+    });
+    emojiBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const open = !emojiPop.classList.contains("open");
+      closePickers("emoji");
+      emojiPop.classList.toggle("open", open);
+      emojiBtn.classList.toggle("active", open);
+    });
+
+    // ---- Image upload (Firebase Storage) ----
+    const MAX_CHAT_IMG_BYTES = 12 * 1024 * 1024;   // 12 MB ceiling per picture
+    imgBtn.addEventListener("click", () => {
+      if (!FIREBASE_READY || !storage) { toast("Pictures need Firebase Storage — check the setup"); return; }
+      closePickers();
+      chatImgInput.click();
+    });
+    chatImgInput.addEventListener("change", async () => {
+      const file = chatImgInput.files && chatImgInput.files[0];
+      chatImgInput.value = "";   // reset so the same file can be picked again
+      if (!file) return;
+      if (!/^image\//i.test(file.type)) { toast("That's not an image file"); return; }
+      if (file.size > MAX_CHAT_IMG_BYTES) { toast("That image is too big (limit 12 MB)"); return; }
+      const isGif = /gif$/i.test(file.type);
+
+      imgBtn.disabled = true;
+      const oldTitle = imgBtn.title;
+      imgBtn.title = "Uploading…";
+      try {
+        // read natural size (best-effort, for nicer layout) before upload
+        let dims = {};
+        try { dims = await readImageDims(file); } catch (_) {}
+        const ext = (/\.([a-z0-9]{2,5})$/i.exec(file.name)?.[1] || (isGif ? "gif" : "png")).toLowerCase();
+        const path = `chat/${ROOM}/${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}.${ext}`;
+        const snap = await uploadBytes(sref(storage, path), file, { contentType: file.type || "image/png" });
+        const url = await getDownloadURL(snap.ref);
+        sendMedia({ kind: isGif ? "gif" : "image", url, w: dims.w, h: dims.h });
+      } catch (err) {
+        console.error("[chat img] upload failed:", err);
+        const denied = err && (err.code === "storage/unauthorized" || /unauthor/i.test(err.code || ""));
+        toast(denied ? "Upload blocked — check Storage rules" : "Couldn't send that picture");
+      } finally {
+        imgBtn.disabled = false;
+        imgBtn.title = oldTitle;
+      }
+    });
+    function readImageDims(file) {
+      return new Promise((res, rej) => {
+        const u = URL.createObjectURL(file);
+        const im = new Image();
+        im.onload = () => { res({ w: im.naturalWidth, h: im.naturalHeight }); URL.revokeObjectURL(u); };
+        im.onerror = () => { rej(new Error("img read")); URL.revokeObjectURL(u); };
+        im.src = u;
+      });
+    }
+
+    // ---- GIF picker (Tenor public API) ----
+    // Tenor's anonymous public demo key. If you want your own, grab a free key at
+    // https://developers.google.com/tenor and swap it in here.
+    const TENOR_KEY = "AIzaSyAFnYySWqUjApJ8nKW6h2RWZ6lLOIuXFsM";
+    const TENOR_CLIENT = "watchtogether";
+    let gifTimer = null, gifReq = 0;
+
+    gifBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const open = !gifPop.classList.contains("open");
+      closePickers("gif");
+      gifPop.classList.toggle("open", open);
+      gifBtn.classList.toggle("active", open);
+      if (open) {
+        gifSearch.focus();
+        if (!gifGrid.children.length) loadGifs("");   // featured on first open
+      }
+    });
+    gifSearch.addEventListener("input", () => {
+      clearTimeout(gifTimer);
+      gifTimer = setTimeout(() => loadGifs(gifSearch.value.trim()), 350);
+    });
+    async function loadGifs(q) {
+      const reqId = ++gifReq;
+      gifGrid.innerHTML = "";
+      gifMsg.hidden = false;
+      gifMsg.textContent = "Loading…";
+      try {
+        const base = q
+          ? `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(q)}`
+          : `https://tenor.googleapis.com/v2/featured?`;
+        const url = `${base}&key=${TENOR_KEY}&client_key=${TENOR_CLIENT}&limit=24&media_filter=tinygif,gif&contentfilter=high`;
+        const r = await fetch(url);
+        if (!r.ok) throw new Error("tenor " + r.status);
+        const data = await r.json();
+        if (reqId !== gifReq) return;   // a newer search superseded this one
+        const results = (data.results || []);
+        if (!results.length) { gifMsg.textContent = "No GIFs found 🌫️"; return; }
+        gifMsg.hidden = true;
+        for (const g of results) {
+          const m = g.media_formats || {};
+          const preview = (m.tinygif && m.tinygif.url) || (m.gif && m.gif.url);
+          const full = (m.gif && m.gif.url) || preview;
+          const dims = (m.gif && m.gif.dims) || (m.tinygif && m.tinygif.dims) || [];
+          if (!full) continue;
+          const im = document.createElement("img");
+          im.src = preview; im.loading = "lazy"; im.alt = g.content_description || "GIF";
+          im.addEventListener("click", () => {
+            sendMedia({ kind: "gif", url: full, w: dims[0], h: dims[1] });
+            closePickers();
+          });
+          gifGrid.appendChild(im);
+        }
+      } catch (err) {
+        console.error("[gif] load failed:", err);
+        if (reqId !== gifReq) return;
+        gifMsg.hidden = false;
+        gifMsg.textContent = "Couldn't reach the GIF service 🌧️";
+      }
+    }
+
+    // ---- Lightbox: tap any chat image/GIF to view it full size ----
+    chatLog.addEventListener("click", (e) => {
+      const img = e.target.closest(".mediaBubble img");
+      if (!img) return;
+      lightboxImg.src = img.src;
+      lightbox.classList.add("open");
+    });
+    lightbox.addEventListener("click", () => {
+      lightbox.classList.remove("open");
+      lightboxImg.src = "";
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && lightbox.classList.contains("open")) {
+        lightbox.classList.remove("open"); lightboxImg.src = "";
+      }
+    });
 
     // ============================================================
     //  Queue
