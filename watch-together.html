@@ -1355,7 +1355,23 @@
       iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
         { urls: "stun:stun1.l.google.com:19302" },
+        // TURN relay — needed whenever a direct peer path can't be made
+        // (strict/symmetric NAT, carrier-grade NAT, most mobile networks).
+        // Without this, the stream either fails to connect or limps along on a
+        // marginal path, which shows up as constant buffering. Swap these for
+        // your own TURN credentials (a self-hosted coturn, or a provider like
+        // Cloudflare/Metered/Twilio) for production-grade reliability.
+        {
+          urls: [
+            "turn:openrelay.metered.ca:80",
+            "turn:openrelay.metered.ca:443",
+            "turn:openrelay.metered.ca:443?transport=tcp",
+          ],
+          username: "openrelayproject",
+          credential: "openrelayproject",
+        },
       ],
+      iceCandidatePoolSize: 4,
     };
     let rtcRoot = null;            // ref watch/${ROOM}/rtc
     let shareLockRef = null;       // ref .../rtc/share
@@ -1470,7 +1486,23 @@
       if (!localShareStream || peers.has(peerId)) return;
       const pc = new RTCPeerConnection(RTC_CONFIG);
       peers.set(peerId, pc);
-      localShareStream.getTracks().forEach(t => pc.addTrack(t, localShareStream));
+      localShareStream.getTracks().forEach(t => {
+        const sender = pc.addTrack(t, localShareStream);
+        // Cap the video encoder so high-motion gameplay degrades quality
+        // gracefully instead of stalling when it outruns the uplink. Without
+        // this, a busy frame can saturate a typical home upload and the viewer
+        // buffers waiting for data.
+        if (t.kind === "video") {
+          try {
+            const params = sender.getParameters();
+            if (!params.encodings || !params.encodings.length) params.encodings = [{}];
+            params.encodings[0].maxBitrate = 2_500_000;  // ~2.5 Mbps
+            params.encodings[0].maxFramerate = 30;
+            params.degradationPreference = "balanced";
+            sender.setParameters(params).catch(() => {});
+          } catch (_) {}
+        }
+      });
       pc.onicecandidate = (e) => { if (e.candidate) sendSignal(peerId, "ice", e.candidate.toJSON()); };
       pc.onconnectionstatechange = () => {
         if (["failed", "closed", "disconnected"].includes(pc.connectionState)) closePeer(peerId);
