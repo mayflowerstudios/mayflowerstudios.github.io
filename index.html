@@ -4,772 +4,174 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mayflower Studios</title>
-  <meta name="description" content="A small indie studio building worlds, mods, and bots with heart — designed for cozy communities, long-term adventures, and a little extra magic." />
+  <meta name="description" content="A small indie studio making cozy, thoughtful little things — watch parties, shared games, and interactive stories, all with a bit of enchanted-forest magic." />
   <meta property="og:title" content="Mayflower Studios" />
-  <meta property="og:description" content="A small indie studio building worlds, mods, and bots with heart." />
+  <meta property="og:description" content="A small indie studio making cozy, thoughtful little things — watch parties, shared games, and interactive stories." />
   <meta property="og:url" content="https://mayflowerstudios.net/" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://mayflowerstudios.net/assets/og/home.png" />
   <meta name="twitter:card" content="summary_large_image" />
-  <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=1" />
-  <link rel="apple-touch-icon" href="/assets/icons/favicon.png?v=1" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=2" />
+  <link rel="apple-touch-icon" href="/assets/icons/favicon.png?v=2" />
   <link rel="stylesheet" href="/style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
   <style>
-/* ============================================================
-   Mayflower Studios — Enchanted Night Garden
-   Single-page redesign
-   ============================================================ */
+    /* Home-only flourishes — everything structural comes from style.css */
+    .home-hero { padding-top: 28px; }
+    .home-hero .page-title { font-size: clamp(52px, 9vw, 104px); line-height: 1.0; letter-spacing: -.5px; }
+    .home-hero .page-title em { display: block; }
+    .home-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 5px 14px; border-radius: 999px; align-self: flex-start;
+      border: 1px solid rgba(249,168,212,.22); background: rgba(249,168,212,.07);
+      font-size: 12px; color: var(--rose); letter-spacing: .4px;
+    }
+    .home-eyebrow .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--emerald); box-shadow: 0 0 8px rgba(110,231,183,.6);
+    }
 
-:root {
-  --bg:         #0b1120;
-  --bg-mid:     #111827;
-  --rose:       #f9a8d4;
-  --rose-deep:  #ec4899;
-  --violet:     #c4b5fd;
-  --violet-deep:#8b5cf6;
-  --gold:       #fde68a;
-  --emerald:    #6ee7b7;
-  --text:       #faf5ff;
-  --text-2:     rgba(250,245,255,.65);
-  --text-3:     rgba(250,245,255,.40);
-  --border:     rgba(249,168,212,.10);
-  --border-2:   rgba(249,168,212,.20);
-  --glass:      rgba(11,17,32,.55);
-  --glass-2:    rgba(255,255,255,.04);
-  --r-sm: 10px;
-  --r-md: 16px;
-  --r-lg: 22px;
-  --r-xl: 30px;
-  --ease: cubic-bezier(.4,0,.2,1);
-  --font-display: 'Cormorant Garamond', Georgia, serif;
-  --font-body:    'DM Sans', system-ui, sans-serif;
-  --font-mono:    'JetBrains Mono', monospace;
-}
+    /* The three things — large, calm cards */
+    .make-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    @media (max-width: 880px) { .make-grid { grid-template-columns: 1fr; } }
 
-*, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+    .make-card {
+      display: flex; flex-direction: column; gap: 14px;
+      padding: 30px 28px 26px; min-height: 280px;
+    }
+    .make-card .make-icon { font-size: 34px; line-height: 1; }
+    .make-card h3 { font-size: 26px; }
+    .make-card p { flex: 1; font-size: 14px; }
+    .make-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .make-tag {
+      font-size: 11px; color: var(--text-3);
+      padding: 4px 10px; border-radius: 999px;
+      border: 1px solid var(--border); background: rgba(255,255,255,.03);
+    }
+    .make-card .btn-pri { align-self: flex-start; margin-top: 4px; }
 
-body {
-  margin: 0;
-  font-family: var(--font-body);
-  font-size: 15px;
-  color: var(--text);
-  line-height: 1.65;
-  background: var(--bg);
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
+    /* About strip */
+    .about-card { padding: 34px 30px; }
+    .about-card p { font-size: 15px; line-height: 1.85; margin-bottom: 16px; }
+    .about-card p:last-child { margin-bottom: 0; }
+    .about-card em { color: var(--rose); font-style: italic; }
 
-a { color: inherit; text-decoration: none; }
-h1,h2,h3,h4 { margin: 0; font-family: var(--font-display); font-weight: 400; }
-p { margin: 0; }
-img { display: block; max-width: 100%; }
-
-
-
-/* ── Page wrapper ── */
-.page {
-  position: relative; z-index: 2;
-  min-height: 100vh;
-}
-
-
-
-/* ── Sections ── */
-section {
-  max-width: 1060px; margin: 0 auto;
-  padding: 80px 24px;
-}
-section + section { padding-top: 40px; }
-
-/* ── HERO ── */
-#hero { padding-top: 100px; padding-bottom: 80px; }
-
-.hero-eyebrow {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 5px 14px; border-radius: 999px;
-  border: 1px solid rgba(249,168,212,.22);
-  background: rgba(249,168,212,.07);
-  font-size: 12px; color: var(--rose); letter-spacing: .5px;
-  margin-bottom: 22px;
-  animation: fadeUp .7s var(--ease) both;
-}
-.dot-live {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--emerald);
-  box-shadow: 0 0 8px rgba(110,231,183,.6);
-}
-
-.hero-title {
-  font-size: clamp(52px, 8vw, 96px);
-  line-height: 1.02; letter-spacing: -.5px;
-  margin-bottom: 20px;
-  animation: fadeUp .7s .1s var(--ease) both;
-}
-.hero-title em {
-  font-style: italic;
-  background: linear-gradient(130deg, var(--rose) 10%, var(--violet) 80%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-}
-
-.hero-desc {
-  font-size: 17px; color: var(--text-2); line-height: 1.75;
-  max-width: 56ch; margin-bottom: 36px;
-  animation: fadeUp .7s .2s var(--ease) both;
-}
-.hero-desc strong { color: var(--text); font-weight: 500; }
-
-.hero-actions {
-  display: flex; flex-wrap: wrap; gap: 10px;
-  animation: fadeUp .7s .3s var(--ease) both;
-}
-.btn-primary {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-family: var(--font-body); font-weight: 600; font-size: 14px;
-  padding: 12px 22px; border-radius: var(--r-md);
-  color: #0b1120;
-  background: linear-gradient(135deg, var(--rose), var(--violet));
-  box-shadow: 0 4px 22px rgba(249,168,212,.25);
-  transition: all 160ms var(--ease); cursor: pointer;
-}
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(249,168,212,.35); }
-.btn-ghost {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-family: var(--font-body); font-weight: 500; font-size: 14px;
-  padding: 11px 20px; border-radius: var(--r-md);
-  color: var(--text-2); background: rgba(255,255,255,.06);
-  border: 1px solid var(--border-2);
-  transition: all 160ms var(--ease); cursor: pointer;
-}
-.btn-ghost:hover { color: var(--text); background: rgba(255,255,255,.10); border-color: rgba(249,168,212,.25); transform: translateY(-1px); }
-
-.hero-stats {
-  display: grid; grid-template-columns: repeat(4, 1fr);
-  gap: 12px; margin-top: 56px;
-  animation: fadeUp .7s .4s var(--ease) both;
-}
-@media (max-width: 760px) { .hero-stats { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 400px) { .hero-stats { grid-template-columns: 1fr; } }
-
-.stat-card {
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  padding: 18px;
-  background: var(--glass-2);
-  transition: border-color 200ms var(--ease), background 200ms var(--ease);
-}
-.stat-card:hover { border-color: var(--border-2); background: rgba(255,255,255,.06); }
-.stat-icon { font-size: 22px; margin-bottom: 10px; }
-.stat-label { font-family: var(--font-body); font-weight: 600; font-size: 13px; margin-bottom: 3px; }
-.stat-sub { font-size: 12px; color: var(--text-3); line-height: 1.5; }
-
-/* ── Section Header ── */
-.sec-header {
-  margin-bottom: 40px;
-}
-.sec-kicker {
-  font-size: 11px; font-weight: 600; letter-spacing: 1.2px;
-  text-transform: uppercase; color: var(--rose); margin-bottom: 8px;
-}
-.sec-title {
-  font-size: clamp(32px, 5vw, 48px); line-height: 1.1;
-}
-.sec-sub { font-size: 15px; color: var(--text-2); margin-top: 10px; max-width: 60ch; }
-
-/* ── PROJECTS ── */
-.project-tabs {
-  display: flex; gap: 6px; margin-bottom: 28px; flex-wrap: wrap;
-}
-.tab-btn {
-  font-family: var(--font-body); font-size: 13px; font-weight: 500;
-  padding: 8px 18px; border-radius: 999px;
-  border: 1px solid var(--border-2); background: transparent;
-  color: var(--text-2); cursor: pointer;
-  transition: all 160ms var(--ease);
-}
-.tab-btn:hover { color: var(--text); background: rgba(255,255,255,.07); }
-.tab-btn.active { color: var(--rose); background: rgba(249,168,212,.08); border-color: rgba(249,168,212,.25); }
-
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
-
-.project-grid {
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
-}
-@media (max-width: 700px) { .project-grid { grid-template-columns: 1fr; } }
-
-.proj-card {
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg);
-  padding: 24px;
-  background: var(--glass);
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  transition: border-color 200ms var(--ease), box-shadow 200ms var(--ease);
-  display: flex; flex-direction: column;
-  position: relative; overflow: hidden;
-}
-.proj-card::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(249,168,212,.3), rgba(196,181,253,.2), transparent);
-  opacity: 0; transition: opacity 200ms;
-}
-.proj-card:hover { border-color: var(--border-2); box-shadow: 0 12px 48px rgba(0,0,0,.25); }
-.proj-card:hover::before { opacity: 1; }
-
-.proj-card-head {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 12px;
-}
-.proj-icon { font-size: 28px; }
-.proj-badge {
-  font-family: var(--font-body); font-size: 10px; font-weight: 600;
-  letter-spacing: .4px; padding: 3px 10px; border-radius: 999px;
-  border: 1px solid var(--border-2); color: var(--text-3);
-  background: rgba(255,255,255,.04);
-}
-.proj-badge.active { color: var(--emerald); border-color: rgba(110,231,183,.3); background: rgba(110,231,183,.07); }
-.proj-badge.bot { color: var(--violet); border-color: rgba(196,181,253,.25); background: rgba(196,181,253,.07); }
-
-.proj-name { font-size: 22px; margin-bottom: 8px; }
-.proj-desc { font-size: 13.5px; color: var(--text-2); line-height: 1.65; margin-bottom: 18px; flex: 1; }
-.proj-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
-
-.link-pill {
-  font-family: var(--font-body); font-size: 12px; font-weight: 500;
-  padding: 6px 14px; border-radius: 999px;
-  border: 1px solid var(--border-2); color: var(--text-2);
-  background: rgba(255,255,255,.05);
-  transition: all 140ms var(--ease);
-}
-.link-pill:hover { color: var(--text); border-color: rgba(249,168,212,.3); background: rgba(249,168,212,.08); }
-.link-pill.primary {
-  color: #0b1120; background: linear-gradient(135deg, var(--rose), var(--violet));
-  border-color: transparent; font-weight: 600;
-}
-.link-pill.primary:hover { box-shadow: 0 4px 16px rgba(249,168,212,.3); transform: translateY(-1px); }
-
-/* ── SERVER ── */
-.server-layout {
-  display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px;
-}
-@media (max-width: 760px) { .server-layout { grid-template-columns: 1fr; } }
-
-.server-main {
-  border: 1px solid var(--border);
-  border-radius: var(--r-lg); padding: 28px;
-  background: var(--glass); backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-.server-address {
-  display: flex; align-items: center; gap: 12px;
-  padding: 14px 18px; margin: 20px 0;
-  border: 1px solid var(--border-2); border-radius: var(--r-md);
-  background: rgba(0,0,0,.2);
-}
-.server-address code {
-  font-family: var(--font-mono); font-size: 15px;
-  color: var(--gold); letter-spacing: .3px; flex: 1;
-}
-.copy-btn {
-  font-family: var(--font-body); font-size: 11px; font-weight: 600;
-  padding: 5px 12px; border-radius: 999px;
-  border: 1px solid rgba(253,230,138,.25); background: rgba(253,230,138,.07);
-  color: var(--gold); cursor: pointer; transition: all 140ms var(--ease);
-}
-.copy-btn:hover { background: rgba(253,230,138,.14); }
-.copy-btn.copied { color: var(--emerald); border-color: rgba(110,231,183,.3); background: rgba(110,231,183,.08); }
-
-.server-side { display: flex; flex-direction: column; gap: 16px; }
-.server-side-card {
-  border: 1px solid var(--border); border-radius: var(--r-lg);
-  padding: 22px; background: var(--glass);
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  flex: 1; display: flex; flex-direction: column; gap: 12px;
-}
-.server-side-card h3 { font-size: 20px; margin-bottom: 4px; }
-.server-side-card p { font-size: 13.5px; color: var(--text-2); flex: 1; }
-
-.wt-launch { display: flex; flex-direction: column; gap: 10px; }
-.wt-room-input {
-  font-family: var(--font-body); font-size: 13px;
-  padding: 9px 14px; border-radius: var(--r-md);
-  border: 1px solid var(--border-2); background: rgba(0,0,0,.2);
-  color: var(--text); width: 100%;
-}
-.wt-room-input::placeholder { color: var(--text-3); }
-.wt-room-input:focus { outline: none; border-color: rgba(196,181,253,.45); }
-
-/* ── COMMUNITY ── */
-.community-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
-}
-@media (max-width: 760px) { .community-grid { grid-template-columns: 1fr; } }
-
-.comm-card {
-  border: 1px solid var(--border); border-radius: var(--r-lg);
-  padding: 28px; background: var(--glass);
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px;
-  transition: border-color 200ms var(--ease), transform 200ms var(--ease);
-}
-.comm-card:hover { border-color: var(--border-2); transform: translateY(-3px); }
-.comm-card-icon { font-size: 36px; }
-.comm-card h3 { font-size: 22px; }
-.comm-card p { font-size: 13px; color: var(--text-2); line-height: 1.65; flex: 1; }
-
-/* ── ABOUT ── */
-.about-grid {
-  display: grid; grid-template-columns: 1.2fr .8fr; gap: 20px;
-}
-@media (max-width: 760px) { .about-grid { grid-template-columns: 1fr; } }
-
-.about-main {
-  border: 1px solid var(--border); border-radius: var(--r-lg);
-  padding: 36px; background: var(--glass);
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  position: relative; overflow: hidden;
-}
-.about-main::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, var(--rose), var(--violet), transparent); opacity: .5;
-}
-.about-main p { color: var(--text-2); margin-bottom: 20px; line-height: 1.8; }
-
-.phil-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 24px; }
-@media (max-width: 500px) { .phil-list { grid-template-columns: 1fr; } }
-.phil-item {
-  display: flex; gap: 10px; align-items: flex-start;
-  padding: 12px; border-radius: var(--r-sm);
-  background: rgba(255,255,255,.03); border: 1px solid var(--border);
-}
-.phil-item .pi { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
-.phil-item strong { display: block; font-family: var(--font-body); font-size: 13px; font-weight: 600; margin-bottom: 2px; }
-.phil-item span { font-size: 12px; color: var(--text-3); }
-
-.kofi-card {
-  border: 1px solid var(--border); border-radius: var(--r-lg);
-  overflow: hidden; background: var(--glass);
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  display: flex; flex-direction: column;
-}
-.kofi-header {
-  padding: 22px 22px 16px;
-  border-bottom: 1px solid var(--border);
-}
-.kofi-header h3 { font-size: 22px; margin-bottom: 6px; }
-.kofi-header p { font-size: 13px; color: var(--text-2); }
-.kofi-header .btn-primary { margin-top: 14px; }
-.kofi-embed { flex: 1; min-height: 400px; background: rgba(0,0,0,.1); }
-.kofi-embed iframe { display: block; width: 100%; height: 100%; min-height: 400px; border: none; }
-
-/* ── FOOTER ── */
-footer {
-  max-width: 1060px; margin: 0 auto;
-  padding: 28px 24px 40px;
-  border-top: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-}
-.footer-brand { font-family: var(--font-display); font-size: 18px; color: var(--text-2); }
-.footer-links { display: flex; gap: 6px; flex-wrap: wrap; }
-.footer-links a {
-  font-size: 12px; color: var(--text-3); padding: 5px 11px;
-  border-radius: 999px; border: 1px solid var(--border);
-  transition: all 140ms var(--ease);
-}
-.footer-links a:hover { color: var(--text-2); border-color: var(--border-2); }
-.footer-copy { font-size: 12px; color: var(--text-3); width: 100%; text-align: center; margin-top: 8px; }
-
-/* ── Animations ── */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(18px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.reveal {
-  opacity: 0; transform: translateY(20px);
-  transition: opacity .6s var(--ease), transform .6s var(--ease);
-}
-.reveal.visible { opacity: 1; transform: translateY(0); }
-
-/* ── Divider ── */
-.sec-divider {
-  max-width: 1060px; margin: 0 auto;
-  height: 1px; background: var(--border);
-}
-
-/* ── Misc ── */
-.inline-icon { font-size: 1em; }
+    .ethos { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 24px; }
+    @media (max-width: 640px) { .ethos { grid-template-columns: 1fr; } }
+    .ethos-item {
+      display: flex; gap: 11px; align-items: flex-start;
+      padding: 14px; border-radius: var(--r-sm);
+      background: rgba(255,255,255,.03); border: 1px solid var(--border);
+    }
+    .ethos-item .ei { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .ethos-item strong { display: block; font-family: var(--font-b); font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+    .ethos-item span { font-size: 12px; color: var(--text-3); line-height: 1.55; }
   </style>
 </head>
 <body data-nav="home">
 
-  <div class="page">
-
+  <div class="site-page">
     <div id="site-nav"></div>
 
-    <!-- ══ HERO ══ -->
-    <section id="hero">
-      <div class="hero-eyebrow">
-        <span class="dot-live"></span>
-        Building worlds, mods &amp; bots with heart
-      </div>
-      <h1 class="hero-title">
-        Mayflower<br><em>Studios</em>
-      </h1>
-      <p class="hero-desc">
-        A small indie studio crafting <strong>cozy Minecraft mods</strong>, <strong>Discord bots</strong>,
-        and <strong>living worlds</strong> — designed for long-term communities with a little extra magic.
-      </p>
-      <div class="hero-actions">
-        <a href="#projects" class="btn-primary">✦ Explore Projects</a>
-        <a href="#server" class="btn-ghost">🌎 Join the Server</a>
-        <a href="https://ko-fi.com/mayflowerstudiosteam" target="_blank" rel="noopener" class="btn-ghost">☕ Support Us</a>
-      </div>
-      <div class="hero-stats">
-        <div class="stat-card">
-          <div class="stat-icon">🧱</div>
-          <div class="stat-label">Minecraft Mods</div>
-          <div class="stat-sub">Server-ready mechanics with clean UI</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">🤖</div>
-          <div class="stat-label">Discord Bots</div>
-          <div class="stat-sub">Progression &amp; lore for your community</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">🌸</div>
-          <div class="stat-label">Cozy Polish</div>
-          <div class="stat-sub">Whimsical flavor, minimal clutter</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon">⚙️</div>
-          <div class="stat-label">Reliable Code</div>
-          <div class="stat-sub">Predictable, tidy, long-term maintained</div>
-        </div>
-      </div>
-    </section>
+    <div class="content">
 
-    <div class="sec-divider"></div>
-
-    <!-- ══ PROJECTS ══ -->
-    <section id="projects" class="reveal">
-      <div class="sec-header">
-        <div class="sec-kicker">✦ What we build</div>
-        <h2 class="sec-title">Projects</h2>
-        <p class="sec-sub">Mods, bots, and tools — built with care for communities that stick around.</p>
-      </div>
-
-      <div class="project-tabs">
-        <button class="tab-btn active" data-tab="mods">🧱 Mods</button>
-        <button class="tab-btn" data-tab="bots">🤖 Bots</button>
-      </div>
-
-      <div class="tab-panel active" id="tab-mods">
-        <div class="project-grid">
-          <div class="proj-card">
-            <div class="proj-card-head">
-              <div class="proj-icon">🏰</div>
-              <span class="proj-badge active">Active</span>
-            </div>
-            <h3 class="proj-name">Steelhold</h3>
-            <p class="proj-desc">Survival-friendly land claiming &amp; access control. Clean UI, predictable behavior, built for long-term servers without the usual grief-plugin clutter.</p>
-            <div class="proj-links">
-              <a href="mods/steelhold.html" class="link-pill primary">View Mod</a>
-              <a href="mods/changelogs/steelholdchangelog.html" class="link-pill">Changelog</a>
-            </div>
-          </div>
-          <div class="proj-card">
-            <div class="proj-card-head">
-              <div class="proj-icon">📦</div>
-              <span class="proj-badge active">Active</span>
-            </div>
-            <h3 class="proj-name">LogiChest</h3>
-            <p class="proj-desc">Intuitive item logistics for survival Minecraft. Link chests, sort automatically, and keep your base tidy — without a spreadsheet tutorial.</p>
-            <div class="proj-links">
-              <a href="mods/logichest.html" class="link-pill primary">View Mod</a>
-              <a href="mods/changelogs/logichestchangelog.html" class="link-pill">Changelog</a>
-            </div>
-          </div>
-          <div class="proj-card">
-            <div class="proj-card-head">
-              <div class="proj-icon">🌿</div>
-              <span class="proj-badge">Stable</span>
-            </div>
-            <h3 class="proj-name">AmumuCurse</h3>
-            <p class="proj-desc">A cozy mob-curse mechanic that adds narrative flavor to survival. Curses are mysterious, reversible, and always interesting.</p>
-            <div class="proj-links">
-              <a href="mods/amumucurse.html" class="link-pill primary">View Mod</a>
-              <a href="mods/changelogs/amumucursechangelog.html" class="link-pill">Changelog</a>
-            </div>
-          </div>
-          <div class="proj-card">
-            <div class="proj-card-head">
-              <div class="proj-icon">🎋</div>
-              <span class="proj-badge">Stable</span>
-            </div>
-            <h3 class="proj-name">GentleCreeper</h3>
-            <p class="proj-desc">Makes creeper explosions friendlier for community servers — customizable blast radii, block protection, and peaceful-mode toggles.</p>
-            <div class="proj-links">
-              <a href="mods/gentlecreeper.html" class="link-pill primary">View Mod</a>
-              <a href="mods/changelog.html" class="link-pill">Changelog</a>
-            </div>
-          </div>
+      <!-- ══ HERO ══ -->
+      <section class="page-hero home-hero reveal">
+        <span class="home-eyebrow"><span class="dot"></span> a tiny indie studio</span>
+        <h1 class="page-title">Mayflower <em>Studios</em></h1>
+        <p class="page-sub">
+          I make small, cozy things meant to be shared — a place to <strong>watch videos in sync</strong>,
+          a little room of <strong>games to play with someone</strong>, and <strong>interactive stories</strong>
+          about the things that are hard to say. All built with a bit of enchanted-forest magic.
+        </p>
+        <div class="page-actions">
+          <a href="#make" class="btn-pri">✦ See what I make</a>
+          <a href="/together.html" class="btn-ghost">💞 Start something together</a>
         </div>
-      </div>
+      </section>
 
-      <div class="tab-panel" id="tab-bots">
-        <div class="project-grid">
-          <div class="proj-card">
-            <div class="proj-card-head">
-              <div class="proj-icon">🌙</div>
-              <span class="proj-badge bot">Bot</span>
-            </div>
-            <h3 class="proj-name">EchoBloom</h3>
-            <p class="proj-desc">The heart of the studio — a lore-driven Discord bot with realms, seasonal events, class progression, and a living world that grows over time with your community.</p>
-            <div class="proj-links">
-              <a href="bots/echobloom.html" class="link-pill primary">View Bot</a>
-              <a href="lore.html" class="link-pill">Read Lore</a>
-              <a href="echobloom-campaigns.html" class="link-pill">Campaigns</a>
-            </div>
-          </div>
-          <div class="proj-card">
-            <div class="proj-card-head">
-              <div class="proj-icon">🦊</div>
-              <span class="proj-badge bot">Bot</span>
-            </div>
-            <h3 class="proj-name">FoxBot</h3>
-            <p class="proj-desc">A playful utility bot for community management — moderation tools, welcome flows, and fun little commands with a foxish personality.</p>
-            <div class="proj-links">
-              <a href="bots/foxbot.html" class="link-pill primary">View Bot</a>
-            </div>
-          </div>
-          <div class="proj-card">
-            <div class="proj-card-head">
-              <div class="proj-icon">🌸</div>
-              <span class="proj-badge bot">Bot</span>
-            </div>
-            <h3 class="proj-name">BloomBot</h3>
-            <p class="proj-desc">Seasonal event automation for Discord servers. Schedules, announces, and runs timed community events with EchoBloom flair.</p>
-            <div class="proj-links">
-              <a href="bots/bloombot.html" class="link-pill primary">View Bot</a>
-            </div>
-          </div>
+      <!-- ══ THE THREE THINGS ══ -->
+      <section id="make" class="sec reveal">
+        <div class="sec-head">
+          <div class="sec-kicker">✦ What I make</div>
+          <h2 class="sec-title">Three little things</h2>
+          <p class="sec-sub">Small in scope, made with care — each one designed to bring people into the same moment.</p>
         </div>
-      </div>
-    </section>
 
-    <div class="sec-divider"></div>
-
-    <!-- ══ SERVER ══ -->
-    <section id="server" class="reveal">
-      <div class="sec-header">
-        <div class="sec-kicker">🌎 Live World</div>
-        <h2 class="sec-title">Minecraft Server</h2>
-        <p class="sec-sub">Our cozy long-term survival world. Whitelisted, community-run, and always growing.</p>
-      </div>
-      <div class="server-layout">
-        <div class="server-main">
-          <p style="color:var(--text-2); font-size:15px; line-height:1.75;">
-            A carefully curated survival experience with our custom mods built in — Steelhold for land protection,
-            LogiChest for logistics, and regular community events. Long-term adventuring, no resets.
-          </p>
-          <div class="server-address">
-            <code id="serverAddr">play.mayflowerstudios.net</code>
-            <button class="copy-btn" id="copyBtn" onclick="copyAddr()">Copy</button>
-          </div>
-          <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;">
-            <a href="server-info.html" class="btn-primary" style="font-size:13px; padding:10px 18px;">Full Server Info</a>
-            <a href="https://map.mayflowerstudios.net:8445" target="_blank" rel="noopener" class="btn-ghost" style="font-size:13px; padding:9px 16px;">🗺 Live Map ↗</a>
-            <a href="rules.html" class="btn-ghost" style="font-size:13px; padding:9px 16px;">📜 Rules</a>
-          </div>
-        </div>
-        <div class="server-side">
-          <div class="server-side-card">
-            <h3>🍿 Movie Night</h3>
-            <p>SyncPlay watch parties in our Jellyfin theater. Join as <strong>Guest</strong> — no password — and hop in when we start.</p>
-            <div style="display:flex; flex-wrap:wrap; gap:8px;">
-              <a href="movienight.html" class="link-pill primary">Open</a>
-              <a href="https://jellyfin.mayflowerstudios.net:8443" target="_blank" rel="noopener" class="link-pill">Jellyfin ↗</a>
+        <div class="make-grid">
+          <!-- Watch Together -->
+          <article class="card card-accent-top make-card">
+            <div class="card-shine"></div>
+            <div class="make-icon">📺</div>
+            <h3>Watch Together</h3>
+            <p>Spin up a room and watch YouTube or videos perfectly in sync — with live chat, a shared queue, and playlists. Keep it public, locked, or hidden for just the people you send the link to.</p>
+            <div class="make-tags">
+              <span class="make-tag">synced playback</span>
+              <span class="make-tag">live chat</span>
+              <span class="make-tag">shared queue</span>
             </div>
-          </div>
-          <div class="server-side-card">
-            <h3>📅 Events Calendar</h3>
-            <p>Seasonal events, movie nights, and community surprises — all in one place.</p>
-            <div>
-              <a href="calendar.html" class="link-pill primary">View Calendar</a>
+            <a href="/watch.html" class="btn-pri sm">Open the lobby</a>
+          </article>
+
+          <!-- Together -->
+          <article class="card card-accent-top make-card">
+            <div class="card-shine"></div>
+            <div class="make-icon">💞</div>
+            <h3>Together</h3>
+            <p>A cozy hub of things to do with someone in real time — draw on a shared canvas, trade question cards, or play a quick game. Everything syncs live, in the same little room.</p>
+            <div class="make-tags">
+              <span class="make-tag">shared canvas</span>
+              <span class="make-tag">question cards</span>
+              <span class="make-tag">mini-games</span>
             </div>
-          </div>
-          <div class="server-side-card">
-            <h3>📺 Watch Together</h3>
-            <p>Create a room — public for anyone to join, or private with a password — and watch YouTube or videos in sync, with chat, a shared queue, and playlists.</p>
-            <div>
-              <a href="watch.html" class="link-pill primary">Open Lobby</a>
+            <a href="/together.html" class="btn-pri sm">Open Together</a>
+          </article>
+
+          <!-- Sakari -->
+          <article class="card card-accent-top make-card">
+            <div class="card-shine"></div>
+            <div class="make-icon">🌸</div>
+            <h3>Sakari Stories</h3>
+            <p>A narrative engine for intimate, honest stories. Choose-your-path games where some choices are visible but unavailable — not because of the plot, but because of what the brain allows. Free to read, always.</p>
+            <div class="make-tags">
+              <span class="make-tag">interactive fiction</span>
+              <span class="make-tag">honest</span>
+              <span class="make-tag">free</span>
             </div>
-          </div>
+            <a href="/sakari.html" class="btn-pri sm">Read stories</a>
+          </article>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <div class="sec-divider"></div>
-
-    <!-- ══ COMMUNITY ══ -->
-    <section id="community" class="reveal">
-      <div class="sec-header">
-        <div class="sec-kicker">🌸 Together</div>
-        <h2 class="sec-title">Community</h2>
-        <p class="sec-sub">The studio is the people — join us across Discord, Minecraft, and movie nights.</p>
-      </div>
-      <div class="community-grid">
-        <div class="comm-card">
-          <div class="comm-card-icon">💬</div>
-          <h3>Discord</h3>
-          <p>Our main hub — announcements, updates, community chat, and where all the magic happens.</p>
-          <a href="https://discord.gg/MutqYAdrwz" target="_blank" rel="noopener" class="btn-primary">Join Server</a>
+      <!-- ══ ABOUT ══ -->
+      <section id="about" class="sec reveal">
+        <div class="sec-head">
+          <div class="sec-kicker">✨ Who's behind it</div>
+          <h2 class="sec-title">About the studio</h2>
         </div>
-        <div class="comm-card">
-          <div class="comm-card-icon">🎬</div>
-          <h3>Movie Nights</h3>
-          <p>Cozy SyncPlay watch parties. Guest access — no account needed. Show up and vibe.</p>
-          <a href="movienight.html" class="btn-ghost">See Info</a>
-        </div>
-        <div class="comm-card">
-          <div class="comm-card-icon">📺</div>
-          <h3>Watch Together</h3>
-          <p>Create a public or private room to watch YouTube or videos perfectly in sync — with chat and a shared queue.</p>
-          <a href="watch.html" class="btn-ghost">Browse Rooms</a>
-        </div>
-        <div class="comm-card">
-          <div class="comm-card-icon">🌙</div>
-          <h3>EchoBloom World</h3>
-          <p>A living lore world that grows with the community — realms, ranks, classes, and seasonal stories.</p>
-          <a href="lore.html" class="btn-ghost">Read Lore</a>
-        </div>
-      </div>
-    </section>
-
-
-    <!-- ══ INTERACTIVE STORIES ══ -->
-    <section id="stories" class="reveal">
-      <div class="sec-header">
-        <div class="sec-kicker">✦ Something different</div>
-        <h2 class="sec-title">Interactive Stories</h2>
-        <p class="sec-sub">Short-form narrative experiences — made with care, designed to be felt.</p>
-      </div>
-      <div class="project-grid" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
-        <div class="proj-card" style="border-color: rgba(212,137,154,0.25); background: rgba(212,137,154,0.04);">
-          <div class="proj-card-head">
-            <div class="proj-icon">🌸</div>
-            <span class="proj-badge" style="background:rgba(212,137,154,0.15);color:#f0a0b4;border-color:rgba(212,137,154,0.3);">Narrative Engine</span>
-          </div>
-          <h3 class="proj-name">Sakari</h3>
-          <p class="proj-desc">A lightweight narrative engine for intimate, honest stories. Choose-your-path games where some choices are locked — not by the story, but by what the brain allows.</p>
-          <div class="proj-links">
-            <a href="/sakari.html" class="link-pill primary">Read Stories</a>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <div class="sec-divider"></div>
-
-    <!-- ══ ABOUT + SUPPORT ══ -->
-    <section id="about" class="reveal">
-      <div class="sec-header">
-        <div class="sec-kicker">✨ Who we are</div>
-        <h2 class="sec-title">About the Studio</h2>
-      </div>
-      <div class="about-grid">
-        <div class="about-main">
+        <div class="card about-card">
           <p>
-            Mayflower Studios is an independent development studio creating imaginative projects across games,
-            mods, interactive tools, and community-driven experiences. We care deeply about polish,
-            reliability, and building things people genuinely enjoy using every day.
+            Mayflower Studios is a one-person indie studio. I build small, deliberate projects —
+            the kind of things I'd actually want to use with the people I care about. No bloat,
+            no roadmaps a mile long; just a few cozy tools and stories, polished until they feel right.
           </p>
-          <p style="margin-bottom:0;">
-            Every project starts with a question: <em style="color:var(--rose);">"Would I actually want to play this?"</em>
-            That keeps us honest, keeps scope reasonable, and makes everything a little more magical.
+          <p>
+            Every project starts with the same question: <em>"Would this make a moment with someone a little better?"</em>
+            That keeps the scope honest and keeps the magic in.
           </p>
-          <div class="phil-list">
-            <div class="phil-item"><span class="pi">✨</span><div><strong>Meaningful Experiences</strong><span>Projects with charm and purpose</span></div></div>
-            <div class="phil-item"><span class="pi">🎨</span><div><strong>Thoughtful Design</strong><span>Systems that feel good to use</span></div></div>
-            <div class="phil-item"><span class="pi">🌱</span><div><strong>Long-term Creativity</strong><span>Worlds and tools that grow</span></div></div>
-            <div class="phil-item"><span class="pi">🤝</span><div><strong>Community-first</strong><span>Built for players and shared spaces</span></div></div>
-          </div>
-          <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:22px;">
-            <a href="#projects" class="btn-primary">Our Projects</a>
-            <a href="privacy.html" class="btn-ghost">Privacy</a>
-            <a href="tos.html" class="btn-ghost">Terms</a>
+          <div class="ethos">
+            <div class="ethos-item"><span class="ei">🌱</span><div><strong>Small on purpose</strong><span>Few things, made well, kept tidy.</span></div></div>
+            <div class="ethos-item"><span class="ei">🤝</span><div><strong>Made to share</strong><span>Built for two, or for a quiet crowd.</span></div></div>
+            <div class="ethos-item"><span class="ei">🌙</span><div><strong>Cozy &amp; honest</strong><span>Warm to look at, gentle to use.</span></div></div>
           </div>
         </div>
-        <div class="kofi-card">
-          <div class="kofi-header">
-            <h3>☕ Support Us</h3>
-            <p>Donations keep the servers running and the cozy magic flowing. Thank you.</p>
-            <a href="https://ko-fi.com/mayflowerstudiosteam" target="_blank" rel="noopener" class="btn-primary" style="display:inline-flex; font-size:13px; padding:10px 18px;">Open Ko-fi ↗</a>
-          </div>
-          <div class="kofi-embed">
-            <iframe
-              src="https://ko-fi.com/mayflowerstudiosteam/?hidefeed=true&widget=true&embed=true&preview=true"
-              title="Support Mayflower Studios on Ko-fi"
-              loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade"
-              allow="payment"
-            ></iframe>
-          </div>
-        </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- ══ FOOTER ══ -->
-    <footer>
-      <span class="footer-brand">Mayflower Studios</span>
-      <div class="footer-links">
-        <a href="privacy.html">Privacy</a>
-        <a href="tos.html">Terms</a>
-        <a href="server-info.html">Server Info</a>
-        <a href="https://discord.gg/MutqYAdrwz" target="_blank" rel="noopener">Discord ↗</a>
-        <a href="https://ko-fi.com/mayflowerstudiosteam" target="_blank" rel="noopener">Ko-fi ↗</a>
-      </div>
-      <p class="footer-copy">© <span id="year"></span> Mayflower Studios — made with 🌸 and fireflies</p>
-    </footer>
+    </div><!-- /content -->
 
-  </div><!-- /page -->
+    <div id="site-footer"></div>
+  </div><!-- /site-page -->
 
-  <script>
-  // ── Year ──
-  document.getElementById('year').textContent = new Date().getFullYear();
-
-  // ── Project tabs ──
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-    });
-  });
-
-  // ── Copy server address ──
-  function copyAddr() {
-    navigator.clipboard.writeText('play.mayflowerstudios.net').then(() => {
-      const btn = document.getElementById('copyBtn');
-      btn.textContent = 'Copied!';
-      btn.classList.add('copied');
-      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
-    });
-  }
-
-  // ── Scroll reveal ──
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
-  }, { threshold: 0.08 });
-  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-  </script>
-<script src="/shared.js"></script>
+  <script src="/shared.js"></script>
 </body>
 </html>

@@ -3,125 +3,103 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Privacy Policy • BloomBot • Mayflower Studios</title>
-  <meta name="description" content="Privacy policy for BloomBot and Mayflower Studios bots — how we handle your data." />
-  <meta property="og:title" content="Privacy Policy • Mayflower Studios" />
+  <title>Privacy • Mayflower Studios</title>
+  <meta name="description" content="How Mayflower Studios handles your data across Watch Together, Together rooms, and Sakari stories." />
+  <meta property="og:title" content="Privacy • Mayflower Studios" />
   <meta property="og:image" content="https://mayflowerstudios.net/assets/og/privacy.png" />
+  <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=2" />
   <link rel="stylesheet" href="/style.css" />
+  <style>
+    .legal .card { padding: 26px 28px; }
+    .legal h2 { font-size: 22px; margin-bottom: 10px; }
+    .legal p { color: var(--text-2); line-height: 1.8; margin-bottom: 12px; }
+    .legal p:last-child { margin-bottom: 0; }
+    .legal ul { margin: 0 0 12px; padding-left: 20px; color: var(--text-2); line-height: 1.8; }
+    .legal strong { color: var(--text); font-weight: 600; }
+  </style>
 </head>
-<body data-nav="projects">
+<body data-nav="together">
   <div class="site-page">
     <div id="site-nav"></div>
 
-    <main class="content">
+    <main class="content legal">
 
-      <!-- Hero -->
       <div class="page-hero">
-        <p class="page-kicker">BloomBot · Legal</p>
-        <h1 class="page-title">Privacy <em>Policy</em></h1>
-        <p class="page-sub">Last updated: March 16, 2026</p>
+        <p class="page-kicker">Legal</p>
+        <h1 class="page-title">Privacy</h1>
+        <p class="page-sub">Last updated: June 15, 2026</p>
         <div class="page-actions">
-          <a href="/bots/bloombot.html" class="btn-pri">🌸 Back to BloomBot</a>
-          <a href="/tos.html" class="btn-ghost">📜 Terms of Service</a>
+          <a href="/" class="btn-pri">🏡 Home</a>
+          <a href="/tos.html" class="btn-ghost">📜 Terms</a>
         </div>
       </div>
 
-      <!-- Summary -->
       <section class="sec reveal">
-        <div class="summary-box">
-          <strong>The short version</strong>
-          <p style="font-size:14px; color:var(--text-2); line-height:1.75;">
-            BloomBot stores only the minimum data needed to make its features work — Discord IDs, XP counts,
-            and birthday dates you choose to share. We never read or store message content. We never sell or
-            share your data with third parties.
+        <div class="card">
+          <h2>The short version</h2>
+          <p>
+            Mayflower Studios is a tiny indie studio. The site has three things: <strong>Watch Together</strong>,
+            <strong>Together</strong> rooms, and <strong>Sakari</strong> stories. None of them ask you to make an
+            account, and we don't run ads or sell anything about you.
           </p>
         </div>
+      </section>
 
-        <div class="card prose">
-          <div class="card-shine"></div>
-
-          <h3>1. Data We Collect</h3>
-          <p>BloomBot collects and stores the following in a local SQLite database. All data is scoped per-server (guild) — no data is shared across servers.</p>
-
-          <div style="overflow:auto; margin:14px 0;">
-            <table class="data-table">
-              <thead>
-                <tr><th>Data</th><th>Purpose</th><th>Source</th></tr>
-              </thead>
-              <tbody>
-                <tr><td><strong>Discord Server (Guild) ID</strong></td><td>Per-server configuration and data storage</td><td>Automatic (Discord API)</td></tr>
-                <tr><td><strong>Discord User ID</strong></td><td>Track XP/levels, achievements, birthdays, and reaction role assignments</td><td>Automatic (Discord API)</td></tr>
-                <tr><td><strong>Channel &amp; Message IDs</strong></td><td>Store configured announcement channels and reaction role panel references</td><td>Admin configuration</td></tr>
-                <tr><td><strong>Discord Role IDs</strong></td><td>Map emoji reactions to roles in reaction role panels</td><td>Admin configuration</td></tr>
-                <tr><td><strong>Birthday (month, day, optional year)</strong></td><td>Post birthday announcements; optionally display age</td><td>Voluntary via <code>/birthday set</code></td></tr>
-                <tr><td><strong>XP, Level, Message &amp; Reaction Count</strong></td><td>Leveling system, achievement tracking, leaderboards</td><td>Automatically counted from activity</td></tr>
-                <tr><td><strong>Achievement Records</strong></td><td>Track which achievements a member has earned and when</td><td>Automatically triggered by milestones</td></tr>
-                <tr><td><strong>Twitch Usernames</strong></td><td>Monitor Twitch channels for live-stream announcements</td><td>Admin configuration</td></tr>
-                <tr><td><strong>Server Configuration</strong></td><td>Feature toggles, custom messages, timezone, channel assignments</td><td>Admin configuration</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <hr />
-          <h3>2. Data We Do NOT Collect</h3>
+      <section class="sec reveal">
+        <div class="card">
+          <h2>Watch Together &amp; Together rooms</h2>
+          <p>
+            These features use a realtime database (Google Firebase) so that everyone in a room sees the same
+            thing at the same time. While you're in a room, the following is stored temporarily so the room can work:
+          </p>
           <ul>
-            <li><strong>Message content</strong> — BloomBot never reads, logs, or stores the content of your messages.</li>
-            <li><strong>Direct messages</strong> — BloomBot does not monitor or store DMs.</li>
-            <li><strong>Voice or video data</strong> — BloomBot has no voice features.</li>
-            <li><strong>Email addresses, IP addresses</strong> or personal identifiers beyond Discord IDs.</li>
-            <li><strong>Twitch user data</strong> — only publicly available live-stream status is checked.</li>
+            <li>The <strong>room name</strong> you chose and its visibility setting (public, locked, or hidden).</li>
+            <li>A <strong>display name</strong> you type in — entirely optional, and only ever shown to others in your room.</li>
+            <li>Whatever you actively share into the room: <strong>chat messages</strong>, the <strong>video/queue</strong> you load, <strong>drawing strokes</strong>, and <strong>game moves</strong>.</li>
+            <li>A short-lived <strong>presence marker</strong> so the room knows who's currently connected.</li>
           </ul>
+          <p>
+            This data lives only as long as the room is active and is meant to be transient. Don't share anything in a
+            room you wouldn't want the other people in that room to see. Locked rooms add a password gate; hidden rooms
+            simply aren't listed — neither is a guarantee of secrecy, so use good judgment.
+          </p>
+        </div>
+      </section>
 
-          <hr />
-          <h3>3. How Data Is Stored</h3>
-          <p>All data is stored in a local SQLite database on the server that hosts BloomBot. The database is not exposed to the internet and is not replicated to any cloud service or third-party storage provider.</p>
+      <section class="sec reveal">
+        <div class="card">
+          <h2>Sakari stories</h2>
+          <p>
+            Sakari stories run entirely in your browser. Your reading progress and language preference are saved in
+            your browser's <strong>local storage</strong> on your own device. Nothing about your reading is sent to us.
+          </p>
+        </div>
+      </section>
 
-          <hr />
-          <h3>4. Third-Party Services</h3>
-          <p>BloomBot interacts with:</p>
+      <section class="sec reveal">
+        <div class="card">
+          <h2>What we don't do</h2>
           <ul>
-            <li><strong>Discord API</strong> — to operate as a bot. Subject to <a href="https://discord.com/privacy" target="_blank" rel="noopener">Discord's Privacy Policy</a>.</li>
-            <li><strong>Twitch Helix API</strong> — to check live-stream status. Subject to <a href="https://www.twitch.tv/p/en/legal/privacy-notice/" target="_blank" rel="noopener">Twitch's Privacy Policy</a>. No Twitch user data is stored beyond configured usernames.</li>
+            <li>No accounts, no email collection, no advertising.</li>
+            <li>No selling or sharing of personal data with third parties.</li>
+            <li>No tracking of you across other websites.</li>
           </ul>
-          <p>We do not share, sell, or transfer your data to any other third parties.</p>
+          <p>
+            Third-party services we rely on (such as Google Firebase for realtime rooms and Google Fonts for type)
+            have their own privacy practices. If you embed an external video, that provider may set its own cookies.
+          </p>
+        </div>
+      </section>
 
-          <hr />
-          <h3>5. Data Retention &amp; Deletion</h3>
-          <p><strong>User requests:</strong> Remove your birthday anytime with <code>/birthday remove</code>. Request deletion of your leveling/achievement data through our <a href="https://discord.gg/MutqYAdrwz" target="_blank" rel="noopener">Discord</a>.</p>
-          <p><strong>Server admin requests:</strong> Admins can request full deletion of all server data by contacting us. We process requests promptly.</p>
-          <p><strong>On bot removal:</strong> Data is not automatically purged — accidental removals do happen — but we will delete it promptly on request.</p>
-
-          <hr />
-          <h3>6. Children's Privacy</h3>
-          <p>BloomBot is not directed at children under 13. We do not knowingly collect data from anyone under 13. If you believe a child under 13 has provided data to BloomBot, contact us and we will delete it promptly.</p>
-
-          <hr />
-          <h3>7. Discord Permissions</h3>
-          <ul>
-            <li><strong>Read Messages / Message Content</strong> — to count messages for XP (content is never stored)</li>
-            <li><strong>Send Messages &amp; Embed Links</strong> — to post announcements, level-ups, and achievement notifications</li>
-            <li><strong>Manage Roles</strong> — to assign and remove reaction roles</li>
-            <li><strong>Add Reactions</strong> — to set up reaction role panels</li>
-            <li><strong>Read Message History</strong> — to track reactions on role panels</li>
-            <li><strong>View Members</strong> — to detect joins/leaves for welcome messages and birthday checks</li>
-          </ul>
-
-          <hr />
-          <h3>8. Changes to This Policy</h3>
-          <p>We may update this Privacy Policy from time to time. The "Last updated" date at the top reflects the most recent revision. Significant changes will be announced in our <a href="https://discord.gg/MutqYAdrwz" target="_blank" rel="noopener">Discord community</a>.</p>
-
-          <hr />
-          <h3>9. Contact Us</h3>
-          <p>Questions, concerns, or data deletion requests:</p>
-          <ul>
-            <li><a href="https://discord.gg/MutqYAdrwz" target="_blank" rel="noopener">Mayflower Studios Discord</a></li>
-            <li><a href="https://mayflowerstudios.net" target="_blank" rel="noopener">mayflowerstudios.net</a></li>
-          </ul>
-
-          <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:20px;">
-            <a href="/bots/bloombot.html" class="btn-pri sm">🌸 Back to BloomBot</a>
-            <a href="/tos.html" class="btn-ghost sm">📜 Terms of Service</a>
-          </div>
+      <section class="sec reveal">
+        <div class="card">
+          <h2>Children</h2>
+          <p>
+            The site isn't directed at children under 13, and we don't knowingly collect data from anyone under 13.
+            If you believe a child has shared data through a room, get in touch and we'll remove it.
+          </p>
+          <h2 style="margin-top:18px;">Contact</h2>
+          <p>Questions about privacy? Reach out through the studio's contact channels and we'll help.</p>
         </div>
       </section>
 

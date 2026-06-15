@@ -87,17 +87,20 @@
 
   function buildNav() {
     // Normalize legacy data-nav values to the canonical six groups
-    const ALIAS = { lore: 'server', eras: 'server', license: 'projects' };
+    // Canonical sections. Aliases map section-specific data-nav values.
+    const ALIAS = {
+      'together-room': 'together',
+      'watch-together': 'watch',
+      'server': 'watch',
+      'sakari': 'stories',
+    };
     const raw = document.body.dataset.nav || '';
     const key = ALIAS[raw] || raw;
     const links = [
-      { href: '/',                 label: 'Home',     key: 'home'     },
-      { href: '/projects.html',    label: 'Projects', key: 'projects' },
-      { href: '/projects.html#bots', label: 'Bots',  key: 'bots'     },
-      { href: '/projects.html#mods', label: 'Mods',  key: 'mods'     },
-      { href: '/sakari.html',      label: 'Stories',  key: 'stories'  },
-      { href: '/server-info.html', label: 'Server',   key: 'server'   },
-      { href: '/together.html',    label: 'Together', key: 'together' },
+      { href: '/',              label: 'Home',     key: 'home'     },
+      { href: '/together.html', label: 'Together', key: 'together' },
+      { href: '/watch.html',    label: 'Watch',    key: 'watch'    },
+      { href: '/sakari.html',   label: 'Stories',  key: 'stories'  },
     ];
     const linksHtml = links.map(l =>
       `<a href="${l.href}"${l.key === key ? ' class="nav-active"' : ''}>${l.label}</a>`
@@ -111,8 +114,6 @@
           <button class="nav-mob-btn" id="navToggle" aria-label="Menu">☰</button>
           <div class="nav-links" id="navLinks">
             ${linksHtml}
-            <a href="/account.html" class="nav-account" id="navAccount" data-nav="account">👤 Account</a>
-            <a href="https://discord.gg/MutqYAdrwz" target="_blank" rel="noopener" class="nav-cta">Discord ↗</a>
           </div>
         </div>
       </nav>`;
@@ -122,11 +123,11 @@
     return `<footer class="site-footer">
         <span class="footer-brand">Mayflower Studios</span>
         <div class="footer-links">
+          <a href="/together.html">Together</a>
+          <a href="/watch.html">Watch</a>
+          <a href="/sakari.html">Stories</a>
           <a href="/privacy.html">Privacy</a>
           <a href="/tos.html">Terms</a>
-          <a href="/server-info.html">Server</a>
-          <a href="https://discord.gg/MutqYAdrwz" target="_blank" rel="noopener">Discord ↗</a>
-          <a href="https://ko-fi.com/mayflowerstudiosteam" target="_blank" rel="noopener">Ko-fi ↗</a>
         </div>
         <p class="footer-copy">© <span class="footer-year"></span> Mayflower Studios — made with 🌸 and fireflies</p>
       </footer>`;
@@ -176,39 +177,7 @@
     document.body.appendChild(s);
   }
 
-  function initAccountNav() {
-    // Ensure auth.js is loaded (pages don't all include it explicitly).
-    function whenAuth(cb) {
-      if (window.MFAuth) return cb();
-      if (!document.querySelector('script[data-mf-auth], script[src$="/auth.js"], script[src="auth.js"]')) {
-        const s = document.createElement('script');
-        s.src = '/auth.js'; s.setAttribute('data-mf-auth', '1');
-        document.body.appendChild(s);
-      }
-      let tries = 0;
-      const iv = setInterval(() => {
-        if (window.MFAuth) { clearInterval(iv); cb(); }
-        else if (++tries > 60) clearInterval(iv); // ~6s give-up
-      }, 100);
-    }
-
-    whenAuth(() => {
-      if (!window.MFAuth || !MFAuth.isConfigured()) return;
-      MFAuth.onChange((user, profile) => {
-        const el = document.getElementById('navAccount');
-        if (!el) return;
-        if (user) {
-          const name = (profile && profile.displayName) || user.displayName ||
-                       (user.email ? user.email.split('@')[0] : 'Account');
-          el.textContent = '👤 ' + name;
-          el.classList.add('nav-signed-in');
-        } else {
-          el.textContent = '👤 Account';
-          el.classList.remove('nav-signed-in');
-        }
-      });
-    });
-  }
+  function initAccountNav() { /* accounts removed — no-op kept for safety */ }
 
   document.addEventListener('DOMContentLoaded', function () {
     injectFavicon();
