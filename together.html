@@ -495,6 +495,7 @@
   <div class="chatPop" id="chatPop">
     <div class="chatPopHead">
       <strong>💬 Chat</strong>
+      <span id="chatDebug" style="font-size:10px;opacity:.5;margin-left:8px;font-variant-numeric:tabular-nums;">conn:? · evt:0</span>
       <span class="chatHeadTools">
         <button class="miniGhost" id="soundToggle" title="Notification sound">🔔</button>
         <button class="miniGhost" id="translateToggle" title="Translate incoming messages">🌐 Off</button>
@@ -1225,32 +1226,45 @@
       setupChatPickers(chatInput);
 
       // ---- live feed ----
-      // Mirror the shared-drawing listener exactly: a plain ref with
-      // onChildAdded. That pattern updates live in this app; a limitToLast()
-      // *query* did not deliver live child events here, which is why messages
-      // only appeared after a reload. onChildAdded replays every existing
-      // message on attach (initial history) and then fires for each new one.
-      const chatPlainRef = chatRef;   // already = ref(db, `together/${ROOM}/chat`)
+      // Two listeners working together:
+      //  • onChildAdded fires reliably for each new message in real time (this is
+      //    the same pattern the shared drawing uses, which updates live). Each new
+      //    message is merged into chatMsgsStore and the chat re-rendered.
+      //  • onValue gives us the initial batch and also catches edits/removals, and
+      //    exposes an error so a rules/permission problem isn't silent.
+      // ---- live feed ----
+      // Use the SAME mechanism the shared drawing uses (plain ref + onChildAdded),
+      // since that is confirmed to sync live in this app. onChildAdded replays
+      // existing messages on attach, then fires once per new message.
+      const chatPlainRef = chatRef;   // ref(db, `together/${ROOM}/chat`)
 
       let _renderQueued = false;
       function queueRender(){
         if (_renderQueued) return;
         _renderQueued = true;
-        // coalesce the burst of replayed events on first attach into one render;
-        // live messages afterward each render on the next frame too
         requestAnimationFrame(() => { _renderQueued = false; renderChat(chatMsgsStore); });
       }
+
+      // visible diagnostic: shows connection + a live event counter in the header
+      let _dbgEvents = 0;
+      const dbgEl = $("chatDebug");
+      function dbg(){
+        if (dbgEl) dbgEl.textContent = `conn:${_dbgConn} · evt:${_dbgEvents}`;
+      }
+      let _dbgConn = "?";
+      onValue(ref(db, ".info/connected"), s => { _dbgConn = (s.val() === true) ? "on" : "off"; dbg(); });
 
       onChildAdded(chatPlainRef, snap => {
         const m = snap.val(); if (!m) return;
         chatMsgsStore[snap.key] = m;
+        _dbgEvents++; dbg();
         queueRender();
       }, err => {
         console.error("[chat] live feed error:", err && err.code, err);
+        if (dbgEl) dbgEl.textContent = "ERR: " + (err && err.code || "feed");
         toast("Chat can't load — check the database rules");
       });
 
-      // Catch deletions / the history cap so removed messages disappear live too.
       onChildRemoved(chatPlainRef, snap => {
         if (snap.key in chatMsgsStore){ delete chatMsgsStore[snap.key]; queueRender(); }
       });
@@ -1517,7 +1531,6 @@
       // here would kill the Firebase callback and stop all future updates.
       if (!chatLog || !chatEmpty) return;
       let entries = Object.values(lastChatMsgs).sort((a,b) => (a.t||0)-(b.t||0));
-      // we no longer use a limitToLast query, so cap the rendered list here
       if (entries.length > 100) entries = entries.slice(entries.length - 100);
       if (!entries.length){ chatEmpty.style.display = "block"; lastSeenCount = 0; chatStarted = true; return; }
       chatEmpty.style.display = "none";
