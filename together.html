@@ -382,10 +382,26 @@
       const u = new URL(location.href); u.searchParams.set("room", room); history.replaceState(null,"",u);
 
       $("nameInput").value = displayName;
+      setupTabs();
       setupPresence();
       setupDraw();
       setupQuestions();
       setupTicTacToe();
+    }
+
+    // ---------- tab switching ----------
+    let tabsReady = false;
+    function setupTabs(){
+      if (tabsReady) return; tabsReady = true;
+      const tabs = $("tabs").querySelectorAll(".tab");
+      const panels = document.querySelectorAll(".gamePanel");
+      tabs.forEach(t => {
+        t.addEventListener("click", () => {
+          const name = t.dataset.tab;
+          tabs.forEach(x => x.classList.toggle("active", x === t));
+          panels.forEach(p => p.classList.toggle("active", p.dataset.panel === name));
+        });
+      });
     }
 
     $("nameInput").addEventListener("input", () => {
