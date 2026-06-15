@@ -124,6 +124,7 @@
         <div class="footer-links">
           <a href="/together.html">Together</a>
           <a href="/sakari.html">Stories</a>
+          <a href="https://ko-fi.com/mayflowerstudiosteam" target="_blank" rel="noopener">Support ↗</a>
           <a href="/privacy.html">Privacy</a>
           <a href="/tos.html">Terms</a>
         </div>
