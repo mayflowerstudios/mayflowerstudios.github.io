@@ -36,9 +36,9 @@ function timeAgo(ts){
   return d === 1 ? "yesterday" : d + "d ago";
 }
 
-// stable per-device id (shared with the other rooms — same key)
-let myId = localStorage.getItem("wt_id");
-if (!myId){ myId = "u" + Math.random().toString(36).slice(2,10); localStorage.setItem("wt_id", myId); }
+// Identity comes from the account system (window.MFAuth), set once signed in.
+let myId = null;
+let displayName = "";
 
 let db = null;
 if (FIREBASE_READY){
@@ -50,7 +50,28 @@ if (FIREBASE_READY){
 }
 
 let ROOM = null;
-let displayName = localStorage.getItem("tg_name") || "";
+
+// ---------- account gate ----------
+// Date Night is an account feature: you must be signed in to use it.
+function waitForAuth(cb){
+  if (window.MFAuth && MFAuth.isReady()) return cb();
+  let n = 0;
+  const iv = setInterval(() => {
+    if (window.MFAuth && MFAuth.isReady()){ clearInterval(iv); cb(); }
+    else if (++n > 100) clearInterval(iv);
+  }, 80);
+}
+
+let authOK = false;
+function refreshIdentity(){
+  if (window.MFAuth && MFAuth.uid){
+    myId = MFAuth.uid;
+    displayName = MFAuth.name() || "someone";
+    authOK = true;
+  } else {
+    authOK = false;
+  }
+}
 
 // ---------- room entry ----------
 const params = new URLSearchParams(location.search);
@@ -58,6 +79,7 @@ const presetRoom = cleanName(params.get("room"));
 if (presetRoom) $("roomInput").value = presetRoom;
 
 $("enterBtn").addEventListener("click", () => {
+  if (!authOK){ promptSignIn(); return; }
   const r = cleanName($("roomInput").value);
   if (!r){ toast("Pick a room name first"); return; }
   enterRoom(r);
@@ -70,15 +92,41 @@ $("copyBtn").addEventListener("click", async () => {
   catch { toast(url); }
 });
 
-window.addEventListener("DOMContentLoaded", () => {
-  if (presetRoom && FIREBASE_READY){
-    try { enterRoom(presetRoom); } catch(err){ console.error("auto-enter failed:", err); }
-  }
+function promptSignIn(){
+  toast("Sign in to open a date night 💕");
+  setTimeout(() => { location.href = "/account.html?next=" + encodeURIComponent(location.pathname + location.search); }, 900);
+}
+
+function showSignInGate(){
+  const gate = $("gateView");
+  if (gate) gate.innerHTML = `
+    <div class="divider"></div>
+    <div class="row" style="flex-direction:column; align-items:flex-start; gap:14px; max-width:480px;">
+      <p style="margin:0; opacity:.85; line-height:1.6;">Date Night is a little space tied to your account, so your name and notes follow you. Sign in to open one. 💜</p>
+      <a class="btn primary" href="/account.html?next=${encodeURIComponent(location.pathname + location.search)}">Sign in to continue →</a>
+    </div>`;
+}
+
+waitForAuth(() => {
+  if (!window.MFAuth || !MFAuth.isConfigured()){ $("connText").textContent = "offline"; return; }
+  MFAuth.onChange(() => {
+    refreshIdentity();
+    if (authOK){
+      // restore the normal gate if it was swapped for a sign-in prompt
+      if (roomEntered){ /* already in a room; name updates handled in presence */ }
+      if (ROOM){ set(P(`presence/${myId}/name`), displayName); }
+      // auto-enter from a shared link now that we're authed
+      if (presetRoom && !roomEntered){ try { enterRoom(presetRoom); } catch(err){ console.error(err); } }
+    } else {
+      showSignInGate();
+    }
+  });
 });
 
 let roomEntered = false;
 function enterRoom(room){
   if (!FIREBASE_READY){ toast("Firebase not configured"); return; }
+  if (!authOK){ promptSignIn(); return; }
   if (roomEntered) return;
   roomEntered = true;
   ROOM = room;
@@ -87,15 +135,12 @@ function enterRoom(room){
   $("roomLabel").textContent = room;
   const u = new URL(location.href); u.searchParams.set("room", room); history.replaceState(null,"",u);
 
-  $("nameInput").value = displayName;
-  $("chatFab").classList.add("show");
   setupTabs();
   setupPresence();
   setupAmbiance();
   setupMusic();
   setupNotes();
   setupJar();
-  setupChat();
 }
 
 const P = (sub) => ref(db, `datenight/${ROOM}/${sub}`);
@@ -115,11 +160,7 @@ function setupTabs(){
   });
 }
 
-$("nameInput").addEventListener("input", () => {
-  displayName = $("nameInput").value.slice(0,24);
-  localStorage.setItem("tg_name", displayName);
-  if (ROOM) set(P(`presence/${myId}/name`), displayName || "someone");
-});
+// Display name comes from the signed-in account (MFAuth); no per-room name input.
 
 // ---------- presence ----------
 function setupPresence(){
@@ -454,45 +495,3 @@ function showReason(text){
   card.textContent = "“" + text + "”";
 }
 
-// ============================================================
-//  CHAT (floating)
-// ============================================================
-let chatOpen = false, chatReady = false, unseen = 0;
-function setupChat(){
-  $("chatFab").addEventListener("click", () => {
-    chatOpen = !chatOpen;
-    $("chatPanel").classList.toggle("open", chatOpen);
-    if (chatOpen){ unseen = 0; updateBadge(); $("chatInput").focus(); }
-  });
-  $("chatClose").addEventListener("click", () => { chatOpen = false; $("chatPanel").classList.remove("open"); });
-  $("chatSend").addEventListener("click", sendChat);
-  $("chatInput").addEventListener("keydown", e => { if (e.key==="Enter") sendChat(); });
-
-  const q = query(P("chat"), limitToLast(80));
-  onChildAdded(q, (snap) => {
-    const m = snap.val(); if (!m) return;
-    renderMsg(m);
-    if (!chatOpen && m.by !== myId){ unseen++; updateBadge(); }
-  });
-  chatReady = true;
-}
-function sendChat(){
-  const text = $("chatInput").value.trim();
-  if (!text) return;
-  push(P("chat"), { text, by: myId, name: displayName || "someone", t: Date.now() });
-  $("chatInput").value = "";
-}
-function renderMsg(m){
-  const log = $("chatLog");
-  const div = document.createElement("div");
-  const mine = m.by === myId;
-  div.className = "msg " + (mine ? "me" : "them");
-  div.innerHTML = (mine ? "" : `<span class="mName">${escapeHtml(m.name||"someone")}</span>`) + escapeHtml(m.text);
-  log.appendChild(div);
-  log.scrollTop = log.scrollHeight;
-}
-function updateBadge(){
-  const b = $("chatBadge");
-  if (unseen > 0){ b.textContent = unseen > 9 ? "9+" : unseen; b.classList.add("show"); }
-  else b.classList.remove("show");
-}

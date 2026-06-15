@@ -1,0 +1,255 @@
+<!-- account.html — sign in / sign up / profile -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Account — Mayflower Studios</title>
+  <meta name="description" content="Sign in to your Mayflower Studios account." />
+  <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=2" />
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    .acctWrap { max-width: 460px; margin: 0 auto; }
+    .acctCard { padding: 30px 28px; }
+    .acctCard h1 { font-family: var(--font-d); font-weight: 400; font-size: 32px; margin-bottom: 6px; }
+    .acctCard .lead { font-size: 14px; color: var(--text-2); margin-bottom: 22px; line-height: 1.6; }
+
+    .seg { display: flex; gap: 4px; padding: 4px; border-radius: 999px; border: 1px solid var(--border); background: rgba(255,255,255,.03); margin-bottom: 22px; }
+    .seg button { flex: 1; padding: 9px; border: 0; border-radius: 999px; background: none; color: var(--text-2); font-family: var(--font-b); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 150ms var(--ease); }
+    .seg button.on { color: #0b1120; background: linear-gradient(135deg, var(--rose), var(--violet)); }
+
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .field label { font-size: 12px; color: var(--text-3); letter-spacing: .3px; }
+    .field input {
+      padding: 12px 14px; border-radius: var(--r-md); font-size: 15px; font-family: var(--font-b);
+      border: 1px solid var(--border-2); background: rgba(0,0,0,.25); color: var(--text);
+    }
+    .field input:focus { outline: none; border-color: rgba(196,181,253,.45); }
+
+    .acctBtn {
+      width: 100%; padding: 13px; border: 0; border-radius: var(--r-md); cursor: pointer;
+      font-family: var(--font-b); font-weight: 600; font-size: 15px; color: #0b1120;
+      background: linear-gradient(135deg, var(--rose), var(--violet));
+      box-shadow: 0 4px 20px rgba(249,168,212,.22); transition: all 160ms var(--ease); margin-top: 4px;
+    }
+    .acctBtn:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(249,168,212,.32); }
+    .acctBtn:disabled { opacity: .6; cursor: default; transform: none; }
+
+    .or { display: flex; align-items: center; gap: 12px; margin: 18px 0; color: var(--text-3); font-size: 12px; }
+    .or::before, .or::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .gBtn {
+      width: 100%; padding: 12px; border-radius: var(--r-md); cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      font-family: var(--font-b); font-weight: 500; font-size: 14px; color: var(--text);
+      background: rgba(255,255,255,.06); border: 1px solid var(--border-2); transition: all 160ms var(--ease);
+    }
+    .gBtn:hover { background: rgba(255,255,255,.10); border-color: rgba(249,168,212,.25); }
+    .gBtn svg { width: 18px; height: 18px; }
+
+    .acctMsg { margin-top: 14px; font-size: 13px; line-height: 1.5; padding: 11px 14px; border-radius: var(--r-sm); display: none; }
+    .acctMsg.err { display: block; color: #fecaca; background: rgba(248,113,113,.10); border: 1px solid rgba(248,113,113,.25); }
+    .acctMsg.ok { display: block; color: var(--emerald); background: rgba(110,231,183,.08); border: 1px solid rgba(110,231,183,.25); }
+
+    .forgot { margin-top: 12px; text-align: center; font-size: 12.5px; }
+    .forgot a { color: var(--text-3); text-decoration: underline; text-decoration-color: rgba(250,245,255,.2); cursor: pointer; }
+    .forgot a:hover { color: var(--text-2); }
+
+    /* signed-in / profile view */
+    .profRow { display: flex; align-items: center; gap: 16px; margin-bottom: 22px; }
+    .profAvatar { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--rose), var(--violet)); display: flex; align-items: center; justify-content: center; font-size: 24px; color: #0b1120; font-family: var(--font-d); flex-shrink: 0; overflow: hidden; }
+    .profAvatar img { width: 100%; height: 100%; object-fit: cover; }
+    .profName { font-family: var(--font-d); font-size: 24px; }
+    .profEmail { font-size: 13px; color: var(--text-3); }
+    .ghostBtn { width: 100%; padding: 12px; border-radius: var(--r-md); cursor: pointer; font-family: var(--font-b); font-weight: 500; font-size: 14px; color: var(--text-2); background: rgba(255,255,255,.06); border: 1px solid var(--border-2); transition: all 160ms var(--ease); margin-top: 10px; }
+    .ghostBtn:hover { color: var(--text); background: rgba(255,255,255,.10); }
+  </style>
+</head>
+<body data-nav="account">
+  <div class="site-page">
+    <div id="site-nav"></div>
+
+    <div class="content acctWrap">
+
+      <!-- AUTH (signed out) -->
+      <div class="card acctCard" id="authView">
+        <h1 id="authTitle">Welcome back</h1>
+        <p class="lead" id="authLead">Sign in to sync your name and chat across the whole site.</p>
+
+        <div class="seg">
+          <button id="tabSignIn" class="on">Sign in</button>
+          <button id="tabSignUp">Create account</button>
+        </div>
+
+        <div class="field" id="nameField" style="display:none;">
+          <label for="dName">Display name</label>
+          <input id="dName" type="text" maxlength="32" placeholder="what should we call you?" autocomplete="nickname" />
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
+        </div>
+        <div class="field">
+          <label for="pass">Password</label>
+          <input id="pass" type="password" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+
+        <button class="acctBtn" id="submitBtn">Sign in</button>
+
+        <div class="or">or</div>
+        <button class="gBtn" id="googleBtn">
+          <svg viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .55 4.1 1.6l3-3C17.2 1.7 14.8.7 12 .7 7.3.7 3.3 3.4 1.4 7.3l3.5 2.7C5.8 7 8.6 5 12 5z"/><path fill="#4285F4" d="M23.3 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.4c-.3 1.5-1.1 2.7-2.4 3.6l3.7 2.8c2.2-2 3.6-5 3.6-8.6z"/><path fill="#FBBC05" d="M4.9 14.3c-.2-.7-.4-1.5-.4-2.3s.1-1.6.4-2.3L1.4 7C.6 8.5.2 10.2.2 12s.4 3.5 1.2 5l3.5-2.7z"/><path fill="#34A853" d="M12 23.3c3.2 0 5.9-1.1 7.9-2.9l-3.7-2.8c-1 .7-2.4 1.1-4.2 1.1-3.4 0-6.2-2-7.1-4.9L1.4 17C3.3 20.9 7.3 23.3 12 23.3z"/></svg>
+          Continue with Google
+        </button>
+
+        <div class="forgot"><a id="forgotLink">Forgot your password?</a></div>
+        <div class="acctMsg" id="authMsg"></div>
+      </div>
+
+      <!-- PROFILE (signed in) -->
+      <div class="card acctCard" id="profileView" style="display:none;">
+        <div class="profRow">
+          <div class="profAvatar" id="profAvatar">🌸</div>
+          <div>
+            <div class="profName" id="profName">—</div>
+            <div class="profEmail" id="profEmail"></div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="editName">Display name</label>
+          <input id="editName" type="text" maxlength="32" placeholder="your name" />
+        </div>
+        <button class="acctBtn" id="saveNameBtn">Save name</button>
+        <button class="ghostBtn" id="signOutBtn">Sign out</button>
+        <div class="acctMsg" id="profMsg"></div>
+      </div>
+
+    </div>
+
+    <div id="site-footer"></div>
+  </div>
+
+  <script src="/shared.js"></script>
+  <script>
+  (function () {
+    const $ = (id) => document.getElementById(id);
+    let mode = "signin"; // or "signup"
+
+    function show(el, on) { el.style.display = on ? "" : "none"; }
+    function msg(el, text, kind) { el.className = "acctMsg " + kind; el.textContent = text; }
+    function clearMsg(el) { el.className = "acctMsg"; el.textContent = ""; }
+
+    function setMode(m) {
+      mode = m;
+      const up = m === "signup";
+      $("tabSignIn").classList.toggle("on", !up);
+      $("tabSignUp").classList.toggle("on", up);
+      $("authTitle").textContent = up ? "Create your account" : "Welcome back";
+      $("authLead").textContent = up
+        ? "Pick a name, and you're set — it'll show up everywhere you go."
+        : "Sign in to sync your name and chat across the whole site.";
+      $("submitBtn").textContent = up ? "Create account" : "Sign in";
+      show($("nameField"), up);
+      $("pass").autocomplete = up ? "new-password" : "current-password";
+      clearMsg($("authMsg"));
+    }
+    $("tabSignIn").addEventListener("click", () => setMode("signin"));
+    $("tabSignUp").addEventListener("click", () => setMode("signup"));
+
+    function waitAuth(cb) {
+      if (window.MFAuth && MFAuth.isReady()) return cb();
+      let n = 0;
+      const iv = setInterval(() => {
+        if (window.MFAuth && MFAuth.isReady()) { clearInterval(iv); cb(); }
+        else if (++n > 80) { clearInterval(iv); }
+      }, 80);
+    }
+
+    function friendlyError(e) {
+      const c = (e && e.code) || "";
+      if (c.includes("email-already-in-use")) return "That email already has an account — try signing in.";
+      if (c.includes("invalid-email")) return "That doesn't look like a valid email.";
+      if (c.includes("weak-password")) return "Password should be at least 6 characters.";
+      if (c.includes("wrong-password") || c.includes("invalid-credential")) return "Email or password isn't right.";
+      if (c.includes("user-not-found")) return "No account with that email yet.";
+      if (c.includes("popup-closed")) return "Sign-in window closed before finishing.";
+      if (c.includes("network")) return "Network hiccup — check your connection and try again.";
+      return (e && e.message) || "Something went wrong. Try again.";
+    }
+
+    function renderProfile(user, profile) {
+      if (!user) { show($("authView"), true); show($("profileView"), false); return; }
+      show($("authView"), false); show($("profileView"), true);
+      const name = (profile && profile.displayName) || MFAuth.name() || "friend";
+      $("profName").textContent = name;
+      $("profEmail").textContent = user.email || (user.providerData[0] && user.providerData[0].providerId) || "";
+      $("editName").value = name;
+      const av = $("profAvatar");
+      if (profile && profile.photoURL) { av.innerHTML = `<img src="${profile.photoURL}" alt="">`; }
+      else { av.textContent = (name[0] || "🌸").toUpperCase(); }
+    }
+
+    waitAuth(() => {
+      if (!MFAuth.isConfigured()) {
+        msg($("authMsg"), "Accounts aren't configured yet.", "err");
+        $("submitBtn").disabled = true; $("googleBtn").disabled = true;
+        return;
+      }
+      // honor ?signup or ?next
+      const params = new URLSearchParams(location.search);
+      if (params.get("signup") !== null) setMode("signup");
+
+      MFAuth.onChange((user, profile) => {
+        renderProfile(user, profile);
+        if (user && params.get("next")) {
+          const dest = params.get("next");
+          // basic same-origin guard
+          if (/^\/[a-zA-Z0-9_\-\/.?=&]*$/.test(dest)) location.href = dest;
+        }
+      });
+
+      $("submitBtn").addEventListener("click", async () => {
+        clearMsg($("authMsg"));
+        const email = $("email").value.trim();
+        const pass = $("pass").value;
+        if (!email || !pass) { msg($("authMsg"), "Enter your email and password.", "err"); return; }
+        $("submitBtn").disabled = true;
+        try {
+          if (mode === "signup") {
+            const name = $("dName").value.trim();
+            if (!name) { msg($("authMsg"), "Pick a display name first.", "err"); $("submitBtn").disabled = false; return; }
+            await MFAuth.signUpEmail(email, pass, name);
+          } else {
+            await MFAuth.signInEmail(email, pass);
+          }
+        } catch (e) { msg($("authMsg"), friendlyError(e), "err"); }
+        $("submitBtn").disabled = false;
+      });
+
+      $("pass").addEventListener("keydown", (e) => { if (e.key === "Enter") $("submitBtn").click(); });
+
+      $("googleBtn").addEventListener("click", async () => {
+        clearMsg($("authMsg"));
+        try { await MFAuth.signInGoogle(); }
+        catch (e) { msg($("authMsg"), friendlyError(e), "err"); }
+      });
+
+      $("forgotLink").addEventListener("click", async () => {
+        const email = $("email").value.trim();
+        if (!email) { msg($("authMsg"), "Type your email above first, then tap reset.", "err"); return; }
+        try { await MFAuth.resetPassword(email); msg($("authMsg"), "Password reset email sent — check your inbox.", "ok"); }
+        catch (e) { msg($("authMsg"), friendlyError(e), "err"); }
+      });
+
+      $("saveNameBtn").addEventListener("click", async () => {
+        clearMsg($("profMsg"));
+        try { await MFAuth.setDisplayName($("editName").value); msg($("profMsg"), "Saved 🌸", "ok"); }
+        catch (e) { msg($("profMsg"), friendlyError(e), "err"); }
+      });
+      $("signOutBtn").addEventListener("click", async () => { await MFAuth.signOut(); });
+    });
+  })();
+  </script>
+</body>
+</html>

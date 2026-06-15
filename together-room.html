@@ -980,6 +980,29 @@
     let displayName = localStorage.getItem("tg_name") || "";
     let mySymbol = null; // "X" or "O" for tic-tac-toe seat
 
+    // If signed in, the account name is the source of truth and the name field
+    // is filled + locked. Signed-out visitors can still type a name to join
+    // public rooms.
+    (function trackAuthName(){
+      let tries = 0;
+      const iv = setInterval(() => {
+        if (window.MFAuth){
+          clearInterval(iv);
+          if (!MFAuth.isConfigured()) return;
+          MFAuth.onChange((user) => {
+            const ni = $("nameInput");
+            if (user && MFAuth.name()){
+              displayName = MFAuth.name();
+              if (ni){ ni.value = displayName; ni.readOnly = true; ni.title = "From your account"; ni.style.opacity = ".85"; }
+              if (ROOM) set(ref(db, `together/${ROOM}/presence/${myId}/name`), displayName);
+            } else {
+              if (ni){ ni.readOnly = false; ni.title = ""; ni.style.opacity = ""; }
+            }
+          });
+        } else if (++tries > 50) clearInterval(iv);
+      }, 100);
+    })();
+
     // ---------- room entry ----------
     const params = new URLSearchParams(location.search);
     const presetRoom = cleanName(params.get("room"));

@@ -465,6 +465,11 @@
 
     async function createRoom() {
       if (!FIREBASE_READY) { toast("Firebase isn't set up yet"); return; }
+      if (!authUid) {
+        toast("Sign in to create a room");
+        setTimeout(() => { location.href = "/account.html?next=" + encodeURIComponent(location.pathname); }, 900);
+        return;
+      }
       const name = cleanName($("newRoomName").value);
       if (!name) { toast("Give the room a name"); return; }
 

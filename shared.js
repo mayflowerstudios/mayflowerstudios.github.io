@@ -113,6 +113,7 @@
           <button class="nav-mob-btn" id="navToggle" aria-label="Menu">☰</button>
           <div class="nav-links" id="navLinks">
             ${linksHtml}
+            <a href="/account.html" class="nav-account" id="navAccount" data-nav="account">Sign in</a>
           </div>
         </div>
       </nav>`;
@@ -176,7 +177,46 @@
     document.body.appendChild(s);
   }
 
-  function initAccountNav() { /* accounts removed — no-op kept for safety */ }
+  function loadScript(src, attrs) {
+    if (document.querySelector(`script[src="${src}"]`)) return;
+    const s = document.createElement('script');
+    s.src = src;
+    if (attrs) Object.keys(attrs).forEach(k => s.setAttribute(k, attrs[k]));
+    document.body.appendChild(s);
+  }
+
+  function loadAuthAndChat() {
+    // auth.js defines window.MFAuth (universal identity).
+    if (!window.MFAuth) loadScript('/auth.js', { 'data-mf-auth': '1' });
+    // chat.js injects the universal floating chat once MFAuth is ready.
+    loadScript('/chat.js', { 'data-mf-chat': '1' });
+  }
+
+  function initAccountNav() {
+    function whenAuth(cb) {
+      if (window.MFAuth) return cb();
+      let n = 0;
+      const iv = setInterval(() => {
+        if (window.MFAuth) { clearInterval(iv); cb(); }
+        else if (++n > 80) clearInterval(iv);
+      }, 80);
+    }
+    whenAuth(() => {
+      if (!MFAuth.isConfigured()) return;
+      MFAuth.onChange((user) => {
+        const el = document.getElementById('navAccount');
+        if (!el) return;
+        if (user) {
+          const name = MFAuth.name() || 'Account';
+          el.textContent = '👤 ' + name;
+          el.classList.add('nav-signed-in');
+        } else {
+          el.textContent = 'Sign in';
+          el.classList.remove('nav-signed-in');
+        }
+      });
+    });
+  }
 
   document.addEventListener('DOMContentLoaded', function () {
     injectFavicon();
@@ -187,6 +227,7 @@
     injectFooter();
     initReveal();
     loadFireflies();
+    loadAuthAndChat();
     initAccountNav();
   });
 
