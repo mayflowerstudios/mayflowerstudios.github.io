@@ -109,7 +109,6 @@
         <div class="nav-inner">
           <a href="/" class="nav-brand">
             <strong>Mayflower Studios</strong>
-            <span>indie · cozy · enchanted</span>
           </a>
           <button class="nav-mob-btn" id="navToggle" aria-label="Menu">☰</button>
           <div class="nav-links" id="navLinks">
