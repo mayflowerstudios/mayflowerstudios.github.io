@@ -1150,10 +1150,17 @@
         _renderQueued = true;
         requestAnimationFrame(() => { _renderQueued = false; renderChat(chatMsgsStore); });
       }
-      let _dbgEvents = 0, _dbgConn = "?";
+      let _dbgEvents = 0, _dbgConn = "?", _dbgGet = "?", _dbgWrites = 0;
       const dbgEl = $("chatDebug");
-      function dbg(){ if (dbgEl) dbgEl.textContent = `conn:${_dbgConn} · evt:${_dbgEvents}`; }
+      function dbg(){ if (dbgEl) dbgEl.textContent = `room:${ROOM} conn:${_dbgConn} evt:${_dbgEvents} get:${_dbgGet} w:${_dbgWrites}`; }
       onValue(ref(db, ".info/connected"), s => { _dbgConn = (s.val() === true) ? "on" : "off"; dbg(); });
+
+      // one-time probe: how many messages actually exist at this exact path right now
+      get(chatRef).then(snap => {
+        const v = snap.val() || {};
+        _dbgGet = String(Object.keys(v).length);
+        dbg();
+      }).catch(e => { _dbgGet = "ERR:" + (e && e.code || "get"); dbg(); });
 
       onChildAdded(chatRef, snap => {
         const m = snap.val(); if (!m) return;
@@ -1242,6 +1249,7 @@
         if (!chatRef){ toast("Chat needs Firebase set up first"); return; }
         chatInput.value = "";
         Promise.resolve(push(chatRef, { text, name: displayName || "someone", by: myId, t: Date.now() }))
+          .then(() => { _dbgWrites++; if (typeof dbg === "function") dbg(); })
           .catch(err => {
             console.error("[chat] send failed:", err && err.code, err);
             const denied = err && (/permission|denied/i.test(err.code || "") || /PERMISSION/i.test(String(err)));
