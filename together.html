@@ -188,6 +188,111 @@
     .ttCell.win{ background:rgba(52,211,153,.16); border-color:rgba(52,211,153,.4); }
     .ttScore{ display:flex; gap:18px; font-size:14px; opacity:.85; }
 
+    /* ---- connect four ---- */
+    .c4Wrap{ display:flex; flex-direction:column; align-items:center; gap:16px; }
+    .c4Status{ font-size:18px; min-height:26px; text-align:center; }
+    .c4Board{
+      display:grid; grid-template-columns:repeat(7, 1fr); gap:8px;
+      padding:14px; border-radius:18px;
+      background:rgba(129,140,248,.10); border:1px solid rgba(129,140,248,.22);
+      box-shadow: inset 0 0 50px rgba(0,0,0,.35);
+    }
+    .c4Cell{
+      width:50px; height:50px; border-radius:50%;
+      background:rgba(13,10,22,.55); border:1px solid rgba(255,255,255,.08);
+      font-size:34px; display:flex; align-items:center; justify-content:center;
+      cursor:pointer; transition: background .12s ease, transform .1s ease; user-select:none;
+    }
+    .c4Cell:hover{ background:rgba(255,255,255,.06); }
+    .c4Cell.win{ background:rgba(52,211,153,.18); border-color:rgba(52,211,153,.45); box-shadow:0 0 16px rgba(52,211,153,.4); }
+    @media (max-width:680px){
+      .c4Board{ gap:5px; padding:9px; }
+      .c4Cell{ width:38px; height:38px; font-size:26px; }
+    }
+    @media (max-width:430px){
+      .c4Cell{ width:32px; height:32px; font-size:21px; }
+    }
+
+    /* ---- dots & boxes ---- */
+    .dbWrap{ display:flex; flex-direction:column; align-items:center; gap:16px; }
+    .dbStatus{ font-size:18px; min-height:26px; text-align:center; }
+    .dbBoardWrap{
+      padding:18px; border-radius:18px;
+      background:rgba(167,139,250,.08); border:1px solid rgba(167,139,250,.20);
+      box-shadow: inset 0 0 50px rgba(0,0,0,.3);
+    }
+    #dbBoard{ display:block; max-width:100%; height:auto; }
+    .dbDot{ fill:#cbb6ff; }
+    .dbLine{ stroke:rgba(255,255,255,.14); stroke-width:7; stroke-linecap:round; cursor:pointer; transition:stroke .12s ease; }
+    .dbLine:hover{ stroke:rgba(255,255,255,.4); }
+    .dbLine.set{ cursor:default; }
+    .dbLine.mine{ stroke:#fb7185; }
+    .dbLine.theirs{ stroke:#a78bfa; }
+    .dbBox{ transition:fill .2s ease; }
+    .dbBox.mine{ fill:rgba(251,113,133,.22); }
+    .dbBox.theirs{ fill:rgba(167,139,250,.22); }
+    .dbBoxLabel{ font-size:18px; text-anchor:middle; dominant-baseline:central; user-select:none; pointer-events:none; }
+
+    /* ---- rock paper scissors ---- */
+    .rpsWrap{ display:flex; flex-direction:column; align-items:center; gap:18px; }
+    .rpsStatus{ font-size:18px; min-height:26px; text-align:center; }
+    .rpsChoices{ display:flex; gap:16px; }
+    .rpsBtn{
+      width:88px; height:88px; border-radius:22px; cursor:pointer; font-size:44px;
+      border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05);
+      transition: transform .12s ease, filter .12s ease, background .12s ease;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .rpsBtn:hover{ transform:translateY(-3px); filter:brightness(1.1); background:rgba(167,139,250,.16); }
+    .rpsBtn.chosen{ background:rgba(251,113,133,.20); border-color:rgba(251,113,133,.4); transform:translateY(-3px); }
+    .rpsBtn:disabled{ opacity:.4; cursor:default; transform:none; filter:none; }
+    .rpsReveal{ display:flex; align-items:center; gap:22px; }
+    .rpsSide{ text-align:center; }
+    .rpsWho{ font-size:13px; opacity:.7; margin:0 0 8px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
+    .rpsHand{
+      width:96px; height:96px; border-radius:24px; font-size:52px;
+      display:flex; align-items:center; justify-content:center;
+      border:1px solid rgba(167,139,250,.25); background:rgba(167,139,250,.08);
+    }
+    .rpsSide.mine .rpsHand{ border-color:rgba(251,113,133,.30); background:rgba(251,113,133,.08); }
+    .rpsHand.win{ border-color:rgba(52,211,153,.5); background:rgba(52,211,153,.14); box-shadow:0 0 20px rgba(52,211,153,.35); }
+    .rpsVs{ opacity:.5; font-size:15px; }
+
+    /* ---- hangman ---- */
+    .hmWrap{ display:flex; flex-direction:column; align-items:center; gap:16px; }
+    .hmSetter{ width:100%; max-width:460px; text-align:center; }
+    .hmPrompt{ font-size:17px; margin:0 0 14px; }
+    .hmTip{ font-size:13px; opacity:.6; margin:10px 0 0; }
+    .hmPlay{ display:flex; flex-direction:column; align-items:center; gap:14px; width:100%; }
+    .hmGallows{ font-size:24px; letter-spacing:6px; min-height:32px; filter:grayscale(.2); }
+    .hmWord{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
+    .hmSlot{
+      width:30px; height:40px; border-bottom:3px solid rgba(167,139,250,.5);
+      font-size:26px; display:flex; align-items:flex-end; justify-content:center;
+      text-transform:uppercase;
+    }
+    .hmSlot.space{ border:0; width:14px; }
+    .hmSlot.revealed{ color:#fb7185; }
+    .hmStatus{ font-size:16px; min-height:24px; text-align:center; margin:0; }
+    .hmKeys{ display:grid; grid-template-columns:repeat(9, 1fr); gap:6px; max-width:440px; }
+    .hmKey{
+      aspect-ratio:1; min-width:34px; border-radius:10px; cursor:pointer;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05);
+      font-size:16px; text-transform:uppercase; color:inherit;
+      transition: background .1s ease, transform .1s ease;
+    }
+    .hmKey:hover:not(:disabled){ background:rgba(167,139,250,.18); transform:translateY(-1px); }
+    .hmKey.hit{ background:rgba(52,211,153,.2); border-color:rgba(52,211,153,.4); }
+    .hmKey.miss{ background:rgba(251,113,133,.18); border-color:rgba(251,113,133,.35); opacity:.6; }
+    .hmKey:disabled{ cursor:default; }
+    .hmGuessed{ font-size:13px; opacity:.6; margin:0; min-height:18px; }
+    .hmWait{ font-size:15px; opacity:.7; text-align:center; padding:30px 0; }
+    @media (max-width:560px){
+      .hmKeys{ grid-template-columns:repeat(7, 1fr); }
+      .rpsBtn{ width:72px; height:72px; font-size:36px; }
+      .rpsHand{ width:78px; height:78px; font-size:42px; }
+    }
+
     .miss{ margin-top:14px; padding:14px 16px; border-radius:14px;
       border:1px solid rgba(251,113,133,.3); background:rgba(251,113,133,.1); font-size:14px; }
 
@@ -421,6 +526,10 @@
               <div class="tab active" data-tab="draw">🎨 Draw together</div>
               <div class="tab" data-tab="questions">💬 Questions</div>
               <div class="tab" data-tab="tictactoe">⭕ Tic-Tac-Toe</div>
+              <div class="tab" data-tab="connect4">🔴 Connect Four</div>
+              <div class="tab" data-tab="dotsboxes">🔲 Dots &amp; Boxes</div>
+              <div class="tab" data-tab="rps">✊ Rock-Paper-Scissors</div>
+              <div class="tab" data-tab="hangman">🔤 Hangman</div>
             </div>
 
             <div class="panelArea">
@@ -519,6 +628,133 @@
                     <span>🌹 You-as-X: <b id="ttScoreX">0</b></span>
                     <span>🟣 O: <b id="ttScoreO">0</b></span>
                     <span>🤝 Draws: <b id="ttScoreD">0</b></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CONNECT FOUR -->
+              <div class="gamePanel" data-panel="connect4">
+                <div class="panelHead">
+                  <div>
+                    <h2>🔴 Connect Four</h2>
+                    <p class="hint">First into the room drops 🌹, the other drops 🟣. Get four in a row — across, down, or diagonal.</p>
+                  </div>
+                  <div class="panelTools">
+                    <button class="btn ghost" id="c4Reset">↻ New round</button>
+                  </div>
+                </div>
+                <div class="c4Wrap">
+                  <div class="c4Status" id="c4Status">Waiting…</div>
+                  <div class="c4Board" id="c4Board"></div>
+                  <div class="ttScore">
+                    <span>🌹 You-as-Red: <b id="c4ScoreX">0</b></span>
+                    <span>🟣 Yellow: <b id="c4ScoreO">0</b></span>
+                    <span>🤝 Draws: <b id="c4ScoreD">0</b></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- DOTS & BOXES -->
+              <div class="gamePanel" data-panel="dotsboxes">
+                <div class="panelHead">
+                  <div>
+                    <h2>🔲 Dots &amp; Boxes</h2>
+                    <p class="hint">Take turns drawing a line between two dots. Close a box to claim it — and take another turn. Most boxes wins.</p>
+                  </div>
+                  <div class="panelTools">
+                    <select class="langSelect" id="dbSize" title="Board size" style="max-width:120px;">
+                      <option value="3">3 × 3</option>
+                      <option value="4" selected>4 × 4</option>
+                      <option value="5">5 × 5</option>
+                    </select>
+                    <button class="btn ghost" id="dbReset">↻ New round</button>
+                  </div>
+                </div>
+                <div class="dbWrap">
+                  <div class="dbStatus" id="dbStatus">Waiting…</div>
+                  <div class="dbBoardWrap"><svg id="dbBoard" xmlns="http://www.w3.org/2000/svg"></svg></div>
+                  <div class="ttScore">
+                    <span>🌹 You: <b id="dbScoreX">0</b></span>
+                    <span>🟣 Them: <b id="dbScoreO">0</b></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ROCK PAPER SCISSORS -->
+              <div class="gamePanel" data-panel="rps">
+                <div class="panelHead">
+                  <div>
+                    <h2>✊ Rock-Paper-Scissors</h2>
+                    <p class="hint">You both pick at the same time — locked in secret, revealed once you've both chosen.</p>
+                  </div>
+                  <div class="panelTools">
+                    <button class="btn ghost" id="rpsReset">↻ Reset score</button>
+                  </div>
+                </div>
+                <div class="rpsWrap">
+                  <div class="rpsStatus" id="rpsStatus">Make your pick 🌙</div>
+                  <div class="rpsReveal" id="rpsReveal" hidden>
+                    <div class="rpsSide mine">
+                      <p class="rpsWho">You</p>
+                      <div class="rpsHand" id="rpsHandMe">❔</div>
+                    </div>
+                    <div class="rpsVs">vs</div>
+                    <div class="rpsSide">
+                      <p class="rpsWho" id="rpsThemName">Them</p>
+                      <div class="rpsHand" id="rpsHandThem">❔</div>
+                    </div>
+                  </div>
+                  <div class="rpsChoices" id="rpsChoices">
+                    <button class="rpsBtn" data-move="rock" title="Rock">✊</button>
+                    <button class="rpsBtn" data-move="paper" title="Paper">✋</button>
+                    <button class="rpsBtn" data-move="scissors" title="Scissors">✌️</button>
+                  </div>
+                  <div class="qActions">
+                    <button class="btn primary" id="rpsNext" hidden>🎲 Next round</button>
+                  </div>
+                  <div class="ttScore">
+                    <span>🌹 You: <b id="rpsScoreMe">0</b></span>
+                    <span>🟣 Them: <b id="rpsScoreThem">0</b></span>
+                    <span>🤝 Ties: <b id="rpsScoreTie">0</b></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- HANGMAN -->
+              <div class="gamePanel" data-panel="hangman">
+                <div class="panelHead">
+                  <div>
+                    <h2>🔤 Hangman</h2>
+                    <p class="hint">One of you sets a secret word or phrase — the other guesses letter by letter. Then swap.</p>
+                  </div>
+                  <div class="panelTools">
+                    <button class="btn ghost" id="hmNew">✏️ New word</button>
+                  </div>
+                </div>
+                <div class="hmWrap">
+                  <!-- setter view -->
+                  <div class="hmSetter" id="hmSetter" hidden>
+                    <p class="hmPrompt">Set a word or short phrase for them to guess 🌸</p>
+                    <input class="input" id="hmWordInput" type="text" maxlength="40" placeholder="cherry blossom" autocomplete="off" />
+                    <p class="hmTip">Letters and spaces only. They'll see blanks for each letter.</p>
+                    <div class="qActions">
+                      <button class="btn primary" id="hmSetBtn">🔒 Lock it in</button>
+                    </div>
+                  </div>
+
+                  <!-- play view -->
+                  <div class="hmPlay" id="hmPlay" hidden>
+                    <div class="hmGallows" id="hmGallows">🌷🌷🌷🌷🌷🌷</div>
+                    <div class="hmWord" id="hmWord"></div>
+                    <p class="hmStatus" id="hmStatus"></p>
+                    <div class="hmKeys" id="hmKeys"></div>
+                    <p class="hmGuessed" id="hmGuessed"></p>
+                  </div>
+
+                  <div class="hmWait" id="hmWait" hidden>Waiting for the other person… 🌙</div>
+                  <div class="ttScore">
+                    <span>🌹 You guessed: <b id="hmScoreMe">0</b></span>
+                    <span>🟣 They guessed: <b id="hmScoreThem">0</b></span>
                   </div>
                 </div>
               </div>
@@ -778,11 +1014,17 @@
       setupDraw();
       setupQuestions();
       setupTicTacToe();
+      setupConnect4();
+      setupDotsBoxes();
+      setupRPS();
+      setupHangman();
       setupChat();
     }
 
     // ---------- tab switching ----------
-    const TAB_LABELS = { draw:"🎨 Drawing", questions:"💬 Questions", tictactoe:"⭕ Tic-Tac-Toe" };
+    const TAB_LABELS = { draw:"🎨 Drawing", questions:"💬 Questions", tictactoe:"⭕ Tic-Tac-Toe",
+                         connect4:"🔴 Connect Four", dotsboxes:"🔲 Dots & Boxes",
+                         rps:"✊ RPS", hangman:"🔤 Hangman" };
     let currentTab = "draw";
     let tabsReady = false;
     function setupTabs(){
@@ -829,6 +1071,10 @@
         const xId = sorted[0] ? sorted[0].id : null;
         mySymbol = (xId === myId) ? "X" : "O";
         updateTTStatus();
+        if (typeof renderC4 === "function") renderC4();
+        if (typeof renderDB === "function") renderDB();
+        if (typeof renderRPS === "function") renderRPS();
+        if (typeof renderHM === "function") renderHM();
 
         // who's here + which game each person is in
         const who = $("whoHere");
@@ -1475,6 +1721,443 @@
       }
       const yours = ttState.turn === mySymbol;
       el.textContent = `You are ${seat}. ` + (yours ? "Your turn." : "Their turn…");
+    }
+
+    // ============================================================
+    //  Connect Four  (7 wide × 6 tall, turn-based — X=Red, O=Yellow)
+    // ============================================================
+    const C4_COLS = 7, C4_ROWS = 6;
+    let c4Built = false;
+    let c4State = { board: Array(C4_COLS*C4_ROWS).fill(""), turn:"X", winner:null, line:null, scores:{X:0,O:0,D:0} };
+
+    function c4Idx(r,c){ return r*C4_COLS + c; }
+    function setupConnect4(){
+      const boardEl = $("c4Board");
+      if (!c4Built){
+        c4Built = true;
+        for (let r=0;r<C4_ROWS;r++){
+          for (let c=0;c<C4_COLS;c++){
+            const cell = document.createElement("div");
+            cell.className = "c4Cell"; cell.dataset.i = c4Idx(r,c); cell.dataset.col = c;
+            cell.addEventListener("click", () => c4Drop(c));
+            boardEl.appendChild(cell);
+          }
+        }
+        $("c4Reset").addEventListener("click", () => {
+          set(ref(db, `together/${ROOM}/c4`), {
+            board: Array(C4_COLS*C4_ROWS).fill(""), turn:"X", winner:null, line:null, scores: c4State.scores, t:Date.now()
+          });
+        });
+      }
+      get(ref(db, `together/${ROOM}/c4`)).then(s => {
+        if (!s.exists()){
+          set(ref(db, `together/${ROOM}/c4`), { board:Array(C4_COLS*C4_ROWS).fill(""), turn:"X", winner:null, line:null, scores:{X:0,O:0,D:0}, t:Date.now() });
+        }
+      });
+      onValue(ref(db, `together/${ROOM}/c4`), (snap) => {
+        const v = snap.val(); if (!v) return;
+        c4State = { board: v.board || Array(C4_COLS*C4_ROWS).fill(""), turn: v.turn||"X",
+                    winner: v.winner||null, line: v.line||null, scores: v.scores||{X:0,O:0,D:0} };
+        renderC4();
+      });
+    }
+
+    function c4Drop(col){
+      if (!mySymbol || c4State.winner) return;
+      if (c4State.turn !== mySymbol){ toast("Not your turn 🌙"); return; }
+      const board = c4State.board.slice();
+      let landed = -1;
+      for (let r=C4_ROWS-1;r>=0;r--){ const i=c4Idx(r,col); if (!board[i]){ board[i]=mySymbol; landed=i; break; } }
+      if (landed < 0){ toast("That column's full 🌸"); return; }
+      const line = c4WinLine(board, landed);
+      let winner = line ? mySymbol : null;
+      if (!winner && board.every(Boolean)) winner = "D";
+      const scores = { ...c4State.scores };
+      if (winner) scores[winner] = (scores[winner]||0) + 1;
+      set(ref(db, `together/${ROOM}/c4`), {
+        board, turn: mySymbol==="X"?"O":"X", winner, line: line||null, scores, t:Date.now()
+      });
+    }
+
+    function c4WinLine(board, i){
+      const r = Math.floor(i/C4_COLS), c = i%C4_COLS, who = board[i];
+      const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+      for (const [dr,dc] of dirs){
+        const cells = [i];
+        for (const sign of [1,-1]){
+          let rr=r+dr*sign, cc=c+dc*sign;
+          while (rr>=0&&rr<C4_ROWS&&cc>=0&&cc<C4_COLS&&board[c4Idx(rr,cc)]===who){
+            cells.push(c4Idx(rr,cc)); rr+=dr*sign; cc+=dc*sign;
+          }
+        }
+        if (cells.length>=4) return cells;
+      }
+      return null;
+    }
+
+    function renderC4(){
+      if (!c4Built) return;
+      const cells = $("c4Board").children;
+      for (let i=0;i<cells.length;i++){
+        const v = c4State.board[i];
+        const el = cells[i];
+        el.textContent = v === "X" ? "🔴" : v === "O" ? "🟡" : "";
+        el.className = "c4Cell" + (c4State.line && c4State.line.includes(i) ? " win" : "");
+      }
+      $("c4ScoreX").textContent = c4State.scores.X || 0;
+      $("c4ScoreO").textContent = c4State.scores.O || 0;
+      $("c4ScoreD").textContent = c4State.scores.D || 0;
+      const el = $("c4Status");
+      const seat = mySymbol === "X" ? "🔴 Red" : "🟡 Yellow";
+      if (c4State.winner === "D"){ el.textContent = "It's a draw 🤝 — tap New round."; return; }
+      if (c4State.winner){
+        const won = c4State.winner === mySymbol;
+        el.textContent = won ? "Four in a row — you win! 🎉" : "They connected four 💜 — tap New round.";
+        return;
+      }
+      el.textContent = `You are ${seat}. ` + (c4State.turn === mySymbol ? "Your turn." : "Their turn…");
+    }
+
+    // ============================================================
+    //  Dots & Boxes  (turn-based, claim a box → go again)
+    // ============================================================
+    let dbBuilt = false;
+    let dbN = 4; // boxes per side (dots = n+1)
+    let dbState = { n:4, h:{}, v:{}, owner:{}, turn:"X", scores:{X:0,O:0} };
+
+    function setupDotsBoxes(){
+      if (!dbBuilt){
+        dbBuilt = true;
+        $("dbSize").addEventListener("change", e => {
+          const n = +e.target.value;
+          set(ref(db, `together/${ROOM}/db`), { n, h:{}, v:{}, owner:{}, turn:"X", scores:{X:0,O:0}, t:Date.now() });
+        });
+        $("dbReset").addEventListener("click", () => {
+          set(ref(db, `together/${ROOM}/db`), { n:dbState.n||4, h:{}, v:{}, owner:{}, turn:"X", scores:{X:0,O:0}, t:Date.now() });
+        });
+      }
+      get(ref(db, `together/${ROOM}/db`)).then(s => {
+        if (!s.exists()) set(ref(db, `together/${ROOM}/db`), { n:4, h:{}, v:{}, owner:{}, turn:"X", scores:{X:0,O:0}, t:Date.now() });
+      });
+      onValue(ref(db, `together/${ROOM}/db`), (snap) => {
+        const v = snap.val(); if (!v) return;
+        dbState = { n:v.n||4, h:v.h||{}, v:v.v||{}, owner:v.owner||{}, turn:v.turn||"X", scores:v.scores||{X:0,O:0} };
+        dbN = dbState.n;
+        const sel = $("dbSize"); if (sel && +sel.value !== dbN) sel.value = String(dbN);
+        renderDB();
+      });
+    }
+
+    // edge keys: horizontal "h:r:c" (row 0..n, col 0..n-1); vertical "v:r:c" (row 0..n-1, col 0..n)
+    function dbPlay(type, r, c){
+      if (!mySymbol) return;
+      const key = r + ":" + c;
+      const lines = type === "h" ? dbState.h : dbState.v;
+      if (lines[key]) return;
+      if (dbState.turn !== mySymbol){ toast("Not your turn 🌙"); return; }
+      const n = dbState.n;
+      const h = { ...dbState.h }, v = { ...dbState.v }, owner = { ...dbState.owner };
+      (type === "h" ? h : v)[key] = mySymbol;
+
+      // which boxes does this edge complete?
+      let claimed = 0;
+      const boxesToCheck = [];
+      if (type === "h"){ if (r>0) boxesToCheck.push([r-1,c]); if (r<n) boxesToCheck.push([r,c]); }
+      else { if (c>0) boxesToCheck.push([r,c-1]); if (c<n) boxesToCheck.push([r,c]); }
+      for (const [br,bc] of boxesToCheck){
+        const top=h[br+":"+bc], bot=h[(br+1)+":"+bc], lft=v[br+":"+bc], rgt=v[br+":"+(bc+1)];
+        if (top&&bot&&lft&&rgt && !owner[br+":"+bc]){ owner[br+":"+bc] = mySymbol; claimed++; }
+      }
+      const scores = { X:0, O:0 };
+      Object.values(owner).forEach(o => { if (scores[o]!=null) scores[o]++; });
+      const totalBoxes = n*n;
+      const done = Object.keys(owner).length >= totalBoxes;
+      // claiming a box → same player goes again
+      const turn = claimed > 0 ? mySymbol : (mySymbol==="X"?"O":"X");
+      set(ref(db, `together/${ROOM}/db`), { n, h, v, owner, turn: done ? mySymbol : turn, scores, t:Date.now() });
+    }
+
+    function renderDB(){
+      if (!dbBuilt) return;
+      const n = dbState.n;
+      const gap = 70, pad = 18, dot = 6;
+      const size = gap*n + pad*2;
+      const svg = $("dbBoard");
+      svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
+      svg.setAttribute("width", Math.min(size, 460));
+      let out = "";
+      // boxes (fill)
+      for (let r=0;r<n;r++) for (let c=0;c<n;c++){
+        const o = dbState.owner[r+":"+c];
+        const x = pad + c*gap, y = pad + r*gap;
+        const cls = o ? (o===mySymbol ? "dbBox mine" : "dbBox theirs") : "dbBox";
+        out += `<rect class="${cls}" x="${x}" y="${y}" width="${gap}" height="${gap}" fill="transparent" rx="6"></rect>`;
+        if (o) out += `<text class="dbBoxLabel" x="${x+gap/2}" y="${y+gap/2}">${o===mySymbol?"🌹":"🟣"}</text>`;
+      }
+      // horizontal edges
+      for (let r=0;r<=n;r++) for (let c=0;c<n;c++){
+        const x=pad+c*gap, y=pad+r*gap, key=r+":"+c, set_=dbState.h[key];
+        const cls = set_ ? "dbLine set " + (set_===mySymbol?"mine":"theirs") : "dbLine";
+        out += `<line class="${cls}" data-type="h" data-r="${r}" data-c="${c}" x1="${x}" y1="${y}" x2="${x+gap}" y2="${y}"></line>`;
+      }
+      // vertical edges
+      for (let r=0;r<n;r++) for (let c=0;c<=n;c++){
+        const x=pad+c*gap, y=pad+r*gap, key=r+":"+c, set_=dbState.v[key];
+        const cls = set_ ? "dbLine set " + (set_===mySymbol?"mine":"theirs") : "dbLine";
+        out += `<line class="${cls}" data-type="v" data-r="${r}" data-c="${c}" x1="${x}" y1="${y}" x2="${x}" y2="${y+gap}"></line>`;
+      }
+      // dots on top
+      for (let r=0;r<=n;r++) for (let c=0;c<=n;c++){
+        out += `<circle class="dbDot" cx="${pad+c*gap}" cy="${pad+r*gap}" r="${dot}"></circle>`;
+      }
+      svg.innerHTML = out;
+      svg.querySelectorAll(".dbLine:not(.set)").forEach(ln => {
+        ln.addEventListener("click", () => dbPlay(ln.dataset.type, +ln.dataset.r, +ln.dataset.c));
+      });
+
+      $("dbScoreX").textContent = dbState.scores.X || 0;
+      $("dbScoreO").textContent = dbState.scores.O || 0;
+      const totalBoxes = n*n;
+      const filled = Object.keys(dbState.owner).length;
+      const el = $("dbStatus");
+      if (filled >= totalBoxes){
+        const mine = dbState.scores[mySymbol]||0, theirs = dbState.scores[mySymbol==="X"?"O":"X"]||0;
+        el.textContent = mine>theirs ? "You win! 🎉 — tap New round." : mine<theirs ? "They win 💜 — tap New round." : "It's a tie 🤝 — tap New round.";
+      } else {
+        el.textContent = dbState.turn === mySymbol ? "Your turn — draw a line." : "Their turn…";
+      }
+    }
+
+    // ============================================================
+    //  Rock-Paper-Scissors  (simultaneous, hidden until both pick)
+    // ============================================================
+    let rpsBuilt = false;
+    let rpsState = { round:1, picks:{}, scores:{} };
+    const RPS_EMOJI = { rock:"✊", paper:"✋", scissors:"✌️" };
+
+    function setupRPS(){
+      if (!rpsBuilt){
+        rpsBuilt = true;
+        $("rpsChoices").querySelectorAll(".rpsBtn").forEach(b => {
+          b.addEventListener("click", () => rpsPick(b.dataset.move));
+        });
+        $("rpsNext").addEventListener("click", () => {
+          update(ref(db, `together/${ROOM}/rps`), { round: (rpsState.round||1)+1, picks: {} });
+        });
+        $("rpsReset").addEventListener("click", () => {
+          set(ref(db, `together/${ROOM}/rps`), { round:1, picks:{}, scores:{}, t:Date.now() });
+        });
+      }
+      get(ref(db, `together/${ROOM}/rps`)).then(s => {
+        if (!s.exists()) set(ref(db, `together/${ROOM}/rps`), { round:1, picks:{}, scores:{}, t:Date.now() });
+      });
+      onValue(ref(db, `together/${ROOM}/rps`), (snap) => {
+        const v = snap.val(); if (!v) return;
+        rpsState = { round:v.round||1, picks:v.picks||{}, scores:v.scores||{} };
+        rpsResolve();
+        renderRPS();
+      });
+    }
+
+    function rpsPick(move){
+      if (rpsState.picks && rpsState.picks[myId]){ return; }
+      update(ref(db, `together/${ROOM}/rps/picks/${myId}`), { move, name:(displayName||"someone"), t:Date.now() });
+    }
+
+    // when both have picked, the X-seat player writes the score (single writer avoids double-count)
+    function rpsResolve(){
+      const picks = rpsState.picks || {};
+      const ids = Object.keys(picks);
+      const otherId = Object.keys(qPresence||{}).filter(id => id!==myId)[0];
+      if (!otherId || !picks[myId] || !picks[otherId]) return;
+      if (rpsState.picks._scored) return;
+      if (mySymbol !== "X") return; // only one client tallies
+      const me = picks[myId].move, them = picks[otherId].move;
+      const scores = { ...(rpsState.scores||{}) };
+      scores[myId] = scores[myId]||0; scores[otherId] = scores[otherId]||0; scores.tie = scores.tie||0;
+      const beats = { rock:"scissors", paper:"rock", scissors:"paper" };
+      if (me === them) scores.tie++;
+      else if (beats[me] === them) scores[myId]++;
+      else scores[otherId]++;
+      update(ref(db, `together/${ROOM}/rps`), { scores, "picks/_scored": true });
+    }
+
+    function renderRPS(){
+      if (!rpsBuilt) return;
+      const picks = rpsState.picks || {};
+      const otherId = Object.keys(qPresence||{}).filter(id => id!==myId)[0];
+      const myPick = picks[myId];
+      const theirPick = otherId ? picks[otherId] : null;
+      const both = myPick && theirPick;
+
+      $("rpsChoices").querySelectorAll(".rpsBtn").forEach(b => {
+        b.disabled = !!myPick;
+        b.classList.toggle("chosen", myPick && myPick.move === b.dataset.move);
+      });
+
+      const reveal = $("rpsReveal"), status = $("rpsStatus"), next = $("rpsNext");
+      if (both){
+        reveal.hidden = false;
+        $("rpsHandMe").textContent = RPS_EMOJI[myPick.move] || "❔";
+        $("rpsHandThem").textContent = RPS_EMOJI[theirPick.move] || "❔";
+        $("rpsThemName").textContent = escapeHtml(theirPick.name || qPresence[otherId]?.name || "Them");
+        const beats = { rock:"scissors", paper:"rock", scissors:"paper" };
+        const me = myPick.move, them = theirPick.move;
+        $("rpsHandMe").classList.toggle("win", me!==them && beats[me]===them);
+        $("rpsHandThem").classList.toggle("win", me!==them && beats[them]===me);
+        status.textContent = me===them ? "Tie! 🤝" : (beats[me]===them ? "You win this round! 🎉" : "They got it 💜");
+        next.hidden = false;
+      } else {
+        reveal.hidden = true;
+        $("rpsHandMe").classList.remove("win"); $("rpsHandThem").classList.remove("win");
+        next.hidden = true;
+        status.textContent = myPick ? (otherId ? "Locked in — waiting for them… 🌙" : "Locked in — waiting for someone to join…")
+                                    : "Make your pick 🌙";
+      }
+      $("rpsScoreMe").textContent = (rpsState.scores||{})[myId] || 0;
+      $("rpsScoreThem").textContent = otherId ? ((rpsState.scores||{})[otherId] || 0) : 0;
+      $("rpsScoreTie").textContent = (rpsState.scores||{}).tie || 0;
+    }
+
+    // ============================================================
+    //  Hangman  (one sets a word, the other guesses, then swap)
+    // ============================================================
+    const HM_MAX = 6; // wrong guesses allowed
+    let hmBuilt = false;
+    let hmState = null; // { setter, word, guessed:{}, wrong, done, win, scores }
+
+    function setupHangman(){
+      if (!hmBuilt){
+        hmBuilt = true;
+        $("hmSetBtn").addEventListener("click", () => {
+          const raw = ($("hmWordInput").value || "").trim();
+          if (!/[a-zA-Z]/.test(raw)){ toast("Use at least one letter 🌸"); return; }
+          if (!/^[a-zA-Z ]+$/.test(raw)){ toast("Letters and spaces only 🌷"); return; }
+          set(ref(db, `together/${ROOM}/hm`), {
+            setter: myId, word: raw.toLowerCase(),
+            guessed: {}, scores: hmState?.scores || {}, t:Date.now()
+          });
+          $("hmWordInput").value = "";
+        });
+        $("hmNew").addEventListener("click", () => {
+          // whoever clicks becomes the new setter
+          remove(ref(db, `together/${ROOM}/hm`)).then(() => {
+            set(ref(db, `together/${ROOM}/hm`), { setter: myId, word:"", guessed:{}, scores: hmState?.scores || {}, t:Date.now() });
+          });
+        });
+      }
+      get(ref(db, `together/${ROOM}/hm`)).then(s => {
+        if (!s.exists()) set(ref(db, `together/${ROOM}/hm`), { setter:null, word:"", guessed:{}, scores:{}, t:Date.now() });
+      });
+      onValue(ref(db, `together/${ROOM}/hm`), (snap) => {
+        hmState = snap.val() || { setter:null, word:"", guessed:{}, scores:{} };
+        renderHM();
+      });
+    }
+
+    function hmGuess(letter){
+      if (!hmState || !hmState.word || hmState.setter === myId) return;
+      const guessed = hmState.guessed || {};
+      if (guessed[letter]) return;
+      const word = hmState.word;
+      const wrongCount = Object.keys(guessed).filter(l => !word.includes(l)).length;
+      if (wrongCount >= HM_MAX) return;
+      if (hmWon(word, guessed)) return;
+      update(ref(db, `together/${ROOM}/hm/guessed/${letter}`), true);
+      // tally a win when the guesser completes the word
+      const ng = { ...guessed, [letter]: true };
+      if (hmWon(word, ng)){
+        const scores = { ...(hmState.scores||{}) };
+        scores[myId] = (scores[myId]||0) + 1;
+        update(ref(db, `together/${ROOM}/hm/scores`), scores);
+      }
+    }
+
+    function hmWon(word, guessed){
+      return word.split("").every(ch => ch === " " || guessed[ch]);
+    }
+
+    function renderHM(){
+      if (!hmBuilt || !hmState) return;
+      const setter = $("hmSetter"), play = $("hmPlay"), wait = $("hmWait");
+      const otherId = Object.keys(qPresence||{}).filter(id => id!==myId)[0];
+      const iAmSetter = hmState.setter === myId;
+      const hasWord = !!hmState.word;
+
+      // scores
+      $("hmScoreMe").textContent = (hmState.scores||{})[myId] || 0;
+      $("hmScoreThem").textContent = otherId ? ((hmState.scores||{})[otherId] || 0) : 0;
+
+      // no setter yet, or setter cleared the word → setter writes a word
+      if (!hmState.setter || (iAmSetter && !hasWord)){
+        if (!hmState.setter && !iAmSetter){
+          // claim the setter role passively only if nobody has it
+          setter.hidden = true; play.hidden = true; wait.hidden = false;
+          wait.textContent = "Tap “✏️ New word” to set a word for them 🌸";
+          return;
+        }
+        setter.hidden = false; play.hidden = true; wait.hidden = true;
+        return;
+      }
+
+      if (iAmSetter){
+        // setter watches the guesser play
+        setter.hidden = true; wait.hidden = true; play.hidden = false;
+      } else {
+        setter.hidden = true; wait.hidden = true; play.hidden = false;
+      }
+
+      const word = hmState.word || "";
+      const guessed = hmState.guessed || {};
+      const wrong = Object.keys(guessed).filter(l => !word.includes(l));
+      const won = hmWon(word, guessed);
+      const lost = wrong.length >= HM_MAX;
+
+      // gallows: flowers wilt as wrong guesses pile up
+      const petals = Math.max(0, HM_MAX - wrong.length);
+      $("hmGallows").textContent = "🌷".repeat(petals) + "🥀".repeat(wrong.length);
+
+      // word slots
+      const wordEl = $("hmWord");
+      wordEl.innerHTML = "";
+      word.split("").forEach(ch => {
+        const slot = document.createElement("div");
+        if (ch === " "){ slot.className = "hmSlot space"; }
+        else {
+          const show = guessed[ch] || lost;
+          slot.className = "hmSlot" + (show ? " revealed" : "");
+          slot.textContent = show ? ch : "";
+        }
+        wordEl.appendChild(slot);
+      });
+
+      // keyboard (only the guesser uses it)
+      const keys = $("hmKeys");
+      keys.innerHTML = "";
+      "abcdefghijklmnopqrstuvwxyz".split("").forEach(ch => {
+        const k = document.createElement("button");
+        k.className = "hmKey";
+        k.textContent = ch;
+        const used = !!guessed[ch];
+        if (used) k.classList.add(word.includes(ch) ? "hit" : "miss");
+        k.disabled = iAmSetter || used || won || lost;
+        if (!iAmSetter) k.addEventListener("click", () => hmGuess(ch));
+        keys.appendChild(k);
+      });
+      keys.style.display = iAmSetter ? "none" : "grid";
+
+      $("hmGuessed").textContent = wrong.length ? "Misses: " + wrong.join(" ").toUpperCase() : "";
+
+      const status = $("hmStatus");
+      if (won){
+        status.textContent = iAmSetter ? "They guessed it! 🎉 — set a new word." : "You got it! 🎉 — tap New word to swap.";
+      } else if (lost){
+        status.textContent = iAmSetter ? `Out of guesses — the word was “${word}”. Set a new one.` : `Out of guesses 💜 the word was “${word}”.`;
+      } else {
+        status.textContent = iAmSetter
+          ? "They're guessing your word… 🌙"
+          : `Guess the word — ${HM_MAX - wrong.length} tries left.`;
+      }
     }
 
     // ============================================================
