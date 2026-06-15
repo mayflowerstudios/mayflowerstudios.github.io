@@ -18,9 +18,10 @@
     .tg-hero { padding-top: 24px; }
     .tg-hero .page-title em { display: inline; }
 
-    /* Two big doors */
-    .tg-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
-    @media (max-width: 760px) { .tg-grid { grid-template-columns: 1fr; } }
+    /* Doors */
+    .tg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    @media (max-width: 940px) { .tg-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 640px) { .tg-grid { grid-template-columns: 1fr; } }
 
     .tg-card { display: flex; flex-direction: column; gap: 16px; padding: 32px 30px; min-height: 320px; }
     .tg-card .tg-icon { font-size: 40px; line-height: 1; }
@@ -53,12 +54,13 @@
         <h1 class="page-title">Do something <em>together</em></h1>
         <p class="page-sub">
           A little hub for being in the same moment as someone, even from far away.
-          Pick a door: <strong>watch something in sync</strong>, or step into a
-          <strong>shared room of games</strong>. Both update live for everyone in them.
+          Pick a door: <strong>watch something in sync</strong>, settle into a
+          <strong>cozy date night</strong>, or step into a <strong>shared room of games</strong>.
+          Everything updates live for everyone in the room.
         </p>
       </section>
 
-      <!-- TWO DOORS -->
+      <!-- THREE DOORS -->
       <section class="sec reveal">
         <div class="tg-grid">
 
@@ -75,6 +77,21 @@
               <div class="tg-feat"><span class="tf">🔒</span><span>Public, locked, or hidden rooms</span></div>
             </div>
             <a href="/watch.html" class="btn-pri">Open the watch lobby →</a>
+          </article>
+
+          <!-- Date Night -->
+          <article class="card card-accent-top tg-card">
+            <div class="card-shine"></div>
+            <div class="tg-icon">🌙</div>
+            <h3>Date Night</h3>
+            <p class="tg-lead">A cozy space made for two. Set a shared scene, play music in sync, leave each other love notes, and keep a jar of reasons you love them.</p>
+            <div class="tg-feats">
+              <div class="tg-feat"><span class="tf">🕯️</span><span>Shared scene &amp; ambient sound</span></div>
+              <div class="tg-feat"><span class="tf">🎵</span><span>Listen to music together, in sync</span></div>
+              <div class="tg-feat"><span class="tf">💌</span><span>Love-notes wall that stays between dates</span></div>
+              <div class="tg-feat"><span class="tf">🫙</span><span>A “reasons I love you” jar to pull from</span></div>
+            </div>
+            <a href="/date-night.html" class="btn-pri">Open date night →</a>
           </article>
 
           <!-- Together room (games) -->
@@ -100,7 +117,7 @@
         <div class="tg-note">
           <span class="tn">🌙</span>
           <p>
-            Both rooms work the same friendly way: pick a name only you and your people would guess,
+            Every room works the same friendly way: pick a name only you and your people would guess,
             open it on each device, and you're in the same space. Nothing to install, nothing to sign up for.
           </p>
         </div>

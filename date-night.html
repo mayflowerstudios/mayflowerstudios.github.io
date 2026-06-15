@@ -1,0 +1,382 @@
+<!-- date-night.html — Date Night: a cozy shared space for two, far apart -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Date Night — Mayflower Studios</title>
+  <meta name="description" content="A cozy shared space for being close from far away — pick a scene, listen to music in sync, leave love notes, and pull a reason from the jar." />
+  <meta property="og:title" content="Date Night — Mayflower Studios" />
+  <meta property="og:description" content="A cozy shared space for being close from far away." />
+  <meta property="og:url" content="https://mayflowerstudios.net/date-night.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://mayflowerstudios.net/assets/og/together.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=2" />
+  <link rel="stylesheet" href="/style.css" />
+
+  <style>
+    .dnWrap{ max-width:1060px; margin:0 auto; padding:22px; }
+    .glass{
+      background: rgba(255,255,255,.045);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 22px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.45);
+      overflow:hidden; position:relative;
+    }
+    .glass::before{
+      content:""; position:absolute; inset:0;
+      background:
+        radial-gradient(900px 380px at 20% 0%, rgba(251,113,133,.10), transparent 60%),
+        radial-gradient(700px 320px at 90% 10%, rgba(167,139,250,.08), transparent 55%),
+        radial-gradient(700px 320px at 50% 115%, rgba(34,197,94,.06), transparent 60%);
+      pointer-events:none;
+    }
+    .content{ position:relative; z-index:1; padding:26px; }
+
+    .kicker{
+      display:inline-flex; gap:10px; align-items:center;
+      padding:7px 12px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05);
+      backdrop-filter: blur(6px); font-size:13px; opacity:.9;
+    }
+    .title{ margin:10px 0 6px; font-family:var(--font-d); font-weight:400; font-size:44px; letter-spacing:.2px; line-height:1.05; }
+    .title em{ font-style:italic;
+      background:linear-gradient(130deg, var(--rose) 10%, var(--violet) 80%);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .sub{ margin:0; opacity:.78; line-height:1.6; max-width:64ch; }
+
+    .divider{ height:1px; background: rgba(255,255,255,.10); margin:20px 0; }
+
+    .input{
+      width:100%; padding:12px 14px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.14); background: rgba(0,0,0,.25);
+      color:inherit; font-size:15px; font-family:var(--font-b);
+    }
+    .input::placeholder{ opacity:.5 }
+    .input:focus{ outline:none; border-color: rgba(167,139,250,.45); }
+
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:9px;
+      padding:12px 18px; border-radius:14px; border:1px solid rgba(255,255,255,.14);
+      text-decoration:none; color:inherit; cursor:pointer; background:rgba(255,255,255,.06);
+      transition: transform .12s ease, filter .12s ease; backdrop-filter: blur(6px);
+      white-space:nowrap; font-size:15px; font-family:var(--font-b);
+    }
+    .btn:hover{ transform:translateY(-1px); filter:brightness(1.08) }
+    .btn.primary{ background: rgba(251,113,133,.18); border-color: rgba(251,113,133,.30); }
+    .btn.violet{ background: rgba(167,139,250,.16); border-color: rgba(167,139,250,.28); }
+    .btn.ghost{ background: rgba(255,255,255,.05); }
+    .btn.sm{ padding:8px 13px; font-size:13px; }
+
+    .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .gateHint{ margin:12px 0 0; font-size:13px; opacity:.6; line-height:1.6; }
+
+    /* room bar */
+    .roomBar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .pillStat{
+      font-size:13px; opacity:.9; padding:7px 12px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05);
+      display:inline-flex; align-items:center; gap:8px;
+    }
+    .dot{ width:9px;height:9px;border-radius:50%; background:#facc15; box-shadow:0 0 8px rgba(250,204,21,.6); }
+    .dot.on{ background:#34d399; box-shadow:0 0 8px rgba(52,211,153,.7); }
+    .dot.off{ background:#fb7185; box-shadow:0 0 8px rgba(251,113,133,.6); }
+    .nameInput{
+      width:120px; background:transparent; border:0; color:inherit;
+      font-size:13px; padding:2px 0; border-bottom:1px solid rgba(255,255,255,.18); font-family:var(--font-b);
+    }
+    .nameInput:focus{ outline:none; border-bottom-color: rgba(167,139,250,.6); }
+    .nameInput::placeholder{ opacity:.5 }
+
+    .missNote{
+      margin:14px 0 0; padding:12px 14px; border-radius:14px;
+      border:1px solid rgba(250,204,21,.22); background:rgba(250,204,21,.06);
+      font-size:13.5px; opacity:.9; line-height:1.55;
+    }
+
+    /* tabs */
+    .tabs{ display:flex; gap:8px; flex-wrap:wrap; margin:4px 0 18px; }
+    .tab{
+      font-size:14px; padding:9px 15px; border-radius:999px; cursor:pointer;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04);
+      opacity:.78; transition: all .14s ease; user-select:none;
+    }
+    .tab:hover{ opacity:1; background:rgba(255,255,255,.07); }
+    .tab.active{ opacity:1; color:#fff; border-color:rgba(251,113,133,.4); background:rgba(251,113,133,.15); }
+
+    .panel{ display:none; }
+    .panel.active{ display:block; animation: fadeIn .3s ease; }
+    @keyframes fadeIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
+
+    .panelHead h2{ font-family:var(--font-d); font-weight:400; font-size:26px; margin:0 0 4px; }
+    .panelHead .hint{ margin:0 0 16px; font-size:13.5px; opacity:.65; line-height:1.55; }
+
+    /* ── AMBIANCE ── */
+    .sceneGrid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); gap:12px; }
+    .sceneCard{
+      position:relative; border-radius:18px; overflow:hidden; cursor:pointer;
+      border:1px solid rgba(255,255,255,.12); aspect-ratio: 4/3;
+      display:flex; flex-direction:column; justify-content:flex-end;
+      padding:14px; transition: transform .14s ease, border-color .14s ease;
+      background-size:cover; background-position:center;
+    }
+    .sceneCard:hover{ transform:translateY(-3px); border-color:rgba(251,113,133,.4); }
+    .sceneCard.active{ border-color:rgba(251,113,133,.7); box-shadow:0 0 0 2px rgba(251,113,133,.35), 0 12px 30px rgba(0,0,0,.4); }
+    .sceneCard .scLabel{ position:relative; z-index:2; font-size:14px; font-weight:600; text-shadow:0 1px 6px rgba(0,0,0,.7); }
+    .sceneCard .scIcon{ position:relative; z-index:2; font-size:22px; }
+    .sceneCard::after{ content:""; position:absolute; inset:0; background:linear-gradient(180deg, transparent 40%, rgba(0,0,0,.55)); z-index:1; }
+
+    .ambientNow{
+      display:flex; align-items:center; gap:14px; margin-top:18px; padding:16px 18px;
+      border-radius:16px; border:1px solid rgba(255,255,255,.10); background:rgba(255,255,255,.035);
+    }
+    .ambientNow .anIcon{ font-size:34px; }
+    .ambientNow .anText{ flex:1; }
+    .ambientNow .anText b{ font-size:15px; }
+    .ambientNow .anText span{ display:block; font-size:13px; opacity:.65; margin-top:2px; }
+    .soundRow{ display:flex; align-items:center; gap:10px; }
+    .soundRow input[type=range]{ width:120px; accent-color:#fb7185; }
+
+    /* ── MUSIC ── */
+    .musicWrap{ display:flex; flex-direction:column; gap:14px; }
+    .ytEmbed{ position:relative; width:100%; aspect-ratio:16/9; border-radius:16px; overflow:hidden; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.1); }
+    .ytEmbed iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; }
+    .ytPlaceholder{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; flex-direction:column; gap:8px; opacity:.6; font-size:14px; padding:20px; }
+    .musicControls{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+
+    /* ── LOVE NOTES ── */
+    .noteCompose{ display:flex; flex-direction:column; gap:10px; }
+    .noteBox{
+      width:100%; min-height:80px; resize:vertical; padding:13px 15px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.14); background:rgba(0,0,0,.25); color:inherit;
+      font-size:15px; font-family:var(--font-b); line-height:1.6;
+    }
+    .noteBox:focus{ outline:none; border-color:rgba(167,139,250,.45); }
+    .notesWall{ display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:14px; margin-top:20px; }
+    .noteCard{
+      position:relative; padding:18px 18px 16px; border-radius:16px;
+      border:1px solid rgba(255,255,255,.10); line-height:1.6; font-size:14.5px;
+      background:rgba(251,113,133,.07); box-shadow:0 8px 24px rgba(0,0,0,.2);
+    }
+    .noteCard:nth-child(3n+1){ background:rgba(167,139,250,.08); }
+    .noteCard:nth-child(3n+2){ background:rgba(253,230,138,.06); }
+    .noteCard .nMeta{ margin-top:12px; font-size:11.5px; opacity:.55; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    .noteCard .nDel{ cursor:pointer; opacity:.5; border:0; background:none; color:inherit; font-size:13px; }
+    .noteCard .nDel:hover{ opacity:1; }
+    .notesEmpty{ grid-column:1/-1; text-align:center; opacity:.55; font-size:14px; padding:30px 10px; }
+
+    /* ── REASONS JAR ── */
+    .jarWrap{ display:flex; flex-direction:column; align-items:center; gap:18px; text-align:center; }
+    .jar{ font-size:90px; line-height:1; filter:drop-shadow(0 8px 22px rgba(251,113,133,.35)); transition:transform .2s ease; }
+    .jar.shake{ animation:jarShake .5s ease; }
+    @keyframes jarShake{ 0%,100%{transform:rotate(0)} 20%{transform:rotate(-8deg)} 40%{transform:rotate(7deg)} 60%{transform:rotate(-5deg)} 80%{transform:rotate(3deg)} }
+    .reasonCard{
+      max-width:480px; min-height:70px; padding:22px 24px; border-radius:18px;
+      border:1px solid rgba(251,113,133,.25); background:rgba(251,113,133,.08);
+      font-family:var(--font-d); font-size:22px; line-height:1.45; font-style:italic;
+    }
+    .reasonCard.empty{ font-family:var(--font-b); font-style:normal; font-size:15px; opacity:.6; }
+    .jarTools{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+    .jarCount{ font-size:13px; opacity:.6; }
+    .jarAdd{ display:flex; gap:10px; width:100%; max-width:520px; }
+
+    /* ── shared chat (floating) ── */
+    .chatFab{
+      position:fixed; right:20px; bottom:20px; z-index:60;
+      width:56px; height:56px; border-radius:50%; cursor:pointer;
+      display:none; align-items:center; justify-content:center; font-size:24px;
+      background:linear-gradient(135deg, var(--rose), var(--violet)); color:#0b1120;
+      border:0; box-shadow:0 8px 28px rgba(249,168,212,.4);
+    }
+    .chatFab.show{ display:flex; }
+    .chatFab .badge{ position:absolute; top:-3px; right:-3px; min-width:18px; height:18px; border-radius:9px; background:#fb7185; color:#fff; font-size:11px; display:none; align-items:center; justify-content:center; padding:0 5px; }
+    .chatFab .badge.show{ display:flex; }
+    .chatPanel{
+      position:fixed; right:20px; bottom:86px; z-index:60; width:min(340px, calc(100vw - 40px));
+      height:min(440px, 60vh); display:none; flex-direction:column;
+      border-radius:20px; overflow:hidden; border:1px solid rgba(255,255,255,.14);
+      background:rgba(11,17,32,.92); backdrop-filter:blur(20px); box-shadow:0 18px 60px rgba(0,0,0,.5);
+    }
+    .chatPanel.open{ display:flex; }
+    .chatHead{ padding:13px 16px; border-bottom:1px solid rgba(255,255,255,.1); font-size:14px; display:flex; justify-content:space-between; align-items:center; }
+    .chatLog{ flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:8px; }
+    .msg{ max-width:80%; padding:8px 12px; border-radius:14px; font-size:14px; line-height:1.45; word-wrap:break-word; }
+    .msg.them{ align-self:flex-start; background:rgba(255,255,255,.08); border-bottom-left-radius:4px; }
+    .msg.me{ align-self:flex-end; background:rgba(251,113,133,.22); border-bottom-right-radius:4px; }
+    .msg .mName{ display:block; font-size:10.5px; opacity:.55; margin-bottom:2px; }
+    .chatInputRow{ display:flex; gap:8px; padding:12px; border-top:1px solid rgba(255,255,255,.1); }
+    .chatInputRow input{ flex:1; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.14); background:rgba(0,0,0,.3); color:inherit; font-size:14px; font-family:var(--font-b); }
+    .chatInputRow input:focus{ outline:none; border-color:rgba(167,139,250,.45); }
+    .chatInputRow button{ border:0; border-radius:12px; padding:0 14px; cursor:pointer; background:linear-gradient(135deg, var(--rose), var(--violet)); color:#0b1120; font-size:16px; }
+
+    .toast{
+      position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px);
+      background:rgba(11,17,32,.95); border:1px solid rgba(255,255,255,.16); color:#fff;
+      padding:12px 18px; border-radius:14px; font-size:14px; opacity:0; pointer-events:none;
+      transition:all .25s ease; z-index:80; box-shadow:0 12px 40px rgba(0,0,0,.5);
+    }
+    .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+    @media (max-width:640px){
+      .content{ padding:20px; }
+      .title{ font-size:34px; }
+    }
+  </style>
+</head>
+<body data-nav="together-room">
+  <div class="wrap">
+    <div id="site-nav"></div>
+
+    <div class="dnWrap">
+      <section class="glass">
+        <div class="content">
+          <div class="kicker">🌙 Date Night • for two</div>
+          <h1 class="title">Date <em>Night</em></h1>
+          <p class="sub">A cozy little space for being close from far away. Pick a scene to share, play music in sync, leave each other notes, and pull a reason from the jar. Everything updates live for both of you.</p>
+
+          <!-- GATE -->
+          <div id="gateView">
+            <div class="divider"></div>
+            <div class="row" style="flex-direction:column; align-items:stretch; gap:12px; max-width:480px;">
+              <label style="font-size:14px; opacity:.85;">Make or join your room — same name on both devices.</label>
+              <div class="row">
+                <input class="input" id="roomInput" type="text" maxlength="40" placeholder="our-date-night" autocomplete="off" spellcheck="false" style="flex:1;" />
+                <button class="btn primary" id="enterBtn">Enter →</button>
+              </div>
+              <p class="gateHint">Pick a name only the two of you would guess — no password needed. Open it on both your screens and you'll be in the same room. 💜</p>
+            </div>
+          </div>
+
+          <!-- ROOM -->
+          <div id="roomView" style="display:none;">
+            <div class="roomBar">
+              <span class="pillStat">🚪 <b id="roomLabel">—</b></span>
+              <span class="pillStat"><span class="dot" id="connDot"></span> <span id="connText">connecting…</span></span>
+              <span class="pillStat">💞 <span id="hereCount">1</span> here</span>
+              <span class="pillStat">🪪 <input class="nameInput" id="nameInput" type="text" maxlength="24" placeholder="your name" /></span>
+              <button class="btn ghost sm" id="copyBtn">🔗 Copy link</button>
+              <button class="btn ghost sm" id="leaveBtn">↩ Leave</button>
+            </div>
+            <div class="missNote" id="missNote" style="display:none;"></div>
+
+            <div class="divider"></div>
+
+            <div class="tabs" id="tabs">
+              <div class="tab active" data-tab="ambiance">🕯️ Ambiance</div>
+              <div class="tab" data-tab="music">🎵 Music</div>
+              <div class="tab" data-tab="notes">💌 Love notes</div>
+              <div class="tab" data-tab="jar">🫙 Reasons jar</div>
+            </div>
+
+            <div class="panelArea">
+
+              <!-- AMBIANCE -->
+              <div class="panel active" data-panel="ambiance">
+                <div class="panelHead">
+                  <h2>🕯️ Set the scene</h2>
+                  <p class="hint">Pick a place to share — whatever one of you chooses, you both settle into. Turn on a soft ambient sound to feel in the same room.</p>
+                </div>
+                <div class="sceneGrid" id="sceneGrid"></div>
+                <div class="ambientNow" id="ambientNow">
+                  <span class="anIcon" id="anIcon">🌙</span>
+                  <div class="anText">
+                    <b id="anTitle">No scene yet</b>
+                    <span id="anDesc">Pick one above to set the mood for both of you.</span>
+                  </div>
+                  <div class="soundRow">
+                    <button class="btn ghost sm" id="soundToggle">🔇 Sound off</button>
+                    <input type="range" id="soundVol" min="0" max="100" value="55" title="Ambient volume" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- MUSIC -->
+              <div class="panel" data-panel="music">
+                <div class="panelHead">
+                  <h2>🎵 Listen together</h2>
+                  <p class="hint">Paste a YouTube link or video ID and it loads for both of you, synced. Play, pause, and skip stay matched — like sharing a pair of headphones.</p>
+                </div>
+                <div class="musicWrap">
+                  <div class="row">
+                    <input class="input" id="musicUrl" type="text" placeholder="Paste a YouTube link…" style="flex:1;" />
+                    <button class="btn violet" id="musicLoad">Load</button>
+                  </div>
+                  <div class="ytEmbed" id="ytEmbed">
+                    <div class="ytPlaceholder" id="ytPlaceholder">🎧<br>Load a song or playlist to start listening together.</div>
+                  </div>
+                  <div class="musicControls">
+                    <button class="btn sm" id="musicPlay">▶ Play</button>
+                    <button class="btn sm" id="musicPause">⏸ Pause</button>
+                    <button class="btn ghost sm" id="musicSync">🔄 Resync to partner</button>
+                    <span class="jarCount" id="musicNow"></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- LOVE NOTES -->
+              <div class="panel" data-panel="notes">
+                <div class="panelHead">
+                  <h2>💌 Love notes</h2>
+                  <p class="hint">Leave little notes for each other — they stay on the wall between dates, so there's always something waiting when one of you comes back.</p>
+                </div>
+                <div class="noteCompose">
+                  <textarea class="noteBox" id="noteBox" maxlength="500" placeholder="Write something sweet…"></textarea>
+                  <div class="row" style="justify-content:flex-end;">
+                    <button class="btn primary sm" id="noteAdd">Pin it 💞</button>
+                  </div>
+                </div>
+                <div class="notesWall" id="notesWall">
+                  <div class="notesEmpty" id="notesEmpty">No notes yet — be the first to pin one. 🌸</div>
+                </div>
+              </div>
+
+              <!-- REASONS JAR -->
+              <div class="panel" data-panel="jar">
+                <div class="panelHead">
+                  <h2>🫙 Reasons I love you</h2>
+                  <p class="hint">Fill the jar with little reasons. When you need a lift, pull one out at random — you'll both see the same one drawn.</p>
+                </div>
+                <div class="jarWrap">
+                  <div class="jar" id="jarIcon">🫙</div>
+                  <div class="reasonCard empty" id="reasonCard">Tap “Pull a reason” to draw one from the jar.</div>
+                  <div class="jarTools">
+                    <button class="btn primary" id="jarPull">✨ Pull a reason</button>
+                    <span class="jarCount" id="jarCount">0 in the jar</span>
+                  </div>
+                  <div class="jarAdd">
+                    <input class="input" id="jarInput" type="text" maxlength="160" placeholder="Add a reason to the jar…" style="flex:1;" />
+                    <button class="btn violet" id="jarAdd">Add</button>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- /panelArea -->
+          </div><!-- /roomView -->
+        </div>
+      </section>
+    </div>
+
+    <div id="site-footer"></div>
+  </div>
+
+  <!-- floating chat -->
+  <button class="chatFab" id="chatFab">💬<span class="badge" id="chatBadge"></span></button>
+  <div class="chatPanel" id="chatPanel">
+    <div class="chatHead"><span>💬 Chat</span><button class="btn ghost sm" id="chatClose" style="padding:4px 10px;">✕</button></div>
+    <div class="chatLog" id="chatLog"></div>
+    <div class="chatInputRow">
+      <input id="chatInput" type="text" maxlength="500" placeholder="Say something…" />
+      <button id="chatSend">➤</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="/shared.js"></script>
+  <script>window._firefliesLoaded = true;</script>
+  <script src="/fireflies.js"></script>
+
+  <script type="module" src="/date-night.js"></script>
+</body>
+</html>
