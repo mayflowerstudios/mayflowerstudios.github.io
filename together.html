@@ -454,7 +454,7 @@
                 <div class="panelHead">
                   <div>
                     <h2>💬 Question game</h2>
-                    <p class="hint">One of you draws a card, you both type your answer, and they reveal together. Then it's the other's turn to draw.</p>
+                    <p class="hint">One of you draws a card — you both answer the same prompt, then they reveal side by side. Then it's the other's turn to draw.</p>
                   </div>
                   <div class="panelTools">
                     <button class="miniGhost" id="qTranslateToggle" title="Translate the question">🌐 Translate: Off</button>
@@ -925,54 +925,105 @@
     }
 
     // ---------- questions ----------
+    // Written reveal game: you both answer the SAME prompt, then compare.
+    // The best prompts are symmetric (each can answer about themselves) or
+    // "guess what they'll write" — both land when the answers flip side by side.
     const QUESTIONS = {
       cute: [
-        "What was the exact moment you knew you liked me?",
-        "What's a tiny thing I do that you secretly love?",
-        "If we had a whole free day with no plans, what's your ideal version of it?",
-        "What's a memory of us you replay in your head?",
-        "What pet name have you never said out loud but thought about?",
-        "What's something small I could do this week that would make you happy?",
-        "Where do you most love being held?",
-        "What's a song that makes you think of me?",
-        "What did you think of me the very first time we talked?",
-        "What's your favorite thing about waking up next to someone?"
+        "In three words, how are you feeling about us right now?",
+        "Describe our perfect lazy morning together.",
+        "What's a tiny habit of the other person you'd be sad to lose?",
+        "Pick one memory of us you'd relive on a loop.",
+        "What pet name should we secretly start using?",
+        "Write down one small thing the other could do this week to make you melt.",
+        "What's your favorite place on the other person to rest your head?",
+        "Name a song that should be 'ours'.",
+        "What's the first thing you noticed about the other person?",
+        "What does 'a good night in' look like to you, exactly?",
+        "What's a comfort food you'd want us to share on a rough day?",
+        "If we adopted a pet tomorrow, what is it and what's its name?",
+        "What's something the other person does that always makes you smile?",
+        "Where in the world would you want to wake up next to each other?",
+        "Describe the other person using only a weather forecast.",
+        "What's a tiny tradition you'd love for us to keep forever?",
+        "What would your ideal cozy date be — no budget, no rules?",
+        "Write a one-sentence love note you'd leave on the mirror.",
+        "What's your favorite kind of hug from the other person?",
+        "If our relationship were a season, which one and why?",
+        "What's a smell or taste that instantly reminds you of the other person?",
+        "What's one thing you're grateful for about today, together?"
       ],
       deep: [
-        "What's a fear you have about us that you don't usually say?",
-        "When do you feel the most loved by me?",
-        "What does 'home' mean to you now versus five years ago?",
-        "What's something you're still healing from?",
-        "What do you hope we're like in ten years?",
+        "What's something you've been carrying lately that you haven't fully said?",
+        "When do you feel the safest with the other person?",
+        "What does 'home' mean to you right now?",
+        "Name a fear about the future you don't usually voice.",
+        "What do you hope we're like in ten years? Write it as a snapshot.",
         "What's a part of yourself you're proud of but rarely show?",
-        "What's something you need more of from me?",
-        "What's a moment that changed how you see the world?",
+        "What's something you need more of — and something you need less of?",
+        "Describe a moment that quietly changed how you see the world.",
         "What do you want to be remembered for?",
-        "When did you last feel truly at peace, and where were you?"
+        "When did you last feel truly at peace, and where were you?",
+        "What's a way you've grown since we met?",
+        "What do you wish the other person understood about you more easily?",
+        "What's a value you refuse to compromise on?",
+        "Write down a dream you've half-given-up on but still want.",
+        "What does love look like to you in everyday actions, not words?",
+        "What's something you forgive easily, and something you really can't?",
+        "When do you feel most like yourself?",
+        "What's a question you've wanted to ask the other person but haven't?",
+        "What's something you'd want us to be braver about together?",
+        "What does 'enough' look like to you — in life, in love?",
+        "What's a hard thing you're secretly proud of surviving?",
+        "If you could send one sentence to yourself a year ago, what is it?"
       ],
       silly: [
-        "If we were a two-person crime duo, what's our heist?",
-        "What weird food combo would you defend with your life?",
-        "If I turned into an animal, which one and why?",
-        "What's the dumbest argument we could realistically have?",
-        "Pick our theme song that plays when we enter a room.",
-        "If we had a haunted house, what would the ghost complain about?",
-        "What's a totally useless superpower you'd actually want?",
-        "If you had to rename me, what would my new name be?",
-        "What's the worst possible couple costume — that we should absolutely wear?",
-        "If our love had a flavor, what is it and is it on sale?"
+        "If we were a two-person crime duo, what's the heist?",
+        "Defend your weirdest food combo. Go.",
+        "If the other person were an animal, which one — and no being nice.",
+        "Predict the dumbest argument we'll realistically have this year.",
+        "Pick the theme song that plays when we walk into a room.",
+        "Our house is haunted. What does the ghost complain about?",
+        "What gloriously useless superpower do you actually want?",
+        "Rename the other person. New name, effective immediately.",
+        "Pitch the worst couple costume that we should 100% wear.",
+        "If our love had a flavor, what is it — and is it on sale?",
+        "What would the other person's villain origin story be?",
+        "We're starting a band. Genre, band name, who's the drama?",
+        "What's a hill you'll die on that nobody asked about?",
+        "Describe the other person as a vending machine snack.",
+        "If we got a tiny boat, what's its embarrassing name?",
+        "What totally normal thing does the other person do that's lowkey unhinged?",
+        "Guess the other person's most-used emoji.",
+        "What's our fictional reality-show title and tagline?",
+        "If you had to survive on one meal forever, what is it?",
+        "What's a conspiracy theory you'd invent just for fun?",
+        "Assign each of us a Pokémon. Justify it.",
+        "What's the pettiest thing that's ever genuinely annoyed you?"
       ],
       spicy: [
-        "What's something you've wanted to try together but haven't brought up?",
-        "What outfit of mine do you think about most?",
-        "What's the most attractive non-physical thing about me?",
-        "Describe our perfect night in with zero interruptions.",
-        "What's a fantasy you'd want to tell me about?",
-        "Where's somewhere unexpected you'd want to be kissed?",
+        "Write down something you've wanted to try together but haven't said.",
+        "What outfit on the other person lives in your head rent-free?",
+        "What's the most attractive non-physical thing about the other person?",
+        "Describe your ideal night in with zero interruptions.",
+        "What's a fantasy you'd be brave enough to write here?",
+        "Where's an unexpected place you'd want to be kissed?",
         "What makes you feel most wanted?",
-        "What's a moment between us that still gives you butterflies?",
-        "Truth: what were you thinking the last time you caught me looking at you?",
-        "What's one thing you'd want more of, physically?"
+        "Name a moment between us that still gives you butterflies.",
+        "What were you thinking last time you caught the other person looking at you?",
+        "What's one thing you'd want more of, physically?",
+        "What's your favorite way to be teased?",
+        "Finish: 'I love it when you…'",
+        "What's something the other person does that's an instant green light?",
+        "Describe the kiss you'd want right now in one sentence.",
+        "What's a confidence you find irresistible?",
+        "Pick: slow morning, or can't-wait-til-we're-home?",
+        "What's a compliment you wish you heard more often?",
+        "What's the most memorable moment we've shared, that you'd repeat tonight?",
+        "What's something you want to whisper but haven't?",
+        "What's your honest answer to 'what are you in the mood for?'",
+        "Name a sound, a look, or a touch that gets you every time.",
+        "If tonight were entirely up to you, what's the plan?"
       ]
     };
     let qPack = "cute";
