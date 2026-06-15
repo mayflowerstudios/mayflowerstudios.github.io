@@ -172,6 +172,100 @@
       .ttBoard{ grid-template-columns:repeat(3, 74px); grid-template-rows:repeat(3, 74px); }
       .ttCell{ font-size:38px; }
     }
+
+    /* ---- who's here / which game ---- */
+    .whoHere{ display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+    .whoChip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:7px 12px; border-radius:999px; font-size:13px;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05);
+    }
+    .whoChip .whoName{ font-weight:600; }
+    .whoChip .whoTab{ opacity:.7; }
+    .whoChip.me{ border-color:rgba(251,113,133,.30); background:rgba(251,113,133,.10); }
+
+    /* ---- question translate ---- */
+    .qOrig{ font-size:14px; opacity:.55; font-style:italic; margin:10px 0 0; text-align:center; }
+    .miniGhost{
+      font-size:12px; font-weight:500;
+      padding:5px 11px; border-radius:999px; cursor:pointer;
+      border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05);
+      color:inherit; transition:filter .12s ease, background .12s ease;
+    }
+    .miniGhost:hover{ background:rgba(255,255,255,.10); }
+    .miniGhost.active{ background:rgba(167,139,250,.20); border-color:rgba(167,139,250,.35); }
+    .langSelect{
+      background: rgba(255,255,255,.06); color:inherit;
+      border:1px solid rgba(255,255,255,.14); border-radius:8px;
+      font-size:12px; padding:4px 7px; cursor:pointer; max-width:130px;
+    }
+    .langSelect option{ background:#1a1426; color:#eee; }
+
+    /* ---- chat — floating popup ---- */
+    .chatFab{
+      position:fixed; right:22px; bottom:22px; z-index:60;
+      width:58px; height:58px; border-radius:50%;
+      border:1px solid rgba(167,139,250,.30); background: rgba(167,139,250,.20);
+      backdrop-filter: blur(8px); box-shadow:0 12px 36px rgba(0,0,0,.5);
+      color:inherit; font-size:24px; cursor:pointer; display:none; place-items:center;
+      transition: transform .14s ease, filter .14s ease;
+    }
+    .chatFab.show{ display:grid; }
+    .chatFab:hover{ transform:translateY(-2px); filter:brightness(1.1); }
+    .chatBadge{
+      position:absolute; top:-4px; right:-4px;
+      min-width:20px; height:20px; padding:0 5px; border-radius:999px;
+      background:#fb7185; color:#fff; font-size:12px; font-weight:600;
+      line-height:20px; text-align:center; border:2px solid rgba(20,16,28,.9);
+    }
+    .chatPop{
+      display:none; position:fixed; right:22px; bottom:92px; z-index:60;
+      width:340px; max-width:calc(100vw - 32px);
+      height:460px; max-height:calc(100vh - 130px);
+      flex-direction:column; background: rgba(20,16,28,.92);
+      border:1px solid rgba(255,255,255,.14); border-radius:20px;
+      box-shadow:0 20px 60px rgba(0,0,0,.55); backdrop-filter: blur(12px);
+      overflow:hidden; transform-origin: bottom right; animation: chatIn .18s ease;
+    }
+    .chatPop.open{ display:flex; }
+    @keyframes chatIn{ from{opacity:0; transform:translateY(10px) scale(.97)} to{opacity:1; transform:none} }
+    .chatPopHead{
+      display:flex; align-items:center; gap:6px;
+      padding:13px 16px; border-bottom:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+    }
+    .chatPopHead strong{ font-size:15px; }
+    .chatHeadTools{ display:inline-flex; align-items:center; gap:6px; margin-left:auto; }
+    .chatClose{
+      background:transparent; border:0; color:inherit; cursor:pointer;
+      font-size:16px; opacity:.7; padding:4px 6px; border-radius:8px;
+    }
+    .chatClose:hover{ opacity:1; background:rgba(255,255,255,.06); }
+    .chatLog{
+      flex:1 1 auto; min-height:0; overflow-y:auto;
+      display:flex; flex-direction:column; gap:8px; padding:12px;
+    }
+    .chatEmpty{ opacity:.5; font-size:14px; text-align:center; margin:auto 0; }
+    .msg{ display:flex; flex-direction:column; max-width:85%; }
+    .msg.mine{ align-self:flex-end; align-items:flex-end; }
+    .msg .bubble{
+      padding:8px 12px; border-radius:14px; font-size:14px; line-height:1.45;
+      background: rgba(167,139,250,.14); border:1px solid rgba(167,139,250,.22);
+      word-break:break-word;
+    }
+    .msg.mine .bubble{ background: rgba(251,113,133,.16); border-color: rgba(251,113,133,.26); }
+    .msg .who{ font-size:11px; opacity:.55; margin:2px 6px 0; }
+    .msg .orig{ display:block; font-size:12px; opacity:.5; margin-top:4px; font-style:italic; }
+    .msg .translating{ display:block; font-size:11px; opacity:.45; margin-top:3px; }
+    .dateDivider{
+      align-self:center; display:flex; align-items:center; gap:10px;
+      width:100%; margin:10px 0 4px; opacity:.5;
+    }
+    .dateDivider::before, .dateDivider::after{ content:""; flex:1; height:1px; background:rgba(255,255,255,.12); }
+    .dateDivider span{ font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; white-space:nowrap; }
+    .chatRow{ display:flex; gap:6px; padding:12px; border-top:1px solid rgba(255,255,255,.10); align-items:center; }
+    .chatRow .input{ flex:1 1 auto; min-width:0; }
+    @media (max-width:560px){ .chatPop{ right:12px; left:12px; width:auto; bottom:86px; } }
   </style>
 
 <!-- OG:START -->
@@ -223,6 +317,8 @@
               <button class="btn ghost" id="leaveBtn" style="padding:7px 12px; font-size:13px;">↩ Leave</button>
             </div>
 
+            <div class="whoHere" id="whoHere"></div>
+
             <div class="divider"></div>
 
             <div class="tabs" id="tabs">
@@ -264,8 +360,25 @@
                     <h2>💬 Questions</h2>
                     <p class="hint">Pull a card, both answer out loud, then draw the next one. Either of you can draw.</p>
                   </div>
+                  <div class="panelTools">
+                    <button class="miniGhost" id="qTranslateToggle" title="Translate the question">🌐 Translate: Off</button>
+                    <select class="langSelect" id="qLangSelect" title="Translate questions into…" hidden>
+                      <option value="en">English</option>
+                      <option value="es">Español</option>
+                      <option value="de">Deutsch</option>
+                      <option value="fr">Français</option>
+                      <option value="pt">Português</option>
+                      <option value="it">Italiano</option>
+                      <option value="nl">Nederlands</option>
+                      <option value="ja">日本語</option>
+                      <option value="ko">한국어</option>
+                      <option value="zh">中文</option>
+                      <option value="ru">Русский</option>
+                    </select>
+                  </div>
                 </div>
                 <div class="qCard"><p class="qText" id="qText">Tap “New question” to start 🌙</p></div>
+                <p class="qOrig" id="qOrig" hidden></p>
                 <p class="qMeta" id="qMeta"></p>
                 <div class="qActions">
                   <button class="btn primary" id="newQBtn">🎲 New question</button>
@@ -310,6 +423,43 @@
     <div id="site-footer"></div>
   </div>
 
+  <!-- Floating chat -->
+  <button class="chatFab" id="chatFab" aria-label="Open chat">
+    💬<span class="chatBadge" id="chatBadge" hidden>0</span>
+  </button>
+
+  <div class="chatPop" id="chatPop">
+    <div class="chatPopHead">
+      <strong>💬 Chat</strong>
+      <span class="chatHeadTools">
+        <button class="miniGhost" id="soundToggle" title="Notification sound">🔔</button>
+        <button class="miniGhost" id="translateToggle" title="Translate incoming messages">🌐 Off</button>
+        <select class="langSelect" id="langSelect" title="Translate messages into…" hidden>
+          <option value="en">English</option>
+          <option value="es">Español</option>
+          <option value="de">Deutsch</option>
+          <option value="fr">Français</option>
+          <option value="pt">Português</option>
+          <option value="it">Italiano</option>
+          <option value="nl">Nederlands</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="zh">中文</option>
+          <option value="ru">Русский</option>
+        </select>
+      </span>
+      <button class="chatClose" id="chatClose" aria-label="Close chat">✕</button>
+    </div>
+    <div class="chatLog" id="chatLog">
+      <p class="chatEmpty" id="chatEmpty">Say hi 🌸</p>
+    </div>
+    <div class="chatRow">
+      <input class="input" id="chatInput" type="text" maxlength="500"
+             placeholder="Type a message…" autocomplete="off" />
+      <button class="btn violet" id="chatSend">Send</button>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script src="/shared.js"></script>
@@ -318,7 +468,7 @@
 
   <script type="module">
     import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, onValue, onChildAdded, set, get, update, remove, push, onDisconnect, serverTimestamp }
+    import { getDatabase, ref, onValue, onChildAdded, set, get, update, remove, push, onDisconnect, serverTimestamp, query, limitToLast }
       from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
@@ -335,6 +485,102 @@
     function toast(msg){ toastEl.textContent = msg; toastEl.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>toastEl.classList.remove("show"),2400); }
 
     function cleanName(s){ return (s||"").toLowerCase().replace(/[.#$\[\]\/]/g,"").trim().slice(0,40); }
+
+    function escapeHtml(s){
+      return String(s ?? "").replace(/[&<>"']/g, c => (
+        { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]
+      ));
+    }
+
+    // ============================================================
+    //  Translation engine (shared by Questions + Chat)
+    // ============================================================
+    // Two tiers: 1) on-device Translator API (Chromium desktop) — private/local;
+    // 2) a free public endpoint fallback (Opera/Firefox/Safari/mobile) — sends
+    // text over the network. "n/a" only when neither is available.
+    const LANG_NAMES = { en:"English", es:"Spanish", de:"German", fr:"French", pt:"Portuguese",
+                         it:"Italian", nl:"Dutch", ja:"Japanese", ko:"Korean", zh:"Chinese", ru:"Russian" };
+    function guessLang(){
+      const l = (navigator.language || "en").slice(0,2).toLowerCase();
+      return LANG_NAMES[l] ? l : "en";
+    }
+    const translationCache = new Map();
+    const translatorPool = new Map();
+    function deviceTranslationSupported(){
+      return (typeof self !== "undefined") && ("Translator" in self) && ("LanguageDetector" in self);
+    }
+    const HAS_DEVICE = deviceTranslationSupported();
+    const HAS_SERVER = /^https?:$/.test(location.protocol);
+    const TRANSLATE_MODE = HAS_DEVICE ? "device" : (HAS_SERVER ? "server" : "none");
+    const TRANSLATE_OK = TRANSLATE_MODE !== "none";
+
+    async function getTranslator(src, tgt){
+      const key = src + "->" + tgt;
+      if (translatorPool.has(key)) return translatorPool.get(key);
+      const p = (async () => {
+        try {
+          const avail = await self.Translator.availability({ sourceLanguage: src, targetLanguage: tgt });
+          if (avail === "unavailable") return null;
+          return await self.Translator.create({ sourceLanguage: src, targetLanguage: tgt });
+        } catch(_){ return null; }
+      })();
+      translatorPool.set(key, p);
+      return p;
+    }
+    async function detectLang(text){
+      try {
+        if ("LanguageDetector" in self){
+          const d = await self.LanguageDetector.create();
+          const res = await d.detect(text);
+          if (res && res.length){
+            const top = res.find(r => r.detectedLanguage && r.detectedLanguage !== "und");
+            if (top && top.confidence > 0.15) return top.detectedLanguage.slice(0,2);
+          }
+        }
+      } catch(_){}
+      return null;
+    }
+    async function serverTranslate(text, tgt){
+      const url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl="
+        + encodeURIComponent(tgt) + "&dt=t&q=" + encodeURIComponent(text);
+      try {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 8000);
+        const r = await fetch(url, { signal: ctrl.signal });
+        clearTimeout(timer);
+        if (!r.ok) return null;
+        const data = await r.json();
+        const out = (data[0] || []).map(seg => seg[0]).join("");
+        const src = (data[2] || "").slice(0,2);
+        if (!out) return null;
+        return { text: out, src };
+      } catch(_){ return null; }
+    }
+    async function translateText(text, tgt){
+      const cacheKey = tgt + "||" + text;
+      if (translationCache.has(cacheKey)) return translationCache.get(cacheKey);
+      let out = null;
+      if (TRANSLATE_MODE === "device"){
+        const src = await detectLang(text);
+        if (src && src === tgt){ translationCache.set(cacheKey, null); return null; }
+        if (src){
+          const t = await getTranslator(src, tgt);
+          if (t){ try { out = await t.translate(text); } catch(_){ out = null; } }
+        }
+        if (!out && HAS_SERVER){
+          const r = await serverTranslate(text, tgt);
+          if (r){ if (r.src && r.src === tgt){ translationCache.set(cacheKey, null); return null; } out = r.text; }
+        }
+      } else if (TRANSLATE_MODE === "server"){
+        const r = await serverTranslate(text, tgt);
+        if (r){
+          if (r.src && r.src === tgt){ translationCache.set(cacheKey, null); return null; }
+          out = r.text;
+        }
+      }
+      translationCache.set(cacheKey, out || null);
+      return out || null;
+    }
 
     // stable per-device id
     let myId = localStorage.getItem("wt_id");
@@ -389,14 +635,18 @@
       const u = new URL(location.href); u.searchParams.set("room", room); history.replaceState(null,"",u);
 
       $("nameInput").value = displayName;
+      $("chatFab").classList.add("show");
       setupTabs();
       setupPresence();
       setupDraw();
       setupQuestions();
       setupTicTacToe();
+      setupChat();
     }
 
     // ---------- tab switching ----------
+    const TAB_LABELS = { draw:"🎨 Drawing", questions:"💬 Questions", tictactoe:"⭕ Tic-Tac-Toe" };
+    let currentTab = "draw";
     let tabsReady = false;
     function setupTabs(){
       if (tabsReady) return; tabsReady = true;
@@ -405,8 +655,10 @@
       tabs.forEach(t => {
         t.addEventListener("click", () => {
           const name = t.dataset.tab;
+          currentTab = name;
           tabs.forEach(x => x.classList.toggle("active", x === t));
           panels.forEach(p => p.classList.toggle("active", p.dataset.panel === name));
+          if (ROOM) set(ref(db, `together/${ROOM}/presence/${myId}/tab`), name);
         });
       });
     }
@@ -420,14 +672,14 @@
     // ---------- presence ----------
     function setupPresence(){
       const pRef = ref(db, `together/${ROOM}/presence/${myId}`);
-      set(pRef, { name: displayName || "someone", joined: serverTimestamp(), t: Date.now() });
+      set(pRef, { name: displayName || "someone", tab: currentTab, joined: serverTimestamp(), t: Date.now() });
       onDisconnect(pRef).remove();
 
       onValue(ref(db, ".info/connected"), (snap) => {
         const on = snap.val() === true;
         $("connDot").className = "dot " + (on ? "on" : "off");
         $("connText").textContent = on ? "connected" : "offline";
-        if (on){ set(pRef, { name: displayName || "someone", joined: serverTimestamp(), t: Date.now() }); onDisconnect(pRef).remove(); }
+        if (on){ set(pRef, { name: displayName || "someone", tab: currentTab, joined: serverTimestamp(), t: Date.now() }); onDisconnect(pRef).remove(); }
       });
 
       onValue(ref(db, `together/${ROOM}/presence`), (snap) => {
@@ -440,6 +692,20 @@
         const xId = sorted[0] ? sorted[0].id : null;
         mySymbol = (xId === myId) ? "X" : "O";
         updateTTStatus();
+
+        // who's here + which game each person is in
+        const who = $("whoHere");
+        who.innerHTML = "";
+        sorted.forEach(({id}) => {
+          const p = all[id] || {};
+          const chip = document.createElement("div");
+          chip.className = "whoChip" + (id === myId ? " me" : "");
+          const nm = escapeHtml(p.name || "someone") + (id === myId ? " (you)" : "");
+          const tab = TAB_LABELS[p.tab] || "🌙 idle";
+          chip.innerHTML = `<span class="whoName">${nm}</span><span class="whoTab">· ${tab}</span>`;
+          who.appendChild(chip);
+        });
+
         const note = $("missNote");
         if (ids.length < 2){ note.style.display="block"; note.textContent = "Waiting for the other person to join this room… share the link with the 🔗 button above."; }
         else { note.style.display="none"; }
@@ -573,6 +839,7 @@
       ]
     };
     let qPack = "cute";
+    let currentQText = "";   // raw (untranslated) text of the shown question
 
     function setupQuestions(){
       $("qPacks").querySelectorAll(".qPack").forEach(p => {
@@ -590,12 +857,81 @@
       onValue(ref(db, `together/${ROOM}/question`), (snap) => {
         const q = snap.val(); if (!q) return;
         const list = QUESTIONS[q.pack]; if (!list) return;
-        $("qText").textContent = list[q.idx] || "🌙";
+        currentQText = list[q.idx] || "🌙";
+        $("qText").textContent = currentQText;
         $("qMeta").textContent = "drawn by " + (q.by || "someone");
         // sync the active pack chip
         $("qPacks").querySelectorAll(".qPack").forEach(x => x.classList.toggle("active", x.dataset.pack === q.pack));
         qPack = q.pack;
+        renderQuestionTranslation();
       });
+      setupQuestionTranslate();
+    }
+
+    // ---- question translation (uses the shared translate engine below) ----
+    let qTranslateOn = false;
+    let qTargetLang = "en";
+    try {
+      qTranslateOn = localStorage.getItem("tg_q_translate_on") === "1";
+      qTargetLang = localStorage.getItem("tg_q_translate_lang") || guessLang();
+    } catch(_) { qTargetLang = guessLang(); }
+
+    function updateQTranslateUI(){
+      const btn = $("qTranslateToggle"), sel = $("qLangSelect");
+      if (!TRANSLATE_OK){
+        btn.textContent = "🌐 Translate: n/a";
+        btn.classList.remove("active");
+        btn.title = "Translation isn't available here (needs a recent desktop browser or an internet connection)";
+        sel.hidden = true; return;
+      }
+      btn.textContent = "🌐 " + (qTranslateOn ? (LANG_NAMES[qTargetLang] || qTargetLang) : "Off");
+      btn.classList.toggle("active", qTranslateOn);
+      btn.title = TRANSLATE_MODE === "device"
+        ? "On-device translation (private, runs locally)"
+        : "Translation via a free online service (text is sent to it to translate)";
+      sel.hidden = !qTranslateOn;
+      sel.value = qTargetLang;
+    }
+
+    function setupQuestionTranslate(){
+      const btn = $("qTranslateToggle"), sel = $("qLangSelect");
+      btn.addEventListener("click", () => {
+        if (!TRANSLATE_OK){ toast("Translation isn't available in this browser"); return; }
+        qTranslateOn = !qTranslateOn;
+        try { localStorage.setItem("tg_q_translate_on", qTranslateOn ? "1":"0"); } catch(_){}
+        if (qTranslateOn && TRANSLATE_MODE === "server") toast("Translating via a free online service 🌐");
+        updateQTranslateUI();
+        renderQuestionTranslation();
+      });
+      sel.addEventListener("change", () => {
+        qTargetLang = sel.value;
+        try { localStorage.setItem("tg_q_translate_lang", qTargetLang); } catch(_){}
+        updateQTranslateUI();
+        renderQuestionTranslation();
+      });
+      updateQTranslateUI();
+    }
+
+    async function renderQuestionTranslation(){
+      const orig = $("qOrig");
+      if (!qTranslateOn || !TRANSLATE_OK || !currentQText){
+        $("qText").textContent = currentQText;
+        orig.hidden = true; orig.textContent = "";
+        return;
+      }
+      const sourceText = currentQText;
+      orig.hidden = true;
+      const translated = await translateText(sourceText, qTargetLang);
+      // guard against the question changing while we awaited
+      if (sourceText !== currentQText) return;
+      if (translated && translated !== sourceText){
+        $("qText").textContent = translated;
+        orig.textContent = "original: " + sourceText;
+        orig.hidden = false;
+      } else {
+        $("qText").textContent = sourceText;
+        orig.hidden = true;
+      }
     }
 
     // ---------- tic-tac-toe ----------
@@ -677,6 +1013,235 @@
       }
       const yours = ttState.turn === mySymbol;
       el.textContent = `You are ${seat}. ` + (yours ? "Your turn." : "Their turn…");
+    }
+
+    // ============================================================
+    //  Chat (floating popup) — text + translation
+    // ============================================================
+    let chatRef = null;
+    let chatReady = false;
+    let chatOpen = false;
+    let unread = 0;
+    let lastSeenCount = 0;
+    let chatStarted = false;
+    let lastChatMsgs = {};
+    let _lastChatSig = null;
+
+    // chat translation state
+    let translateOn = false;
+    let targetLang = "en";
+    try {
+      translateOn = localStorage.getItem("tg_translate_on") === "1";
+      targetLang = localStorage.getItem("tg_translate_lang") || guessLang();
+    } catch(_){ targetLang = guessLang(); }
+
+    // notification chime via Web Audio
+    let audioCtx = null;
+    let soundOn = true;
+    try { soundOn = localStorage.getItem("tg_sound_off") !== "1"; } catch(_){}
+
+    function setupChat(){
+      if (chatReady) return; chatReady = true;
+      const chatFab = $("chatFab"), chatPop = $("chatPop"), chatClose = $("chatClose");
+      const chatInput = $("chatInput"), chatSend = $("chatSend");
+      const soundToggle = $("soundToggle"), translateToggle = $("translateToggle"), langSelect = $("langSelect");
+
+      chatRef = ref(db, `together/${ROOM}/chat`);
+
+      function setBadge(){
+        const b = $("chatBadge");
+        if (unread > 0){ b.textContent = unread > 99 ? "99+" : String(unread); b.hidden = false; }
+        else b.hidden = true;
+      }
+      function openChat(){
+        chatOpen = true; chatPop.classList.add("open");
+        unread = 0; setBadge();
+        $("chatLog").scrollTop = $("chatLog").scrollHeight;
+        setTimeout(() => chatInput.focus(), 50);
+      }
+      function closeChat(){ chatOpen = false; chatPop.classList.remove("open"); }
+      chatFab.addEventListener("click", () => chatOpen ? closeChat() : openChat());
+      chatClose.addEventListener("click", closeChat);
+      document.addEventListener("keydown", e => { if (e.key === "Escape" && chatOpen) closeChat(); });
+
+      // ---- sound ----
+      function primeAudio(){
+        try {
+          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (audioCtx.state === "suspended") audioCtx.resume();
+        } catch(_){}
+      }
+      ["pointerdown","keydown"].forEach(ev => window.addEventListener(ev, primeAudio, { once:true, passive:true }));
+      function updateSoundUI(){
+        soundToggle.textContent = soundOn ? "🔔" : "🔕";
+        soundToggle.title = soundOn ? "Notification sound: on" : "Notification sound: off";
+        soundToggle.classList.toggle("active", soundOn);
+      }
+      soundToggle.addEventListener("click", () => {
+        soundOn = !soundOn;
+        try { localStorage.setItem("tg_sound_off", soundOn ? "0":"1"); } catch(_){}
+        primeAudio(); updateSoundUI(); if (soundOn) playPing();
+      });
+      updateSoundUI();
+
+      // ---- translate UI ----
+      function updateTranslateUI(){
+        if (!TRANSLATE_OK){
+          translateToggle.textContent = "🌐 n/a";
+          translateToggle.classList.remove("active");
+          translateToggle.title = "Translation isn't available here (needs a recent desktop browser or an internet connection)";
+          langSelect.hidden = true; return;
+        }
+        translateToggle.textContent = "🌐 " + (translateOn ? (LANG_NAMES[targetLang] || targetLang) : "Off");
+        translateToggle.classList.toggle("active", translateOn);
+        translateToggle.title = TRANSLATE_MODE === "device"
+          ? "On-device translation (private, runs locally)"
+          : "Translation via a free online service (messages are sent to it to translate)";
+        langSelect.hidden = !translateOn;
+        langSelect.value = targetLang;
+      }
+      translateToggle.addEventListener("click", () => {
+        if (!TRANSLATE_OK){ toast("Translation isn't available in this browser"); return; }
+        translateOn = !translateOn;
+        try { localStorage.setItem("tg_translate_on", translateOn ? "1":"0"); } catch(_){}
+        if (translateOn && TRANSLATE_MODE === "server") toast("Translating via a free online service 🌐");
+        updateTranslateUI(); renderChat(lastChatMsgs);
+      });
+      langSelect.addEventListener("change", () => {
+        targetLang = langSelect.value;
+        try { localStorage.setItem("tg_translate_lang", targetLang); } catch(_){}
+        updateTranslateUI(); renderChat(lastChatMsgs);
+      });
+      updateTranslateUI();
+
+      // ---- send ----
+      function sendChat(){
+        const text = chatInput.value.trim();
+        if (!text) return;
+        if (!chatRef){ toast("Chat needs Firebase set up first"); return; }
+        push(chatRef, { text, name: displayName || "someone", by: myId, t: Date.now() });
+        chatInput.value = "";
+      }
+      chatSend.addEventListener("click", sendChat);
+      chatInput.addEventListener("keydown", e => { if (e.key === "Enter") sendChat(); });
+
+      // ---- live feed ----
+      onValue(query(chatRef, limitToLast(100)), snap => {
+        const val = snap.val() || {};
+        const sig = Object.keys(val).sort().join("|");
+        if (sig === _lastChatSig) return;
+        _lastChatSig = sig;
+        renderChat(val);
+      });
+    }
+
+    function playPing(){
+      if (!soundOn) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const now = audioCtx.currentTime;
+        [[880,0],[1175,0.12]].forEach(([freq,at]) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = "sine"; osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.0001, now+at);
+          gain.gain.exponentialRampToValueAtTime(0.18, now+at+0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now+at+0.22);
+          osc.connect(gain).connect(audioCtx.destination);
+          osc.start(now+at); osc.stop(now+at+0.24);
+        });
+      } catch(_){}
+    }
+
+    function fmtTime(t){
+      if (!t) return "";
+      try { return new Date(t).toLocaleTimeString([], { hour:"numeric", minute:"2-digit" }); }
+      catch(_){ return ""; }
+    }
+    function fmtDateDivider(t){
+      const d = new Date(t), today = new Date(), yest = new Date();
+      yest.setDate(today.getDate()-1);
+      const sameDay = (a,b) => a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+      if (sameDay(d,today)) return "Today";
+      if (sameDay(d,yest)) return "Yesterday";
+      const opts = { weekday:"short", month:"short", day:"numeric" };
+      if (d.getFullYear() !== today.getFullYear()) opts.year = "numeric";
+      try { return d.toLocaleDateString([], opts); } catch(_){ return d.toDateString(); }
+    }
+    function isNewDay(prevT, curT){
+      if (!prevT) return true;
+      const a = new Date(prevT), b = new Date(curT);
+      return a.getFullYear()!==b.getFullYear() || a.getMonth()!==b.getMonth() || a.getDate()!==b.getDate();
+    }
+
+    function renderChat(msgs){
+      lastChatMsgs = msgs || {};
+      const chatLog = $("chatLog"), chatEmpty = $("chatEmpty");
+      const entries = Object.values(lastChatMsgs).sort((a,b) => (a.t||0)-(b.t||0));
+      if (!entries.length){ chatEmpty.style.display = "block"; lastSeenCount = 0; chatStarted = true; return; }
+      chatEmpty.style.display = "none";
+
+      const mine = m => m.by === myId;
+      if (lastSeenCount > entries.length) lastSeenCount = entries.length;
+      if (!chatStarted){ lastSeenCount = entries.length; chatStarted = true; }
+      else if (chatOpen){
+        const fresh = entries.slice(lastSeenCount);
+        if (fresh.some(m => !mine(m))) playPing();
+        lastSeenCount = entries.length;
+      } else {
+        const fresh = entries.slice(lastSeenCount).filter(m => !mine(m));
+        if (fresh.length){ unread += fresh.length; const b = $("chatBadge"); b.textContent = unread>99?"99+":String(unread); b.hidden=false; playPing(); }
+        lastSeenCount = entries.length;
+      }
+
+      const wasNearBottom = chatLog.scrollHeight - chatLog.scrollTop - chatLog.clientHeight < 80;
+      chatLog.innerHTML = "";
+      let prevT = null;
+      for (const m of entries){
+        if (isNewDay(prevT, m.t)){
+          const div = document.createElement("div");
+          div.className = "dateDivider";
+          div.innerHTML = `<span>${escapeHtml(fmtDateDivider(m.t))}</span>`;
+          chatLog.appendChild(div);
+        }
+        prevT = m.t;
+        const isMine = mine(m);
+        const wrap = document.createElement("div");
+        wrap.className = "msg" + (isMine ? " mine" : "");
+        const time = fmtTime(m.t);
+        const timeTag = time ? ` · <span class="time">${escapeHtml(time)}</span>` : "";
+        const who = isMine ? "you" : escapeHtml(m.name || "someone");
+        const hint = translateOn ? `<span class="translating">translating…</span>` : "";
+        wrap.innerHTML =
+          `<div class="bubble" data-text="${escapeHtml(m.text)}">${escapeHtml(m.text)}</div>` +
+          hint + `<div class="who">${who}${timeTag}</div>`;
+        chatLog.appendChild(wrap);
+      }
+      if (chatOpen || wasNearBottom) chatLog.scrollTop = chatLog.scrollHeight;
+      if (translateOn) applyChatTranslations().then(() => {
+        if (chatOpen || wasNearBottom) chatLog.scrollTop = chatLog.scrollHeight;
+      });
+    }
+
+    async function applyChatTranslations(){
+      if (!translateOn || !TRANSLATE_OK) return;
+      const bubbles = $("chatLog").querySelectorAll(".msg .bubble[data-text]");
+      for (const b of bubbles){
+        if (b.dataset.translatedFor === targetLang) continue;
+        const original = b.dataset.text;
+        const wrap = b.closest(".msg");
+        const translated = await translateText(original, targetLang);
+        b.dataset.translatedFor = targetLang;
+        const hint = wrap.querySelector(".translating");
+        if (hint) hint.remove();
+        if (translated && translated !== original){
+          b.textContent = translated;
+          let orig = wrap.querySelector(".orig");
+          if (!orig){ orig = document.createElement("span"); orig.className = "orig"; b.after(orig); }
+          orig.textContent = "original: " + original;
+        }
+      }
     }
   </script>
 </body>
