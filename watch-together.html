@@ -1039,7 +1039,15 @@
       }
       if (e.data === YT.PlayerState.BUFFERING) { setBuffering(true); return; }
       if (e.data === YT.PlayerState.PLAYING) setBuffering(false);
-      if (e.data === YT.PlayerState.ENDED) { setBuffering(false); advanceQueue(); return; }
+      if (e.data === YT.PlayerState.ENDED) {
+        setBuffering(false);
+        // Ignore ENDED that fires while we're applying the partner's state or
+        // loading a new source — loadVideoById can momentarily re-report ENDED
+        // on the previous video, which would otherwise double-advance.
+        if (applyingRemote) return;
+        advanceQueue(currentSrc);
+        return;
+      }
       if (applyingRemote) return;
       if (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.PAUSED) {
         broadcast(e.data === YT.PlayerState.PLAYING ? "playing" : "paused");
@@ -1090,7 +1098,7 @@
     fileVid.addEventListener("stalled", () => { if (currentKind === "file") { setBuffering(true); armStallWatch(); } });
     fileVid.addEventListener("playing", () => { if (currentKind === "file") { setBuffering(false); clearTimeout(stallTimer); } });
     fileVid.addEventListener("canplay", () => { if (currentKind === "file") { setBuffering(false); clearTimeout(stallTimer); } });
-    fileVid.addEventListener("ended", () => { syncWakeLock(); setBuffering(false); if (currentKind === "file") advanceQueue(); });
+    fileVid.addEventListener("ended", () => { syncWakeLock(); setBuffering(false); if (currentKind === "file" && !applyingRemote) advanceQueue(currentSrc); });
     fileVid.addEventListener("error", () => {
       if (currentKind !== "file") return;
       setBuffering(false);   // don't leave the overlay spinning forever
@@ -2317,6 +2325,9 @@
     function startSource(parsed) {
       placeholder.style.display = "none";
       setBuffering(false);
+      // A fresh source is now playing — clear the "already advanced from" guard
+      // so when THIS video ends it's allowed to advance the queue.
+      lastAdvancedFrom = null;
       // One upload per room: if a *different* source is starting, drop the
       // previous uploaded file from Storage so we never accumulate them.
       maybeClearUploadFor(parsed.src);
@@ -3531,10 +3542,16 @@
 
     // Auto-advance when the current item ends. Honors repeat mode, and uses a
     // short-lived shared "claim" so both screens' end events don't double-skip.
+    // `endedSrc` is the source that just finished; we track it so a duplicate
+    // ENDED for the same video (YouTube re-fires this on load) can't advance twice.
     let advancing = false;
-    async function advanceQueue() {
+    let lastAdvancedFrom = null;
+    async function advanceQueue(endedSrc) {
       if (advancing) return;
+      // Idempotency: never advance twice off the same finished source.
+      if (endedSrc != null && endedSrc === lastAdvancedFrom) return;
       advancing = true;
+      if (endedSrc != null) lastAdvancedFrom = endedSrc;
       try {
         // Repeat-one: just replay what's playing, ignore the queue.
         if (repeatMode === "one" && currentKind && currentSrc) {
@@ -3552,7 +3569,7 @@
         }
 
         // Claim the advance so the partner's end event stands down. The claim
-        // self-expires after 2.5s, so if whoever claimed it crashes or drops,
+        // self-expires after 4s, so if whoever claimed it crashes or drops,
         // the other side can take over on the next end/retry instead of stalling.
         let claimRef = null;
         if (FIREBASE_READY && db) {
@@ -3562,9 +3579,13 @@
           try {
             const snap = await get(claimRef);
             const prev = snap.val();
-            if (prev && prev.by !== clientId && (now - (prev.t || 0)) < 2500) claimed = false;
+            if (prev && prev.by !== clientId && (now - (prev.t || 0)) < 4000) claimed = false;
           } catch (_) {}
-          if (!claimed) return;
+          if (!claimed) {
+            // Partner is advancing. Don't touch the queue or reload anything —
+            // their startSource broadcast will move us to the next video.
+            return;
+          }
           try { await set(claimRef, { by: clientId, t: now }); } catch (_) {}
         }
 
@@ -3578,10 +3599,13 @@
           push(queueRef, { kind: currentKind, src: currentSrc, title: currentTitle || null, t: Date.now(), by: myName });
         }
 
+        // Remove the item we're about to play FIRST so the queue is consistent
+        // before startSource broadcasts the new state, then start it.
         removeQueued(key);
         startSource({ kind, src });
-        // Release the claim now that we've actually moved on.
-        if (claimRef) { try { await remove(claimRef); } catch (_) {} }
+        // Hold the claim a beat past startSource's broadcast (≈800ms) so a late
+        // ENDED on the partner's side still sees it and stands down, then release.
+        if (claimRef) { setTimeout(() => { try { remove(claimRef); } catch (_) {} }, 1200); }
       } finally {
         setTimeout(() => { advancing = false; }, 1500);
       }

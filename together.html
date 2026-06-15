@@ -2178,11 +2178,24 @@
     let chatReady = false;
     let chatOpen = false;
     let unread = 0;
-    let lastSeenCount = 0;
     let chatStarted = false;
     let lastChatMsgs = {};
     let chatMsgsStore = {};   // accumulated messages (keyed by push id) for live updates
     let _lastChatSig = null;
+
+    // Persisted "read" watermark: the timestamp of the newest message we've
+    // already seen. Anything at or before this is treated as already-read on
+    // load, so reopening the page doesn't re-notify for old messages. Keyed by
+    // room so different rooms track their own read state.
+    const SEEN_KEY = "tg_chat_seen_" + ROOM;
+    let lastSeenT = 0;
+    try { lastSeenT = Number(localStorage.getItem(SEEN_KEY)) || 0; } catch(_){}
+    function markSeen(t){
+      if (t && t > lastSeenT){
+        lastSeenT = t;
+        try { localStorage.setItem(SEEN_KEY, String(lastSeenT)); } catch(_){}
+      }
+    }
 
     // chat translation state
     let translateOn = false;
@@ -2206,19 +2219,30 @@
       chatRef = ref(db, `together/${ROOM}/chat`);
 
       // ---- live feed ----
-      // Plain ref + onChildAdded, the exact pattern the shared drawing uses to
-      // sync live. Render synchronously on each event (no rAF indirection).
-      onChildAdded(chatRef, snap => {
+      // onChildAdded fires once per message — during the initial history load
+      // that's one event per stored message. Rather than rebuild the whole chat
+      // DOM on every event (janky on first open), coalesce bursts into a single
+      // render on the next frame. Live single messages still feel instant.
+      let renderQueued = false;
+      function scheduleChatRender(){
+        if (renderQueued) return;
+        renderQueued = true;
+        requestAnimationFrame(() => {
+          renderQueued = false;
+          try { renderChat(chatMsgsStore); }
+          catch(err){ console.error("[chat] render threw:", err); }
+        });
+      }
+      onChildAdded(query(chatRef, limitToLast(100)), snap => {
         const m = snap.val(); if (!m) return;
         chatMsgsStore[snap.key] = m;
-        try { renderChat(chatMsgsStore); }
-        catch(err){ console.error("[chat] render threw:", err); }
+        scheduleChatRender();
       }, err => {
         console.error("[chat] live feed error:", err && err.code, err);
         toast("Chat can't load — check the database rules");
       });
       onChildRemoved(chatRef, snap => {
-        if (snap.key in chatMsgsStore){ delete chatMsgsStore[snap.key]; try{ renderChat(chatMsgsStore); }catch(_){} }
+        if (snap.key in chatMsgsStore){ delete chatMsgsStore[snap.key]; scheduleChatRender(); }
       });
 
       function setBadge(){
@@ -2229,6 +2253,13 @@
       function openChat(){
         chatOpen = true; chatPop.classList.add("open");
         unread = 0; setBadge();
+        // Everything currently in the log is now read — save the watermark so a
+        // reload won't resurface these as unread.
+        const all = Object.values(chatMsgsStore);
+        if (all.length){
+          const newestT = all.reduce((mx,m) => Math.max(mx, m.t||0), 0);
+          markSeen(newestT);
+        }
         $("chatLog").scrollTop = $("chatLog").scrollHeight;
         setTimeout(() => chatInput.focus(), 50);
       }
@@ -2575,20 +2606,37 @@
       const showEmpty = v => { if (chatEmpty) chatEmpty.style.display = v ? "flex" : "none"; };
       let entries = Object.values(lastChatMsgs).sort((a,b) => (a.t||0)-(b.t||0));
       if (entries.length > 100) entries = entries.slice(entries.length - 100);
-      if (!entries.length){ showEmpty(true); lastSeenCount = 0; chatStarted = true; return; }
+      if (!entries.length){ showEmpty(true); chatStarted = true; return; }
       showEmpty(false);
 
       const mine = m => m.by === myId;
-      if (lastSeenCount > entries.length) lastSeenCount = entries.length;
-      if (!chatStarted){ lastSeenCount = entries.length; chatStarted = true; }
-      else if (chatOpen){
-        const fresh = entries.slice(lastSeenCount);
-        if (fresh.some(m => !mine(m))) playPing();
-        lastSeenCount = entries.length;
+      const newestT = entries[entries.length - 1].t || 0;
+
+      // Messages are "unseen" if they arrived after our saved watermark and
+      // aren't ours. This survives reloads, so old messages never re-notify.
+      const unseen = entries.filter(m => !mine(m) && (m.t || 0) > lastSeenT);
+
+      if (!chatStarted){
+        // First render after page load: don't notify for history. Just reflect
+        // any genuinely-unseen messages as a badge count (no ping/sound).
+        chatStarted = true;
+        if (chatOpen){
+          markSeen(newestT);
+        } else if (unseen.length){
+          unread = unseen.length;
+          const b = $("chatBadge"); b.textContent = unread>99?"99+":String(unread); b.hidden=false;
+        }
+      } else if (chatOpen){
+        // Chat is open: ping for fresh partner messages, then mark all seen.
+        if (unseen.length) playPing();
+        markSeen(newestT);
       } else {
-        const fresh = entries.slice(lastSeenCount).filter(m => !mine(m));
-        if (fresh.length){ unread += fresh.length; const b = $("chatBadge"); b.textContent = unread>99?"99+":String(unread); b.hidden=false; playPing(); }
-        lastSeenCount = entries.length;
+        // Chat closed: bump the badge and ping for new partner messages.
+        if (unseen.length){
+          unread = unseen.length;
+          const b = $("chatBadge"); b.textContent = unread>99?"99+":String(unread); b.hidden=false;
+          playPing();
+        }
       }
 
       const wasNearBottom = chatLog.scrollHeight - chatLog.scrollTop - chatLog.clientHeight < 80;
