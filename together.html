@@ -166,6 +166,7 @@
     .revealCard .rWho{ font-size:12px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; opacity:.7; margin:0 0 8px; }
     .revealCard .rText{ font-size:15.5px; line-height:1.55; margin:0; white-space:pre-wrap; word-break:break-word; }
     .revealCard .rText.empty{ opacity:.5; font-style:italic; }
+    .revealCard .rOrig{ font-size:13px; opacity:.5; font-style:italic; margin:8px 0 0; white-space:pre-wrap; word-break:break-word; }
 
     /* ---- tic tac toe ---- */
     .ttWrap{ display:flex; flex-direction:column; align-items:center; gap:16px; }
@@ -1114,12 +1115,17 @@
           const card = document.createElement("div");
           card.className = "revealCard" + (id === myId ? " mine" : "");
           const who = id === myId ? "You" : escapeHtml(a?.name || qPresence[id]?.name || "them");
-          const text = a?.text ? escapeHtml(a.text) : "";
+          const raw = a?.text || "";
+          const text = raw ? escapeHtml(raw) : "";
           card.innerHTML =
             `<p class="rWho">${who}</p>` +
-            (text ? `<p class="rText">${text}</p>` : `<p class="rText empty">— no answer —</p>`);
+            (text
+              ? `<p class="rText" data-text="${escapeHtml(raw)}">${text}</p><p class="rOrig" hidden></p>`
+              : `<p class="rText empty">— no answer —</p>`);
           revealArea.appendChild(card);
         });
+        // translate the revealed answers if the question-translate toggle is on
+        applyAnswerTranslations();
 
         // whose turn to draw next
         const nextIsMe = q.nextDrawer === myId || !q.nextDrawer;
@@ -1194,14 +1200,47 @@
         if (qTranslateOn && TRANSLATE_MODE === "server") toast("Translating via a free online service 🌐");
         updateQTranslateUI();
         renderQuestionTranslation();
+        applyAnswerTranslations();
       });
       sel.addEventListener("change", () => {
         qTargetLang = sel.value;
         try { localStorage.setItem("tg_q_translate_lang", qTargetLang); } catch(_){}
         updateQTranslateUI();
         renderQuestionTranslation();
+        applyAnswerTranslations();
       });
       updateQTranslateUI();
+    }
+
+    // translate the revealed answer cards, mirroring the chat translation pattern
+    async function applyAnswerTranslations(){
+      const area = $("revealArea");
+      if (!area || area.hidden) return;
+      const cards = area.querySelectorAll(".rText[data-text]");
+      // translation off (or unavailable) → show originals, clear any prior translation
+      if (!qTranslateOn || !TRANSLATE_OK){
+        cards.forEach(t => {
+          t.textContent = t.dataset.text;
+          const orig = t.parentElement.querySelector(".rOrig");
+          if (orig){ orig.hidden = true; orig.textContent = ""; }
+          delete t.dataset.translatedFor;
+        });
+        return;
+      }
+      for (const t of cards){
+        if (t.dataset.translatedFor === qTargetLang) continue;
+        const original = t.dataset.text;
+        const orig = t.parentElement.querySelector(".rOrig");
+        const translated = await translateText(original, qTargetLang);
+        t.dataset.translatedFor = qTargetLang;
+        if (translated && translated !== original){
+          t.textContent = translated;
+          if (orig){ orig.textContent = "original: " + original; orig.hidden = false; }
+        } else {
+          t.textContent = original;
+          if (orig){ orig.hidden = true; orig.textContent = ""; }
+        }
+      }
     }
 
     async function renderQuestionTranslation(){
