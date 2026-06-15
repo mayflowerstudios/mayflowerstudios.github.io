@@ -1549,7 +1549,9 @@
       const wasNearBottom = chatLog.scrollHeight - chatLog.scrollTop - chatLog.clientHeight < 80;
       chatLog.innerHTML = "";
       let prevT = null;
+      let _renderErr = null;
       for (const m of entries){
+       try {
         if (isNewDay(prevT, m.t)){
           const div = document.createElement("div");
           div.className = "dateDivider";
@@ -1577,13 +1579,18 @@
             hint + `<div class="who">${who}${timeTag}</div>`;
         }
         chatLog.appendChild(wrap);
+       } catch(err){
+        // one malformed message must never abort the whole render
+        if (!_renderErr) _renderErr = err;
+        console.error("[chat] render skipped a message:", err, m);
+       }
       }
       if (chatOpen || wasNearBottom) chatLog.scrollTop = chatLog.scrollHeight;
       // diagnostic: how many message nodes are actually in the log after render
       try {
         const painted = chatLog.querySelectorAll(".msg").length;
         const dEl = document.getElementById("chatDebug");
-        if (dEl) dEl.textContent = dEl.textContent.replace(/ paint:\d+/,"") + " paint:" + painted;
+        if (dEl) dEl.textContent = dEl.textContent.replace(/ paint:\S+/,"") + " paint:" + painted + (_renderErr ? (" perr:" + ((_renderErr.message||"").slice(0,18))) : "");
       } catch(_){}
       if (translateOn) applyChatTranslations().then(() => {
         if (chatOpen || wasNearBottom) chatLog.scrollTop = chatLog.scrollHeight;
