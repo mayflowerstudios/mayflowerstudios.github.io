@@ -784,7 +784,6 @@
   <div class="chatPop" id="chatPop">
     <div class="chatPopHead">
       <strong>💬 Chat</strong>
-      <span id="chatDebug" style="font-size:10px;opacity:.5;margin-left:8px;">…</span>
       <span class="chatHeadTools">
         <button class="miniGhost" id="soundToggle" title="Notification sound">🔔</button>
         <button class="miniGhost" id="translateToggle" title="Translate incoming messages">🌐 Off</button>
@@ -2209,27 +2208,13 @@
       // ---- live feed ----
       // Plain ref + onChildAdded, the exact pattern the shared drawing uses to
       // sync live. Render synchronously on each event (no rAF indirection).
-      const _dbg = { evt:0, get:"?", err:"" };
-      function showDbg(){
-        const el = $("chatDebug");
-        if (el) el.textContent = `evt:${_dbg.evt} get:${_dbg.get}${_dbg.err ? " ERR:"+_dbg.err : ""}`;
-      }
-      showDbg();
-      // surface ANY uncaught error so a silent throw can't hide
-      window.addEventListener("error", e => { _dbg.err = (e.message||"err").slice(0,30); showDbg(); });
-
-      get(chatRef).then(s => { _dbg.get = String(Object.keys(s.val()||{}).length); showDbg(); })
-                  .catch(e => { _dbg.get = "ERR:"+(e&&e.code||"get"); showDbg(); });
-
       onChildAdded(chatRef, snap => {
         const m = snap.val(); if (!m) return;
         chatMsgsStore[snap.key] = m;
-        _dbg.evt++; showDbg();
         try { renderChat(chatMsgsStore); }
-        catch(err){ _dbg.err = "render:"+((err&&err.message||"").slice(0,22)); showDbg(); console.error("[chat] render threw:", err); }
+        catch(err){ console.error("[chat] render threw:", err); }
       }, err => {
         console.error("[chat] live feed error:", err && err.code, err);
-        _dbg.err = "feed:"+(err&&err.code||"?"); showDbg();
         toast("Chat can't load — check the database rules");
       });
       onChildRemoved(chatRef, snap => {
