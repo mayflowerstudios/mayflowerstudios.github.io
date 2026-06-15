@@ -1140,6 +1140,35 @@
 
       chatRef = ref(db, `together/${ROOM}/chat`);
 
+      // ---- live feed (attached FIRST so nothing else can block it) ----
+      // Same mechanism the shared drawing uses (plain ref + onChildAdded), which
+      // syncs live in this app. onChildAdded replays existing messages on attach,
+      // then fires once per new message.
+      let _renderQueued = false;
+      function queueRender(){
+        if (_renderQueued) return;
+        _renderQueued = true;
+        requestAnimationFrame(() => { _renderQueued = false; renderChat(chatMsgsStore); });
+      }
+      let _dbgEvents = 0, _dbgConn = "?";
+      const dbgEl = $("chatDebug");
+      function dbg(){ if (dbgEl) dbgEl.textContent = `conn:${_dbgConn} · evt:${_dbgEvents}`; }
+      onValue(ref(db, ".info/connected"), s => { _dbgConn = (s.val() === true) ? "on" : "off"; dbg(); });
+
+      onChildAdded(chatRef, snap => {
+        const m = snap.val(); if (!m) return;
+        chatMsgsStore[snap.key] = m;
+        _dbgEvents++; dbg();
+        queueRender();
+      }, err => {
+        console.error("[chat] live feed error:", err && err.code, err);
+        if (dbgEl) dbgEl.textContent = "ERR: " + (err && (err.code || err.message) || "feed");
+        toast("Chat can't load — check the database rules");
+      });
+      onChildRemoved(chatRef, snap => {
+        if (snap.key in chatMsgsStore){ delete chatMsgsStore[snap.key]; queueRender(); }
+      });
+
       function setBadge(){
         const b = $("chatBadge");
         if (unread > 0){ b.textContent = unread > 99 ? "99+" : String(unread); b.hidden = false; }
@@ -1223,51 +1252,10 @@
       chatInput.addEventListener("keydown", e => { if (e.key === "Enter") sendChat(); });
 
       // ---- pickers + media ----
-      setupChatPickers(chatInput);
-
-      // ---- live feed ----
-      // Two listeners working together:
-      //  • onChildAdded fires reliably for each new message in real time (this is
-      //    the same pattern the shared drawing uses, which updates live). Each new
-      //    message is merged into chatMsgsStore and the chat re-rendered.
-      //  • onValue gives us the initial batch and also catches edits/removals, and
-      //    exposes an error so a rules/permission problem isn't silent.
-      // ---- live feed ----
-      // Use the SAME mechanism the shared drawing uses (plain ref + onChildAdded),
-      // since that is confirmed to sync live in this app. onChildAdded replays
-      // existing messages on attach, then fires once per new message.
-      const chatPlainRef = chatRef;   // ref(db, `together/${ROOM}/chat`)
-
-      let _renderQueued = false;
-      function queueRender(){
-        if (_renderQueued) return;
-        _renderQueued = true;
-        requestAnimationFrame(() => { _renderQueued = false; renderChat(chatMsgsStore); });
-      }
-
-      // visible diagnostic: shows connection + a live event counter in the header
-      let _dbgEvents = 0;
-      const dbgEl = $("chatDebug");
-      function dbg(){
-        if (dbgEl) dbgEl.textContent = `conn:${_dbgConn} · evt:${_dbgEvents}`;
-      }
-      let _dbgConn = "?";
-      onValue(ref(db, ".info/connected"), s => { _dbgConn = (s.val() === true) ? "on" : "off"; dbg(); });
-
-      onChildAdded(chatPlainRef, snap => {
-        const m = snap.val(); if (!m) return;
-        chatMsgsStore[snap.key] = m;
-        _dbgEvents++; dbg();
-        queueRender();
-      }, err => {
-        console.error("[chat] live feed error:", err && err.code, err);
-        if (dbgEl) dbgEl.textContent = "ERR: " + (err && err.code || "feed");
-        toast("Chat can't load — check the database rules");
-      });
-
-      onChildRemoved(chatPlainRef, snap => {
-        if (snap.key in chatMsgsStore){ delete chatMsgsStore[snap.key]; queueRender(); }
-      });
+      // Guard so any picker wiring error can't abort setupChat before the live
+      // feed attaches.
+      try { setupChatPickers(chatInput); }
+      catch(err){ console.error("[chat] picker setup failed:", err); }
     }
 
     // ============================================================
