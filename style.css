@@ -563,12 +563,16 @@ hr.sep { border: 0; height: 1px; background: var(--border); margin: 14px 0; }
 }
 .mf-chat-fab:hover { transform: translateY(-2px) scale(1.04); }
 .mf-chat-badge {
-  position: absolute; top: -2px; right: -2px; min-width: 19px; height: 19px;
-  border-radius: 10px; background: #fb7185; color: #fff; font-size: 11px; font-weight: 600;
+  position: absolute; min-width: 19px; height: 19px;
+  border-radius: 10px; color: #fff; font-size: 11px; font-weight: 600;
   display: none; align-items: center; justify-content: center; padding: 0 5px;
-  font-family: var(--font-b);
+  font-family: var(--font-b); border: 2px solid var(--bg);
 }
 .mf-chat-badge.show { display: flex; }
+/* DM messages — top-right (rose) */
+.mf-badge-dm { top: -4px; right: -4px; background: #fb7185; }
+/* friend requests — opposite corner, top-left (violet) */
+.mf-badge-req { top: -4px; left: -4px; background: var(--violet-deep); }
 
 .mf-chat-panel {
   position: fixed; right: 20px; bottom: 88px; z-index: 300;

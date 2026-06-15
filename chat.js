@@ -21,9 +21,14 @@
   let openPanel = false;
   let wired = false;
   let unsubscribe = null;
-  let unseenGlobal = 0;
-  const seenAt = { global: Date.now() };
-  const friendsUnsub = { req: null, list: null };
+  let unseenDM = 0;             // unread DM messages (across friend threads)
+  let reqCount = 0;             // pending friend requests
+  const seenAt = { dm: {} };    // per-friend last-seen timestamp
+  const friendsUnsub = { req: null, list: null, dmWatch: {} };
+  let muted = false;
+  try { muted = localStorage.getItem("mf_chat_muted") === "1"; } catch (_) {}
+  let audioCtx = null;
+  let myFriends = {};           // uid -> {t}, kept current for DM watchers
 
   function esc(s) {
     return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
@@ -41,7 +46,9 @@
     const fab = document.createElement("button");
     fab.id = "mfChatFab";
     fab.className = "mf-chat-fab";
-    fab.innerHTML = '💬<span class="mf-chat-badge" id="mfChatBadge"></span>';
+    fab.innerHTML = '💬'
+      + '<span class="mf-chat-badge mf-badge-dm" id="mfDmBadge"></span>'
+      + '<span class="mf-chat-badge mf-badge-req" id="mfReqBadge" title="Friend requests"></span>';
     fab.setAttribute("aria-label", "Chat");
 
     const panel = document.createElement("div");
@@ -54,6 +61,7 @@
           <button class="mf-ct" data-ctab="dm">💌 Friends</button>
         </div>
         <div class="mf-chat-headtools">
+          <button class="mf-tr-btn" id="mfMuteBtn" title="Mute message sounds">🔔</button>
           <button class="mf-tr-btn" id="mfTrBtn" title="Translate messages">🌐</button>
           <select class="mf-tr-lang" id="mfTrLang" hidden></select>
           <button class="mf-chat-x" id="mfChatX" aria-label="Close">✕</button>
@@ -101,29 +109,74 @@
       if (translateOn) applyTranslations();
     });
     updateTrUI();
+
+    // mute toggle (message sounds — DMs only)
+    const muteBtn = panel.querySelector("#mfMuteBtn");
+    function updateMuteUI() {
+      muteBtn.textContent = muted ? "🔕" : "🔔";
+      muteBtn.title = muted ? "Message sounds are muted" : "Mute message sounds";
+      muteBtn.classList.toggle("on", !muted);
+    }
+    muteBtn.addEventListener("click", () => {
+      muted = !muted;
+      try { localStorage.setItem("mf_chat_muted", muted ? "1" : "0"); } catch (_) {}
+      updateMuteUI();
+    });
+    updateMuteUI();
+  }
+
+  // ---- DM chime (a soft two-note ping; synthesized, no audio file) ----
+  function playChime() {
+    if (muted) return;
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      const now = audioCtx.currentTime;
+      const notes = [(880), (1175)]; // A5 -> D6, gentle
+      notes.forEach((f, i) => {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = "sine"; o.frequency.value = f;
+        const t0 = now + i * 0.12;
+        g.gain.setValueAtTime(0, t0);
+        g.gain.linearRampToValueAtTime(0.18, t0 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.32);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(t0); o.stop(t0 + 0.34);
+      });
+    } catch (_) {}
   }
 
   function togglePanel(force) {
     openPanel = (typeof force === "boolean") ? force : !openPanel;
     document.getElementById("mfChatPanel").classList.toggle("open", openPanel);
-    if (openPanel) {
-      if (view === "global") { unseenGlobal = 0; seenAt.global = Date.now(); updateBadge(); }
-      render();
-    }
+    if (openPanel) render();
   }
 
   function setView(v) {
     view = v;
+    // entering the Friends tab clears the request glance; opening a DM clears its unread
     render();
   }
 
-  function updateBadge() {
-    const b = document.getElementById("mfChatBadge");
-    if (!b) return;
-    if (unseenGlobal > 0 && !(openPanel && view === "global")) {
-      b.textContent = unseenGlobal > 9 ? "9+" : unseenGlobal;
-      b.classList.add("show");
-    } else b.classList.remove("show");
+  function markDmSeen(fid) {
+    seenAt.dm[fid] = Date.now();
+    // We show a single combined DM badge; opening a thread clears the glance.
+    unseenDM = 0;
+    updateBadges();
+  }
+
+  function updateBadges() {
+    const dm = document.getElementById("mfDmBadge");
+    if (dm) {
+      if (unseenDM > 0) { dm.textContent = unseenDM > 9 ? "9+" : unseenDM; dm.classList.add("show"); }
+      else dm.classList.remove("show");
+    }
+    const rq = document.getElementById("mfReqBadge");
+    if (rq) {
+      if (reqCount > 0) { rq.textContent = reqCount > 9 ? "9+" : reqCount; rq.classList.add("show"); }
+      else rq.classList.remove("show");
+    }
   }
 
   // ---- rendering ----
@@ -151,6 +204,8 @@
       // DM mode: either a people list, or an open thread
       if (!dmWith) { renderDmList(); foot.innerHTML = ""; }
       else {
+        // opening this thread marks it seen; recompute the DM badge
+        markDmSeen(dmWith);
         body.innerHTML = `<div class="mf-chat-dmhead" id="mfDmHead"></div><div class="mf-chat-log" id="mfChatLog"></div>`;
         renderDmHead();
         foot.innerHTML = composerHTML();
@@ -625,14 +680,46 @@
   }
 
   // ---- background: count unseen global messages for the badge ----
-  function watchGlobalForBadge() {
-    const q = mods.query(mods.ref(db, "chat/global"), mods.limitToLast(30));
-    mods.onChildAdded(q, (snap) => {
-      const m = snap.val(); if (!m) return;
-      if (m.uid === me) return;
-      if (m.t && m.t > (seenAt.global || 0) && !(openPanel && view === "global")) {
-        unseenGlobal++; updateBadge();
-      }
+  // Watch all friend DM threads for new incoming messages → chime + DM badge.
+  // Re-armed whenever the friends list changes.
+  function rearmDmWatchers() {
+    if (!mods || !me) return;
+    Object.keys(myFriends || {}).forEach(fid => {
+      if (friendsUnsub.dmWatch[fid]) return; // already watching
+      const node = mods.query(mods.ref(db, `dm/${pairKey(me, fid)}`), mods.limitToLast(1));
+      const handler = (snap) => {
+        const m = snap.val(); if (!m) return;
+        if (m.uid === me) return;                       // our own message
+        const seen = seenAt.dm[fid] || 0;
+        if (!m.t || m.t <= seen) return;                // already accounted for
+        // viewing this exact thread? then it's seen, no chime/badge
+        if (openPanel && view === "dm" && dmWith === fid) { seenAt.dm[fid] = m.t; return; }
+        seenAt.dm[fid] = m.t;
+        unseenDM++; updateBadges();
+        playChime();
+      };
+      mods.onChildAdded(node, handler);
+      friendsUnsub.dmWatch[fid] = () => mods.off(node, "child_added", handler);
+    });
+  }
+
+  // Pending friend-request count → request badge.
+  function watchRequestCount() {
+    if (!MFAuth.watchFriendRequests) return;
+    MFAuth.watchFriendRequests((reqs) => {
+      reqCount = Object.keys(reqs || {}).length;
+      updateBadges();
+    });
+  }
+
+  // Keep the friends map current so DM watchers cover every thread.
+  function watchFriendsForWatchers() {
+    if (!MFAuth.watchFriends) return;
+    MFAuth.watchFriends((friends) => {
+      myFriends = friends || {};
+      // prime seenAt for brand-new friends so old history doesn't chime
+      Object.keys(myFriends).forEach(fid => { if (!(fid in seenAt.dm)) seenAt.dm[fid] = Date.now(); });
+      rearmDmWatchers();
     });
   }
 
@@ -652,7 +739,8 @@
     import(`https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js`).then(m => {
       mods = m;
       wired = true;
-      watchGlobalForBadge();
+      watchRequestCount();
+      watchFriendsForWatchers();
       if (openPanel) render();
     });
   }
