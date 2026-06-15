@@ -832,7 +832,8 @@
 
   <script src="/shared.js"></script>
   <script src="/auth.js"></script>
-  <script src="fireflies.js"></script>
+  <script>window._firefliesLoaded = true;</script>
+  <script src="/fireflies.js"></script>
 
   <script type="module">
     import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -999,8 +1000,11 @@
       }
     });
 
+    let roomEntered = false;
     function enterRoom(room){
       if (!FIREBASE_READY){ toast("Firebase not configured"); return; }
+      if (roomEntered) return;   // never wire the room (and its listeners) twice
+      roomEntered = true;
       ROOM = room;
       $("gateView").style.display = "none";
       $("roomView").style.display = "block";

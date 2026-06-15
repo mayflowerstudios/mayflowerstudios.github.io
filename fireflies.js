@@ -1,3 +1,14 @@
+// Guard against running twice. This file is referenced both by a direct
+// <script src="fireflies.js"> tag on some pages AND injected by shared.js's
+// loadFireflies(). Running twice in the same global scope previously threw
+// "Identifier 'canvas' has already been declared", a fatal SyntaxError that
+// aborted other scripts on the page. The IIFE keeps canvas/ctx local, and the
+// flag makes a second load a harmless no-op.
+if (window._firefliesLoaded) {
+  // already initialized — do nothing
+} else {
+  window._firefliesLoaded = true;
+(function () {
 const canvas = document.getElementById("fireflies");
 if (!canvas) {
   console.warn("Fireflies canvas not found!");
@@ -352,4 +363,6 @@ if (!canvas) {
     if (document.hidden) stop();
     else if (!externallyPaused) start();
   });
+}
+})();
 }
