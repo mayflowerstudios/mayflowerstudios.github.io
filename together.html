@@ -1113,6 +1113,7 @@
     let lastSeenCount = 0;
     let chatStarted = false;
     let lastChatMsgs = {};
+    let chatMsgsStore = {};   // accumulated messages (keyed by push id) for live updates
     let _lastChatSig = null;
 
     // chat translation state
@@ -1222,12 +1223,44 @@
       setupChatPickers(chatInput);
 
       // ---- live feed ----
-      onValue(query(chatRef, limitToLast(100)), snap => {
+      // Two listeners working together:
+      //  • onChildAdded fires reliably for each new message in real time (this is
+      //    the same pattern the shared drawing uses, which updates live). Each new
+      //    message is merged into chatMsgsStore and the chat re-rendered.
+      //  • onValue gives us the initial batch and also catches edits/removals, and
+      //    exposes an error so a rules/permission problem isn't silent.
+      const feedRef = query(chatRef, limitToLast(100));
+
+      let _renderQueued = false;
+      function queueRender(){
+        if (_renderQueued) return;
+        _renderQueued = true;
+        // coalesce the burst of onChildAdded events fired on first attach into
+        // a single render; live messages after that render on the next frame too
+        requestAnimationFrame(() => { _renderQueued = false; renderChat(chatMsgsStore); });
+      }
+
+      onChildAdded(feedRef, snap => {
+        const m = snap.val(); if (!m) return;
+        chatMsgsStore[snap.key] = m;
+        queueRender();
+      }, err => {
+        console.error("[chat] live feed error:", err && err.code, err);
+        toast("Chat can't load — check the database rules");
+      });
+
+      onValue(feedRef, snap => {
         const val = snap.val() || {};
+        // adopt the full snapshot as the source of truth (covers first load,
+        // removals, and the history cap dropping old messages)
+        chatMsgsStore = val;
         const sig = Object.keys(val).sort().join("|");
         if (sig === _lastChatSig) return;
         _lastChatSig = sig;
         renderChat(val);
+      }, err => {
+        console.error("[chat] feed error:", err && err.code, err);
+        toast("Chat can't load — check the database rules");
       });
     }
 
