@@ -378,11 +378,18 @@
       font-size:16px; opacity:.7; padding:4px 6px; border-radius:8px;
     }
     .chatClose:hover{ opacity:1; background:rgba(255,255,255,.06); }
+    .chatLogWrap{
+      flex:1 1 auto; min-height:0; position:relative; display:flex;
+    }
     .chatLog{
       flex:1 1 auto; min-height:0; overflow-y:auto;
       display:flex; flex-direction:column; gap:8px; padding:12px;
     }
-    .chatEmpty{ opacity:.5; font-size:14px; text-align:center; margin:auto 0; }
+    .chatEmpty{
+      position:absolute; inset:0; margin:0;
+      display:flex; align-items:center; justify-content:center;
+      opacity:.5; font-size:14px; text-align:center; pointer-events:none;
+    }
     .msg{ display:flex; flex-direction:column; max-width:85%; }
     .msg.mine{ align-self:flex-end; align-items:flex-end; }
     .msg .bubble{
@@ -797,7 +804,8 @@
       </span>
       <button class="chatClose" id="chatClose" aria-label="Close chat">✕</button>
     </div>
-    <div class="chatLog" id="chatLog">
+    <div class="chatLogWrap" id="chatLogWrap">
+      <div class="chatLog" id="chatLog"></div>
       <p class="chatEmpty" id="chatEmpty">Say hi 🌸</p>
     </div>
 
@@ -1003,7 +1011,7 @@
     let roomEntered = false;
     function enterRoom(room){
       if (!FIREBASE_READY){ toast("Firebase not configured"); return; }
-      if (roomEntered) return;   // never wire the room (and its listeners) twice
+      if (roomEntered) return;
       roomEntered = true;
       ROOM = room;
       $("gateView").style.display = "none";
@@ -2573,14 +2581,17 @@
     function renderChat(msgs){
       lastChatMsgs = msgs || {};
       const chatLog = $("chatLog"), chatEmpty = $("chatEmpty");
-      // If the chat DOM isn't present yet (listener fired before the popup
-      // mounted, or markup missing), skip quietly instead of throwing — a throw
-      // here would kill the Firebase callback and stop all future updates.
-      if (!chatLog || !chatEmpty) return;
+      // If the chat log itself isn't present yet (listener fired before the
+      // popup mounted), skip quietly instead of throwing — a throw here would
+      // kill the Firebase callback and stop all future updates. chatEmpty is
+      // optional: it lives OUTSIDE chatLog now so innerHTML clears can't delete
+      // it, but render must not depend on it existing.
+      if (!chatLog) return;
+      const showEmpty = v => { if (chatEmpty) chatEmpty.style.display = v ? "flex" : "none"; };
       let entries = Object.values(lastChatMsgs).sort((a,b) => (a.t||0)-(b.t||0));
       if (entries.length > 100) entries = entries.slice(entries.length - 100);
-      if (!entries.length){ chatEmpty.style.display = "block"; lastSeenCount = 0; chatStarted = true; return; }
-      chatEmpty.style.display = "none";
+      if (!entries.length){ showEmpty(true); lastSeenCount = 0; chatStarted = true; return; }
+      showEmpty(false);
 
       const mine = m => m.by === myId;
       if (lastSeenCount > entries.length) lastSeenCount = entries.length;
