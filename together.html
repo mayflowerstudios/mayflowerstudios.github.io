@@ -1150,9 +1150,10 @@
         _renderQueued = true;
         requestAnimationFrame(() => { _renderQueued = false; renderChat(chatMsgsStore); });
       }
-      let _dbgEvents = 0, _dbgConn = "?", _dbgGet = "?", _dbgWrites = 0;
+      let _dbgEvents = 0, _dbgConn = "?", _dbgGet = "?", _dbgWrites = 0, _dbgRen = "?";
       const dbgEl = $("chatDebug");
-      function dbg(){ if (dbgEl) dbgEl.textContent = `room:${ROOM} conn:${_dbgConn} evt:${_dbgEvents} get:${_dbgGet} w:${_dbgWrites}`; }
+      function dbg(){ if (dbgEl) dbgEl.textContent = `room:${ROOM} conn:${_dbgConn} evt:${_dbgEvents} get:${_dbgGet} w:${_dbgWrites} ren:${_dbgRen}`; }
+      window._tgDbg = (n, painted) => { _dbgRen = n + "/" + painted; dbg(); };
       onValue(ref(db, ".info/connected"), s => { _dbgConn = (s.val() === true) ? "on" : "off"; dbg(); });
 
       // one-time probe: how many messages actually exist at this exact path right now
@@ -1528,6 +1529,7 @@
       if (!chatLog || !chatEmpty) return;
       let entries = Object.values(lastChatMsgs).sort((a,b) => (a.t||0)-(b.t||0));
       if (entries.length > 100) entries = entries.slice(entries.length - 100);
+      try { if (window._tgDbg) window._tgDbg(entries.length, chatLog.children.length); } catch(_){}
       if (!entries.length){ chatEmpty.style.display = "block"; lastSeenCount = 0; chatStarted = true; return; }
       chatEmpty.style.display = "none";
 
@@ -1577,6 +1579,12 @@
         chatLog.appendChild(wrap);
       }
       if (chatOpen || wasNearBottom) chatLog.scrollTop = chatLog.scrollHeight;
+      // diagnostic: how many message nodes are actually in the log after render
+      try {
+        const painted = chatLog.querySelectorAll(".msg").length;
+        const dEl = document.getElementById("chatDebug");
+        if (dEl) dEl.textContent = dEl.textContent.replace(/ paint:\d+/,"") + " paint:" + painted;
+      } catch(_){}
       if (translateOn) applyChatTranslations().then(() => {
         if (chatOpen || wasNearBottom) chatLog.scrollTop = chatLog.scrollHeight;
       });
