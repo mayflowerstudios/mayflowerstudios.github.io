@@ -136,6 +136,37 @@
     }
     .qPack.active{ background:rgba(251,113,133,.18); border-color:rgba(251,113,133,.32); }
 
+    /* ---- question game: answer + reveal ---- */
+    .qTurn{ text-align:center; font-size:13.5px; opacity:.8; margin:10px 0 0; min-height:18px; }
+    .qTurn b{ color:#fbcfe8; }
+    .answerArea{ margin-top:18px; }
+    .answerBox{
+      width:100%; min-height:92px; resize:vertical; padding:13px 15px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.14); background:rgba(0,0,0,.25);
+      color:inherit; font-size:15px; font-family:inherit; line-height:1.5;
+    }
+    .answerBox::placeholder{ opacity:.5; }
+    .answerBox:focus{ outline:none; border-color:rgba(167,139,250,.45); }
+    .answerBox:disabled{ opacity:.7; cursor:default; }
+    .answerStatus{ display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-top:12px; font-size:13px; }
+    .answerStatus .who2{
+      display:inline-flex; align-items:center; gap:7px;
+      padding:6px 12px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05);
+    }
+    .answerStatus .who2 .pin{ width:8px;height:8px;border-radius:50%; background:#facc15; box-shadow:0 0 7px rgba(250,204,21,.6); }
+    .answerStatus .who2.done .pin{ background:#34d399; box-shadow:0 0 7px rgba(52,211,153,.7); }
+    .reveal{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:18px; }
+    @media (max-width:560px){ .reveal{ grid-template-columns:1fr; } }
+    .revealCard{
+      border:1px solid rgba(167,139,250,.25); background:rgba(167,139,250,.07);
+      border-radius:16px; padding:16px 18px;
+    }
+    .revealCard.mine{ border-color:rgba(251,113,133,.30); background:rgba(251,113,133,.08); }
+    .revealCard .rWho{ font-size:12px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; opacity:.7; margin:0 0 8px; }
+    .revealCard .rText{ font-size:15.5px; line-height:1.55; margin:0; white-space:pre-wrap; word-break:break-word; }
+    .revealCard .rText.empty{ opacity:.5; font-style:italic; }
+
     /* ---- tic tac toe ---- */
     .ttWrap{ display:flex; flex-direction:column; align-items:center; gap:16px; }
     .ttStatus{ font-size:18px; min-height:26px; text-align:center; }
@@ -421,8 +452,8 @@
               <div class="gamePanel" data-panel="questions">
                 <div class="panelHead">
                   <div>
-                    <h2>💬 Questions</h2>
-                    <p class="hint">Pull a card, both answer out loud, then draw the next one. Either of you can draw.</p>
+                    <h2>💬 Question game</h2>
+                    <p class="hint">One of you draws a card, you both type your answer, and they reveal together. Then it's the other's turn to draw.</p>
                   </div>
                   <div class="panelTools">
                     <button class="miniGhost" id="qTranslateToggle" title="Translate the question">🌐 Translate: Off</button>
@@ -441,11 +472,25 @@
                     </select>
                   </div>
                 </div>
-                <div class="qCard"><p class="qText" id="qText">Tap “New question” to start 🌙</p></div>
+                <div class="qCard"><p class="qText" id="qText">Pick a pack and draw the first card 🌙</p></div>
                 <p class="qOrig" id="qOrig" hidden></p>
                 <p class="qMeta" id="qMeta"></p>
+                <p class="qTurn" id="qTurn"></p>
+
+                <!-- answer phase -->
+                <div class="answerArea" id="answerArea" hidden>
+                  <textarea class="answerBox" id="answerBox" maxlength="800" placeholder="Type your answer… (only revealed once you both submit)"></textarea>
+                  <div class="qActions">
+                    <button class="btn primary" id="submitAnsBtn">✓ Submit answer</button>
+                  </div>
+                  <div class="answerStatus" id="answerStatus"></div>
+                </div>
+
+                <!-- reveal phase -->
+                <div class="reveal" id="revealArea" hidden></div>
+
                 <div class="qActions">
-                  <button class="btn primary" id="newQBtn">🎲 New question</button>
+                  <button class="btn primary" id="newQBtn">🎲 Draw a card</button>
                 </div>
                 <div class="qPacks" id="qPacks">
                   <div class="qPack active" data-pack="cute">🌸 Cute</div>
@@ -931,8 +976,20 @@
     };
     let qPack = "cute";
     let currentQText = "";   // raw (untranslated) text of the shown question
+    let currentQ = null;     // the full question object from Firebase
+    let qReady = false;
+    let qLastRound = 0;      // detect when a new card is drawn, to clear the box
+
+    function qOtherId(){
+      // the present partner's id (anyone who isn't me), used to know who answered
+      const here = Object.keys(qPresence || {}).filter(id => id !== myId);
+      return here[0] || null;
+    }
+    let qPresence = {};
 
     function setupQuestions(){
+      if (qReady) return; qReady = true;
+
       $("qPacks").querySelectorAll(".qPack").forEach(p => {
         p.addEventListener("click", () => {
           $("qPacks").querySelectorAll(".qPack").forEach(x=>x.classList.remove("active"));
@@ -940,23 +997,167 @@
           qPack = p.dataset.pack;
         });
       });
+
+      // keep a light copy of presence so we can label answers / track who's here
+      onValue(ref(db, `together/${ROOM}/presence`), (snap) => {
+        qPresence = snap.val() || {};
+        if (currentQ) renderQuestionGame(currentQ);
+      });
+
+      // DRAW a card
       $("newQBtn").addEventListener("click", () => {
+        // turn check: if a round exists and it isn't my turn, block (first draw is always allowed)
+        if (currentQ && currentQ.nextDrawer && currentQ.nextDrawer !== myId){
+          toast("It's their turn to draw 🌙");
+          return;
+        }
         const list = QUESTIONS[qPack];
         const idx = Math.floor(Math.random() * list.length);
-        set(ref(db, `together/${ROOM}/question`), { pack:qPack, idx, by:(displayName||"someone"), t:Date.now() });
+        const round = (currentQ?.round || 0) + 1;
+        set(ref(db, `together/${ROOM}/question`), {
+          pack: qPack, idx, round,
+          drawnBy: myId,
+          drawnByName: (displayName || "someone"),
+          // next round the OTHER person draws
+          nextDrawer: qOtherId() || null,
+          answers: {},
+          revealed: false,
+          t: Date.now()
+        });
       });
+
+      // SUBMIT an answer
+      $("submitAnsBtn").addEventListener("click", () => {
+        if (!currentQ) return;
+        const text = ($("answerBox").value || "").trim();
+        if (!text){ toast("Type something first 🌸"); return; }
+        const round = currentQ.round || 0;
+        update(ref(db, `together/${ROOM}/question/answers/${myId}`), {
+          text, name: (displayName || "someone"), round, t: Date.now()
+        }).then(checkReveal);
+      });
+
       onValue(ref(db, `together/${ROOM}/question`), (snap) => {
-        const q = snap.val(); if (!q) return;
-        const list = QUESTIONS[q.pack]; if (!list) return;
-        currentQText = list[q.idx] || "🌙";
-        $("qText").textContent = currentQText;
-        $("qMeta").textContent = "drawn by " + (q.by || "someone");
-        // sync the active pack chip
-        $("qPacks").querySelectorAll(".qPack").forEach(x => x.classList.toggle("active", x.dataset.pack === q.pack));
-        qPack = q.pack;
-        renderQuestionTranslation();
+        currentQ = snap.val();
+        if (!currentQ){ renderQuestionGame(null); return; }
+        const list = QUESTIONS[currentQ.pack];
+        if (!list){ renderQuestionGame(null); return; }
+        currentQText = list[currentQ.idx] || "🌙";
+        // a brand-new card was drawn → clear my stale answer text
+        const r = currentQ.round || 0;
+        if (r !== qLastRound){ qLastRound = r; $("answerBox").value = ""; }
+        // sync the active pack chip to whatever was drawn
+        $("qPacks").querySelectorAll(".qPack").forEach(x => x.classList.toggle("active", x.dataset.pack === currentQ.pack));
+        qPack = currentQ.pack;
+        renderQuestionGame(currentQ);
+        // if both have answered but it isn't flagged revealed yet, flip it
+        checkReveal();
       });
+
       setupQuestionTranslate();
+    }
+
+    // flip to revealed once both present players have answered this round
+    function checkReveal(){
+      if (!currentQ || currentQ.revealed) return;
+      const round = currentQ.round || 0;
+      const ans = currentQ.answers || {};
+      const answered = Object.keys(ans).filter(id => (ans[id]?.round || 0) === round);
+      const otherId = qOtherId();
+      // reveal when I've answered AND the partner has answered (or there's no partner present and I've answered solo? no — wait for two)
+      const bothIn = answered.includes(myId) && otherId && answered.includes(otherId);
+      if (bothIn){
+        set(ref(db, `together/${ROOM}/question/revealed`), true);
+      }
+    }
+
+    function renderQuestionGame(q){
+      const answerArea = $("answerArea");
+      const revealArea = $("revealArea");
+      const submitBtn  = $("submitAnsBtn");
+      const box        = $("answerBox");
+      const turnEl     = $("qTurn");
+      const statusEl   = $("answerStatus");
+
+      if (!q){
+        $("qText").textContent = "Pick a pack and draw the first card 🌙";
+        $("qMeta").textContent = "";
+        turnEl.textContent = "";
+        answerArea.hidden = true;
+        revealArea.hidden = true;
+        $("newQBtn").disabled = false;
+        renderQuestionTranslation();
+        return;
+      }
+
+      $("qMeta").textContent = "drawn by " + (q.drawnByName || "someone");
+      renderQuestionTranslation();
+
+      const round = q.round || 0;
+      const ans = q.answers || {};
+      const otherId = qOtherId();
+      const iAnswered = (ans[myId]?.round || 0) === round && !!ans[myId]?.text;
+      const theyAnswered = otherId && (ans[otherId]?.round || 0) === round && !!ans[otherId]?.text;
+
+      if (q.revealed){
+        // ---- REVEAL phase ----
+        answerArea.hidden = true;
+        revealArea.hidden = false;
+        revealArea.innerHTML = "";
+
+        const order = [myId, otherId].filter(Boolean);
+        // include anyone else who answered too (just in case)
+        Object.keys(ans).forEach(id => { if (!order.includes(id)) order.push(id); });
+
+        order.forEach(id => {
+          const a = ans[id];
+          const card = document.createElement("div");
+          card.className = "revealCard" + (id === myId ? " mine" : "");
+          const who = id === myId ? "You" : escapeHtml(a?.name || qPresence[id]?.name || "them");
+          const text = a?.text ? escapeHtml(a.text) : "";
+          card.innerHTML =
+            `<p class="rWho">${who}</p>` +
+            (text ? `<p class="rText">${text}</p>` : `<p class="rText empty">— no answer —</p>`);
+          revealArea.appendChild(card);
+        });
+
+        // whose turn to draw next
+        const nextIsMe = q.nextDrawer === myId || !q.nextDrawer;
+        turnEl.innerHTML = nextIsMe
+          ? `Your turn — <b>draw the next card</b> 🎲`
+          : `Waiting for <b>${escapeHtml(qPresence[q.nextDrawer]?.name || "them")}</b> to draw the next card…`;
+        $("newQBtn").disabled = !nextIsMe;
+        statusEl.innerHTML = "";
+        return;
+      }
+
+      // ---- ANSWER phase ----
+      revealArea.hidden = true;
+      answerArea.hidden = false;
+      $("newQBtn").disabled = true; // can't redraw mid-round
+
+      // restore my own answer text if I reloaded
+      if (iAnswered && box.value.trim() === ""){ box.value = ans[myId].text; }
+      box.disabled = iAnswered;
+      submitBtn.disabled = iAnswered;
+      submitBtn.textContent = iAnswered ? "✓ Submitted" : "✓ Submit answer";
+
+      // status pills
+      statusEl.innerHTML = "";
+      const mePill = document.createElement("span");
+      mePill.className = "who2" + (iAnswered ? " done" : "");
+      mePill.innerHTML = `<span class="pin"></span> You ${iAnswered ? "✓" : "…"}`;
+      statusEl.appendChild(mePill);
+
+      const themPill = document.createElement("span");
+      themPill.className = "who2" + (theyAnswered ? " done" : "");
+      const themName = otherId ? escapeHtml(qPresence[otherId]?.name || "them") : "partner";
+      themPill.innerHTML = `<span class="pin"></span> ${themName} ${theyAnswered ? "✓" : (otherId ? "…" : "(not here)")}`;
+      statusEl.appendChild(themPill);
+
+      turnEl.textContent = iAnswered
+        ? (theyAnswered ? "Revealing…" : "Waiting for them to answer…")
+        : "Type your answer, then submit 💜";
     }
 
     // ---- question translation (uses the shared translate engine below) ----
