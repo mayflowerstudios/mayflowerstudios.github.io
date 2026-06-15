@@ -331,18 +331,16 @@
   </style>
 
 <!-- OG:START -->
-<meta name="description" content="Cozy mods, bots, and worlds built with heart — designed for long-term communities." />
 <meta property="og:title" content="Together — Mayflower Studios" />
-<meta property="og:description" content="Cozy mods, bots, and worlds built with heart — designed for long-term communities." />
-<meta property="og:url" content="https://mayflowerstudios.net/together.html" />
+<meta property="og:description" content="A cozy little hub of things to do together — draw on a shared canvas, trade questions, and play games in real time." />
 <meta property="og:type" content="website" />
-<meta property="og:image" content="https://mayflowerstudios.net/assets/og/together.png" />
+<meta property="og:image" content="https://mayflowerstudios.net/assets/og/watch.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Together — Mayflower Studios" />
-<meta name="twitter:description" content="Cozy mods, bots, and worlds built with heart — designed for long-term communities." />
-<meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/together.png" />
+<meta name="twitter:description" content="Draw together, trade questions, and play games in real time." />
+<meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/watch.png" />
 <!-- OG:END -->
 </head>
 
@@ -1522,6 +1520,10 @@
     function renderChat(msgs){
       lastChatMsgs = msgs || {};
       const chatLog = $("chatLog"), chatEmpty = $("chatEmpty");
+      // If the chat DOM isn't present yet (listener fired before the popup
+      // mounted, or markup missing), skip quietly instead of throwing — a throw
+      // here would kill the Firebase callback and stop all future updates.
+      if (!chatLog || !chatEmpty) return;
       const entries = Object.values(lastChatMsgs).sort((a,b) => (a.t||0)-(b.t||0));
       if (!entries.length){ chatEmpty.style.display = "block"; lastSeenCount = 0; chatStarted = true; return; }
       chatEmpty.style.display = "none";
@@ -1579,7 +1581,9 @@
 
     async function applyChatTranslations(){
       if (!translateOn || !TRANSLATE_OK) return;
-      const bubbles = $("chatLog").querySelectorAll(".msg .bubble[data-text]");
+      const log = $("chatLog");
+      if (!log) return;
+      const bubbles = log.querySelectorAll(".msg .bubble[data-text]");
       for (const b of bubbles){
         if (b.dataset.translatedFor === targetLang) continue;
         const original = b.dataset.text;
