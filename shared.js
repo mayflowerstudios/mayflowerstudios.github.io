@@ -188,6 +188,8 @@
   function loadAuthAndChat() {
     // auth.js defines window.MFAuth (universal identity).
     if (!window.MFAuth) loadScript('/auth.js', { 'data-mf-auth': '1' });
+    // profile-view.js defines window.MFProfile (public profile overlay).
+    loadScript('/profile-view.js', { 'data-mf-profile': '1' });
     // chat.js injects the universal floating chat once MFAuth is ready.
     loadScript('/chat.js', { 'data-mf-chat': '1' });
   }

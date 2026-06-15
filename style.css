@@ -655,3 +655,78 @@ hr.sep { border: 0; height: 1px; background: var(--border); margin: 14px 0; }
   .mf-chat-panel { right: 12px; left: 12px; width: auto; bottom: 84px; height: min(70vh, 540px); }
   .mf-chat-fab { right: 16px; bottom: 16px; }
 }
+
+/* ── chat: clickable names + DM presence dots ── */
+.mf-msg-name { cursor: pointer; }
+.mf-msg-name:hover { text-decoration: underline; }
+.mf-dm-item { position: relative; }
+.mf-dm-av { position: relative; }
+.mf-dm-dot, .mf-prof-dot {
+  width: 9px; height: 9px; border-radius: 50%; background: var(--text-3);
+  display: inline-block;
+}
+.mf-dm-dot {
+  position: absolute; right: -1px; bottom: -1px; border: 2px solid rgba(11,17,32,.94);
+}
+.mf-dm-dot.on, .mf-prof-dot.on { background: var(--emerald); box-shadow: 0 0 6px rgba(110,231,183,.7); }
+.mf-dm-go { margin-left: auto; color: var(--text-3); font-size: 18px; }
+
+/* ════════════════════════════════════════════════
+   Public profile overlay (profile-view.js)
+   ════════════════════════════════════════════════ */
+.mf-prof-overlay {
+  position: fixed; inset: 0; z-index: 400; display: none;
+  align-items: center; justify-content: center; padding: 20px;
+  background: rgba(7,10,20,.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.mf-prof-overlay.open { display: flex; animation: mfFade .18s var(--ease); }
+@keyframes mfFade { from { opacity: 0; } to { opacity: 1; } }
+
+.mf-prof-card {
+  --prof-accent: var(--rose);
+  position: relative; width: min(380px, 100%);
+  border-radius: 24px; overflow: hidden;
+  background: rgba(17,24,39,.96); border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 24px 80px rgba(0,0,0,.6);
+  animation: mfProfIn .22s var(--ease);
+}
+@keyframes mfProfIn { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+
+.mf-prof-x {
+  position: absolute; top: 12px; right: 12px; z-index: 3;
+  width: 30px; height: 30px; border-radius: 50%; border: 0; cursor: pointer;
+  background: rgba(0,0,0,.35); color: #fff; font-size: 14px;
+}
+.mf-prof-x:hover { background: rgba(0,0,0,.55); }
+
+.mf-prof-banner {
+  height: 84px;
+  background: linear-gradient(135deg, var(--prof-accent), rgba(196,181,253,.4));
+  opacity: .55;
+}
+.mf-prof-avatar {
+  position: absolute; top: 44px; left: 50%; transform: translateX(-50%); z-index: 2;
+  width: 84px; height: 84px; border-radius: 50%; overflow: hidden;
+  border: 3px solid rgba(17,24,39,.96);
+  display: flex; align-items: center; justify-content: center; font-size: 38px;
+  background: linear-gradient(135deg, var(--prof-accent), var(--violet)); color: #0b1120;
+}
+.mf-prof-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.mf-prof-body { padding: 50px 24px 24px; text-align: center; }
+.mf-prof-name { font-family: var(--font-d); font-size: 26px; line-height: 1.1; }
+.mf-prof-pron { font-family: var(--font-b); font-size: 12px; color: var(--text-3); margin-left: 4px; }
+.mf-prof-presence { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; color: var(--text-3); }
+.mf-prof-status { margin-top: 12px; font-family: var(--font-d); font-style: italic; font-size: 17px; color: var(--prof-accent); }
+.mf-prof-bio { margin-top: 12px; font-size: 14px; color: var(--text-2); line-height: 1.65; }
+.mf-prof-bio.dim { color: var(--text-3); font-style: italic; }
+.mf-prof-actions { margin-top: 20px; }
+.mf-prof-btn {
+  display: inline-flex; align-items: center; gap: 7px; cursor: pointer;
+  padding: 10px 20px; border-radius: var(--r-md); border: 0; text-decoration: none;
+  font-family: var(--font-b); font-weight: 600; font-size: 14px; color: #0b1120;
+  background: linear-gradient(135deg, var(--prof-accent), var(--violet));
+  box-shadow: 0 4px 18px rgba(0,0,0,.25); transition: transform 140ms var(--ease);
+}
+.mf-prof-btn:hover { transform: translateY(-1px); }
+.mf-prof-loading { padding: 50px; text-align: center; color: var(--text-3); }

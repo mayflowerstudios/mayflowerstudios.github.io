@@ -43,6 +43,15 @@
       if (MFAuth.user && MFAuth.user.email) return MFAuth.user.email.split("@")[0];
       return null;
     },
+    // Returns { kind:'photo'|'emoji'|'letter', value } for any profile object.
+    avatarFor(profile, name) {
+      const p = profile || {};
+      if (p.avatarType === "photo" && p.photoURL) return { kind: "photo", value: p.photoURL };
+      if (p.photoURL && !p.avatarType) return { kind: "photo", value: p.photoURL }; // google photo
+      if (p.avatarEmoji) return { kind: "emoji", value: p.avatarEmoji };
+      const n = p.displayName || name || "?";
+      return { kind: "letter", value: (n[0] || "?").toUpperCase() };
+    },
     onChange(cb) {
       if (typeof cb !== "function") return;
       listeners.push(cb);
@@ -130,12 +139,84 @@
       };
       MFAuth.getProfile = loadProfile;
 
+      // Whitelisted, validated profile fields. Keeps writes tidy and matches DB rules.
+      const HEX = /^#[0-9a-fA-F]{6}$/;
+      MFAuth.updateProfile = async (fields) => {
+        if (!MFAuth.user) throw new Error("Not signed in");
+        const patch = {};
+        if (typeof fields.displayName === "string") {
+          const v = fields.displayName.trim().slice(0, 32);
+          if (!v) throw new Error("Name can't be empty");
+          patch.displayName = v;
+          try { await authMod.updateProfile(MFAuth.user, { displayName: v }); } catch (_) {}
+        }
+        if (typeof fields.bio === "string")      patch.bio    = fields.bio.trim().slice(0, 300);
+        if (typeof fields.status === "string")   patch.status = fields.status.trim().slice(0, 120);
+        if (typeof fields.pronouns === "string") patch.pronouns = fields.pronouns.trim().slice(0, 32);
+        if (typeof fields.accent === "string") {
+          const a = fields.accent.trim();
+          if (a && !HEX.test(a)) throw new Error("Accent must be a hex color like #f9a8d4");
+          patch.accent = a;
+        }
+        if (typeof fields.avatarEmoji === "string") {
+          patch.avatarEmoji = fields.avatarEmoji.slice(0, 8);
+          patch.avatarType = "emoji";
+        }
+        if (typeof fields.photoURL === "string") {
+          patch.photoURL = fields.photoURL.slice(0, 500);
+          patch.avatarType = "photo";
+        }
+        if (!Object.keys(patch).length) return MFAuth.profile;
+        await dbMod.update(dbMod.ref(db, `users/${MFAuth.user.uid}`), patch);
+        MFAuth.profile = { ...(MFAuth.profile || {}), ...patch };
+        MFAuth._emit();
+        return MFAuth.profile;
+      };
+
+      // Avatar upload via Firebase Storage (loaded lazily so pages that never
+      // upload don't pay for the module). Returns the download URL.
+      let storageMod = null, storage = null;
+      MFAuth.uploadAvatar = async (file) => {
+        if (!MFAuth.user) throw new Error("Not signed in");
+        if (!file) throw new Error("No file");
+        if (!/^image\//.test(file.type)) throw new Error("Please choose an image file");
+        if (file.size > 5 * 1024 * 1024) throw new Error("Image must be under 5 MB");
+        if (!storageMod) storageMod = await import(`https://www.gstatic.com/firebasejs/${FB_VERSION}/firebase-storage.js`);
+        if (!storage) storage = storageMod.getStorage(app);
+        const ext = (file.name.split(".").pop() || "jpg").toLowerCase().slice(0, 5);
+        const path = `avatars/${MFAuth.user.uid}/avatar.${ext}`;
+        const sref = storageMod.ref(storage, path);
+        await storageMod.uploadBytes(sref, file, { contentType: file.type });
+        const url = await storageMod.getDownloadURL(sref);
+        await MFAuth.updateProfile({ photoURL: url });
+        return url;
+      };
+
+      // ---- presence (online + lastSeen) ----
+      function startPresence(uid) {
+        const stRef = dbMod.ref(db, `status/${uid}`);
+        const connRef = dbMod.ref(db, ".info/connected");
+        dbMod.onValue(connRef, (snap) => {
+          if (snap.val() !== true) return;
+          // On disconnect, mark offline with a timestamp; while connected, mark online.
+          dbMod.onDisconnect(stRef).set({ state: "offline", last: dbMod.serverTimestamp() });
+          dbMod.set(stRef, { state: "online", last: dbMod.serverTimestamp() });
+        });
+      }
+
+      // expose a status watcher for other modules (chat, profile view)
+      MFAuth.watchStatus = (uid, cb) => {
+        const stRef = dbMod.ref(db, `status/${uid}`);
+        return dbMod.onValue(stRef, (snap) => cb(snap.exists() ? snap.val() : null));
+      };
+
       // ---- auth state ----
       authMod.onAuthStateChanged(auth, async (user) => {
         MFAuth.user = user || null;
         if (user) {
           MFAuth.profile = await ensureProfile(user);
-          // keep a presence-ish lastSeen fresh, and watch our own profile live
+          startPresence(user.uid);
+          // keep our profile live + lastSeen fresh
           dbMod.onValue(dbMod.ref(db, `users/${user.uid}`), (snap) => {
             MFAuth.profile = snap.exists() ? snap.val() : MFAuth.profile;
             MFAuth._emit();

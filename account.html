@@ -63,6 +63,40 @@
     .profEmail { font-size: 13px; color: var(--text-3); }
     .ghostBtn { width: 100%; padding: 12px; border-radius: var(--r-md); cursor: pointer; font-family: var(--font-b); font-weight: 500; font-size: 14px; color: var(--text-2); background: rgba(255,255,255,.06); border: 1px solid var(--border-2); transition: all 160ms var(--ease); margin-top: 10px; }
     .ghostBtn:hover { color: var(--text); background: rgba(255,255,255,.10); }
+
+    .fieldLabel { font-size: 12px; color: var(--text-3); letter-spacing: .3px; display: block; margin-bottom: 8px; }
+    .fieldRow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 460px) { .fieldRow { grid-template-columns: 1fr; } }
+    .field textarea {
+      padding: 12px 14px; border-radius: var(--r-md); font-size: 15px; font-family: var(--font-b);
+      border: 1px solid var(--border-2); background: rgba(0,0,0,.25); color: var(--text);
+      resize: vertical; line-height: 1.5;
+    }
+    .field textarea:focus { outline: none; border-color: rgba(196,181,253,.45); }
+
+    .avatarPick { margin-bottom: 16px; }
+    .avatarRow { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .avatarUp {
+      padding: 9px 14px; border-radius: var(--r-md); cursor: pointer; font-family: var(--font-b);
+      font-size: 13px; font-weight: 500; color: var(--text); background: rgba(255,255,255,.06);
+      border: 1px solid var(--border-2); transition: all 150ms var(--ease);
+    }
+    .avatarUp:hover { background: rgba(255,255,255,.1); border-color: rgba(249,168,212,.25); }
+    .avatarOr { font-size: 12px; color: var(--text-3); }
+    .emojiGrid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
+    @media (max-width: 460px) { .emojiGrid { grid-template-columns: repeat(6, 1fr); } }
+    .emojiGrid button {
+      aspect-ratio: 1; border: 1px solid var(--border); border-radius: 12px; cursor: pointer;
+      background: rgba(255,255,255,.03); font-size: 20px; line-height: 1; transition: all 130ms var(--ease);
+    }
+    .emojiGrid button:hover { background: rgba(255,255,255,.08); transform: scale(1.08); }
+    .emojiGrid button.on { border-color: var(--rose); background: rgba(249,168,212,.12); }
+
+    .accentRow { display: flex; align-items: center; gap: 10px; }
+    #editAccent { width: 44px; height: 40px; padding: 2px; border: 1px solid var(--border-2); border-radius: var(--r-md); background: rgba(0,0,0,.25); cursor: pointer; }
+    .swatchRow { display: flex; gap: 5px; flex-wrap: wrap; }
+    .swatchRow button { width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(255,255,255,.2); cursor: pointer; padding: 0; transition: transform 120ms var(--ease); }
+    .swatchRow button:hover { transform: scale(1.15); }
   </style>
 </head>
 <body data-nav="account">
@@ -116,11 +150,46 @@
           </div>
         </div>
 
+        <div class="avatarPick">
+          <label class="fieldLabel">Avatar</label>
+          <div class="avatarRow">
+            <button class="avatarUp" id="avatarUpBtn" type="button">📷 Upload photo</button>
+            <input type="file" id="avatarFile" accept="image/*" hidden />
+            <span class="avatarOr">or pick one</span>
+          </div>
+          <div class="emojiGrid" id="emojiGrid"></div>
+        </div>
+
         <div class="field">
           <label for="editName">Display name</label>
           <input id="editName" type="text" maxlength="32" placeholder="your name" />
         </div>
-        <button class="acctBtn" id="saveNameBtn">Save name</button>
+
+        <div class="fieldRow">
+          <div class="field">
+            <label for="editPronouns">Pronouns</label>
+            <input id="editPronouns" type="text" maxlength="32" placeholder="she/her, they/them…" />
+          </div>
+          <div class="field">
+            <label for="editAccent">Accent color</label>
+            <div class="accentRow">
+              <input id="editAccent" type="color" value="#f9a8d4" />
+              <div class="swatchRow" id="swatchRow"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="editStatus">Status / mood</label>
+          <input id="editStatus" type="text" maxlength="120" placeholder="thinking of you 💭" />
+        </div>
+
+        <div class="field">
+          <label for="editBio">About you</label>
+          <textarea id="editBio" maxlength="300" rows="3" placeholder="a little about you…"></textarea>
+        </div>
+
+        <button class="acctBtn" id="saveProfileBtn">Save profile</button>
         <button class="ghostBtn" id="signOutBtn">Sign out</button>
         <div class="acctMsg" id="profMsg"></div>
       </div>
@@ -178,16 +247,61 @@
       return (e && e.message) || "Something went wrong. Try again.";
     }
 
+    const EMOJIS = ["🌸","🦊","🌙","✨","🌷","🍓","🐰","🦋","🌿","☕","🔥","🌊","🐱","🐶","🌻","🍃","💜","🎀","🪷","🍒"];
+    const ACCENTS = ["#f9a8d4","#c4b5fd","#fb7185","#fde68a","#6ee7b7","#7dd3fc","#fca5a5","#a78bfa"];
+    let chosenEmoji = null;     // tracks emoji selection in the editor
+    let chosenPhoto = null;     // tracks a freshly uploaded photo URL
+
+    function buildEmojiGrid() {
+      const grid = $("emojiGrid");
+      if (!grid || grid.childElementCount) return;
+      EMOJIS.forEach(e => {
+        const b = document.createElement("button");
+        b.type = "button"; b.textContent = e;
+        b.addEventListener("click", () => {
+          chosenEmoji = e; chosenPhoto = null;
+          grid.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
+          const av = $("profAvatar"); av.innerHTML = ""; av.textContent = e;
+        });
+        grid.appendChild(b);
+      });
+    }
+    function buildSwatches() {
+      const row = $("swatchRow");
+      if (!row || row.childElementCount) return;
+      ACCENTS.forEach(c => {
+        const b = document.createElement("button");
+        b.type = "button"; b.style.background = c; b.title = c;
+        b.addEventListener("click", () => { $("editAccent").value = c; });
+        row.appendChild(b);
+      });
+    }
+
     function renderProfile(user, profile) {
       if (!user) { show($("authView"), true); show($("profileView"), false); return; }
       show($("authView"), false); show($("profileView"), true);
-      const name = (profile && profile.displayName) || MFAuth.name() || "friend";
+      buildEmojiGrid(); buildSwatches();
+
+      const p = profile || {};
+      const name = p.displayName || MFAuth.name() || "friend";
       $("profName").textContent = name;
       $("profEmail").textContent = user.email || (user.providerData[0] && user.providerData[0].providerId) || "";
       $("editName").value = name;
+      $("editPronouns").value = p.pronouns || "";
+      $("editStatus").value = p.status || "";
+      $("editBio").value = p.bio || "";
+      $("editAccent").value = p.accent || "#f9a8d4";
+
+      // avatar preview
       const av = $("profAvatar");
-      if (profile && profile.photoURL) { av.innerHTML = `<img src="${profile.photoURL}" alt="">`; }
-      else { av.textContent = (name[0] || "🌸").toUpperCase(); }
+      const a = MFAuth.avatarFor(p, name);
+      if (a.kind === "photo") av.innerHTML = `<img src="${a.value}" alt="">`;
+      else { av.innerHTML = ""; av.textContent = a.value; }
+
+      // reflect emoji selection in the grid
+      chosenEmoji = (p.avatarType === "emoji") ? (p.avatarEmoji || null) : null;
+      const grid = $("emojiGrid");
+      if (grid) grid.querySelectorAll("button").forEach(x => x.classList.toggle("on", x.textContent === chosenEmoji));
     }
 
     waitAuth(() => {
@@ -242,10 +356,38 @@
         catch (e) { msg($("authMsg"), friendlyError(e), "err"); }
       });
 
-      $("saveNameBtn").addEventListener("click", async () => {
+      // avatar upload
+      $("avatarUpBtn").addEventListener("click", () => $("avatarFile").click());
+      $("avatarFile").addEventListener("change", async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
         clearMsg($("profMsg"));
-        try { await MFAuth.setDisplayName($("editName").value); msg($("profMsg"), "Saved 🌸", "ok"); }
+        $("avatarUpBtn").textContent = "Uploading…";
+        try {
+          const url = await MFAuth.uploadAvatar(file);
+          chosenPhoto = url; chosenEmoji = null;
+          const av = $("profAvatar"); av.innerHTML = `<img src="${url}" alt="">`;
+          $("emojiGrid").querySelectorAll("button").forEach(x => x.classList.remove("on"));
+          msg($("profMsg"), "Photo updated 🌸", "ok");
+        } catch (err) { msg($("profMsg"), friendlyError(err), "err"); }
+        $("avatarUpBtn").textContent = "📷 Upload photo";
+        e.target.value = "";
+      });
+
+      $("saveProfileBtn").addEventListener("click", async () => {
+        clearMsg($("profMsg"));
+        const fields = {
+          displayName: $("editName").value,
+          pronouns: $("editPronouns").value,
+          status: $("editStatus").value,
+          bio: $("editBio").value,
+          accent: $("editAccent").value,
+        };
+        if (chosenEmoji) fields.avatarEmoji = chosenEmoji;
+        $("saveProfileBtn").disabled = true;
+        try { await MFAuth.updateProfile(fields); msg($("profMsg"), "Profile saved 🌸", "ok"); }
         catch (e) { msg($("profMsg"), friendlyError(e), "err"); }
+        $("saveProfileBtn").disabled = false;
       });
       $("signOutBtn").addEventListener("click", async () => { await MFAuth.signOut(); });
     });

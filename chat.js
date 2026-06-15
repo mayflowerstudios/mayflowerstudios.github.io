@@ -175,9 +175,12 @@
     const mine = m.uid === me;
     const row = document.createElement("div");
     row.className = "mf-msg " + (mine ? "me" : "them");
-    row.innerHTML = (mine ? "" : `<span class="mf-msg-name">${esc(m.name || "someone")}</span>`)
+    const nameHTML = mine ? "" : `<span class="mf-msg-name" data-uid="${m.uid}">${esc(m.name || "someone")}</span>`;
+    row.innerHTML = nameHTML
       + `<span class="mf-msg-text">${esc(m.text)}</span>`
       + `<span class="mf-msg-time">${timeShort(m.t)}</span>`;
+    const nm = row.querySelector(".mf-msg-name");
+    if (nm) nm.addEventListener("click", () => { if (window.MFProfile) MFProfile.show(m.uid); });
     log.appendChild(row);
     log.scrollTop = log.scrollHeight;
   }
@@ -204,12 +207,23 @@
         ids.forEach(uid => {
           const u = users[uid] || {};
           const name = u.displayName || "someone";
-          const item = document.createElement("button");
+          const a = MFAuth.avatarFor(u, name);
+          const avInner = a.kind === "photo" ? `<img src="${esc(a.value)}">` : esc(a.value);
+          const item = document.createElement("div");
           item.className = "mf-dm-item";
-          item.innerHTML = `<span class="mf-dm-av">${u.photoURL ? `<img src="${esc(u.photoURL)}">` : esc((name[0] || "?").toUpperCase())}</span>
-            <span class="mf-dm-name">${esc(name)}</span>`;
+          item.innerHTML = `<span class="mf-dm-av" data-pf="${uid}">${avInner}<i class="mf-dm-dot" id="mfdot_${uid}"></i></span>
+            <span class="mf-dm-name">${esc(name)}</span>
+            <span class="mf-dm-go">›</span>`;
           item.addEventListener("click", () => { dmWith = uid; render(); });
+          // tapping the avatar opens the profile instead of the thread
+          const av = item.querySelector(".mf-dm-av");
+          av.addEventListener("click", (e) => { e.stopPropagation(); if (window.MFProfile) MFProfile.show(uid); });
           list.appendChild(item);
+          // live presence dot
+          if (MFAuth.watchStatus) MFAuth.watchStatus(uid, (st) => {
+            const d = document.getElementById("mfdot_" + uid);
+            if (d) d.classList.toggle("on", !!(st && st.state === "online"));
+          });
         });
       });
     });
@@ -220,10 +234,15 @@
     mods.get(mods.ref(db, `users/${dmWith}`)).then(snap => {
       const u = snap.exists() ? snap.val() : {};
       const name = u.displayName || "someone";
+      const a = MFAuth.avatarFor(u, name);
+      const avInner = a.kind === "photo" ? `<img src="${esc(a.value)}">` : esc(a.value);
       head.innerHTML = `<button class="mf-dm-back" id="mfDmBack">‹</button>
-        <span class="mf-dm-av sm">${u.photoURL ? `<img src="${esc(u.photoURL)}">` : esc((name[0]||"?").toUpperCase())}</span>
-        <span class="mf-dm-headname">${esc(name)}</span>`;
+        <span class="mf-dm-av sm" id="mfDmHeadAv">${avInner}</span>
+        <span class="mf-dm-headname" id="mfDmHeadName">${esc(name)}</span>`;
       head.querySelector("#mfDmBack").addEventListener("click", () => { dmWith = null; render(); });
+      const openProf = () => { if (window.MFProfile) MFProfile.show(dmWith); };
+      head.querySelector("#mfDmHeadAv").addEventListener("click", openProf);
+      head.querySelector("#mfDmHeadName").addEventListener("click", openProf);
     });
   }
 
@@ -288,6 +307,19 @@
       } else if (++n > 120) clearInterval(iv);
     }, 80);
   }
+
+  // Public API for other modules (e.g. profile overlay "Message" button)
+  window.MFChat = {
+    openDM(uid) {
+      if (!me || !uid || uid === me) return;
+      dmWith = uid;
+      view = "dm";
+      const panel = document.getElementById("mfChatPanel");
+      if (panel) panel.querySelectorAll(".mf-ct").forEach(x => x.classList.toggle("on", x.dataset.ctab === "dm"));
+      togglePanel(true);
+    },
+    open() { togglePanel(true); },
+  };
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);

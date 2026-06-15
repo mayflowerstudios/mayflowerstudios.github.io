@@ -1,0 +1,136 @@
+{
+  "rules": {
+
+    "users": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        "displayName": { ".validate": "newData.isString() && newData.val().length <= 32" },
+        "photoURL":    { ".validate": "newData.isString() && newData.val().length <= 500" },
+        "avatarEmoji": { ".validate": "newData.isString() && newData.val().length <= 8" },
+        "avatarType":  { ".validate": "newData.val() === 'emoji' || newData.val() === 'photo'" },
+        "bio":         { ".validate": "newData.isString() && newData.val().length <= 300" },
+        "status":      { ".validate": "newData.isString() && newData.val().length <= 120" },
+        "pronouns":    { ".validate": "newData.isString() && newData.val().length <= 32" },
+        "accent":      { ".validate": "newData.isString() && newData.val().matches(/^#[0-9a-fA-F]{6}$/)" },
+        "createdAt":   { ".validate": "newData.isNumber()" },
+        "lastSeen":    { ".validate": "newData.isNumber()" },
+        "$other":      { ".validate": false }
+      }
+    },
+
+    "status": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        "state": { ".validate": "newData.val() === 'online' || newData.val() === 'offline'" },
+        "last":  { ".validate": "newData.isNumber()" },
+        "$other": { ".validate": false }
+      }
+    },
+
+    "chat": {
+      "global": {
+        ".read": "auth != null",
+        "$msg": {
+          ".write": "auth != null && (!data.exists() || data.child('uid').val() === auth.uid)",
+          ".validate": "newData.hasChildren(['uid','text','t']) && newData.child('uid').val() === auth.uid && newData.child('text').isString() && newData.child('text').val().length <= 500 && newData.child('t').isNumber()",
+          "name": { ".validate": "newData.isString() && newData.val().length <= 32" },
+          "$other": { ".validate": true }
+        }
+      }
+    },
+
+    "dm": {
+      "$pair": {
+        ".read":  "auth != null && ($pair.contains(auth.uid + '__') || $pair.contains('__' + auth.uid))",
+        ".write": "auth != null && ($pair.contains(auth.uid + '__') || $pair.contains('__' + auth.uid))",
+        "$msg": {
+          ".validate": "newData.hasChildren(['uid','text','t']) && newData.child('uid').val() === auth.uid && newData.child('text').isString() && newData.child('text').val().length <= 500 && newData.child('t').isNumber()",
+          "name": { ".validate": "newData.isString() && newData.val().length <= 32" },
+          "$other": { ".validate": true }
+        }
+      }
+    },
+
+    "dmIndex": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "$other": {
+          ".write": "auth != null && (auth.uid === $uid || auth.uid === $other)",
+          ".validate": "newData.hasChild('t')"
+        }
+      }
+    },
+
+    "lobby": {
+      ".read": true,
+      "$room": {
+        ".write": "auth != null && (!data.exists() || data.child('owner').val() === auth.uid)",
+        ".validate": "newData.hasChildren(['name','visibility','t']) && newData.child('owner').val() === auth.uid",
+        "name":       { ".validate": "newData.isString() && newData.val().length <= 40 && newData.val() === $room" },
+        "visibility": { ".validate": "newData.val() === 'public' || newData.val() === 'locked' || newData.val() === 'hidden' || newData.val() === 'private'" },
+        "t":          { ".validate": "newData.isNumber()" },
+        "lastActive": { ".validate": "newData.isNumber()" },
+        "pass":       { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "owner":      { ".validate": "newData.isString() && newData.val() === auth.uid" },
+        "$other":     { ".validate": false }
+      }
+    },
+
+    "watch": {
+      "$room": {
+        ".read":  "root.child('lobby').child($room).exists() && (root.child('lobby').child($room).child('visibility').val() === 'public' || auth != null)",
+        ".write": "root.child('lobby').child($room).exists() && (root.child('lobby').child($room).child('visibility').val() === 'public' || auth != null)",
+        "state": { ".validate": "newData.hasChildren(['kind','src']) || !newData.exists()" },
+        "presence": {
+          "$client": { ".validate": "newData.hasChild('name') || !newData.exists()" }
+        },
+        "chat": {
+          "$msg": { ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 2000 && newData.child('t').isNumber()" }
+        },
+        "queue":   { ".validate": true },
+        "history": { ".validate": true },
+        "waiting": { ".validate": true },
+        "advance": { ".validate": true },
+        "repeat":  { ".validate": true }
+      }
+    },
+
+    "together": {
+      "$room": {
+        ".read": true,
+        ".write": true,
+        "presence": {
+          "$client": { ".validate": "newData.hasChild('name') || !newData.exists()" }
+        },
+        "chat": {
+          "$msg": { ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 2500 && newData.child('t').isNumber()" }
+        },
+        "draw":     { ".validate": true },
+        "question": { ".validate": true },
+        "ttt":      { ".validate": true }
+      }
+    },
+
+    "datenight": {
+      "$room": {
+        ".read":  "auth != null",
+        ".write": "auth != null",
+        "presence": {
+          "$client": { ".validate": "newData.hasChild('name') || !newData.exists()" }
+        },
+        "notes": {
+          "$id": { ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 500 && newData.child('t').isNumber()" }
+        },
+        "reasons": {
+          "$id": { ".validate": "newData.child('text').isString() && newData.child('text').val().length <= 160 && newData.child('t').isNumber()" }
+        },
+        "scene":  { ".validate": true },
+        "music":  { ".validate": true },
+        "drawn":  { ".validate": true }
+      }
+    }
+
+  }
+}
