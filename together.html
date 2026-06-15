@@ -553,7 +553,7 @@
 
   <script type="module">
     import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, onValue, onChildAdded, set, get, update, remove, push, onDisconnect, serverTimestamp, query, limitToLast }
+    import { getDatabase, ref, onValue, onChildAdded, onChildRemoved, set, get, update, remove, push, onDisconnect, serverTimestamp, query, limitToLast }
       from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
     import { getStorage, ref as sref, uploadBytesResumable, getDownloadURL }
       from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
@@ -1225,24 +1225,23 @@
       setupChatPickers(chatInput);
 
       // ---- live feed ----
-      // Two listeners working together:
-      //  • onChildAdded fires reliably for each new message in real time (this is
-      //    the same pattern the shared drawing uses, which updates live). Each new
-      //    message is merged into chatMsgsStore and the chat re-rendered.
-      //  • onValue gives us the initial batch and also catches edits/removals, and
-      //    exposes an error so a rules/permission problem isn't silent.
-      const feedRef = query(chatRef, limitToLast(100));
+      // Mirror the shared-drawing listener exactly: a plain ref with
+      // onChildAdded. That pattern updates live in this app; a limitToLast()
+      // *query* did not deliver live child events here, which is why messages
+      // only appeared after a reload. onChildAdded replays every existing
+      // message on attach (initial history) and then fires for each new one.
+      const chatPlainRef = chatRef;   // already = ref(db, `together/${ROOM}/chat`)
 
       let _renderQueued = false;
       function queueRender(){
         if (_renderQueued) return;
         _renderQueued = true;
-        // coalesce the burst of onChildAdded events fired on first attach into
-        // a single render; live messages after that render on the next frame too
+        // coalesce the burst of replayed events on first attach into one render;
+        // live messages afterward each render on the next frame too
         requestAnimationFrame(() => { _renderQueued = false; renderChat(chatMsgsStore); });
       }
 
-      onChildAdded(feedRef, snap => {
+      onChildAdded(chatPlainRef, snap => {
         const m = snap.val(); if (!m) return;
         chatMsgsStore[snap.key] = m;
         queueRender();
@@ -1251,18 +1250,9 @@
         toast("Chat can't load — check the database rules");
       });
 
-      onValue(feedRef, snap => {
-        const val = snap.val() || {};
-        // adopt the full snapshot as the source of truth (covers first load,
-        // removals, and the history cap dropping old messages)
-        chatMsgsStore = val;
-        const sig = Object.keys(val).sort().join("|");
-        if (sig === _lastChatSig) return;
-        _lastChatSig = sig;
-        renderChat(val);
-      }, err => {
-        console.error("[chat] feed error:", err && err.code, err);
-        toast("Chat can't load — check the database rules");
+      // Catch deletions / the history cap so removed messages disappear live too.
+      onChildRemoved(chatPlainRef, snap => {
+        if (snap.key in chatMsgsStore){ delete chatMsgsStore[snap.key]; queueRender(); }
       });
     }
 
@@ -1526,7 +1516,9 @@
       // mounted, or markup missing), skip quietly instead of throwing — a throw
       // here would kill the Firebase callback and stop all future updates.
       if (!chatLog || !chatEmpty) return;
-      const entries = Object.values(lastChatMsgs).sort((a,b) => (a.t||0)-(b.t||0));
+      let entries = Object.values(lastChatMsgs).sort((a,b) => (a.t||0)-(b.t||0));
+      // we no longer use a limitToLast query, so cap the rendered list here
+      if (entries.length > 100) entries = entries.slice(entries.length - 100);
       if (!entries.length){ chatEmpty.style.display = "block"; lastSeenCount = 0; chatStarted = true; return; }
       chatEmpty.style.display = "none";
 
