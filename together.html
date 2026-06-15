@@ -371,7 +371,14 @@
       catch { toast(url); }
     });
 
-    if (presetRoom && FIREBASE_READY){ enterRoom(presetRoom); }
+    // auto-enter from a shared link, but only after everything below is defined
+    // and wrapped so a single error can't halt the rest of the script
+    window.addEventListener("DOMContentLoaded", () => {
+      if (presetRoom && FIREBASE_READY){
+        try { enterRoom(presetRoom); }
+        catch (err){ console.error("auto-enter failed:", err); }
+      }
+    });
 
     function enterRoom(room){
       if (!FIREBASE_READY){ toast("Firebase not configured"); return; }
