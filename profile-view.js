@@ -74,19 +74,36 @@
         <div class="mf-prof-presence" id="mfProfPresence"><span class="mf-prof-dot"></span><span id="mfProfPresText">—</span></div>
         ${prof.status ? `<div class="mf-prof-status">“${esc(prof.status)}”</div>` : ""}
         ${prof.bio ? `<p class="mf-prof-bio">${esc(prof.bio)}</p>` : `<p class="mf-prof-bio dim">No bio yet.</p>`}
-        <div class="mf-prof-actions">
+        <div class="mf-prof-actions" id="mfProfActions">
           ${isMe
             ? `<a class="mf-prof-btn" href="/account.html">Edit your profile</a>`
-            : `<button class="mf-prof-btn" id="mfProfDM">💌 Message ${esc(name)}</button>`}
+            : `<span class="mf-prof-dim">…</span>`}
         </div>
       </div>`;
 
     card.querySelector("#mfProfX").addEventListener("click", hide);
-    const dm = card.querySelector("#mfProfDM");
-    if (dm) dm.addEventListener("click", () => {
-      hide();
-      if (window.MFChat && MFChat.openDM) MFChat.openDM(uid);
-    });
+
+    // Friend-aware action button (only for other people)
+    if (!isMe && window.MFAuth && MFAuth.areFriends) {
+      const actions = card.querySelector("#mfProfActions");
+      MFAuth.areFriends(uid).then(friends => {
+        if (friends) {
+          actions.innerHTML = `<button class="mf-prof-btn" id="mfProfDM">💌 Message ${esc(name)}</button>`;
+          actions.querySelector("#mfProfDM").addEventListener("click", () => { hide(); if (window.MFChat) MFChat.openDM(uid); });
+        } else {
+          actions.innerHTML = `<button class="mf-prof-btn" id="mfProfAdd">＋ Add ${esc(name)}</button><div class="mf-prof-dim" id="mfProfAddMsg" style="margin-top:8px;"></div>`;
+          actions.querySelector("#mfProfAdd").addEventListener("click", async () => {
+            const m = card.querySelector("#mfProfAddMsg");
+            try {
+              if (!prof.username) throw new Error("They haven't set a username yet");
+              await MFAuth.sendFriendRequest(prof.username);
+              if (m) m.textContent = "Friend request sent ✨";
+              const btn = actions.querySelector("#mfProfAdd"); if (btn) btn.disabled = true;
+            } catch (e) { if (m) m.textContent = (e && e.message) || "Couldn't send request"; }
+          });
+        }
+      });
+    }
 
     // live presence
     const dot = card.querySelector(".mf-prof-dot");

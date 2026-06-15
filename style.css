@@ -773,3 +773,31 @@ hr.sep { border: 0; height: 1px; background: var(--border); margin: 14px 0; }
 .mf-lightbox { position: fixed; inset: 0; z-index: 500; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.85); padding: 24px; cursor: zoom-out; }
 .mf-lightbox.open { display: flex; }
 .mf-lightbox img { max-width: 92vw; max-height: 90vh; border-radius: 12px; box-shadow: 0 20px 70px rgba(0,0,0,.6); }
+
+/* ── chat: friends list + requests ── */
+.mf-friends { padding: 12px; overflow-y: auto; }
+.mf-addfriend { display: flex; align-items: center; gap: 0; border: 1px solid var(--border-2); border-radius: 12px; background: rgba(0,0,0,.3); overflow: hidden; }
+.mf-addfriend:focus-within { border-color: rgba(196,181,253,.45); }
+.mf-addfriend .mf-at { padding: 0 2px 0 12px; color: var(--text-3); }
+.mf-addfriend input { flex: 1; border: 0; background: none; color: var(--text); font-family: var(--font-b); font-size: 14px; padding: 10px 8px; }
+.mf-addfriend input:focus { outline: none; }
+.mf-addfriend button { border: 0; cursor: pointer; padding: 0 16px; align-self: stretch; color: #0b1120; font-family: var(--font-b); font-weight: 600; font-size: 13px; background: linear-gradient(135deg, var(--rose), var(--violet)); }
+.mf-addfriend button:disabled { opacity: .6; }
+.mf-addmsg { font-size: 12px; min-height: 16px; margin: 6px 2px 0; }
+.mf-addmsg.ok { color: var(--emerald); }
+.mf-addmsg.err { color: #fecaca; }
+
+.mf-friends-label { font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--text-3); margin: 16px 2px 6px; }
+.mf-friends-list { display: flex; flex-direction: column; gap: 2px; }
+.mf-dim { color: var(--text-3); font-weight: 400; font-size: 12px; }
+
+.mf-req-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 12px; background: rgba(249,168,212,.06); margin-bottom: 4px; }
+.mf-req-item .mf-dm-name { flex: 1; font-size: 14px; }
+.mf-req-actions { display: flex; gap: 6px; }
+.mf-req-yes, .mf-req-no { border: 0; cursor: pointer; width: 30px; height: 30px; border-radius: 9px; font-size: 14px; }
+.mf-req-yes { background: rgba(110,231,183,.18); color: var(--emerald); }
+.mf-req-yes:hover { background: rgba(110,231,183,.3); }
+.mf-req-no { background: rgba(248,113,113,.15); color: #fca5a5; }
+.mf-req-no:hover { background: rgba(248,113,113,.28); }
+
+.mf-prof-dim { font-size: 12px; color: var(--text-3); }

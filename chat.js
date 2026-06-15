@@ -23,6 +23,7 @@
   let unsubscribe = null;
   let unseenGlobal = 0;
   const seenAt = { global: Date.now() };
+  const friendsUnsub = { req: null, list: null };
 
   function esc(s) {
     return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
@@ -50,7 +51,7 @@
       <div class="mf-chat-head">
         <div class="mf-chat-tabs">
           <button class="mf-ct on" data-ctab="global">🌸 Everyone</button>
-          <button class="mf-ct" data-ctab="dm">💌 Messages</button>
+          <button class="mf-ct" data-ctab="dm">💌 Friends</button>
         </div>
         <div class="mf-chat-headtools">
           <button class="mf-tr-btn" id="mfTrBtn" title="Translate messages">🌐</button>
@@ -512,38 +513,91 @@
   // ---- DM people list ----
   function renderDmList() {
     const body = document.getElementById("mfChatBody");
-    body.innerHTML = `<div class="mf-chat-dmlist" id="mfDmList">
-      <div class="mf-chat-empty"><p>Loading people…</p></div></div>`;
-    mods.get(mods.ref(db, "users")).then(snap => {
-      const users = snap.exists() ? snap.val() : {};
-      const ids = Object.keys(users).filter(uid => uid !== me);
-      const list = document.getElementById("mfDmList");
+    body.innerHTML = `
+      <div class="mf-friends">
+        <div class="mf-addfriend">
+          <span class="mf-at">@</span>
+          <input id="mfAddInput" type="text" maxlength="20" placeholder="add a friend by username" autocomplete="off" spellcheck="false" />
+          <button id="mfAddBtn">Add</button>
+        </div>
+        <div class="mf-addmsg" id="mfAddMsg"></div>
+        <div id="mfReqSection"></div>
+        <div class="mf-friends-label" id="mfFriendsLabel" hidden>Friends</div>
+        <div class="mf-friends-list" id="mfFriendsList">
+          <div class="mf-chat-empty"><p>Loading…</p></div>
+        </div>
+      </div>`;
+
+    const addInput = document.getElementById("mfAddInput");
+    const addBtn = document.getElementById("mfAddBtn");
+    const addMsg = document.getElementById("mfAddMsg");
+    const sendReq = async () => {
+      const v = addInput.value.trim();
+      if (!v) return;
+      addBtn.disabled = true; addMsg.className = "mf-addmsg"; addMsg.textContent = "";
+      try {
+        await MFAuth.sendFriendRequest(v);
+        addMsg.className = "mf-addmsg ok"; addMsg.textContent = "Request sent ✨";
+        addInput.value = "";
+      } catch (e) { addMsg.className = "mf-addmsg err"; addMsg.textContent = (e && e.message) || "Couldn't send request"; }
+      addBtn.disabled = false;
+    };
+    addBtn.addEventListener("click", sendReq);
+    addInput.addEventListener("keydown", e => { if (e.key === "Enter") sendReq(); });
+
+    // incoming requests (live)
+    if (friendsUnsub.req) { try { friendsUnsub.req(); } catch (_) {} }
+    friendsUnsub.req = MFAuth.watchFriendRequests((reqs) => {
+      const sec = document.getElementById("mfReqSection");
+      if (!sec) return;
+      const ids = Object.keys(reqs || {});
+      if (!ids.length) { sec.innerHTML = ""; return; }
+      sec.innerHTML = `<div class="mf-friends-label">Requests</div>`;
+      ids.forEach(uid => {
+        const r = reqs[uid] || {};
+        const row = document.createElement("div");
+        row.className = "mf-req-item";
+        row.innerHTML = `
+          <span class="mf-dm-name">${esc(r.name || "someone")}${r.username ? ` <span class="mf-dim">@${esc(r.username)}</span>` : ""}</span>
+          <span class="mf-req-actions">
+            <button class="mf-req-yes" title="Accept">✓</button>
+            <button class="mf-req-no" title="Decline">✕</button>
+          </span>`;
+        row.querySelector(".mf-req-yes").addEventListener("click", async () => { try { await MFAuth.acceptFriendRequest(uid); } catch (_) {} });
+        row.querySelector(".mf-req-no").addEventListener("click", async () => { try { await MFAuth.declineFriendRequest(uid); } catch (_) {} });
+        sec.appendChild(row);
+      });
+    });
+
+    // friends (live)
+    if (friendsUnsub.list) { try { friendsUnsub.list(); } catch (_) {} }
+    friendsUnsub.list = MFAuth.watchFriends((friends) => {
+      const list = document.getElementById("mfFriendsList");
+      const label = document.getElementById("mfFriendsLabel");
+      if (!list) return;
+      const ids = Object.keys(friends || {});
+      if (label) label.hidden = !ids.length;
       if (!ids.length) {
-        list.innerHTML = `<div class="mf-chat-empty"><div style="font-size:28px">🫧</div>
-          <p>No one else has signed up yet. When they do, they'll show up here.</p></div>`;
+        list.innerHTML = `<div class="mf-chat-empty"><div style="font-size:26px">👋</div>
+          <p>No friends yet. Add someone by their @username to start a chat.</p></div>`;
         return;
       }
-      // recent first if we have an index
-      mods.get(mods.ref(db, `dmIndex/${me}`)).then(idxSnap => {
-        const idx = idxSnap.exists() ? idxSnap.val() : {};
-        ids.sort((a, b) => ((idx[b] && idx[b].t) || 0) - ((idx[a] && idx[a].t) || 0));
-        list.innerHTML = "";
-        ids.forEach(uid => {
-          const u = users[uid] || {};
+      list.innerHTML = "";
+      ids.forEach(uid => {
+        mods.get(mods.ref(db, `users/${uid}`)).then(s => {
+          const u = s.exists() ? s.val() : {};
           const name = u.displayName || "someone";
           const a = MFAuth.avatarFor(u, name);
           const avInner = a.kind === "photo" ? `<img src="${esc(a.value)}">` : esc(a.value);
           const item = document.createElement("div");
           item.className = "mf-dm-item";
-          item.innerHTML = `<span class="mf-dm-av" data-pf="${uid}">${avInner}<i class="mf-dm-dot" id="mfdot_${uid}"></i></span>
-            <span class="mf-dm-name">${esc(name)}</span>
+          item.innerHTML = `<span class="mf-dm-av">${avInner}<i class="mf-dm-dot" id="mfdot_${uid}"></i></span>
+            <span class="mf-dm-name">${esc(name)}${u.username ? ` <span class="mf-dim">@${esc(u.username)}</span>` : ""}</span>
             <span class="mf-dm-go">›</span>`;
           item.addEventListener("click", () => { dmWith = uid; render(); });
-          // tapping the avatar opens the profile instead of the thread
           const av = item.querySelector(".mf-dm-av");
           av.addEventListener("click", (e) => { e.stopPropagation(); if (window.MFProfile) MFProfile.show(uid); });
           list.appendChild(item);
-          // live presence dot
           if (MFAuth.watchStatus) MFAuth.watchStatus(uid, (st) => {
             const d = document.getElementById("mfdot_" + uid);
             if (d) d.classList.toggle("on", !!(st && st.state === "online"));
@@ -634,11 +688,19 @@
 
   // Public API for other modules (e.g. profile overlay "Message" button)
   window.MFChat = {
-    openDM(uid) {
+    async openDM(uid) {
       if (!me || !uid || uid === me) return;
+      // DMs are friends-only — verify before opening
+      const ok = await MFAuth.areFriends(uid);
+      const panel = document.getElementById("mfChatPanel");
+      if (!ok) {
+        view = "dm"; dmWith = null;
+        if (panel) panel.querySelectorAll(".mf-ct").forEach(x => x.classList.toggle("on", x.dataset.ctab === "dm"));
+        togglePanel(true);
+        return;
+      }
       dmWith = uid;
       view = "dm";
-      const panel = document.getElementById("mfChatPanel");
       if (panel) panel.querySelectorAll(".mf-ct").forEach(x => x.classList.toggle("on", x.dataset.ctab === "dm"));
       togglePanel(true);
     },

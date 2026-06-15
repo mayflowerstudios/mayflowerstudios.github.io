@@ -156,22 +156,129 @@
         if (typeof fields.pronouns === "string") patch.pronouns = fields.pronouns.trim().slice(0, 32);
         if (typeof fields.accent === "string") {
           const a = fields.accent.trim();
+          // only write a valid hex; skip empties so we never hit the validator
           if (a && !HEX.test(a)) throw new Error("Accent must be a hex color like #f9a8d4");
-          patch.accent = a;
+          if (a) patch.accent = a;
         }
-        if (typeof fields.avatarEmoji === "string") {
+        if (typeof fields.avatarEmoji === "string" && fields.avatarEmoji) {
           patch.avatarEmoji = fields.avatarEmoji.slice(0, 8);
           patch.avatarType = "emoji";
         }
-        if (typeof fields.photoURL === "string") {
+        if (typeof fields.photoURL === "string" && fields.photoURL) {
           patch.photoURL = fields.photoURL.slice(0, 500);
           patch.avatarType = "photo";
         }
         if (!Object.keys(patch).length) return MFAuth.profile;
-        await dbMod.update(dbMod.ref(db, `users/${MFAuth.user.uid}`), patch);
+        try {
+          await dbMod.update(dbMod.ref(db, `users/${MFAuth.user.uid}`), patch);
+        } catch (err) {
+          // Surface a useful message instead of Firebase's generic wording.
+          const code = (err && err.code) || "";
+          if (/permission/i.test(code) || /PERMISSION_DENIED/.test(err && err.message)) {
+            throw new Error("Couldn't save — the database rules need updating (see database-rules.json).");
+          }
+          throw err;
+        }
         MFAuth.profile = { ...(MFAuth.profile || {}), ...patch };
         MFAuth._emit();
         return MFAuth.profile;
+      };
+
+      // ---- usernames (unique @handle) ----
+      // Index lives at usernames/{handle} = uid. We claim the new one, then
+      // release the old, so a handle is never double-owned.
+      function normHandle(h) {
+        return String(h || "").trim().toLowerCase().replace(/^@+/, "").replace(/[^a-z0-9_]/g, "").slice(0, 20);
+      }
+      MFAuth.normHandle = normHandle;
+      MFAuth.setUsername = async (handle) => {
+        if (!MFAuth.user) throw new Error("Not signed in");
+        const h = normHandle(handle);
+        if (h.length < 3) throw new Error("Username needs at least 3 letters/numbers");
+        const current = MFAuth.profile && MFAuth.profile.username;
+        if (current === h) return h;
+        const uref = dbMod.ref(db, `usernames/${h}`);
+        const snap = await dbMod.get(uref);
+        if (snap.exists() && snap.val() !== MFAuth.user.uid) throw new Error("That username is taken — try another");
+        // claim new
+        await dbMod.set(uref, MFAuth.user.uid);
+        await dbMod.update(dbMod.ref(db, `users/${MFAuth.user.uid}`), { username: h });
+        // release old
+        if (current && current !== h) { try { await dbMod.remove(dbMod.ref(db, `usernames/${current}`)); } catch (_) {} }
+        MFAuth.profile = { ...(MFAuth.profile || {}), username: h };
+        MFAuth._emit();
+        return h;
+      };
+      MFAuth.lookupUsername = async (handle) => {
+        const h = normHandle(handle);
+        if (!h) return null;
+        try {
+          const snap = await dbMod.get(dbMod.ref(db, `usernames/${h}`));
+          return snap.exists() ? snap.val() : null; // returns uid or null
+        } catch (_) { return null; }
+      };
+
+      // ---- friends & requests ----
+      // Data model:
+      //   friendRequests/{toUid}/{fromUid} = { name, username, t }   (incoming)
+      //   friends/{uid}/{otherUid} = { t }                            (mutual once accepted)
+      MFAuth.sendFriendRequest = async (handle) => {
+        if (!MFAuth.user) throw new Error("Not signed in");
+        const targetUid = await MFAuth.lookupUsername(handle);
+        if (!targetUid) throw new Error("No one found with that username");
+        if (targetUid === MFAuth.user.uid) throw new Error("That's you! 🌸");
+        // already friends?
+        const fr = await dbMod.get(dbMod.ref(db, `friends/${MFAuth.user.uid}/${targetUid}`));
+        if (fr.exists()) throw new Error("You're already friends");
+        await dbMod.set(dbMod.ref(db, `friendRequests/${targetUid}/${MFAuth.user.uid}`), {
+          name: MFAuth.name() || "someone",
+          username: (MFAuth.profile && MFAuth.profile.username) || "",
+          t: Date.now(),
+        });
+        return true;
+      };
+      MFAuth.acceptFriendRequest = async (fromUid) => {
+        if (!MFAuth.user) throw new Error("Not signed in");
+        const me = MFAuth.user.uid;
+        const t = Date.now();
+        // create the mutual friendship (both directions), then clear the request
+        await dbMod.update(dbMod.ref(db), {
+          [`friends/${me}/${fromUid}`]: { t },
+          [`friends/${fromUid}/${me}`]: { t },
+          [`friendRequests/${me}/${fromUid}`]: null,
+        });
+        return true;
+      };
+      MFAuth.declineFriendRequest = async (fromUid) => {
+        if (!MFAuth.user) throw new Error("Not signed in");
+        await dbMod.remove(dbMod.ref(db, `friendRequests/${MFAuth.user.uid}/${fromUid}`));
+        return true;
+      };
+      MFAuth.removeFriend = async (otherUid) => {
+        if (!MFAuth.user) throw new Error("Not signed in");
+        const me = MFAuth.user.uid;
+        await dbMod.update(dbMod.ref(db), {
+          [`friends/${me}/${otherUid}`]: null,
+          [`friends/${otherUid}/${me}`]: null,
+        });
+        return true;
+      };
+      MFAuth.watchFriends = (cb) => {
+        if (!MFAuth.user) return () => {};
+        const r = dbMod.ref(db, `friends/${MFAuth.user.uid}`);
+        const h = dbMod.onValue(r, (snap) => cb(snap.exists() ? snap.val() : {}));
+        return () => dbMod.off(r, "value", h);
+      };
+      MFAuth.watchFriendRequests = (cb) => {
+        if (!MFAuth.user) return () => {};
+        const r = dbMod.ref(db, `friendRequests/${MFAuth.user.uid}`);
+        const h = dbMod.onValue(r, (snap) => cb(snap.exists() ? snap.val() : {}));
+        return () => dbMod.off(r, "value", h);
+      };
+      MFAuth.areFriends = async (otherUid) => {
+        if (!MFAuth.user) return false;
+        try { return (await dbMod.get(dbMod.ref(db, `friends/${MFAuth.user.uid}/${otherUid}`))).exists(); }
+        catch (_) { return false; }
       };
 
       // Avatar upload via Firebase Storage (loaded lazily so pages that never

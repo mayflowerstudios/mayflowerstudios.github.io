@@ -97,6 +97,12 @@
     .swatchRow { display: flex; gap: 5px; flex-wrap: wrap; }
     .swatchRow button { width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(255,255,255,.2); cursor: pointer; padding: 0; transition: transform 120ms var(--ease); }
     .swatchRow button:hover { transform: scale(1.15); }
+
+    .userRow { display: flex; align-items: center; border: 1px solid var(--border-2); border-radius: var(--r-md); background: rgba(0,0,0,.25); overflow: hidden; }
+    .userRow:focus-within { border-color: rgba(196,181,253,.45); }
+    .userAt { padding: 0 4px 0 14px; color: var(--text-3); font-size: 15px; }
+    .userRow input { flex: 1; border: 0; background: none; padding: 12px 14px 12px 2px; color: var(--text); font-size: 15px; font-family: var(--font-b); }
+    .userRow input:focus { outline: none; }
   </style>
 </head>
 <body data-nav="account">
@@ -163,6 +169,14 @@
         <div class="field">
           <label for="editName">Display name</label>
           <input id="editName" type="text" maxlength="32" placeholder="your name" />
+        </div>
+
+        <div class="field">
+          <label for="editUsername">Username <span style="opacity:.6">(how friends add you)</span></label>
+          <div class="userRow">
+            <span class="userAt">@</span>
+            <input id="editUsername" type="text" maxlength="20" placeholder="yourname" autocomplete="off" spellcheck="false" />
+          </div>
         </div>
 
         <div class="fieldRow">
@@ -287,6 +301,7 @@
       $("profName").textContent = name;
       $("profEmail").textContent = user.email || (user.providerData[0] && user.providerData[0].providerId) || "";
       $("editName").value = name;
+      $("editUsername").value = p.username || "";
       $("editPronouns").value = p.pronouns || "";
       $("editStatus").value = p.status || "";
       $("editBio").value = p.bio || "";
@@ -385,7 +400,16 @@
         };
         if (chosenEmoji) fields.avatarEmoji = chosenEmoji;
         $("saveProfileBtn").disabled = true;
-        try { await MFAuth.updateProfile(fields); msg($("profMsg"), "Profile saved 🌸", "ok"); }
+        try {
+          // username first (it has its own uniqueness check)
+          const uname = $("editUsername").value.trim();
+          if (uname) {
+            const cur = (MFAuth.profile && MFAuth.profile.username) || "";
+            if (MFAuth.normHandle(uname) !== cur) await MFAuth.setUsername(uname);
+          }
+          await MFAuth.updateProfile(fields);
+          msg($("profMsg"), "Profile saved 🌸", "ok");
+        }
         catch (e) { msg($("profMsg"), friendlyError(e), "err"); }
         $("saveProfileBtn").disabled = false;
       });
