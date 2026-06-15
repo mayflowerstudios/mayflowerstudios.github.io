@@ -97,6 +97,7 @@
       { href: '/projects.html#mods', label: 'Mods',  key: 'mods'     },
       { href: '/sakari.html',      label: 'Stories',  key: 'stories'  },
       { href: '/server-info.html', label: 'Server',   key: 'server'   },
+      { href: '/together.html',    label: 'Together', key: 'together' },
     ];
     const linksHtml = links.map(l =>
       `<a href="${l.href}"${l.key === key ? ' class="nav-active"' : ''}>${l.label}</a>`

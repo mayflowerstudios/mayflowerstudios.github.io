@@ -1,0 +1,660 @@
+<!-- together.html — Together: a little hub of things to do with someone -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Together — Mayflower Studios</title>
+  <link rel="stylesheet" href="/style.css" />
+
+  <style>
+    .tWrap{ max-width:1100px; margin:0 auto; padding:22px; }
+    .glass{
+      background: rgba(255,255,255,.045);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 22px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.45);
+      overflow:hidden; position:relative;
+    }
+    .glass::before{
+      content:""; position:absolute; inset:0;
+      background:
+        radial-gradient(900px 380px at 20% 0%, rgba(251,113,133,.10), transparent 60%),
+        radial-gradient(700px 320px at 90% 10%, rgba(167,139,250,.08), transparent 55%),
+        radial-gradient(700px 320px at 50% 115%, rgba(34,197,94,.06), transparent 60%);
+      pointer-events:none;
+    }
+    .content{ position:relative; z-index:1; padding:26px; }
+
+    .kicker{
+      display:inline-flex; gap:10px; align-items:center;
+      padding:7px 12px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05);
+      backdrop-filter: blur(6px); font-size:13px; opacity:.9;
+    }
+    .title{ margin:10px 0 6px; font-size:44px; letter-spacing:.2px; line-height:1.05; }
+    .sub{ margin:0; opacity:.78; line-height:1.6; max-width:70ch; }
+
+    .roomBar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:16px; }
+    .pillStat{
+      font-size:13px; opacity:.9;
+      padding:7px 12px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05);
+      display:inline-flex; align-items:center; gap:8px;
+    }
+    .dot{ width:9px;height:9px;border-radius:50%; background:#facc15; box-shadow:0 0 8px rgba(250,204,21,.6); }
+    .dot.on{ background:#34d399; box-shadow:0 0 8px rgba(52,211,153,.7); }
+    .dot.off{ background:#fb7185; box-shadow:0 0 8px rgba(251,113,133,.6); }
+    .nameInput{
+      width:120px; background:transparent; border:0; color:inherit;
+      font-size:13px; padding:2px 0; border-bottom:1px solid rgba(255,255,255,.18);
+    }
+    .nameInput:focus{ outline:none; border-bottom-color: rgba(167,139,250,.6); }
+    .nameInput::placeholder{ opacity:.5 }
+
+    .divider{ height:1px; background: rgba(255,255,255,.10); margin:20px 0; }
+
+    .input{
+      width:100%; padding:12px 14px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.14); background: rgba(0,0,0,.25);
+      color:inherit; font-size:15px;
+    }
+    .input::placeholder{ opacity:.5 }
+    .input:focus{ outline:none; border-color: rgba(167,139,250,.45); }
+
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:9px;
+      padding:12px 18px; border-radius:14px; border:1px solid rgba(255,255,255,.14);
+      text-decoration:none; color:inherit; cursor:pointer; background:rgba(255,255,255,.06);
+      transition: transform .12s ease, filter .12s ease; backdrop-filter: blur(6px);
+      white-space:nowrap; font-size:15px; font-family:inherit;
+    }
+    .btn:hover{ transform:translateY(-1px); filter:brightness(1.08); }
+    .btn.primary{ background: rgba(251,113,133,.18); border-color: rgba(251,113,133,.30); }
+    .btn.violet{ background: rgba(167,139,250,.16); border-color: rgba(167,139,250,.28); }
+    .btn.ghost{ background: rgba(255,255,255,.04); }
+    .btn.full{ width:100%; }
+    .btn:disabled{ opacity:.45; cursor:not-allowed; transform:none; filter:none; }
+
+    /* ---- gate (enter a room) ---- */
+    .gate{ max-width:520px; margin:6px auto 0; }
+    .gate .row{ display:flex; gap:10px; margin-top:12px; }
+    .gate .row .input{ flex:1; }
+    .gateHint{ font-size:13px; opacity:.7; margin-top:10px; line-height:1.5; }
+
+    /* ---- tabs ---- */
+    .tabs{ display:flex; gap:8px; flex-wrap:wrap; margin:4px 0 18px; }
+    .tab{
+      padding:10px 16px; border-radius:14px; cursor:pointer; font-size:14px;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05);
+      transition: filter .12s ease, transform .12s ease, background .12s ease;
+      display:inline-flex; align-items:center; gap:8px;
+    }
+    .tab:hover{ filter:brightness(1.1); transform:translateY(-1px); }
+    .tab.active{ background:rgba(167,139,250,.18); border-color:rgba(167,139,250,.35); }
+
+    .panelArea{ position:relative; }
+    .gamePanel{ display:none; }
+    .gamePanel.active{ display:block; }
+
+    .panelHead{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+    .panelHead h2{ margin:0; font-size:22px; }
+    .panelHead .hint{ margin:4px 0 0; opacity:.7; font-size:13.5px; }
+    .panelTools{ display:flex; gap:8px; flex-wrap:wrap; }
+
+    /* ---- drawing ---- */
+    .canvasWrap{
+      position:relative; border-radius:18px; overflow:hidden;
+      border:1px solid rgba(255,255,255,.12); background:#0d0a16;
+      box-shadow: inset 0 0 60px rgba(0,0,0,.4);
+    }
+    #board{ display:block; width:100%; touch-action:none; cursor:crosshair; }
+    .drawTools{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-top:14px; }
+    .swatches{ display:flex; gap:8px; flex-wrap:wrap; }
+    .swatch{
+      width:30px; height:30px; border-radius:50%; cursor:pointer;
+      border:2px solid rgba(255,255,255,.2); transition: transform .1s ease;
+    }
+    .swatch:hover{ transform:scale(1.12); }
+    .swatch.active{ border-color:#fff; transform:scale(1.15); box-shadow:0 0 12px rgba(255,255,255,.3); }
+    .sizeRow{ display:flex; align-items:center; gap:10px; font-size:13px; opacity:.85; }
+    .sizeRow input[type=range]{ accent-color:#a78bfa; }
+
+    /* ---- question game ---- */
+    .qCard{
+      border:1px solid rgba(167,139,250,.25); background:rgba(167,139,250,.08);
+      border-radius:18px; padding:30px 26px; text-align:center; min-height:140px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .qText{ font-size:24px; line-height:1.45; max-width:48ch; margin:0; }
+    .qMeta{ text-align:center; opacity:.6; font-size:13px; margin:12px 0 0; }
+    .qActions{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:18px; }
+    .qPacks{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:16px; }
+    .qPack{
+      font-size:13px; padding:7px 14px; border-radius:999px; cursor:pointer;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05);
+    }
+    .qPack.active{ background:rgba(251,113,133,.18); border-color:rgba(251,113,133,.32); }
+
+    /* ---- tic tac toe ---- */
+    .ttWrap{ display:flex; flex-direction:column; align-items:center; gap:16px; }
+    .ttStatus{ font-size:18px; min-height:26px; text-align:center; }
+    .ttBoard{
+      display:grid; grid-template-columns:repeat(3, 92px); grid-template-rows:repeat(3, 92px);
+      gap:10px;
+    }
+    .ttCell{
+      border-radius:16px; border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.04); font-size:46px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      transition: background .12s ease, transform .1s ease; user-select:none;
+    }
+    .ttCell:hover{ background:rgba(255,255,255,.08); }
+    .ttCell.taken{ cursor:default; }
+    .ttCell.x{ color:#fb7185; text-shadow:0 0 18px rgba(251,113,133,.5); }
+    .ttCell.o{ color:#a78bfa; text-shadow:0 0 18px rgba(167,139,250,.5); }
+    .ttCell.win{ background:rgba(52,211,153,.16); border-color:rgba(52,211,153,.4); }
+    .ttScore{ display:flex; gap:18px; font-size:14px; opacity:.85; }
+
+    .miss{ margin-top:14px; padding:14px 16px; border-radius:14px;
+      border:1px solid rgba(251,113,133,.3); background:rgba(251,113,133,.1); font-size:14px; }
+
+    .toast{
+      position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px);
+      background:rgba(20,16,32,.95); border:1px solid rgba(255,255,255,.14);
+      padding:12px 18px; border-radius:14px; font-size:14px; opacity:0;
+      transition:opacity .2s ease, transform .2s ease; pointer-events:none; z-index:50;
+    }
+    .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+    @media (max-width:560px){
+      .title{ font-size:34px; }
+      .ttBoard{ grid-template-columns:repeat(3, 74px); grid-template-rows:repeat(3, 74px); }
+      .ttCell{ font-size:38px; }
+    }
+  </style>
+
+<!-- OG:START -->
+<meta property="og:title" content="Together — Mayflower Studios" />
+<meta property="og:description" content="A cozy little hub of things to do together — draw on a shared canvas, trade questions, and play games in real time." />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="https://mayflowerstudios.net/assets/og/watch.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Together — Mayflower Studios" />
+<meta name="twitter:description" content="Draw together, trade questions, and play games in real time." />
+<meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/watch.png" />
+<!-- OG:END -->
+</head>
+
+<body data-nav="together">
+  <div class="wrap">
+    <div id="site-nav"></div>
+
+    <div class="tWrap">
+      <section class="glass">
+        <div class="content">
+          <div class="kicker">🌸 Together • for two</div>
+          <h1 class="title">Together</h1>
+          <p class="sub">A little hub of things to do with someone, in the same room at the same time. Draw on a shared canvas, trade questions, or play a game — it all syncs live.</p>
+
+          <!-- GATE: shown until a room is entered -->
+          <div id="gateView">
+            <div class="divider"></div>
+            <div class="gate">
+              <label style="font-size:14px; opacity:.85;">Make or join a room — share the name (or the link) with her.</label>
+              <div class="row">
+                <input class="input" id="roomInput" type="text" maxlength="40" placeholder="our-cozy-room" autocomplete="off" spellcheck="false" />
+                <button class="btn primary" id="enterBtn">Enter</button>
+              </div>
+              <p class="gateHint">Same room name on both devices = same canvas, same questions, same game. No password needed — just pick something only you two would guess. 💜</p>
+            </div>
+          </div>
+
+          <!-- ROOM: shown after entering -->
+          <div id="roomView" style="display:none;">
+            <div class="roomBar">
+              <span class="pillStat">🚪 <b id="roomLabel">—</b></span>
+              <span class="pillStat"><span class="dot" id="connDot"></span> <span id="connText">connecting…</span></span>
+              <span class="pillStat">💞 <span id="hereCount">1</span> here</span>
+              <span class="pillStat">🪪 <input class="nameInput" id="nameInput" type="text" maxlength="24" placeholder="your name" /></span>
+              <button class="btn ghost" id="copyBtn" style="padding:7px 12px; font-size:13px;">🔗 Copy link</button>
+              <button class="btn ghost" id="leaveBtn" style="padding:7px 12px; font-size:13px;">↩ Leave</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="tabs" id="tabs">
+              <div class="tab active" data-tab="draw">🎨 Draw together</div>
+              <div class="tab" data-tab="questions">💬 Questions</div>
+              <div class="tab" data-tab="tictactoe">⭕ Tic-Tac-Toe</div>
+            </div>
+
+            <div class="panelArea">
+              <!-- DRAW -->
+              <div class="gamePanel active" data-panel="draw">
+                <div class="panelHead">
+                  <div>
+                    <h2>🎨 Draw together</h2>
+                    <p class="hint">Whatever either of you draws shows up for both, live.</p>
+                  </div>
+                  <div class="panelTools">
+                    <button class="btn ghost" id="clearBtn">🧹 Clear</button>
+                  </div>
+                </div>
+                <div class="canvasWrap">
+                  <canvas id="board" width="1040" height="585"></canvas>
+                </div>
+                <div class="drawTools">
+                  <div class="swatches" id="swatches"></div>
+                  <div class="sizeRow">
+                    <span>Brush</span>
+                    <input type="range" id="sizeRange" min="2" max="40" value="6" />
+                    <span id="sizeVal">6</span>
+                  </div>
+                  <button class="btn ghost" id="eraserBtn" style="padding:8px 14px; font-size:13px;">🩹 Eraser</button>
+                </div>
+              </div>
+
+              <!-- QUESTIONS -->
+              <div class="gamePanel" data-panel="questions">
+                <div class="panelHead">
+                  <div>
+                    <h2>💬 Questions</h2>
+                    <p class="hint">Pull a card, both answer out loud, then draw the next one. Either of you can draw.</p>
+                  </div>
+                </div>
+                <div class="qCard"><p class="qText" id="qText">Tap “New question” to start 🌙</p></div>
+                <p class="qMeta" id="qMeta"></p>
+                <div class="qActions">
+                  <button class="btn primary" id="newQBtn">🎲 New question</button>
+                </div>
+                <div class="qPacks" id="qPacks">
+                  <div class="qPack active" data-pack="cute">🌸 Cute</div>
+                  <div class="qPack" data-pack="deep">🌌 Deep</div>
+                  <div class="qPack" data-pack="silly">🎈 Silly</div>
+                  <div class="qPack" data-pack="spicy">🔥 Spicy</div>
+                </div>
+              </div>
+
+              <!-- TIC TAC TOE -->
+              <div class="gamePanel" data-panel="tictactoe">
+                <div class="panelHead">
+                  <div>
+                    <h2>⭕ Tic-Tac-Toe</h2>
+                    <p class="hint">First one to enter the room is 🌹 (X), the other is 🟣 (O).</p>
+                  </div>
+                  <div class="panelTools">
+                    <button class="btn ghost" id="ttReset">↻ New round</button>
+                  </div>
+                </div>
+                <div class="ttWrap">
+                  <div class="ttStatus" id="ttStatus">Waiting…</div>
+                  <div class="ttBoard" id="ttBoard"></div>
+                  <div class="ttScore">
+                    <span>🌹 You-as-X: <b id="ttScoreX">0</b></span>
+                    <span>🟣 O: <b id="ttScoreO">0</b></span>
+                    <span>🤝 Draws: <b id="ttScoreD">0</b></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="miss" id="missNote" style="display:none;"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div id="site-footer"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="/shared.js"></script>
+  <script src="/auth.js"></script>
+  <script src="fireflies.js"></script>
+
+  <script type="module">
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, onValue, onChildAdded, set, get, update, remove, push, onDisconnect, serverTimestamp }
+      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDVJ0Tiq0gimaB-epcD9HQlVBrOWHq-IXI",
+      authDomain: "watchtogether-95d7d.firebaseapp.com",
+      databaseURL: "https://watchtogether-95d7d-default-rtdb.firebaseio.com",
+      projectId: "watchtogether-95d7d",
+    };
+    const FIREBASE_READY = !firebaseConfig.apiKey.startsWith("REPLACE");
+
+    const $ = (id) => document.getElementById(id);
+    const toastEl = $("toast");
+    let toastTimer;
+    function toast(msg){ toastEl.textContent = msg; toastEl.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>toastEl.classList.remove("show"),2400); }
+
+    function cleanName(s){ return (s||"").toLowerCase().replace(/[.#$\[\]\/]/g,"").trim().slice(0,40); }
+
+    // stable per-device id
+    let myId = localStorage.getItem("wt_id");
+    if (!myId){ myId = "u" + Math.random().toString(36).slice(2,10); localStorage.setItem("wt_id", myId); }
+
+    let db = null;
+    if (FIREBASE_READY){
+      const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+      db = getDatabase(app);
+      $("connText").textContent = "ready";
+    } else {
+      $("connText").textContent = "offline";
+    }
+
+    let ROOM = null;
+    let displayName = localStorage.getItem("tg_name") || "";
+    let mySymbol = null; // "X" or "O" for tic-tac-toe seat
+
+    // ---------- room entry ----------
+    const params = new URLSearchParams(location.search);
+    const presetRoom = cleanName(params.get("room"));
+    if (presetRoom){ $("roomInput").value = presetRoom; }
+
+    $("enterBtn").addEventListener("click", () => {
+      const r = cleanName($("roomInput").value);
+      if (!r){ toast("Pick a room name first"); return; }
+      enterRoom(r);
+    });
+    $("roomInput").addEventListener("keydown", e => { if (e.key==="Enter") $("enterBtn").click(); });
+    $("leaveBtn").addEventListener("click", () => { location.href = "together.html"; });
+    $("copyBtn").addEventListener("click", async () => {
+      const url = location.origin + location.pathname + "?room=" + encodeURIComponent(ROOM);
+      try { await navigator.clipboard.writeText(url); toast("Link copied 🔗"); }
+      catch { toast(url); }
+    });
+
+    if (presetRoom && FIREBASE_READY){ enterRoom(presetRoom); }
+
+    function enterRoom(room){
+      if (!FIREBASE_READY){ toast("Firebase not configured"); return; }
+      ROOM = room;
+      $("gateView").style.display = "none";
+      $("roomView").style.display = "block";
+      $("roomLabel").textContent = room;
+      const u = new URL(location.href); u.searchParams.set("room", room); history.replaceState(null,"",u);
+
+      $("nameInput").value = displayName;
+      setupPresence();
+      setupDraw();
+      setupQuestions();
+      setupTicTacToe();
+    }
+
+    $("nameInput").addEventListener("input", () => {
+      displayName = $("nameInput").value.slice(0,24);
+      localStorage.setItem("tg_name", displayName);
+      if (ROOM) set(ref(db, `together/${ROOM}/presence/${myId}/name`), displayName || "someone");
+    });
+
+    // ---------- presence ----------
+    function setupPresence(){
+      const pRef = ref(db, `together/${ROOM}/presence/${myId}`);
+      set(pRef, { name: displayName || "someone", joined: serverTimestamp(), t: Date.now() });
+      onDisconnect(pRef).remove();
+
+      onValue(ref(db, ".info/connected"), (snap) => {
+        const on = snap.val() === true;
+        $("connDot").className = "dot " + (on ? "on" : "off");
+        $("connText").textContent = on ? "connected" : "offline";
+        if (on){ set(pRef, { name: displayName || "someone", joined: serverTimestamp(), t: Date.now() }); onDisconnect(pRef).remove(); }
+      });
+
+      onValue(ref(db, `together/${ROOM}/presence`), (snap) => {
+        const all = snap.val() || {};
+        const ids = Object.keys(all);
+        $("hereCount").textContent = ids.length;
+        // assign tic-tac-toe seat: earliest-joined present id = X
+        const sorted = ids.map(id => ({id, j: all[id].joined || all[id].t || 0}))
+                          .sort((a,b) => a.j - b.j);
+        const xId = sorted[0] ? sorted[0].id : null;
+        mySymbol = (xId === myId) ? "X" : "O";
+        updateTTStatus();
+        const note = $("missNote");
+        if (ids.length < 2){ note.style.display="block"; note.textContent = "Waiting for the other person to join this room… share the link with the 🔗 button above."; }
+        else { note.style.display="none"; }
+      });
+    }
+
+    // ---------- shared drawing ----------
+    const COLORS = ["#fb7185","#f9a8d4","#a78bfa","#818cf8","#38bdf8","#34d399","#fde68a","#fff7ed","#0d0a16"];
+    let drawColor = COLORS[0], drawSize = 6, erasing = false;
+    let canvas, ctx, drawing = false, last = null, drawReady = false;
+
+    function setupDraw(){
+      if (drawReady) return; drawReady = true;
+      canvas = $("board"); ctx = canvas.getContext("2d");
+      ctx.lineCap = "round"; ctx.lineJoin = "round";
+
+      // swatches
+      const sw = $("swatches"); sw.innerHTML = "";
+      COLORS.forEach((c,i) => {
+        const el = document.createElement("div");
+        el.className = "swatch" + (i===0 ? " active":"");
+        el.style.background = c;
+        el.title = c;
+        el.addEventListener("click", () => {
+          erasing = false;
+          drawColor = c;
+          [...sw.children].forEach(s=>s.classList.remove("active"));
+          el.classList.add("active");
+        });
+        sw.appendChild(el);
+      });
+      $("sizeRange").addEventListener("input", e => { drawSize = +e.target.value; $("sizeVal").textContent = drawSize; });
+      $("eraserBtn").addEventListener("click", () => { erasing = !erasing; $("eraserBtn").style.background = erasing ? "rgba(251,113,133,.18)":""; });
+      $("clearBtn").addEventListener("click", () => {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        push(ref(db, `together/${ROOM}/draw`), { clear:true, by:myId, t:Date.now() });
+      });
+
+      const pos = (e) => {
+        const r = canvas.getBoundingClientRect();
+        const cx = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+        const cy = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+        return { x: cx * (canvas.width / r.width), y: cy * (canvas.height / r.height) };
+      };
+      const start = (e) => { drawing = true; last = pos(e); e.preventDefault(); };
+      const move = (e) => {
+        if (!drawing) return;
+        const p = pos(e);
+        const seg = { x0:last.x, y0:last.y, x1:p.x, y1:p.y,
+                      c: erasing ? null : drawColor, w: drawSize, by:myId };
+        drawSeg(seg);
+        push(ref(db, `together/${ROOM}/draw`), { ...seg, t:Date.now() });
+        last = p; e.preventDefault();
+      };
+      const end = () => { drawing = false; last = null; };
+
+      canvas.addEventListener("mousedown", start);
+      canvas.addEventListener("mousemove", move);
+      window.addEventListener("mouseup", end);
+      canvas.addEventListener("touchstart", start, {passive:false});
+      canvas.addEventListener("touchmove", move, {passive:false});
+      canvas.addEventListener("touchend", end);
+
+      // replay everything + live
+      const drawRef = ref(db, `together/${ROOM}/draw`);
+      onChildAdded(drawRef, (snap) => {
+        const d = snap.val(); if (!d) return;
+        if (d.clear){ ctx.clearRect(0,0,canvas.width,canvas.height); return; }
+        if (d.by === myId) return; // we already drew our own live
+        drawSeg(d);
+      });
+    }
+
+    function drawSeg(s){
+      ctx.globalCompositeOperation = s.c ? "source-over" : "destination-out";
+      ctx.strokeStyle = s.c || "rgba(0,0,0,1)";
+      ctx.lineWidth = s.w;
+      ctx.beginPath(); ctx.moveTo(s.x0, s.y0); ctx.lineTo(s.x1, s.y1); ctx.stroke();
+      ctx.globalCompositeOperation = "source-over";
+    }
+
+    // ---------- questions ----------
+    const QUESTIONS = {
+      cute: [
+        "What was the exact moment you knew you liked me?",
+        "What's a tiny thing I do that you secretly love?",
+        "If we had a whole free day with no plans, what's your ideal version of it?",
+        "What's a memory of us you replay in your head?",
+        "What pet name have you never said out loud but thought about?",
+        "What's something small I could do this week that would make you happy?",
+        "Where do you most love being held?",
+        "What's a song that makes you think of me?",
+        "What did you think of me the very first time we talked?",
+        "What's your favorite thing about waking up next to someone?"
+      ],
+      deep: [
+        "What's a fear you have about us that you don't usually say?",
+        "When do you feel the most loved by me?",
+        "What does 'home' mean to you now versus five years ago?",
+        "What's something you're still healing from?",
+        "What do you hope we're like in ten years?",
+        "What's a part of yourself you're proud of but rarely show?",
+        "What's something you need more of from me?",
+        "What's a moment that changed how you see the world?",
+        "What do you want to be remembered for?",
+        "When did you last feel truly at peace, and where were you?"
+      ],
+      silly: [
+        "If we were a two-person crime duo, what's our heist?",
+        "What weird food combo would you defend with your life?",
+        "If I turned into an animal, which one and why?",
+        "What's the dumbest argument we could realistically have?",
+        "Pick our theme song that plays when we enter a room.",
+        "If we had a haunted house, what would the ghost complain about?",
+        "What's a totally useless superpower you'd actually want?",
+        "If you had to rename me, what would my new name be?",
+        "What's the worst possible couple costume — that we should absolutely wear?",
+        "If our love had a flavor, what is it and is it on sale?"
+      ],
+      spicy: [
+        "What's something you've wanted to try together but haven't brought up?",
+        "What outfit of mine do you think about most?",
+        "What's the most attractive non-physical thing about me?",
+        "Describe our perfect night in with zero interruptions.",
+        "What's a fantasy you'd want to tell me about?",
+        "Where's somewhere unexpected you'd want to be kissed?",
+        "What makes you feel most wanted?",
+        "What's a moment between us that still gives you butterflies?",
+        "Truth: what were you thinking the last time you caught me looking at you?",
+        "What's one thing you'd want more of, physically?"
+      ]
+    };
+    let qPack = "cute";
+
+    function setupQuestions(){
+      $("qPacks").querySelectorAll(".qPack").forEach(p => {
+        p.addEventListener("click", () => {
+          $("qPacks").querySelectorAll(".qPack").forEach(x=>x.classList.remove("active"));
+          p.classList.add("active");
+          qPack = p.dataset.pack;
+        });
+      });
+      $("newQBtn").addEventListener("click", () => {
+        const list = QUESTIONS[qPack];
+        const idx = Math.floor(Math.random() * list.length);
+        set(ref(db, `together/${ROOM}/question`), { pack:qPack, idx, by:(displayName||"someone"), t:Date.now() });
+      });
+      onValue(ref(db, `together/${ROOM}/question`), (snap) => {
+        const q = snap.val(); if (!q) return;
+        const list = QUESTIONS[q.pack]; if (!list) return;
+        $("qText").textContent = list[q.idx] || "🌙";
+        $("qMeta").textContent = "drawn by " + (q.by || "someone");
+        // sync the active pack chip
+        $("qPacks").querySelectorAll(".qPack").forEach(x => x.classList.toggle("active", x.dataset.pack === q.pack));
+        qPack = q.pack;
+      });
+    }
+
+    // ---------- tic-tac-toe ----------
+    const WINS = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    let ttBuilt = false;
+    let ttState = { board: Array(9).fill(""), turn:"X", winner:null, line:null, scores:{X:0,O:0,D:0} };
+
+    function setupTicTacToe(){
+      const boardEl = $("ttBoard");
+      if (!ttBuilt){
+        ttBuilt = true;
+        for (let i=0;i<9;i++){
+          const c = document.createElement("div");
+          c.className = "ttCell"; c.dataset.i = i;
+          c.addEventListener("click", () => ttPlay(i));
+          boardEl.appendChild(c);
+        }
+        $("ttReset").addEventListener("click", () => {
+          set(ref(db, `together/${ROOM}/ttt`), {
+            board: Array(9).fill(""), turn:"X", winner:null, line:null, scores: ttState.scores, t:Date.now()
+          });
+        });
+      }
+      // seed if missing
+      get(ref(db, `together/${ROOM}/ttt`)).then(s => {
+        if (!s.exists()){
+          set(ref(db, `together/${ROOM}/ttt`), { board:Array(9).fill(""), turn:"X", winner:null, line:null, scores:{X:0,O:0,D:0}, t:Date.now() });
+        }
+      });
+      onValue(ref(db, `together/${ROOM}/ttt`), (snap) => {
+        const v = snap.val(); if (!v) return;
+        ttState = { board: v.board || Array(9).fill(""), turn: v.turn||"X", winner: v.winner||null,
+                    line: v.line||null, scores: v.scores||{X:0,O:0,D:0} };
+        renderTT();
+      });
+    }
+
+    function ttPlay(i){
+      if (!mySymbol) return;
+      if (ttState.winner) return;
+      if (ttState.board[i]) return;
+      if (ttState.turn !== mySymbol){ toast("Not your turn 🌙"); return; }
+      const board = ttState.board.slice();
+      board[i] = mySymbol;
+      let winner = null, line = null;
+      for (const w of WINS){ const [a,b,c]=w; if (board[a] && board[a]===board[b] && board[b]===board[c]){ winner=board[a]; line=w; break; } }
+      const full = board.every(Boolean);
+      if (!winner && full) winner = "D";
+      const scores = { ...ttState.scores };
+      if (winner) scores[winner] = (scores[winner]||0) + 1;
+      set(ref(db, `together/${ROOM}/ttt`), {
+        board, turn: mySymbol==="X"?"O":"X", winner, line, scores, t:Date.now()
+      });
+    }
+
+    function renderTT(){
+      const cells = $("ttBoard").children;
+      for (let i=0;i<9;i++){
+        const v = ttState.board[i];
+        const c = cells[i];
+        c.textContent = v === "X" ? "🌹" : v === "O" ? "🟣" : "";
+        c.className = "ttCell" + (v?" taken":"") + (v==="X"?" x":"") + (v==="O"?" o":"");
+        if (ttState.line && ttState.line.includes(i)) c.classList.add("win");
+      }
+      $("ttScoreX").textContent = ttState.scores.X || 0;
+      $("ttScoreO").textContent = ttState.scores.O || 0;
+      $("ttScoreD").textContent = ttState.scores.D || 0;
+      updateTTStatus();
+    }
+
+    function updateTTStatus(){
+      const el = $("ttStatus"); if (!el) return;
+      const seat = mySymbol === "X" ? "🌹 X" : "🟣 O";
+      if (ttState.winner === "D"){ el.textContent = "It's a draw 🤝 — tap New round."; return; }
+      if (ttState.winner){
+        const won = ttState.winner === mySymbol;
+        el.textContent = won ? "You win! 🎉 — tap New round." : "They got that one 💜 — tap New round.";
+        return;
+      }
+      const yours = ttState.turn === mySymbol;
+      el.textContent = `You are ${seat}. ` + (yours ? "Your turn." : "Their turn…");
+    }
+  </script>
+</body>
+</html>
