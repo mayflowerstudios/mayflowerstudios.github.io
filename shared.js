@@ -90,8 +90,9 @@
     // Canonical sections. Aliases map section-specific data-nav values.
     const ALIAS = {
       'together-room': 'together',
-      'watch-together': 'watch',
-      'server': 'watch',
+      'watch': 'together',
+      'watch-together': 'together',
+      'server': 'together',
       'sakari': 'stories',
     };
     const raw = document.body.dataset.nav || '';
@@ -99,7 +100,6 @@
     const links = [
       { href: '/',              label: 'Home',     key: 'home'     },
       { href: '/together.html', label: 'Together', key: 'together' },
-      { href: '/watch.html',    label: 'Watch',    key: 'watch'    },
       { href: '/sakari.html',   label: 'Stories',  key: 'stories'  },
     ];
     const linksHtml = links.map(l =>
@@ -123,7 +123,6 @@
         <span class="footer-brand">Mayflower Studios</span>
         <div class="footer-links">
           <a href="/together.html">Together</a>
-          <a href="/watch.html">Watch</a>
           <a href="/sakari.html">Stories</a>
           <a href="/privacy.html">Privacy</a>
           <a href="/tos.html">Terms</a>
