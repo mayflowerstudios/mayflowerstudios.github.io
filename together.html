@@ -495,7 +495,6 @@
   <div class="chatPop" id="chatPop">
     <div class="chatPopHead">
       <strong>💬 Chat</strong>
-      <span id="chatDebug" style="font-size:10px;opacity:.5;margin-left:8px;font-variant-numeric:tabular-nums;">conn:? · evt:0</span>
       <span class="chatHeadTools">
         <button class="miniGhost" id="soundToggle" title="Notification sound">🔔</button>
         <button class="miniGhost" id="translateToggle" title="Translate incoming messages">🌐 Off</button>
@@ -1140,41 +1139,19 @@
 
       chatRef = ref(db, `together/${ROOM}/chat`);
 
-      // ---- live feed (attached FIRST so nothing else can block it) ----
-      // Same mechanism the shared drawing uses (plain ref + onChildAdded), which
-      // syncs live in this app. onChildAdded replays existing messages on attach,
-      // then fires once per new message.
-      let _renderQueued = false;
-      function queueRender(){
-        if (_renderQueued) return;
-        _renderQueued = true;
-        requestAnimationFrame(() => { _renderQueued = false; renderChat(chatMsgsStore); });
-      }
-      let _dbgEvents = 0, _dbgConn = "?", _dbgGet = "?", _dbgWrites = 0, _dbgRen = "?";
-      const dbgEl = $("chatDebug");
-      function dbg(){ if (dbgEl) dbgEl.textContent = `room:${ROOM} conn:${_dbgConn} evt:${_dbgEvents} get:${_dbgGet} w:${_dbgWrites} ren:${_dbgRen}`; }
-      window._tgDbg = (n, painted) => { _dbgRen = n + "/" + painted; dbg(); };
-      onValue(ref(db, ".info/connected"), s => { _dbgConn = (s.val() === true) ? "on" : "off"; dbg(); });
-
-      // one-time probe: how many messages actually exist at this exact path right now
-      get(chatRef).then(snap => {
-        const v = snap.val() || {};
-        _dbgGet = String(Object.keys(v).length);
-        dbg();
-      }).catch(e => { _dbgGet = "ERR:" + (e && e.code || "get"); dbg(); });
-
+      // ---- live feed ----
+      // Plain ref + onChildAdded, the exact pattern the shared drawing uses to
+      // sync live. Render synchronously on each event (no rAF indirection).
       onChildAdded(chatRef, snap => {
         const m = snap.val(); if (!m) return;
         chatMsgsStore[snap.key] = m;
-        _dbgEvents++; dbg();
-        queueRender();
+        renderChat(chatMsgsStore);
       }, err => {
         console.error("[chat] live feed error:", err && err.code, err);
-        if (dbgEl) dbgEl.textContent = "ERR: " + (err && (err.code || err.message) || "feed");
         toast("Chat can't load — check the database rules");
       });
       onChildRemoved(chatRef, snap => {
-        if (snap.key in chatMsgsStore){ delete chatMsgsStore[snap.key]; queueRender(); }
+        if (snap.key in chatMsgsStore){ delete chatMsgsStore[snap.key]; renderChat(chatMsgsStore); }
       });
 
       function setBadge(){
@@ -1529,7 +1506,6 @@
       if (!chatLog || !chatEmpty) return;
       let entries = Object.values(lastChatMsgs).sort((a,b) => (a.t||0)-(b.t||0));
       if (entries.length > 100) entries = entries.slice(entries.length - 100);
-      try { if (window._tgDbg) window._tgDbg(entries.length, chatLog.children.length); } catch(_){}
       if (!entries.length){ chatEmpty.style.display = "block"; lastSeenCount = 0; chatStarted = true; return; }
       chatEmpty.style.display = "none";
 
@@ -1586,12 +1562,6 @@
        }
       }
       if (chatOpen || wasNearBottom) chatLog.scrollTop = chatLog.scrollHeight;
-      // diagnostic: how many message nodes are actually in the log after render
-      try {
-        const painted = chatLog.querySelectorAll(".msg").length;
-        const dEl = document.getElementById("chatDebug");
-        if (dEl) dEl.textContent = dEl.textContent.replace(/ paint:\S+/,"") + " paint:" + painted + (_renderErr ? (" perr:" + ((_renderErr.message||"").slice(0,18))) : "");
-      } catch(_){}
       if (translateOn) applyChatTranslations().then(() => {
         if (chatOpen || wasNearBottom) chatLog.scrollTop = chatLog.scrollHeight;
       });
