@@ -1227,7 +1227,6 @@
         if (!chatRef){ toast("Chat needs Firebase set up first"); return; }
         chatInput.value = "";
         Promise.resolve(push(chatRef, { text, name: displayName || "someone", by: myId, t: Date.now() }))
-          .then(() => { _dbgWrites++; if (typeof dbg === "function") dbg(); })
           .catch(err => {
             console.error("[chat] send failed:", err && err.code, err);
             const denied = err && (/permission|denied/i.test(err.code || "") || /PERMISSION/i.test(String(err)));
