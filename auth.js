@@ -86,6 +86,7 @@
 
       mods = { appMod, authMod, dbMod, app, auth, db };
       MFAuth.db = db; // expose shared db so chat.js etc. reuse one connection
+      MFAuth._app = app; // expose app so chat.js can init Storage on the same instance
 
       // ---- profile helpers ----
       async function loadProfile(uid) {

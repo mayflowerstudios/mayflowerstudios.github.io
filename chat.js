@@ -52,7 +52,11 @@
           <button class="mf-ct on" data-ctab="global">🌸 Everyone</button>
           <button class="mf-ct" data-ctab="dm">💌 Messages</button>
         </div>
-        <button class="mf-chat-x" id="mfChatX" aria-label="Close">✕</button>
+        <div class="mf-chat-headtools">
+          <button class="mf-tr-btn" id="mfTrBtn" title="Translate messages">🌐</button>
+          <select class="mf-tr-lang" id="mfTrLang" hidden></select>
+          <button class="mf-chat-x" id="mfChatX" aria-label="Close">✕</button>
+        </div>
       </div>
       <div class="mf-chat-body" id="mfChatBody"></div>
       <div class="mf-chat-foot" id="mfChatFoot"></div>`;
@@ -68,6 +72,34 @@
         setView(b.dataset.ctab);
       });
     });
+
+    // translate control
+    const trBtn = panel.querySelector("#mfTrBtn");
+    const trLang = panel.querySelector("#mfTrLang");
+    trLang.innerHTML = Object.entries(LANG_NAMES).map(([k, v]) => `<option value="${k}">${v}</option>`).join("");
+    function updateTrUI() {
+      if (!TR_OK) { trBtn.textContent = "🌐"; trBtn.title = "Translation isn't available in this browser"; trBtn.disabled = true; trLang.hidden = true; return; }
+      trBtn.classList.toggle("on", translateOn);
+      trBtn.title = translateOn ? ("Translating to " + (LANG_NAMES[targetLang] || targetLang)) : "Translate messages";
+      trLang.hidden = !translateOn;
+      trLang.value = targetLang;
+    }
+    trBtn.addEventListener("click", () => {
+      if (!TR_OK) return;
+      translateOn = !translateOn;
+      try { localStorage.setItem("mf_tr_on", translateOn ? "1" : "0"); } catch (_) {}
+      updateTrUI();
+      if (translateOn) applyTranslations();
+      else { document.querySelectorAll(".mf-msg-text[data-text]").forEach(b => { b.textContent = b.dataset.text; delete b.dataset.trFor; }); document.querySelectorAll(".mf-msg-orig").forEach(o => o.remove()); }
+    });
+    trLang.addEventListener("change", () => {
+      targetLang = trLang.value;
+      try { localStorage.setItem("mf_tr_lang", targetLang); } catch (_) {}
+      document.querySelectorAll(".mf-msg-text[data-text]").forEach(b => { delete b.dataset.trFor; });
+      updateTrUI();
+      if (translateOn) applyTranslations();
+    });
+    updateTrUI();
   }
 
   function togglePanel(force) {
@@ -128,11 +160,38 @@
   }
 
   function composerHTML() {
-    return `<div class="mf-chat-input">
-      <input id="mfChatText" type="text" maxlength="500" placeholder="Type a message…" autocomplete="off" />
-      <button id="mfChatSend" aria-label="Send">➤</button>
-    </div>`;
+    return `
+      <div class="mf-pickerPop" id="mfEmojiPop"></div>
+      <div class="mf-pickerPop" id="mfGifPop">
+        <div class="mf-gifSearch"><input type="text" id="mfGifSearch" placeholder="Search GIFs…" autocomplete="off" /></div>
+        <div class="mf-gifGrid" id="mfGifGrid"></div>
+        <div class="mf-gifMsg" id="mfGifMsg" hidden></div>
+        <div class="mf-gifAttr">Powered by Klipy</div>
+      </div>
+      <div class="mf-chat-tools">
+        <button class="mf-tool" id="mfEmojiBtn" title="Emoji" type="button">😊</button>
+        <button class="mf-tool" id="mfGifBtn" title="GIF" type="button">GIF</button>
+        <button class="mf-tool" id="mfImgBtn" title="Send a picture" type="button">🖼️</button>
+        <input type="file" id="mfImgInput" accept="image/*" hidden />
+      </div>
+      <div class="mf-chat-input">
+        <input id="mfChatText" type="text" maxlength="500" placeholder="Type a message…" autocomplete="off" />
+        <button id="mfChatSend" aria-label="Send">➤</button>
+      </div>`;
   }
+
+  function chatNode() {
+    return (view === "global")
+      ? mods.ref(db, "chat/global")
+      : mods.ref(db, `dm/${pairKey(me, dmWith)}`);
+  }
+  function afterSend() {
+    if (view === "dm") {
+      mods.set(mods.ref(db, `dmIndex/${me}/${dmWith}`), { t: Date.now() });
+      mods.set(mods.ref(db, `dmIndex/${dmWith}/${me}`), { t: Date.now() });
+    }
+  }
+
   function wireComposer(kind) {
     const input = document.getElementById("mfChatText");
     const send = document.getElementById("mfChatSend");
@@ -140,20 +199,258 @@
     const go = () => {
       const text = input.value.trim();
       if (!text) return;
-      const node = (kind === "global")
-        ? mods.ref(db, "chat/global")
-        : mods.ref(db, `dm/${pairKey(me, dmWith)}`);
-      mods.push(node, { uid: me, name: myName || "someone", text, t: Date.now() });
-      if (kind === "dm") {
-        // index both sides so it shows in each person's message list
-        mods.set(mods.ref(db, `dmIndex/${me}/${dmWith}`), { t: Date.now() });
-        mods.set(mods.ref(db, `dmIndex/${dmWith}/${me}`), { t: Date.now() });
-      }
+      mods.push(chatNode(), { uid: me, name: myName || "someone", text, t: Date.now() });
+      afterSend();
       input.value = "";
     };
     send.addEventListener("click", go);
     input.addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+    wirePickers(input);
     setTimeout(() => input.focus(), 50);
+  }
+
+  // Push a media (image/GIF) message. Encoded into the `text` field with an
+  // invisible marker so the DB shape stays identical to a text message.
+  const MEDIA_PREFIX = "\u0001mfmedia:";
+  function encodeMedia({ kind, url, w, h }) {
+    const p = { k: kind, u: url };
+    if (Number.isFinite(w)) p.w = w;
+    if (Number.isFinite(h)) p.h = h;
+    return MEDIA_PREFIX + JSON.stringify(p);
+  }
+  function decodeMedia(text) {
+    if (typeof text !== "string" || !text.startsWith(MEDIA_PREFIX)) return null;
+    try {
+      const p = JSON.parse(text.slice(MEDIA_PREFIX.length));
+      if (!p || !p.u) return null;
+      return { kind: p.k === "gif" ? "gif" : "image", url: p.u, w: p.w, h: p.h };
+    } catch (_) { return null; }
+  }
+  function sendMedia({ kind, url, w, h }) {
+    if (!url) return Promise.reject();
+    return Promise.resolve(
+      mods.push(chatNode(), { uid: me, name: myName || "someone", text: encodeMedia({ kind, url, w, h }), t: Date.now() })
+    ).then(afterSend);
+  }
+
+  // ---- Emoji / GIF / image pickers ----
+  const EMOJI = {
+    "Smileys": ["😀","😁","😂","🤣","😊","😇","🙂","😉","😍","🥰","😘","😋","😜","🤪","😎","🤩","🥳","😏","😴","🤤","😢","😭","😤","😡","🥺","😳","🤔","🤗","🤭","🫢","😬","🙄","😩","🤯","🥶","🥵","😱","🤫","🫠","👀"],
+    "Hearts": ["❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💖","💗","💓","💞","💕","💔","❣️","💘","💝","💟","♥️"],
+    "Hands": ["👍","👎","👌","🤌","✌️","🤞","🫶","🙌","👏","🙏","💪","🫂","🤝","👋","🤙","🫰","✊","👊","🤟","🤙"],
+    "Cozy": ["🌸","🌺","🌷","🌹","🌻","🌼","🌙","⭐","✨","💫","🔥","🦊","🐾","🍃","🌿","☕","🍵","🕯️","🫖","🍰","🎀","🎬","🍿","🎮","💌","🌈"],
+    "Misc": ["🎉","🎊","🥂","🍻","🎵","🎶","💤","💯","✅","❌","⚡","💥","💦","🌟","👻","💀","🤡","🎃","🐱","🍒"]
+  };
+  let pickersBuilt = false;
+  function wirePickers(input) {
+    const emojiBtn = document.getElementById("mfEmojiBtn");
+    const gifBtn = document.getElementById("mfGifBtn");
+    const imgBtn = document.getElementById("mfImgBtn");
+    const emojiPop = document.getElementById("mfEmojiPop");
+    const gifPop = document.getElementById("mfGifPop");
+    const imgInput = document.getElementById("mfImgInput");
+    if (!emojiBtn) return;
+
+    // build emoji grid once per composer render
+    let html = "";
+    for (const [cat, list] of Object.entries(EMOJI)) {
+      html += `<div class="mf-emojiCat">${cat}</div><div class="mf-emojiGrid">`;
+      html += list.map(e => `<button type="button" data-emoji="${e}">${e}</button>`).join("");
+      html += `</div>`;
+    }
+    emojiPop.innerHTML = html;
+
+    function closePops(except) {
+      if (except !== "emoji") { emojiPop.classList.remove("open"); emojiBtn.classList.remove("on"); }
+      if (except !== "gif")   { gifPop.classList.remove("open"); gifBtn.classList.remove("on"); }
+    }
+    // outside-click close (one listener)
+    if (!wirePickers._docClose) {
+      wirePickers._docClose = (e) => {
+        const ep = document.getElementById("mfEmojiPop"), eb = document.getElementById("mfEmojiBtn");
+        const gp = document.getElementById("mfGifPop"), gb = document.getElementById("mfGifBtn");
+        if (ep && (ep.contains(e.target) || (eb && eb.contains(e.target)))) return;
+        if (gp && (gp.contains(e.target) || (gb && gb.contains(e.target)))) return;
+        if (ep) ep.classList.remove("open"); if (eb) eb.classList.remove("on");
+        if (gp) gp.classList.remove("open"); if (gb) gb.classList.remove("on");
+      };
+      document.addEventListener("click", wirePickers._docClose);
+    }
+
+    emojiPop.addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-emoji]"); if (!b) return;
+      const emoji = b.dataset.emoji;
+      const s = input.selectionStart ?? input.value.length;
+      const en = input.selectionEnd ?? input.value.length;
+      input.value = input.value.slice(0, s) + emoji + input.value.slice(en);
+      const pos = s + emoji.length; input.focus();
+      try { input.setSelectionRange(pos, pos); } catch (_) {}
+    });
+    emojiBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const open = !emojiPop.classList.contains("open");
+      closePops("emoji"); emojiPop.classList.toggle("open", open); emojiBtn.classList.toggle("on", open);
+    });
+
+    // GIF
+    let gifTimer = null, gifReq = 0;
+    gifBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const open = !gifPop.classList.contains("open");
+      closePops("gif"); gifPop.classList.toggle("open", open); gifBtn.classList.toggle("on", open);
+      if (open) {
+        const s = document.getElementById("mfGifSearch"); if (s) s.focus();
+        if (!document.getElementById("mfGifGrid").children.length) loadGifs("");
+      }
+    });
+    const gifSearch = document.getElementById("mfGifSearch");
+    gifSearch.addEventListener("input", () => {
+      clearTimeout(gifTimer);
+      gifTimer = setTimeout(() => loadGifs(gifSearch.value.trim()), 350);
+    });
+    function loadGifs(q) {
+      const reqId = ++gifReq;
+      const grid = document.getElementById("mfGifGrid");
+      const msg = document.getElementById("mfGifMsg");
+      grid.innerHTML = ""; msg.hidden = false; msg.textContent = "Loading…";
+      const path = q ? `gifs/search?q=${encodeURIComponent(q)}&per_page=24` : `gifs/trending?per_page=24`;
+      const url = `https://api.klipy.com/api/v1/${KLIPY_KEY}/${path}&content_filter=high`;
+      fetch(url).then(r => { if (!r.ok) throw new Error("klipy " + r.status); return r.json(); })
+        .then(json => {
+          if (reqId !== gifReq) return;
+          const results = (json && json.data && json.data.data) || [];
+          if (!results.length) { msg.textContent = "No GIFs found 🌫️"; return; }
+          msg.hidden = true;
+          for (const g of results) {
+            const { preview, full } = klipyUrls(g); if (!full) continue;
+            const d = klipyDims(g);
+            const im = document.createElement("img");
+            im.src = preview || full; im.loading = "lazy"; im.alt = g.title || "GIF";
+            im.addEventListener("click", () => { sendMedia({ kind: "gif", url: full, w: d[0], h: d[1] }); closePops(); });
+            grid.appendChild(im);
+          }
+          if (!grid.children.length) { msg.hidden = false; msg.textContent = "No GIFs found 🌫️"; }
+        })
+        .catch(() => { if (reqId === gifReq) { msg.hidden = false; msg.textContent = "Couldn't reach the GIF service 🌧️"; } });
+    }
+
+    // Image upload
+    imgBtn.addEventListener("click", () => { closePops(); imgInput.click(); });
+    imgInput.addEventListener("change", async () => {
+      const file = imgInput.files && imgInput.files[0];
+      imgInput.value = "";
+      if (!file) return;
+      if (!/^image\//i.test(file.type)) { return; }
+      if (file.size > 12 * 1024 * 1024) { alert("That image is too big (limit 12 MB)"); return; }
+      const isGif = /gif$/i.test(file.type);
+      imgBtn.disabled = true; const old = imgBtn.textContent; imgBtn.textContent = "…";
+      let dims = {};
+      try { dims = await readImageDims(file); } catch (_) {}
+      try {
+        const url = await uploadChatImage(file);
+        await sendMedia({ kind: isGif ? "gif" : "image", url, w: dims.w, h: dims.h });
+      } catch (err) { console.error("[chat img]", err); alert("Couldn't send that picture"); }
+      imgBtn.disabled = false; imgBtn.textContent = old;
+    });
+  }
+
+  function readImageDims(file) {
+    return new Promise((res, rej) => {
+      const u = URL.createObjectURL(file);
+      const im = new Image();
+      im.onload = () => { res({ w: im.naturalWidth, h: im.naturalHeight }); URL.revokeObjectURL(u); };
+      im.onerror = () => { rej(new Error("img read")); URL.revokeObjectURL(u); };
+      im.src = u;
+    });
+  }
+
+  // Upload a chat picture to Storage under chatmedia/{uid}/...
+  let storageMod = null, storage = null;
+  async function uploadChatImage(file) {
+    if (!storageMod) storageMod = await import(`https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js`);
+    if (!storage) storage = MFAuth._app ? storageMod.getStorage(MFAuth._app) : storageMod.getStorage();
+    const ext = (/\.([a-z0-9]{2,5})$/i.exec(file.name)?.[1] || "png").toLowerCase();
+    const path = `chatmedia/${me}/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
+    const sref = storageMod.ref(storage, path);
+    await storageMod.uploadBytes(sref, file, { contentType: file.type || "image/png" });
+    return storageMod.getDownloadURL(sref);
+  }
+
+  // ---- Klipy GIF helpers (same API as the watch room) ----
+  const KLIPY_KEY = "CShaQsI9HgGHkocmgvSz0r8C9Nzzibp2qeAW0XvW4Gq7EF8Pp7nlq9RK6jJvEEG7";
+  function klipyUrls(item) {
+    const f = item.file || item.files || {};
+    const pick = (sz) => { const s = f[sz] || {}; return (s.gif && (s.gif.url || s.gif)) || (s.webp && (s.webp.url || s.webp)) || null; };
+    const small = pick("sm") || pick("xs") || pick("md");
+    const big = pick("hd") || pick("md") || small;
+    const flat = typeof item.url === "string" ? item.url : null;
+    return { preview: small || big || flat, full: big || small || flat };
+  }
+  function klipyDims(item) {
+    const f = item.file || item.files || {};
+    const s = f.md || f.hd || f.sm || {};
+    const g = s.gif || {};
+    return [g.width || item.width, g.height || item.height];
+  }
+
+  // ---- Translation engine (two-tier: on-device, then free server fallback) ----
+  const LANG_NAMES = { en:"English", es:"Spanish", de:"German", fr:"French", pt:"Portuguese", it:"Italian", nl:"Dutch", ja:"Japanese", ko:"Korean", zh:"Chinese", ru:"Russian" };
+  let translateOn = false, targetLang = "en";
+  const translationCache = new Map(), translatorPool = new Map();
+  function guessLang() { const l = (navigator.language || "en").slice(0,2).toLowerCase(); return LANG_NAMES[l] ? l : "en"; }
+  try { translateOn = localStorage.getItem("mf_tr_on") === "1"; targetLang = localStorage.getItem("mf_tr_lang") || guessLang(); } catch (_) { targetLang = guessLang(); }
+  const HAS_DEVICE = (typeof self !== "undefined") && ("Translator" in self) && ("LanguageDetector" in self);
+  const HAS_SERVER = /^https?:$/.test(location.protocol);
+  const TR_MODE = HAS_DEVICE ? "device" : (HAS_SERVER ? "server" : "none");
+  const TR_OK = TR_MODE !== "none";
+  async function getTranslator(src, tgt) {
+    const key = src + "->" + tgt;
+    if (translatorPool.has(key)) return translatorPool.get(key);
+    const p = (async () => { try { const a = await self.Translator.availability({ sourceLanguage: src, targetLanguage: tgt }); if (a === "unavailable") return null; return await self.Translator.create({ sourceLanguage: src, targetLanguage: tgt }); } catch (_) { return null; } })();
+    translatorPool.set(key, p); return p;
+  }
+  async function detectLang(text) {
+    try { if ("LanguageDetector" in self) { const d = await self.LanguageDetector.create(); const res = await d.detect(text); if (res && res.length) { const top = res.find(r => r.detectedLanguage && r.detectedLanguage !== "und"); if (top && top.confidence > 0.15) return top.detectedLanguage.slice(0,2); } } } catch (_) {}
+    return null;
+  }
+  async function serverTranslate(text, tgt) {
+    const url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" + encodeURIComponent(tgt) + "&dt=t&q=" + encodeURIComponent(text);
+    try { const ctrl = new AbortController(); const timer = setTimeout(() => ctrl.abort(), 8000); const r = await fetch(url, { signal: ctrl.signal }); clearTimeout(timer); if (!r.ok) return null; const data = await r.json(); const out = (data[0] || []).map(s => s[0]).join(""); const src = (data[2] || "").slice(0,2); if (!out) return null; return { text: out, src }; } catch (_) { return null; }
+  }
+  async function translateText(text, tgt) {
+    const ck = tgt + "||" + text;
+    if (translationCache.has(ck)) return translationCache.get(ck);
+    let out = null;
+    if (TR_MODE === "device") {
+      const src = await detectLang(text);
+      if (src && src === tgt) { translationCache.set(ck, null); return null; }
+      if (src) { const t = await getTranslator(src, tgt); if (t) { try { out = await t.translate(text); } catch (_) { out = null; } } }
+      if (!out && HAS_SERVER) { const r = await serverTranslate(text, tgt); if (r) { if (r.src && r.src === tgt) { translationCache.set(ck, null); return null; } out = r.text; } }
+    } else if (TR_MODE === "server") {
+      const r = await serverTranslate(text, tgt);
+      if (r) { if (r.src && r.src === tgt) { translationCache.set(ck, null); return null; } out = r.text; }
+    }
+    translationCache.set(ck, out || null);
+    return out || null;
+  }
+  async function applyTranslations() {
+    if (!translateOn || !TR_OK) return;
+    const log = document.getElementById("mfChatLog"); if (!log) return;
+    const bubbles = log.querySelectorAll(".mf-msg-text[data-text]");
+    for (const b of bubbles) {
+      if (b.dataset.trFor === targetLang) continue;
+      const original = b.dataset.text;
+      const translated = await translateText(original, targetLang);
+      b.dataset.trFor = targetLang;
+      if (translated && translated !== original) {
+        b.textContent = translated;
+        const row = b.closest(".mf-msg");
+        if (row && !row.querySelector(".mf-msg-orig")) {
+          const o = document.createElement("span"); o.className = "mf-msg-orig"; o.textContent = "original: " + original;
+          b.after(o);
+        }
+      }
+    }
   }
 
   function subscribeMessages(node) {
@@ -176,13 +473,40 @@
     const row = document.createElement("div");
     row.className = "mf-msg " + (mine ? "me" : "them");
     const nameHTML = mine ? "" : `<span class="mf-msg-name" data-uid="${m.uid}">${esc(m.name || "someone")}</span>`;
-    row.innerHTML = nameHTML
-      + `<span class="mf-msg-text">${esc(m.text)}</span>`
-      + `<span class="mf-msg-time">${timeShort(m.t)}</span>`;
+
+    const media = decodeMedia(m.text);
+    if (media) {
+      const w = (Number.isFinite(media.w) && media.w) ? ` width="${Math.min(220, media.w)}"` : "";
+      row.innerHTML = nameHTML
+        + `<span class="mf-media"><img src="${esc(media.url)}" alt="${media.kind === "gif" ? "GIF" : "image"}" loading="lazy"${w}></span>`
+        + `<span class="mf-msg-time">${timeShort(m.t)}</span>`;
+      const img = row.querySelector(".mf-media img");
+      if (img) img.addEventListener("click", () => openLightbox(media.url));
+    } else {
+      row.innerHTML = nameHTML
+        + `<span class="mf-msg-text" data-text="${esc(m.text)}">${esc(m.text)}</span>`
+        + `<span class="mf-msg-time">${timeShort(m.t)}</span>`;
+    }
     const nm = row.querySelector(".mf-msg-name");
     if (nm) nm.addEventListener("click", () => { if (window.MFProfile) MFProfile.show(m.uid); });
     log.appendChild(row);
     log.scrollTop = log.scrollHeight;
+    if (translateOn) applyTranslations().then(() => { log.scrollTop = log.scrollHeight; });
+  }
+
+  // ---- lightbox ----
+  function openLightbox(url) {
+    let lb = document.getElementById("mfLightbox");
+    if (!lb) {
+      lb = document.createElement("div");
+      lb.id = "mfLightbox"; lb.className = "mf-lightbox";
+      lb.innerHTML = `<img alt="">`;
+      document.body.appendChild(lb);
+      lb.addEventListener("click", () => { lb.classList.remove("open"); lb.querySelector("img").src = ""; });
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape" && lb.classList.contains("open")) { lb.classList.remove("open"); lb.querySelector("img").src = ""; } });
+    }
+    lb.querySelector("img").src = url;
+    lb.classList.add("open");
   }
 
   // ---- DM people list ----
