@@ -586,7 +586,14 @@
         + `<span class="mf-media"><img src="${esc(media.url)}" alt="${media.kind === "gif" ? "GIF" : "image"}" loading="lazy"${w}></span>`
         + `<span class="mf-msg-time">${timeShort(m.t)}</span>`;
       const img = row.querySelector(".mf-media img");
-      if (img) img.addEventListener("click", () => openLightbox(media.url));
+      if (img) {
+        img.addEventListener("click", () => openLightbox(media.url));
+        // The image has no height until it loads, so an immediate scroll lands
+        // short of the bottom. Re-pin to the bottom once it actually loads.
+        const rescroll = () => { log.scrollTop = log.scrollHeight; };
+        if (img.complete) rescroll();
+        else { img.addEventListener("load", rescroll); img.addEventListener("error", rescroll); }
+      }
     } else {
       row.innerHTML = nameHTML
         + `<span class="mf-msg-text" data-text="${esc(m.text)}">${esc(m.text)}</span>`
