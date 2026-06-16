@@ -110,7 +110,20 @@
     });
     updateTrUI();
 
-    // mute toggle (message sounds — DMs only)
+    // Keep the chat translator in sync with the site-wide language picker.
+    window.addEventListener("mf-lang-change", (e) => {
+      const lang = e && e.detail && e.detail.lang;
+      if (!lang || !TR_OK) return;
+      targetLang = lang;
+      document.querySelectorAll(".mf-msg-text[data-text]").forEach(b => { delete b.dataset.trFor; });
+      // If the whole site is being translated, mirror that in chat automatically.
+      if (lang !== "en") {
+        translateOn = true;
+        try { localStorage.setItem("mf_tr_on", "1"); } catch (_) {}
+      }
+      updateTrUI();
+      if (translateOn) applyTranslations();
+    });
     const muteBtn = panel.querySelector("#mfMuteBtn");
     function updateMuteUI() {
       muteBtn.textContent = muted ? "🔕" : "🔔";

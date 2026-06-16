@@ -535,6 +535,36 @@ hr.sep { border: 0; height: 1px; background: var(--border); margin: 14px 0; }
 /* Media block */
 .mediaBlock { display: flex; flex-wrap: wrap; gap: 12px; }
 .mediaBlock img { border-radius: var(--r-md); border: 1px solid var(--border); max-height: 280px; }
+/* ── Language picker in nav ── */
+.nav-lang {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin: 0 4px 0 8px; padding: 5px 10px 5px 11px;
+  border: 1px solid var(--border-2); border-radius: 999px;
+  background: var(--glass-2); cursor: pointer;
+  transition: border-color 180ms var(--ease);
+}
+.nav-lang:hover { border-color: rgba(249,168,212,.3); }
+.nav-lang-ic { font-size: 13px; line-height: 1; opacity: .8; }
+.nav-lang select {
+  appearance: none; -webkit-appearance: none; -moz-appearance: none;
+  border: 0; background: transparent; outline: none; cursor: pointer;
+  color: var(--text-2); font-family: var(--font-b); font-size: 13px; font-weight: 500;
+  padding: 0 2px; max-width: 120px;
+}
+.nav-lang select:hover { color: var(--text); }
+.nav-lang select option { background: #141a2e; color: var(--text); }
+/* show a subtle shimmer on the page while a translation pass runs */
+html[data-mf-translating] .content,
+html[data-mf-translating] .wrap { transition: opacity 200ms var(--ease); }
+
+@media (max-width: 720px) {
+  .nav-lang {
+    margin: 4px 0; justify-content: flex-start; width: 100%;
+    border-radius: var(--r-sm); padding: 10px 12px;
+  }
+  .nav-lang select { max-width: none; flex: 1; font-size: 15px; }
+}
+
 /* ── Account link in nav ── */
 .nav-links a.nav-account {
   color: var(--text-2);
