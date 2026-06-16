@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Watch Together — Mayflower Studios</title>
-  <link rel="stylesheet" href="/style.css?v=13" />
+  <link rel="stylesheet" href="/style.css?v=14" />
 
   <style>
     /* Ensure padding is included in element width so nothing overflows the
@@ -630,13 +630,13 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/shared.js?v=13"></script>
+  <script src="/shared.js?v=14"></script>
 
   <script src="fireflies.js"></script>
 
   <!-- Firebase (Realtime Database) for lightweight room sync -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import {
       getDatabase, ref, onValue, set, onDisconnect, serverTimestamp, get,
       push, remove, query, limitToLast, child, onChildAdded, onChildRemoved, update
@@ -1893,7 +1893,7 @@
               applyName(local, { lock: false });
             }
           });
-        } else if (++tries > 50) { clearInterval(iv); }
+        } else if (++tries > 150) { clearInterval(iv); }
       }, 100);
     })();
 
@@ -1925,7 +1925,9 @@
         return;
       }
       try {
-        const app = initializeApp(firebaseConfig);
+        // Reuse the app auth.js already created (shared session/persistence)
+        // instead of spinning up a second one, which broke auth state.
+        const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
         db = getDatabase(app);
         try { storage = getStorage(app); } catch (_) { storage = null; }
 

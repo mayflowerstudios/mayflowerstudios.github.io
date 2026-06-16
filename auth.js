@@ -80,9 +80,27 @@
       const dbMod   = await import(`https://www.gstatic.com/firebasejs/${FB_VERSION}/firebase-database.js`);
 
       const app = appMod.getApps().length ? appMod.getApp() : appMod.initializeApp(cfg);
-      const auth = authMod.getAuth(app);
+
+      // Initialize Auth with persistence declared UP FRONT so the signed-in
+      // session is restored from storage on every page load (no re-login on
+      // reload). We prefer IndexedDB, then localStorage, then in-memory.
+      // initializeAuth must run before any getAuth() for this app; if another
+      // module already created it, fall back to getAuth + setPersistence.
+      let auth;
+      try {
+        auth = authMod.initializeAuth(app, {
+          persistence: [
+            authMod.indexedDBLocalPersistence,
+            authMod.browserLocalPersistence,
+          ],
+          popupRedirectResolver: authMod.browserPopupRedirectResolver,
+        });
+      } catch (_) {
+        // already initialized somewhere — reuse it and set persistence anyway
+        auth = authMod.getAuth(app);
+        try { await authMod.setPersistence(auth, authMod.browserLocalPersistence); } catch (_) {}
+      }
       const db = dbMod.getDatabase(app);
-      try { await authMod.setPersistence(auth, authMod.browserLocalPersistence); } catch (_) {}
 
       mods = { appMod, authMod, dbMod, app, auth, db };
       MFAuth.db = db; // expose shared db so chat.js etc. reuse one connection
@@ -322,18 +340,24 @@
       authMod.onAuthStateChanged(auth, async (user) => {
         MFAuth.user = user || null;
         if (user) {
-          MFAuth.profile = await ensureProfile(user);
+          // Mark ready and emit right away using whatever we know, so pages
+          // recognise the restored session instantly on load (no re-login
+          // flash). The profile + presence load in the background and emit
+          // again when they arrive.
+          ready = true;
+          MFAuth._emit();
+          try { MFAuth.profile = await ensureProfile(user); } catch (_) {}
           startPresence(user.uid);
-          // keep our profile live + lastSeen fresh
           dbMod.onValue(dbMod.ref(db, `users/${user.uid}`), (snap) => {
             MFAuth.profile = snap.exists() ? snap.val() : MFAuth.profile;
             MFAuth._emit();
           });
+          MFAuth._emit();
         } else {
           MFAuth.profile = null;
+          ready = true;
+          MFAuth._emit();
         }
-        ready = true;
-        MFAuth._emit();
       });
 
     } catch (err) {

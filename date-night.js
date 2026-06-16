@@ -58,7 +58,7 @@ function waitForAuth(cb){
   let n = 0;
   const iv = setInterval(() => {
     if (window.MFAuth && MFAuth.isReady()){ clearInterval(iv); cb(); }
-    else if (++n > 100) clearInterval(iv);
+    else if (++n > 250) clearInterval(iv);   // ~20s ceiling for slow networks
   }, 80);
 }
 
