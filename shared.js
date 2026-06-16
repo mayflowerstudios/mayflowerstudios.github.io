@@ -545,6 +545,15 @@
     });
   }
 
+  function initReveal() {
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+      });
+    }, { threshold: 0.07 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+  }
+
   // ───────────────────────────────────────────────────────────────
   //  🐝 Easter egg — a hidden path to /bee.html
   //  Two cute ways in, both hard to find by accident:
@@ -662,7 +671,7 @@
 
   // Bump this whenever auth.js / chat.js / profile-view.js change, so browsers
   // and the GitHub Pages CDN fetch the new version instead of a cached copy.
-  var MF_ASSET_VER = '24';
+  var MF_ASSET_VER = '25';
 
   function loadScript(src, attrs) {
     if (document.querySelector(`script[data-mf-src="${src}"]`)) return;
