@@ -10,4 +10,8 @@
   <url><loc>https://mayflowerstudios.net/account.html</loc></url>
   <url><loc>https://mayflowerstudios.net/privacy.html</loc></url>
   <url><loc>https://mayflowerstudios.net/tos.html</loc></url>
+  <url><loc>https://mayflowerstudios.net/projects.html</loc><changefreq>monthly</changefreq></url>
+  <url><loc>https://mayflowerstudios.net/bots/foxbot.html</loc><changefreq>monthly</changefreq></url>
+  <url><loc>https://mayflowerstudios.net/bots/echobloom.html</loc><changefreq>monthly</changefreq></url>
+  <url><loc>https://mayflowerstudios.net/bots/bloombot.html</loc><changefreq>monthly</changefreq></url>
 </urlset>

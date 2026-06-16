@@ -474,6 +474,8 @@
       'watch-together': 'together',
       'server': 'together',
       'sakari': 'stories',
+      'mods': 'projects',
+      'bots': 'projects',
     };
     const raw = document.body.dataset.nav || '';
     const key = ALIAS[raw] || raw;
@@ -481,6 +483,7 @@
       { href: '/',              label: 'Home',     key: 'home'     },
       { href: '/together.html', label: 'Together', key: 'together' },
       { href: '/sakari.html',   label: 'Stories',  key: 'stories'  },
+      { href: '/projects.html', label: 'Projects', key: 'projects' },
     ];
     const linksHtml = links.map(l =>
       `<a href="${l.href}"${l.key === key ? ' class="nav-active"' : ''}>${l.label}</a>`
@@ -506,6 +509,7 @@
         <div class="footer-links">
           <a href="/together.html">Together</a>
           <a href="/sakari.html">Stories</a>
+          <a href="/projects.html">Projects</a>
           <a href="https://ko-fi.com/mayflowerstudiosteam" target="_blank" rel="noopener">Support ↗</a>
           <a href="/privacy.html">Privacy</a>
           <a href="/tos.html">Terms</a>
@@ -561,7 +565,7 @@
 
   // Bump this whenever auth.js / chat.js / profile-view.js change, so browsers
   // and the GitHub Pages CDN fetch the new version instead of a cached copy.
-  var MF_ASSET_VER = '20';
+  var MF_ASSET_VER = '21';
 
   function loadScript(src, attrs) {
     if (document.querySelector(`script[data-mf-src="${src}"]`)) return;
