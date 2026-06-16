@@ -121,27 +121,63 @@
       muted = !muted;
       try { localStorage.setItem("mf_chat_muted", muted ? "1" : "0"); } catch (_) {}
       updateMuteUI();
+      // tapping unmute is a user gesture — unlock audio and give a tiny preview
+      if (!muted) { unlockAudio(); playChime(); }
     });
     updateMuteUI();
   }
 
   // ---- DM chime (a soft two-note ping; synthesized, no audio file) ----
+  // Mobile browsers (esp. iOS Safari) only allow audio after a user gesture and
+  // keep the AudioContext suspended otherwise. So we create + unlock it on the
+  // first tap/click/keypress anywhere, then chimes work even from background
+  // events like an incoming message.
+  let audioUnlocked = false;
+  function ensureAudio() {
+    if (!audioCtx) {
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) { return null; }
+    }
+    return audioCtx;
+  }
+  function unlockAudio() {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    if (ctx.state === "suspended") { ctx.resume().catch(() => {}); }
+    // Play a near-silent buffer to satisfy iOS's "must start in a gesture" rule.
+    try {
+      const buf = ctx.createBuffer(1, 1, 22050);
+      const src = ctx.createBufferSource();
+      src.buffer = buf; src.connect(ctx.destination); src.start(0);
+    } catch (_) {}
+    audioUnlocked = true;
+  }
+  // Arm the unlock on the first interaction (covers desktop + mobile).
+  ["pointerdown", "touchstart", "click", "keydown"].forEach(ev => {
+    document.addEventListener(ev, function once() {
+      unlockAudio();
+      ["pointerdown", "touchstart", "click", "keydown"].forEach(e2 => document.removeEventListener(e2, once));
+    }, { once: false, passive: true });
+  });
+
   function playChime() {
     if (muted) return;
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    // If the context got suspended (tab refocus, mobile), try to resume; this
+    // succeeds when called close to a gesture, and is harmless otherwise.
+    if (ctx.state === "suspended") { ctx.resume().catch(() => {}); }
     try {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === "suspended") audioCtx.resume();
-      const now = audioCtx.currentTime;
-      const notes = [(880), (1175)]; // A5 -> D6, gentle
+      const now = ctx.currentTime;
+      const notes = [880, 1175]; // A5 -> D6, gentle
       notes.forEach((f, i) => {
-        const o = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
         o.type = "sine"; o.frequency.value = f;
         const t0 = now + i * 0.12;
         g.gain.setValueAtTime(0, t0);
-        g.gain.linearRampToValueAtTime(0.18, t0 + 0.02);
+        g.gain.linearRampToValueAtTime(0.2, t0 + 0.02);
         g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.32);
-        o.connect(g); g.connect(audioCtx.destination);
+        o.connect(g); g.connect(ctx.destination);
         o.start(t0); o.stop(t0 + 0.34);
       });
     } catch (_) {}
@@ -692,11 +728,12 @@
         if (m.uid === me) return;                       // our own message
         const seen = seenAt.dm[fid] || 0;
         if (!m.t || m.t <= seen) return;                // already accounted for
-        // viewing this exact thread? then it's seen, no chime/badge
-        if (openPanel && view === "dm" && dmWith === fid) { seenAt.dm[fid] = m.t; return; }
         seenAt.dm[fid] = m.t;
-        unseenDM++; updateBadges();
+        // Chime on every incoming DM — open or closed, any tab.
         playChime();
+        // Only bump the unread badge if you're NOT actively reading this thread.
+        const viewingThis = openPanel && view === "dm" && dmWith === fid;
+        if (!viewingThis) { unseenDM++; updateBadges(); }
       };
       mods.onChildAdded(node, handler);
       friendsUnsub.dmWatch[fid] = () => mods.off(node, "child_added", handler);

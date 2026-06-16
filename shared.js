@@ -177,10 +177,15 @@
     document.body.appendChild(s);
   }
 
+  // Bump this whenever auth.js / chat.js / profile-view.js change, so browsers
+  // and the GitHub Pages CDN fetch the new version instead of a cached copy.
+  var MF_ASSET_VER = '8';
+
   function loadScript(src, attrs) {
-    if (document.querySelector(`script[src="${src}"]`)) return;
+    if (document.querySelector(`script[data-mf-src="${src}"]`)) return;
     const s = document.createElement('script');
-    s.src = src;
+    s.src = src + (src.indexOf('?') === -1 ? '?v=' : '&v=') + MF_ASSET_VER;
+    s.setAttribute('data-mf-src', src);
     if (attrs) Object.keys(attrs).forEach(k => s.setAttribute(k, attrs[k]));
     document.body.appendChild(s);
   }
