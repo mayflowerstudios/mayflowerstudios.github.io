@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Together — Mayflower Studios</title>
-  <link rel="stylesheet" href="/style.css?v=10" />
+  <link rel="stylesheet" href="/style.css?v=11" />
 
   <style>
     .tWrap{ max-width:1100px; margin:0 auto; padding:22px; }
@@ -645,7 +645,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/shared.js?v=10"></script>
+  <script src="/shared.js?v=11"></script>
 
   <script>window._firefliesLoaded = true;</script>
   <script src="/fireflies.js"></script>
@@ -894,6 +894,11 @@
       set(pRef, { name: displayName || "someone", tab: currentTab, joined: serverTimestamp(), t: Date.now() });
       onDisconnect(pRef).remove();
 
+      // Heartbeat so we stay "fresh" and aren't pruned as stale by peers.
+      setInterval(() => {
+        try { set(pRef, { name: displayName || "someone", tab: currentTab, joined: serverTimestamp(), t: Date.now() }); } catch(_){}
+      }, 20000);
+
       onValue(ref(db, ".info/connected"), (snap) => {
         const on = snap.val() === true;
         $("connDot").className = "dot " + (on ? "on" : "off");
@@ -902,7 +907,17 @@
       });
 
       onValue(ref(db, `together/${ROOM}/presence`), (snap) => {
-        const all = snap.val() || {};
+        const raw = snap.val() || {};
+        const now = Date.now();
+        // Drop stale entries (reload/crash sessions whose onDisconnect didn't
+        // fire). Everyone present heartbeats their timestamp, so old entries
+        // age out within ~70s. Our own id is always kept.
+        const all = {};
+        Object.keys(raw).forEach(id => {
+          const t = (raw[id] && raw[id].t) || 0;
+          if (id === myId || (now - t) < 70000) all[id] = raw[id];
+          else { try { remove(ref(db, `together/${ROOM}/presence/${id}`)); } catch(_){} }
+        });
         const ids = Object.keys(all);
         $("hereCount").textContent = ids.length;
         // assign tic-tac-toe seat: earliest-joined present id = X

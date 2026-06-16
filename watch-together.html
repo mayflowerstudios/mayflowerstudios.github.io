@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Watch Together — Mayflower Studios</title>
-  <link rel="stylesheet" href="/style.css?v=10" />
+  <link rel="stylesheet" href="/style.css?v=11" />
 
   <style>
     .wtWrap{max-width:1100px;margin:0 auto;padding:22px}
@@ -607,7 +607,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/shared.js?v=10"></script>
+  <script src="/shared.js?v=11"></script>
 
   <script src="fireflies.js"></script>
 
@@ -1745,8 +1745,25 @@
       hostName.textContent = isMe ? "You" : name;
     }
 
+    const PRESENCE_TTL = 70000;   // entries older than this are treated as gone
     function renderPresence(val) {
-      const ids = Object.keys(val || {});
+      val = val || {};
+      const now = Date.now();
+      // Drop stale entries: sessions that reloaded or crashed without their
+      // onDisconnect firing leave behind an entry whose timestamp stops moving.
+      // Anyone still here heartbeats every 8s, so a stale entry ages out quickly.
+      const fresh = {};
+      for (const id of Object.keys(val)) {
+        const t = (val[id] && val[id].t) || 0;
+        if (id === clientId || (now - t) < PRESENCE_TTL) {
+          fresh[id] = val[id];
+        } else {
+          // best-effort cleanup of the stale node so it doesn't linger
+          try { remove(ref(db, `watch/${ROOM}/presence/${id}`)); } catch (_) {}
+        }
+      }
+      val = fresh;
+      const ids = Object.keys(val);
       const n = ids.length;
       lastPresenceCount = n;
       // Track who's actually here, so stale "waiting" entries from clients that
@@ -1931,6 +1948,9 @@
         // so we do a synchronous best-effort here). pagehide covers mobile.
         const unloadCleanup = () => {
           try {
+            // Remove our presence immediately so a reload/close doesn't leave a
+            // ghost "user" lingering (onDisconnect is the network-level backup).
+            try { remove(presRef); } catch (_) {}
             if (isBroadcasting) stopBroadcast(true);
             if (!currentUpload) return;
             const others = presenceRef && lastPresenceCount > 1;
@@ -2050,6 +2070,10 @@
       if (lastHostId === clientId && currentKind) {
         try { if (isPlayingNow()) broadcast("playing"); } catch(_){}
       }
+      // Refresh our presence timestamp so we stay "fresh" and aren't pruned as
+      // stale by other clients. (Stale entries from reloads/crashes that never
+      // fired onDisconnect get filtered out by their old timestamp.)
+      try { if (myPresRef) set(myPresRef, { name: myName, t: Date.now() }); } catch (_) {}
       touchLobbyActivity();
     }, 8000);
 

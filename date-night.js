@@ -167,6 +167,8 @@ function setupPresence(){
   const pRef = P(`presence/${myId}`);
   const write = () => { set(pRef, { name: displayName || "someone", t: Date.now() }); onDisconnect(pRef).remove(); };
   write();
+  // Heartbeat so we stay "fresh"; stale reload/crash entries age out.
+  setInterval(write, 20000);
   onValue(ref(db, ".info/connected"), (snap) => {
     const on = snap.val() === true;
     $("connDot").className = "dot " + (on ? "on" : "off");
@@ -174,7 +176,14 @@ function setupPresence(){
     if (on) write();
   });
   onValue(P("presence"), (snap) => {
-    const all = snap.val() || {};
+    const raw = snap.val() || {};
+    const now = Date.now();
+    const all = {};
+    Object.keys(raw).forEach(id => {
+      const t = (raw[id] && raw[id].t) || 0;
+      if (id === myId || (now - t) < 70000) all[id] = raw[id];
+      else { try { set(P(`presence/${id}`), null); } catch(_){} }
+    });
     const ids = Object.keys(all);
     $("hereCount").textContent = ids.length;
     const note = $("missNote");

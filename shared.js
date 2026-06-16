@@ -179,7 +179,7 @@
 
   // Bump this whenever auth.js / chat.js / profile-view.js change, so browsers
   // and the GitHub Pages CDN fetch the new version instead of a cached copy.
-  var MF_ASSET_VER = '10';
+  var MF_ASSET_VER = '11';
 
   function loadScript(src, attrs) {
     if (document.querySelector(`script[data-mf-src="${src}"]`)) return;
