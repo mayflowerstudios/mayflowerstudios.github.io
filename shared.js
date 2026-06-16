@@ -112,9 +112,54 @@
     try { targetLang = localStorage.getItem("mf_tr_lang") || guessLang(); } catch (_) { targetLang = guessLang(); }
     // If the saved language is "en" we don't translate; that's the original.
 
-    const cache = new Map();        // key `${tgt}||${text}` -> translated string (or null)
+    // ---- persistent translation cache ----
+    // Translations are deterministic for a given (text -> language), so we keep
+    // them in localStorage. Repeat visits then translate from cache instantly
+    // and only fetch strings we've never seen before.
+    const CACHE_KEY = "mf_tr_cache_v1";  // bump the v# to invalidate all cached translations
+    const CACHE_MAX = 4000;              // entry ceiling so we never blow the ~5MB quota
+    const cache = new Map();             // key `${tgt}||${text}` -> translated string (or null)
+    let cacheDirty = false;
+
+    (function loadCache() {
+      try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return;
+        const obj = JSON.parse(raw);
+        if (obj && obj.e) for (const k in obj.e) cache.set(k, obj.e[k]);
+      } catch (_) { /* corrupt cache — ignore, it'll be rebuilt */ }
+    })();
+
+    let saveTimer = null;
+    function persistCache() {
+      // Debounced + size-bounded write so we don't thrash localStorage.
+      if (saveTimer) return;
+      saveTimer = setTimeout(() => {
+        saveTimer = null;
+        if (!cacheDirty) return;
+        cacheDirty = false;
+        try {
+          let entries = [...cache.entries()];
+          if (entries.length > CACHE_MAX) entries = entries.slice(entries.length - CACHE_MAX); // keep newest
+          const e = {};
+          for (const [k, v] of entries) e[k] = v;
+          localStorage.setItem(CACHE_KEY, JSON.stringify({ v: 1, e }));
+        } catch (_) {
+          // quota exceeded — drop half and retry once
+          try {
+            const entries = [...cache.entries()].slice(-Math.floor(CACHE_MAX / 2));
+            cache.clear(); for (const [k, v] of entries) cache.set(k, v);
+            const e = {}; for (const [k, v] of entries) e[k] = v;
+            localStorage.setItem(CACHE_KEY, JSON.stringify({ v: 1, e }));
+          } catch (_) {}
+        }
+      }, 1200);
+    }
+    function cacheSet(key, val) { cache.set(key, val); cacheDirty = true; persistCache(); }
+
     const translatorPool = new Map();
     const originals = new WeakMap(); // textNode -> original nodeValue
+    const trDone = new WeakMap();    // textNode -> language it currently displays
     const tracked = new Set();       // text nodes we've touched (for revert)
     let busy = false;
     let observer = null;
@@ -164,7 +209,7 @@
         const r = await serverTranslate(text, tgt);
         if (r) out = r.text;
       }
-      cache.set(ck, out || null);
+      cacheSet(ck, out || null);
       return out || null;
     }
 
@@ -209,6 +254,10 @@
     function snapshotOriginal(node) {
       if (!originals.has(node)) { originals.set(node, node.nodeValue); tracked.add(node); }
     }
+    // Mark which language a node currently displays, so we never translate
+    // already-translated text a second time (which would stack "[es][es]…").
+    function markDone(node, lang) { trDone.set(node, lang); }
+    function alreadyDone(node) { return trDone.get(node) === targetLang; }
 
     async function translateNodes(nodes) {
       if (!nodes.length || targetLang === "en" || !TR_OK) return;
@@ -216,7 +265,9 @@
       const jobs = [];      // { node, lead, trail, core }
       const need = new Map(); // core -> array of jobs
       for (const node of nodes) {
-        const raw = node.nodeValue;
+        if (alreadyDone(node)) continue;              // node already shows the target language
+        // Source text = the recorded original if we've touched this node, else its current value.
+        const raw = originals.has(node) ? originals.get(node) : node.nodeValue;
         const core = raw.trim();
         if (!core) continue;
         const lead = raw.slice(0, raw.indexOf(core[0]));
@@ -241,13 +292,13 @@
               res = [];
               for (const s of slice) res.push(await translateOne(s, targetLang));
             }
-            slice.forEach((s, idx) => cache.set(targetLang + "||" + s, res[idx] || null));
+            slice.forEach((s, idx) => cacheSet(targetLang + "||" + s, res[idx] || null));
           }
         } else {
           // device mode: translate individually (API is local & fast, runs concurrently-ish)
           await Promise.all(uncached.map(async (s) => {
             const out = await translateOne(s, targetLang);
-            cache.set(targetLang + "||" + s, out || null);
+            cacheSet(targetLang + "||" + s, out || null);
           }));
         }
       }
@@ -259,6 +310,7 @@
           snapshotOriginal(job.node);
           job.node.nodeValue = job.lead + tr + job.trail;
         }
+        markDone(job.node, targetLang);
       }
     }
 
@@ -266,7 +318,34 @@
       for (const node of tracked) {
         const orig = originals.get(node);
         if (orig != null && node.parentNode) node.nodeValue = orig;
+        trDone.delete(node);
       }
+    }
+
+    // Instant pass: swap in only translations we ALREADY have cached, with no
+    // network and no awaiting. On a repeat visit this paints the page in the
+    // chosen language immediately; the async translatePage() then mops up any
+    // strings that are new since last time.
+    function applyCachedSync(root) {
+      if (targetLang === "en" || !TR_OK) return 0;
+      let hits = 0;
+      const nodes = collectTextNodes(root || document.body);
+      for (const node of nodes) {
+        if (alreadyDone(node)) continue;
+        const raw = originals.has(node) ? originals.get(node) : node.nodeValue;
+        const core = raw.trim();
+        if (!core) continue;
+        const tr = cache.get(targetLang + "||" + core);
+        if (tr && tr !== core) {
+          const lead = raw.slice(0, raw.indexOf(core[0]));
+          const trail = raw.slice(raw.indexOf(core[0]) + core.length);
+          snapshotOriginal(node);
+          node.nodeValue = lead + tr + trail;
+          markDone(node, targetLang);
+          hits++;
+        }
+      }
+      return hits;
     }
 
     // ---- public actions ----
@@ -299,9 +378,25 @@
           });
         }
         if (fresh.length) {
-          // de-dupe nodes we already swapped this run
-          const todo = fresh.filter(n => !originals.has(n) || originals.get(n) === n.nodeValue);
-          if (todo.length) translateNodes(todo).catch(() => {});
+          // Skip nodes already showing the target language.
+          const todo = fresh.filter(n => !alreadyDone(n));
+          if (todo.length) {
+            // Instantly swap any cached strings, then async-fetch the rest.
+            for (const n of todo) {
+              const raw = originals.has(n) ? originals.get(n) : n.nodeValue;
+              const core = raw.trim();
+              if (!core) continue;
+              const tr = cache.get(targetLang + "||" + core);
+              if (tr && tr !== core) {
+                const lead = raw.slice(0, raw.indexOf(core[0]));
+                const trail = raw.slice(raw.indexOf(core[0]) + core.length);
+                snapshotOriginal(n);
+                n.nodeValue = lead + tr + trail;
+                markDone(n, targetLang);
+              }
+            }
+            translateNodes(todo).catch(() => {});
+          }
         }
       });
       observer.observe(document.body, { childList: true, subtree: true });
@@ -335,12 +430,19 @@
       startObserver();
       if (targetLang !== "en") {
         document.documentElement.lang = targetLang;
-        // let first paint settle, then translate
+        // Instant: paint anything we already have cached, synchronously.
+        applyCachedSync(document.body);
+        // Then fill in anything new (or everything, on a first visit) off the main thread.
         (window.requestIdleCallback || window.requestAnimationFrame || setTimeout)(() => translatePage());
       }
     }
 
-    return { init, setLang, current, names, available, mode, translatePage, revertAll };
+    function clearCache() {
+      cache.clear();
+      try { localStorage.removeItem(CACHE_KEY); } catch (_) {}
+    }
+
+    return { init, setLang, current, names, available, mode, translatePage, revertAll, clearCache };
   })();
   window.MFTranslate = MFTranslate;
 
@@ -459,7 +561,7 @@
 
   // Bump this whenever auth.js / chat.js / profile-view.js change, so browsers
   // and the GitHub Pages CDN fetch the new version instead of a cached copy.
-  var MF_ASSET_VER = '15';
+  var MF_ASSET_VER = '16';
 
   function loadScript(src, attrs) {
     if (document.querySelector(`script[data-mf-src="${src}"]`)) return;
