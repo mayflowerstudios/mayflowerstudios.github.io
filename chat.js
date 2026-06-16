@@ -586,24 +586,33 @@
     translationCache.set(ck, out || null);
     return out || null;
   }
+  // Translate ONE bubble in place. Cheap and idempotent (the trFor guard means
+  // calling it again for the same language is a no-op).
+  async function translateBubble(b) {
+    if (!translateOn || !TR_OK || !b) return;
+    if (b.dataset.trFor === targetLang) return;
+    const original = b.dataset.text;
+    const translated = await translateText(original, targetLang);
+    b.dataset.trFor = targetLang;
+    if (translated && translated !== original) {
+      b.innerHTML = linkify(translated);
+      const row = b.closest(".mf-msg");
+      if (row && !row.querySelector(".mf-msg-orig")) {
+        const o = document.createElement("span"); o.className = "mf-msg-orig"; o.textContent = "original: " + original;
+        b.after(o);
+      }
+    }
+  }
+
+  // Full-log pass — used only when translation is toggled on or the language
+  // changes, NOT on every incoming message (that would re-scan the whole log
+  // each time and make a busy chat lag). New messages translate just their own
+  // bubble via translateBubble().
   async function applyTranslations() {
     if (!translateOn || !TR_OK) return;
     const log = document.getElementById("mfChatLog"); if (!log) return;
     const bubbles = log.querySelectorAll(".mf-msg-text[data-text]");
-    for (const b of bubbles) {
-      if (b.dataset.trFor === targetLang) continue;
-      const original = b.dataset.text;
-      const translated = await translateText(original, targetLang);
-      b.dataset.trFor = targetLang;
-      if (translated && translated !== original) {
-        b.innerHTML = linkify(translated);
-        const row = b.closest(".mf-msg");
-        if (row && !row.querySelector(".mf-msg-orig")) {
-          const o = document.createElement("span"); o.className = "mf-msg-orig"; o.textContent = "original: " + original;
-          b.after(o);
-        }
-      }
-    }
+    for (const b of bubbles) await translateBubble(b);
   }
 
   // Map of Firebase message key -> its rendered row element, so edits and
@@ -690,10 +699,17 @@
       // Scroll down for a new message only if you're already at the bottom, or
       // it's your own message — so reading older messages isn't interrupted.
       if (atBottom || mine) log.scrollTop = log.scrollHeight;
-      if (translateOn) applyTranslations().then(() => { if (atBottom || mine) log.scrollTop = log.scrollHeight; });
+      // Translate just THIS bubble (not the whole log) so a busy chat stays fast.
+      if (translateOn && !media) {
+        const b = row.querySelector(".mf-msg-text[data-text]");
+        translateBubble(b).then(() => { if (atBottom || mine) log.scrollTop = log.scrollHeight; });
+      }
     } else {
-      // An edit/delete landed — keep the view put unless we were at the bottom.
-      if (translateOn) applyTranslations();
+      // An edit/delete landed — re-translate only this one bubble.
+      if (translateOn && !media) {
+        const b = row.querySelector(".mf-msg-text[data-text]");
+        if (b) { delete b.dataset.trFor; translateBubble(b); }
+      }
       if (atBottom) log.scrollTop = log.scrollHeight;
     }
   }

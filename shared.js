@@ -586,14 +586,14 @@
 
       var W = window.innerWidth, H = window.innerHeight;
       var t0 = performance.now();
-      var dur = 1500;
+      var dur = 4200;
       function frame(now) {
         var p = Math.min(1, (now - t0) / dur);
         // ease across the screen with a gentle sine bob, like a real bee
         var ease = 1 - Math.pow(1 - p, 2);
         var x = -60 + ease * (W + 120);
-        var y = (H * 0.6) + Math.sin(p * Math.PI * 5) * 42 - ease * (H * 0.18);
-        var flip = Math.sin(p * Math.PI * 5) > 0 ? 1 : -1;
+        var y = (H * 0.6) + Math.sin(p * Math.PI * 3) * 42 - ease * (H * 0.18);
+        var flip = Math.sin(p * Math.PI * 3) > 0 ? 1 : -1;
         bee.style.transform = 'translate(' + x + 'px,' + (y - H * 0.6) + 'px) scaleX(' + flip + ')';
         if (p >= 1) { window.location.href = BEE_URL; return; }
         requestAnimationFrame(frame);
@@ -671,7 +671,7 @@
 
   // Bump this whenever auth.js / chat.js / profile-view.js change, so browsers
   // and the GitHub Pages CDN fetch the new version instead of a cached copy.
-  var MF_ASSET_VER = '25';
+  var MF_ASSET_VER = '26';
 
   function loadScript(src, attrs) {
     if (document.querySelector(`script[data-mf-src="${src}"]`)) return;
