@@ -514,7 +514,7 @@
           <a href="/privacy.html">Privacy</a>
           <a href="/tos.html">Terms</a>
         </div>
-        <p class="footer-copy">© <span class="footer-year"></span> Mayflower Studios — made with 🌸 and fireflies</p>
+        <p class="footer-copy">© <span class="footer-year"></span> Mayflower Studios — made with <span class="footer-flower" role="button" tabindex="-1" aria-label="🌸" title="🌸" data-no-translate style="cursor:default;display:inline-block;user-select:none;">🌸</span> and fireflies</p>
       </footer>`;
   }
 
@@ -545,13 +545,110 @@
     });
   }
 
-  function initReveal() {
-    const obs = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
-      });
-    }, { threshold: 0.07 });
-    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+  // ───────────────────────────────────────────────────────────────
+  //  🐝 Easter egg — a hidden path to /bee.html
+  //  Two cute ways in, both hard to find by accident:
+  //   1) Type the word "bee" anywhere on the site.
+  //   2) Click the little footer flower (🌸) five times — petals flutter,
+  //      then a bee drifts out and carries you there.
+  //  When triggered, a bee buzzes across the screen and then flies to the
+  //  page. Respects prefers-reduced-motion (skips the animation, still works).
+  // ───────────────────────────────────────────────────────────────
+  function initBeeEgg() {
+    if (window._beeEggReady) return;
+    window._beeEggReady = true;
+    var BEE_URL = '/bee.html';
+    var triggered = false;
+
+    function flyToBee() {
+      if (triggered) return;
+      triggered = true;
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduce) { window.location.href = BEE_URL; return; }
+
+      var bee = document.createElement('div');
+      bee.textContent = '🐝';
+      bee.setAttribute('aria-hidden', 'true');
+      bee.style.cssText =
+        'position:fixed;left:-60px;top:60%;font-size:34px;z-index:99999;' +
+        'pointer-events:none;will-change:transform,opacity;' +
+        'filter:drop-shadow(0 2px 6px rgba(246,197,71,.5));';
+      document.body.appendChild(bee);
+
+      var W = window.innerWidth, H = window.innerHeight;
+      var t0 = performance.now();
+      var dur = 1500;
+      function frame(now) {
+        var p = Math.min(1, (now - t0) / dur);
+        // ease across the screen with a gentle sine bob, like a real bee
+        var ease = 1 - Math.pow(1 - p, 2);
+        var x = -60 + ease * (W + 120);
+        var y = (H * 0.6) + Math.sin(p * Math.PI * 5) * 42 - ease * (H * 0.18);
+        var flip = Math.sin(p * Math.PI * 5) > 0 ? 1 : -1;
+        bee.style.transform = 'translate(' + x + 'px,' + (y - H * 0.6) + 'px) scaleX(' + flip + ')';
+        if (p >= 1) { window.location.href = BEE_URL; return; }
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }
+    window._flyToBee = flyToBee;
+
+    // 1) Type "bee" anywhere (ignore while typing in a field).
+    var buf = '';
+    document.addEventListener('keydown', function (e) {
+      var t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      if (e.key && e.key.length === 1) {
+        buf = (buf + e.key.toLowerCase()).slice(-3);
+        if (buf === 'bee') { buf = ''; flyToBee(); }
+      }
+    });
+
+    // 2) The footer flower: 5 clicks within a short window.
+    var clicks = 0, clickTimer = null;
+    document.addEventListener('click', function (e) {
+      var flower = e.target.closest && e.target.closest('.footer-flower');
+      if (!flower) return;
+      e.preventDefault();
+      clicks++;
+      // little wiggle each click
+      flower.style.display = 'inline-block';
+      flower.style.transition = 'transform .15s var(--ease)';
+      flower.style.transform = 'scale(1.3) rotate(' + (clicks * 14) + 'deg)';
+      setTimeout(function () { flower.style.transform = ''; }, 160);
+      clearTimeout(clickTimer);
+      clickTimer = setTimeout(function () { clicks = 0; }, 1400);
+      if (clicks >= 5) { clicks = 0; spawnPetals(flower); setTimeout(flyToBee, 500); }
+    });
+
+    function spawnPetals(origin) {
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduce) return;
+      var r = origin.getBoundingClientRect();
+      var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      for (var i = 0; i < 8; i++) {
+        (function (i) {
+          var pet = document.createElement('div');
+          pet.textContent = '🌸';
+          pet.setAttribute('aria-hidden', 'true');
+          pet.style.cssText =
+            'position:fixed;left:' + cx + 'px;top:' + cy + 'px;font-size:16px;' +
+            'z-index:99998;pointer-events:none;will-change:transform,opacity;';
+          document.body.appendChild(pet);
+          var ang = (Math.PI * 2 * i) / 8 + Math.random();
+          var dist = 50 + Math.random() * 50;
+          var dx = Math.cos(ang) * dist, dy = Math.sin(ang) * dist + 40;
+          var st = performance.now(), d = 900 + Math.random() * 400;
+          (function fall(now) {
+            var p = Math.min(1, (now - st) / d);
+            pet.style.transform = 'translate(' + (dx * p) + 'px,' + (dy * p) + 'px) rotate(' + (p * 320) + 'deg)';
+            pet.style.opacity = String(1 - p);
+            if (p >= 1) { pet.remove(); return; }
+            requestAnimationFrame(fall);
+          })(st);
+        })(i);
+      }
+    }
   }
 
   function loadFireflies() {
@@ -565,7 +662,7 @@
 
   // Bump this whenever auth.js / chat.js / profile-view.js change, so browsers
   // and the GitHub Pages CDN fetch the new version instead of a cached copy.
-  var MF_ASSET_VER = '23';
+  var MF_ASSET_VER = '24';
 
   function loadScript(src, attrs) {
     if (document.querySelector(`script[data-mf-src="${src}"]`)) return;
@@ -623,6 +720,7 @@
     loadAuthAndChat();
     initAccountNav();
     MFTranslate.init();
+    initBeeEgg();
   });
 
 })();
