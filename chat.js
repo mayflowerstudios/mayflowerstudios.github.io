@@ -34,6 +34,35 @@
     return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
   }
   function pairKey(a, b) { return [a, b].sort().join("__"); }
+
+  // Lightweight toast. Reuses a page-level #toast element if one exists,
+  // otherwise creates its own — so chat feedback works on any page.
+  let _toastEl = null, _toastTimer = null;
+  function toast(msg) {
+    let el = document.getElementById("toast");
+    if (!el) {
+      if (!_toastEl) {
+        _toastEl = document.createElement("div");
+        _toastEl.id = "mfChatToast";
+        _toastEl.style.cssText =
+          "position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);" +
+          "background:rgba(20,26,46,.96);color:#f3eefb;padding:10px 16px;border-radius:12px;" +
+          "font:14px/1.4 system-ui,sans-serif;border:1px solid rgba(196,181,253,.3);" +
+          "box-shadow:0 8px 30px rgba(0,0,0,.4);opacity:0;transition:opacity .2s,transform .2s;z-index:99999;pointer-events:none;";
+        document.body.appendChild(_toastEl);
+      }
+      el = _toastEl;
+    }
+    el.textContent = msg;
+    el.style.opacity = "1";
+    el.style.transform = "translateX(-50%) translateY(0)";
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => {
+      el.style.opacity = "0";
+      el.style.transform = "translateX(-50%) translateY(20px)";
+    }, 2600);
+  }
+
   function timeShort(ts) {
     if (!ts) return "";
     const d = new Date(ts);
@@ -558,28 +587,60 @@
     }
   }
 
+  // Map of Firebase message key -> its rendered row element, so edits and
+  // deletes can update exactly one row in place (O(1)) instead of re-rendering.
+  let msgRows = new Map();
+
   function subscribeMessages(node) {
     if (unsubscribe) { try { unsubscribe(); } catch (_) {} unsubscribe = null; }
     const log = document.getElementById("mfChatLog");
     if (log) log.innerHTML = "";
+    msgRows = new Map();
     const q = mods.query(node, mods.limitToLast(100));
-    const handler = (snap) => {
-      const m = snap.val(); if (!m) return;
-      appendMsg(m);
+    const onAdd = (snap) => { const m = snap.val(); if (m) renderMsg(snap.key, m); };
+    const onChange = (snap) => { const m = snap.val(); if (m) renderMsg(snap.key, m); };
+    const onRemove = (snap) => {
+      // Hard removal from the DB (rare — we soft-delete instead). Drop the row.
+      const row = msgRows.get(snap.key);
+      if (row) { row.remove(); msgRows.delete(snap.key); }
     };
-    mods.onChildAdded(q, handler);
-    unsubscribe = () => mods.off(q, "child_added", handler);
+    mods.onChildAdded(q, onAdd);
+    mods.onChildChanged(q, onChange);
+    mods.onChildRemoved(q, onRemove);
+    unsubscribe = () => {
+      mods.off(q, "child_added", onAdd);
+      mods.off(q, "child_changed", onChange);
+      mods.off(q, "child_removed", onRemove);
+    };
   }
 
-  function appendMsg(m) {
+  // Build OR update the row for a message. Adding and editing share this one
+  // path, so an edit re-renders in place and a delete shows a tombstone.
+  function renderMsg(key, m) {
     const log = document.getElementById("mfChatLog");
     if (!log) return;
-    const mine = m.uid === me;
-    const row = document.createElement("div");
-    row.className = "mf-msg " + (mine ? "me" : "them");
-    const nameHTML = mine ? "" : `<span class="mf-msg-name" data-uid="${m.uid}">${esc(m.name || "someone")}</span>`;
+    const existing = msgRows.get(key);
+    const atBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 40;
 
+    const mine = m.uid === me;
+    const row = existing || document.createElement("div");
+    row.className = "mf-msg " + (mine ? "me" : "them");
+    row.dataset.key = key;
+
+    if (m.deleted) {
+      row.classList.add("deleted");
+      row.innerHTML =
+        (mine ? "" : `<span class="mf-msg-name" data-uid="${m.uid}">${esc(m.name || "someone")}</span>`)
+        + `<span class="mf-msg-text mf-msg-tomb">🥀 message deleted</span>`
+        + `<span class="mf-msg-time">${timeShort(m.t)}</span>`;
+      if (!existing) { log.appendChild(row); msgRows.set(key, row); }
+      return;
+    }
+
+    const nameHTML = mine ? "" : `<span class="mf-msg-name" data-uid="${m.uid}">${esc(m.name || "someone")}</span>`;
+    const editedTag = m.edited ? ` <span class="mf-msg-edited" title="${m.editedAt ? timeShort(m.editedAt) : ""}">(edited)</span>` : "";
     const media = decodeMedia(m.text);
+
     if (media) {
       const w = (Number.isFinite(media.w) && media.w) ? ` width="${Math.min(220, media.w)}"` : "";
       row.innerHTML = nameHTML
@@ -588,22 +649,130 @@
       const img = row.querySelector(".mf-media img");
       if (img) {
         img.addEventListener("click", () => openLightbox(media.url));
-        // The image has no height until it loads, so an immediate scroll lands
-        // short of the bottom. Re-pin to the bottom once it actually loads.
-        const rescroll = () => { log.scrollTop = log.scrollHeight; };
+        const rescroll = () => { if (atBottom) log.scrollTop = log.scrollHeight; };
         if (img.complete) rescroll();
         else { img.addEventListener("load", rescroll); img.addEventListener("error", rescroll); }
       }
     } else {
       row.innerHTML = nameHTML
-        + `<span class="mf-msg-text" data-text="${esc(m.text)}">${esc(m.text)}</span>`
+        + `<span class="mf-msg-text" data-text="${esc(m.text)}">${esc(m.text)}</span>${editedTag}`
         + `<span class="mf-msg-time">${timeShort(m.t)}</span>`;
     }
+
+    // Your own messages get an edit/delete affordance (edit is text-only).
+    if (mine) addMsgActions(row, key, m, !media);
+
     const nm = row.querySelector(".mf-msg-name");
     if (nm) nm.addEventListener("click", () => { if (window.MFProfile) MFProfile.show(m.uid); });
-    log.appendChild(row);
-    log.scrollTop = log.scrollHeight;
-    if (translateOn) applyTranslations().then(() => { log.scrollTop = log.scrollHeight; });
+
+    if (!existing) {
+      log.appendChild(row);
+      msgRows.set(key, row);
+      // Scroll down for a new message only if you're already at the bottom, or
+      // it's your own message — so reading older messages isn't interrupted.
+      if (atBottom || mine) log.scrollTop = log.scrollHeight;
+      if (translateOn) applyTranslations().then(() => { if (atBottom || mine) log.scrollTop = log.scrollHeight; });
+    } else {
+      // An edit/delete landed — keep the view put unless we were at the bottom.
+      if (translateOn) applyTranslations();
+      if (atBottom) log.scrollTop = log.scrollHeight;
+    }
+  }
+
+  // The RTDB ref for a specific message in the current view (global or DM).
+  function msgRef(key) {
+    return (view === "global")
+      ? mods.ref(db, `chat/global/${key}`)
+      : mods.ref(db, `dm/${pairKey(me, dmWith)}/${key}`);
+  }
+
+  // Attach a small ⋯ menu (Edit / Delete) to one of your own text messages.
+  function addMsgActions(row, key, m, canEdit) {
+    if (row.querySelector(".mf-msg-actions")) return; // already wired (edit re-render)
+    const btn = document.createElement("button");
+    btn.className = "mf-msg-actions";
+    btn.type = "button";
+    btn.title = "Edit or delete";
+    btn.setAttribute("aria-label", "Message options");
+    btn.textContent = "⋯";
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openMsgMenu(row, key, m, canEdit);
+    });
+    row.appendChild(btn);
+  }
+
+  function closeMsgMenu() {
+    const open = document.querySelector(".mf-msg-menu");
+    if (open) open.remove();
+    document.removeEventListener("click", closeMsgMenu);
+  }
+
+  function openMsgMenu(row, key, m, canEdit) {
+    closeMsgMenu();
+    const menu = document.createElement("div");
+    menu.className = "mf-msg-menu";
+    menu.innerHTML =
+      (canEdit ? `<button type="button" data-act="edit">✏️ Edit</button>` : "") +
+      `<button type="button" data-act="delete">🗑️ Delete</button>`;
+    row.appendChild(menu);
+    const editBtn = menu.querySelector('[data-act="edit"]');
+    if (editBtn) editBtn.addEventListener("click", (e) => {
+      e.stopPropagation(); closeMsgMenu(); startEdit(row, key, m);
+    });
+    menu.querySelector('[data-act="delete"]').addEventListener("click", (e) => {
+      e.stopPropagation(); closeMsgMenu(); deleteMsg(key);
+    });
+    // close on next outside click
+    setTimeout(() => document.addEventListener("click", closeMsgMenu), 0);
+  }
+
+  function deleteMsg(key) {
+    // Soft delete: keep the node but blank the text and flag it, so both sides
+    // show "message deleted" rather than the message silently vanishing.
+    mods.update(msgRef(key), { text: "", deleted: true, editedAt: Date.now() })
+      .catch(() => toast("Couldn't delete that message"));
+  }
+
+  function startEdit(row, key, m) {
+    const textSpan = row.querySelector(".mf-msg-text");
+    if (!textSpan) return;
+    const current = m.text || "";
+    const editor = document.createElement("div");
+    editor.className = "mf-msg-editing";
+    editor.innerHTML =
+      `<input type="text" maxlength="500" class="mf-msg-editfield" />` +
+      `<div class="mf-msg-editbtns">` +
+        `<button type="button" data-act="save" title="Save">✓</button>` +
+        `<button type="button" data-act="cancel" title="Cancel">✕</button>` +
+      `</div>`;
+    const field = editor.querySelector(".mf-msg-editfield");
+    field.value = current;
+    // hide the static text + actions while editing
+    textSpan.style.display = "none";
+    const actions = row.querySelector(".mf-msg-actions");
+    if (actions) actions.style.display = "none";
+    row.insertBefore(editor, row.querySelector(".mf-msg-time"));
+    field.focus();
+    field.setSelectionRange(current.length, current.length);
+
+    const finish = (save) => {
+      const val = field.value.trim();
+      editor.remove();
+      textSpan.style.display = "";
+      if (actions) actions.style.display = "";
+      if (!save) return;
+      if (!val) { toast("Empty message — use delete instead"); return; }
+      if (val === current) return; // no change
+      mods.update(msgRef(key), { text: val, edited: true, editedAt: Date.now() })
+        .catch(() => toast("Couldn't save the edit"));
+    };
+    editor.querySelector('[data-act="save"]').addEventListener("click", (e) => { e.stopPropagation(); finish(true); });
+    editor.querySelector('[data-act="cancel"]').addEventListener("click", (e) => { e.stopPropagation(); finish(false); });
+    field.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); finish(true); }
+      else if (e.key === "Escape") { e.preventDefault(); finish(false); }
+    });
   }
 
   // ---- lightbox ----

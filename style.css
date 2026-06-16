@@ -643,6 +643,48 @@ html[data-mf-translating] .wrap { transition: opacity 200ms var(--ease); }
 .mf-msg-text { display: block; }
 .mf-msg-time { display: block; font-size: 9.5px; opacity: .4; margin-top: 3px; text-align: right; }
 
+/* edited tag + deleted tombstone */
+.mf-msg-edited { font-size: 9.5px; opacity: .45; font-style: italic; }
+.mf-msg.deleted { opacity: .75; }
+.mf-msg-tomb { font-style: italic; opacity: .6; }
+
+/* per-message edit/delete affordance (your own text messages only) */
+.mf-msg-actions {
+  position: absolute; top: 2px; right: 4px; width: 20px; height: 20px;
+  border: 0; border-radius: 6px; cursor: pointer; padding: 0;
+  background: transparent; color: var(--text); opacity: 0;
+  font-size: 15px; line-height: 1; transition: opacity .12s, background .12s;
+}
+.mf-msg:hover .mf-msg-actions { opacity: .5; }
+.mf-msg-actions:hover { opacity: 1 !important; background: rgba(0,0,0,.25); }
+.mf-msg.me { padding-right: 24px; }
+
+.mf-msg-menu {
+  position: absolute; top: 22px; right: 4px; z-index: 5;
+  display: flex; flex-direction: column; min-width: 116px; overflow: hidden;
+  background: #141a2e; border: 1px solid rgba(196,181,253,.25);
+  border-radius: 10px; box-shadow: 0 8px 26px rgba(0,0,0,.45);
+}
+.mf-msg-menu button {
+  border: 0; background: transparent; color: var(--text); cursor: pointer;
+  text-align: left; padding: 9px 12px; font-size: 13px; font-family: var(--font-b);
+}
+.mf-msg-menu button:hover { background: rgba(196,181,253,.16); }
+
+.mf-msg-editing { display: flex; gap: 6px; align-items: center; margin: 2px 0; }
+.mf-msg-editfield {
+  flex: 1; min-width: 0; padding: 6px 9px; border-radius: 9px; font-size: 14px;
+  font-family: var(--font-b); color: var(--text);
+  border: 1px solid rgba(196,181,253,.45); background: rgba(0,0,0,.3);
+}
+.mf-msg-editfield:focus { outline: none; border-color: rgba(196,181,253,.7); }
+.mf-msg-editbtns { display: flex; gap: 4px; }
+.mf-msg-editbtns button {
+  border: 0; border-radius: 8px; width: 28px; height: 28px; cursor: pointer;
+  font-size: 14px; color: #0b1120; background: linear-gradient(135deg, var(--rose), var(--violet));
+}
+.mf-msg-editbtns button[data-act="cancel"] { background: rgba(255,255,255,.14); color: var(--text); }
+
 .mf-chat-foot { flex-shrink: 0; }
 .mf-chat-input { display: flex; gap: 8px; padding: 12px; border-top: 1px solid rgba(255,255,255,.1); }
 .mf-chat-input input {
