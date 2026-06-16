@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Together — Mayflower Studios</title>
-  <link rel="stylesheet" href="/style.css?v=9" />
+  <link rel="stylesheet" href="/style.css?v=10" />
 
   <style>
     .tWrap{ max-width:1100px; margin:0 auto; padding:22px; }
@@ -20,7 +20,7 @@
       content:""; position:absolute; inset:0;
       background:
         radial-gradient(900px 380px at 20% 0%, rgba(251,113,133,.10), transparent 60%),
-        radial-gradient(700px 320px at 90% 10%, rgba(167,139,250,.08), transparent 55%),
+        radial-gradient(700px 320px at 90% 10%, rgba(196,181,253,.08), transparent 55%),
         radial-gradient(700px 320px at 50% 115%, rgba(34,197,94,.06), transparent 60%);
       pointer-events:none;
     }
@@ -32,7 +32,7 @@
       border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05);
       backdrop-filter: blur(6px); font-size:13px; opacity:.9;
     }
-    .title{ margin:10px 0 6px; font-size:44px; letter-spacing:.2px; line-height:1.05; }
+    .title{ margin:10px 0 6px; font-family:var(--font-d); font-weight:400; font-size:44px; letter-spacing:.2px; line-height:1.05; }
     .sub{ margin:0; opacity:.78; line-height:1.6; max-width:70ch; }
 
     .roomBar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:16px; }
@@ -49,7 +49,7 @@
       width:120px; background:transparent; border:0; color:inherit;
       font-size:13px; padding:2px 0; border-bottom:1px solid rgba(255,255,255,.18);
     }
-    .nameInput:focus{ outline:none; border-bottom-color: rgba(167,139,250,.6); }
+    .nameInput:focus{ outline:none; border-bottom-color: rgba(196,181,253,.6); }
     .nameInput::placeholder{ opacity:.5 }
 
     .divider{ height:1px; background: rgba(255,255,255,.10); margin:20px 0; }
@@ -60,7 +60,7 @@
       color:inherit; font-size:15px;
     }
     .input::placeholder{ opacity:.5 }
-    .input:focus{ outline:none; border-color: rgba(167,139,250,.45); }
+    .input:focus{ outline:none; border-color: rgba(196,181,253,.45); }
 
     .btn{
       display:inline-flex; align-items:center; justify-content:center; gap:9px;
@@ -71,7 +71,7 @@
     }
     .btn:hover{ transform:translateY(-1px); filter:brightness(1.08); }
     .btn.primary{ background: rgba(251,113,133,.18); border-color: rgba(251,113,133,.30); }
-    .btn.violet{ background: rgba(167,139,250,.16); border-color: rgba(167,139,250,.28); }
+    .btn.violet{ background: rgba(196,181,253,.16); border-color: rgba(196,181,253,.28); }
     .btn.ghost{ background: rgba(255,255,255,.04); }
     .btn.full{ width:100%; }
     .btn:disabled{ opacity:.45; cursor:not-allowed; transform:none; filter:none; }
@@ -91,7 +91,7 @@
       display:inline-flex; align-items:center; gap:8px;
     }
     .tab:hover{ filter:brightness(1.1); transform:translateY(-1px); }
-    .tab.active{ background:rgba(167,139,250,.18); border-color:rgba(167,139,250,.35); }
+    .tab.active{ background:rgba(196,181,253,.18); border-color:rgba(196,181,253,.35); }
 
     .panelArea{ position:relative; }
     .gamePanel{ display:none; }
@@ -118,11 +118,11 @@
     .swatch:hover{ transform:scale(1.12); }
     .swatch.active{ border-color:#fff; transform:scale(1.15); box-shadow:0 0 12px rgba(255,255,255,.3); }
     .sizeRow{ display:flex; align-items:center; gap:10px; font-size:13px; opacity:.85; }
-    .sizeRow input[type=range]{ accent-color:#a78bfa; }
+    .sizeRow input[type=range]{ accent-color:#c4b5fd; }
 
     /* ---- question game ---- */
     .qCard{
-      border:1px solid rgba(167,139,250,.25); background:rgba(167,139,250,.08);
+      border:1px solid rgba(196,181,253,.25); background:rgba(196,181,253,.08);
       border-radius:18px; padding:30px 26px; text-align:center; min-height:140px;
       display:flex; align-items:center; justify-content:center;
     }
@@ -146,7 +146,7 @@
       color:inherit; font-size:15px; font-family:inherit; line-height:1.5;
     }
     .answerBox::placeholder{ opacity:.5; }
-    .answerBox:focus{ outline:none; border-color:rgba(167,139,250,.45); }
+    .answerBox:focus{ outline:none; border-color:rgba(196,181,253,.45); }
     .answerBox:disabled{ opacity:.7; cursor:default; }
     .answerStatus{ display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-top:12px; font-size:13px; }
     .answerStatus .who2{
@@ -159,7 +159,7 @@
     .reveal{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:18px; }
     @media (max-width:560px){ .reveal{ grid-template-columns:1fr; } }
     .revealCard{
-      border:1px solid rgba(167,139,250,.25); background:rgba(167,139,250,.07);
+      border:1px solid rgba(196,181,253,.25); background:rgba(196,181,253,.07);
       border-radius:16px; padding:16px 18px;
     }
     .revealCard.mine{ border-color:rgba(251,113,133,.30); background:rgba(251,113,133,.08); }
@@ -184,7 +184,7 @@
     .ttCell:hover{ background:rgba(255,255,255,.08); }
     .ttCell.taken{ cursor:default; }
     .ttCell.x{ color:#fb7185; text-shadow:0 0 18px rgba(251,113,133,.5); }
-    .ttCell.o{ color:#a78bfa; text-shadow:0 0 18px rgba(167,139,250,.5); }
+    .ttCell.o{ color:#c4b5fd; text-shadow:0 0 18px rgba(196,181,253,.5); }
     .ttCell.win{ background:rgba(52,211,153,.16); border-color:rgba(52,211,153,.4); }
     .ttScore{ display:flex; gap:18px; font-size:14px; opacity:.85; }
 
@@ -218,7 +218,7 @@
     .dbStatus{ font-size:18px; min-height:26px; text-align:center; }
     .dbBoardWrap{
       padding:18px; border-radius:18px;
-      background:rgba(167,139,250,.08); border:1px solid rgba(167,139,250,.20);
+      background:rgba(196,181,253,.08); border:1px solid rgba(196,181,253,.20);
       box-shadow: inset 0 0 50px rgba(0,0,0,.3);
     }
     #dbBoard{ display:block; max-width:100%; height:auto; }
@@ -227,10 +227,10 @@
     .dbLine:hover{ stroke:rgba(255,255,255,.4); }
     .dbLine.set{ cursor:default; }
     .dbLine.mine{ stroke:#fb7185; }
-    .dbLine.theirs{ stroke:#a78bfa; }
+    .dbLine.theirs{ stroke:#c4b5fd; }
     .dbBox{ transition:fill .2s ease; }
     .dbBox.mine{ fill:rgba(251,113,133,.22); }
-    .dbBox.theirs{ fill:rgba(167,139,250,.22); }
+    .dbBox.theirs{ fill:rgba(196,181,253,.22); }
     .dbBoxLabel{ font-size:18px; text-anchor:middle; dominant-baseline:central; user-select:none; pointer-events:none; }
 
     /* ---- rock paper scissors ---- */
@@ -243,7 +243,7 @@
       transition: transform .12s ease, filter .12s ease, background .12s ease;
       display:flex; align-items:center; justify-content:center;
     }
-    .rpsBtn:hover{ transform:translateY(-3px); filter:brightness(1.1); background:rgba(167,139,250,.16); }
+    .rpsBtn:hover{ transform:translateY(-3px); filter:brightness(1.1); background:rgba(196,181,253,.16); }
     .rpsBtn.chosen{ background:rgba(251,113,133,.20); border-color:rgba(251,113,133,.4); transform:translateY(-3px); }
     .rpsBtn:disabled{ opacity:.4; cursor:default; transform:none; filter:none; }
     .rpsReveal{ display:flex; align-items:center; gap:22px; }
@@ -252,7 +252,7 @@
     .rpsHand{
       width:96px; height:96px; border-radius:24px; font-size:52px;
       display:flex; align-items:center; justify-content:center;
-      border:1px solid rgba(167,139,250,.25); background:rgba(167,139,250,.08);
+      border:1px solid rgba(196,181,253,.25); background:rgba(196,181,253,.08);
     }
     .rpsSide.mine .rpsHand{ border-color:rgba(251,113,133,.30); background:rgba(251,113,133,.08); }
     .rpsHand.win{ border-color:rgba(52,211,153,.5); background:rgba(52,211,153,.14); box-shadow:0 0 20px rgba(52,211,153,.35); }
@@ -267,7 +267,7 @@
     .hmGallows{ font-size:24px; letter-spacing:6px; min-height:32px; filter:grayscale(.2); }
     .hmWord{ display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
     .hmSlot{
-      width:30px; height:40px; border-bottom:3px solid rgba(167,139,250,.5);
+      width:30px; height:40px; border-bottom:3px solid rgba(196,181,253,.5);
       font-size:26px; display:flex; align-items:flex-end; justify-content:center;
       text-transform:uppercase;
     }
@@ -281,7 +281,7 @@
       font-size:16px; text-transform:uppercase; color:inherit;
       transition: background .1s ease, transform .1s ease;
     }
-    .hmKey:hover:not(:disabled){ background:rgba(167,139,250,.18); transform:translateY(-1px); }
+    .hmKey:hover:not(:disabled){ background:rgba(196,181,253,.18); transform:translateY(-1px); }
     .hmKey.hit{ background:rgba(52,211,153,.2); border-color:rgba(52,211,153,.4); }
     .hmKey.miss{ background:rgba(251,113,133,.18); border-color:rgba(251,113,133,.35); opacity:.6; }
     .hmKey:disabled{ cursor:default; }
@@ -330,13 +330,13 @@
       color:inherit; transition:filter .12s ease, background .12s ease;
     }
     .miniGhost:hover{ background:rgba(255,255,255,.10); }
-    .miniGhost.active{ background:rgba(167,139,250,.20); border-color:rgba(167,139,250,.35); }
+    .miniGhost.active{ background:rgba(196,181,253,.20); border-color:rgba(196,181,253,.35); }
     .langSelect{
       background: rgba(255,255,255,.06); color:inherit;
       border:1px solid rgba(255,255,255,.14); border-radius:8px;
       font-size:12px; padding:4px 7px; cursor:pointer; max-width:130px;
     }
-    .langSelect option{ background:#1a1426; color:#eee; }
+    .langSelect option{ background:#111827; color:#eee; }
 
   </style>
 
@@ -645,7 +645,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/shared.js?v=9"></script>
+  <script src="/shared.js?v=10"></script>
 
   <script>window._firefliesLoaded = true;</script>
   <script src="/fireflies.js"></script>
@@ -936,7 +936,7 @@
     }
 
     // ---------- shared drawing ----------
-    const COLORS = ["#fb7185","#f9a8d4","#a78bfa","#818cf8","#38bdf8","#34d399","#fde68a","#fff7ed","#0d0a16"];
+    const COLORS = ["#fb7185","#f9a8d4","#c4b5fd","#818cf8","#38bdf8","#34d399","#fde68a","#fff7ed","#0d0a16"];
     let drawColor = COLORS[0], drawSize = 6, erasing = false;
     let canvas, ctx, drawing = false, last = null, drawReady = false;
 

@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Watch Together — Mayflower Studios</title>
-  <link rel="stylesheet" href="/style.css?v=9" />
+  <link rel="stylesheet" href="/style.css?v=10" />
 
   <style>
     .wtWrap{max-width:1100px;margin:0 auto;padding:22px}
@@ -22,7 +22,7 @@
       position:absolute; inset:0;
       background:
         radial-gradient(900px 380px at 20% 0%, rgba(251,113,133,.10), transparent 60%),
-        radial-gradient(700px 320px at 90% 10%, rgba(167,139,250,.08), transparent 55%),
+        radial-gradient(700px 320px at 90% 10%, rgba(196,181,253,.08), transparent 55%),
         radial-gradient(700px 320px at 50% 115%, rgba(34,197,94,.06), transparent 60%);
       pointer-events:none;
     }
@@ -40,7 +40,7 @@
       backdrop-filter: blur(6px);
       font-size:13px; opacity:.9;
     }
-    .title{ margin:10px 0 6px; font-size:44px; letter-spacing:.2px; line-height:1.05; }
+    .title{ margin:10px 0 6px; font-family:var(--font-d); font-weight:400; font-size:44px; letter-spacing:.2px; line-height:1.05; }
     .sub{ margin:0; opacity:.78; line-height:1.6; max-width:70ch; }
 
     .roomBar{
@@ -61,19 +61,19 @@
     .namePill{ padding-top:3px; padding-bottom:3px; }
     .lobbyLink{
       text-decoration:none; color:inherit; cursor:pointer;
-      border-color:rgba(167,139,250,.30);
-      background:rgba(167,139,250,.12);
+      border-color:rgba(196,181,253,.30);
+      background:rgba(196,181,253,.12);
       transition:filter .12s ease, transform .12s ease, background .12s ease;
       font-family:inherit; font-size:13px;   /* button needs explicit font */
     }
-    .lobbyLink:hover{ filter:brightness(1.1); transform:translateY(-1px); background:rgba(167,139,250,.20); }
+    .lobbyLink:hover{ filter:brightness(1.1); transform:translateY(-1px); background:rgba(196,181,253,.20); }
     /* the last left-aligned pill pushes the status/room/name cluster to the right */
     #copyRoomBtn{ margin-right:auto; }
     .nameInput{
       width:96px; background:transparent; border:0; color:inherit;
       font-size:13px; padding:2px 0; border-bottom:1px solid rgba(255,255,255,.18);
     }
-    .nameInput:focus{ outline:none; border-bottom-color: rgba(167,139,250,.6); }
+    .nameInput:focus{ outline:none; border-bottom-color: rgba(196,181,253,.6); }
     .nameInput::placeholder{ opacity:.5 }
     .nameInput[readonly]{ border-bottom-color: transparent; cursor: default; opacity:.95; }
     .nameInput[readonly]:focus{ border-bottom-color: transparent; }
@@ -81,8 +81,8 @@
     .hostTag{
       font-size:13px; opacity:.9;
       padding:7px 12px; border-radius:999px;
-      border:1px solid rgba(167,139,250,.26);
-      background: rgba(167,139,250,.14);
+      border:1px solid rgba(196,181,253,.26);
+      background: rgba(196,181,253,.14);
       display:inline-flex; align-items:center; gap:6px;
     }
     .awakeTag{
@@ -104,7 +104,7 @@
       font-size:15px;
     }
     .input::placeholder{ opacity:.5 }
-    .input:focus{ outline:none; border-color: rgba(167,139,250,.45); }
+    .input:focus{ outline:none; border-color: rgba(196,181,253,.45); }
 
     .btn{
       display:inline-flex; align-items:center; justify-content:center; gap:10px;
@@ -117,7 +117,7 @@
     }
     .btn:hover{transform:translateY(-1px);filter:brightness(1.08)}
     .btn.primary{ background: rgba(251,113,133,.18); border-color: rgba(251,113,133,.30); }
-    .btn.violet{ background: rgba(167,139,250,.16); border-color: rgba(167,139,250,.28); }
+    .btn.violet{ background: rgba(196,181,253,.16); border-color: rgba(196,181,253,.28); }
     .btn.link{ background: transparent; border-color: rgba(255,255,255,.10); opacity:.92; }
     .btn.rose{ background: rgba(244,114,182,.16); border-color: rgba(244,114,182,.30); }
     .btn.rose.active{ background: rgba(239,68,68,.22); border-color: rgba(239,68,68,.45); color:#fca5a5; }
@@ -151,7 +151,7 @@
     .streamCfgBtn{
       display:inline-flex; align-items:center; justify-content:center;
       width:44px; padding:0; border-radius:14px;
-      border:1px solid rgba(167,139,250,.28); background:rgba(167,139,250,.16);
+      border:1px solid rgba(196,181,253,.28); background:rgba(196,181,253,.16);
       color:inherit; cursor:pointer; font-size:16px;
       transition: transform .12s ease, filter .12s ease;
       backdrop-filter: blur(6px);
@@ -161,7 +161,7 @@
     .streamCfgMenu{
       position:absolute; right:0; top:calc(100% + 8px); z-index:60;
       width:260px; padding:14px;
-      background:rgba(20,16,28,.98); border:1px solid rgba(167,139,250,.22);
+      background:rgba(17,24,39,.98); border:1px solid rgba(196,181,253,.22);
       border-radius:16px; box-shadow:0 18px 50px rgba(0,0,0,.55);
       display:none;
     }
@@ -185,9 +185,9 @@
     }
     .segGroup button:hover{ background:rgba(255,255,255,.09); }
     .segGroup button.sel{
-      background:rgba(167,139,250,.26); border-color:rgba(167,139,250,.5); color:#f0ebff;
+      background:rgba(196,181,253,.26); border-color:rgba(196,181,253,.5); color:#f0ebff;
     }
-    .cfgRow input[type=range]{ width:100%; accent-color:#a78bfa; cursor:pointer; }
+    .cfgRow input[type=range]{ width:100%; accent-color:#c4b5fd; cursor:pointer; }
     .cfgHint{ font-size:11px; line-height:1.4; color:#8c83a8; margin-top:10px; }
     .cfgLive{ font-size:11px; color:#fca5a5; margin-top:8px; display:none; }
     .cfgLive.show{ display:block; }
@@ -197,7 +197,7 @@
     .uploadBar{ flex:1 1 auto; height:8px; border-radius:999px; overflow:hidden;
       background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.10); }
     .uploadFill{ height:100%; width:0%; border-radius:999px;
-      background:linear-gradient(90deg, rgba(251,113,133,.85), rgba(167,139,250,.85));
+      background:linear-gradient(90deg, rgba(251,113,133,.85), rgba(196,181,253,.85));
       transition:width .2s ease; }
     .uploadMsg{ font-size:12px; opacity:.75; flex:0 0 auto; min-width:96px; }
 
@@ -244,7 +244,7 @@
     .step{ display:flex; gap:10px; align-items:flex-start; }
     .num{
       width:26px;height:26px;border-radius:10px; display:grid; place-items:center;
-      border:1px solid rgba(255,255,255,.16); background: rgba(167,139,250,.14);
+      border:1px solid rgba(255,255,255,.16); background: rgba(196,181,253,.14);
       flex:0 0 auto; font-size:13px;
     }
     .tiny{font-size:13px;opacity:.72;margin:10px 0 0;line-height:1.55}
@@ -293,7 +293,7 @@
     /* queue tools cluster in panel headers */
     .qTools{ display:inline-flex; gap:6px; margin-left:auto; flex-wrap:wrap; }
     .miniGhost.active{
-      background: rgba(167,139,250,.20); border-color: rgba(167,139,250,.35);
+      background: rgba(196,181,253,.20); border-color: rgba(196,181,253,.35);
     }
     .qMini.up, .qMini.down{ font-size:12px; }
     .qMini:disabled{ opacity:.3; cursor:default; }
@@ -321,7 +321,7 @@
     .waitOverlay.show{ opacity:1; }
     .waitSpin{
       width:22px; height:22px; border-radius:50%;
-      border:3px solid rgba(167,139,250,.3); border-top-color:#a78bfa;
+      border:3px solid rgba(196,181,253,.3); border-top-color:#c4b5fd;
       animation: waitspin .8s linear infinite;
     }
     @keyframes waitspin{ to { transform: rotate(360deg); } }
@@ -329,14 +329,14 @@
     /* drag state for reorderable queue rows */
     .qItem.draggable{ cursor:grab; }
     .qItem.dragging{ opacity:.45; }
-    .qItem.dropTarget{ border-color: rgba(167,139,250,.6); }
+    .qItem.dropTarget{ border-color: rgba(196,181,253,.6); }
 
     /* tiny add-to-playlist popover */
     .addPlWrap{ position:relative; }
     .addPlMenu{
       position:absolute; right:0; top:calc(100% + 6px); z-index:30;
       min-width:180px; max-height:240px; overflow-y:auto;
-      background: rgba(20,16,28,.97); border:1px solid rgba(255,255,255,.14);
+      background: rgba(17,24,39,.97); border:1px solid rgba(255,255,255,.14);
       border-radius:12px; box-shadow:0 14px 40px rgba(0,0,0,.5); padding:6px;
       display:none;
     }
@@ -389,7 +389,7 @@
     .toast{
       position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px);
       padding:11px 16px; border-radius:14px;
-      background: rgba(20,16,28,.92); border:1px solid rgba(255,255,255,.14);
+      background: rgba(17,24,39,.92); border:1px solid rgba(255,255,255,.14);
       box-shadow:0 12px 40px rgba(0,0,0,.5);
       opacity:0; pointer-events:none; transition: all .25s ease; z-index:50; font-size:14px;
     }
@@ -607,7 +607,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/shared.js?v=9"></script>
+  <script src="/shared.js?v=10"></script>
 
   <script src="fireflies.js"></script>
 
