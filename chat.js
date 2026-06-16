@@ -33,6 +33,25 @@
   function esc(s) {
     return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
   }
+
+  // Escape text AND turn URLs into safe, clickable links. Used wherever a
+  // message's text is rendered so links work in both original and translated
+  // messages. Plain text is always escaped first, so this is injection-safe.
+  function linkify(text) {
+    const raw = String(text ?? "");
+    // Match http(s):// URLs and bare www. URLs, stopping at whitespace.
+    const re = /\b((?:https?:\/\/|www\.)[^\s<]+[^\s<.,!?;:'")\]}])/gi;
+    let out = "", last = 0, m;
+    while ((m = re.exec(raw)) !== null) {
+      out += esc(raw.slice(last, m.index));   // escape the text before the URL
+      const url = m[0];
+      const href = /^https?:\/\//i.test(url) ? url : "https://" + url;
+      out += `<a href="${esc(href)}" class="mf-link" target="_blank" rel="noopener noreferrer nofollow">${esc(url)}</a>`;
+      last = m.index + url.length;
+    }
+    out += esc(raw.slice(last));               // escape the trailing text
+    return out;
+  }
   function pairKey(a, b) { return [a, b].sort().join("__"); }
 
   // Lightweight toast. Reuses a page-level #toast element if one exists,
@@ -128,7 +147,7 @@
       try { localStorage.setItem("mf_tr_on", translateOn ? "1" : "0"); } catch (_) {}
       updateTrUI();
       if (translateOn) applyTranslations();
-      else { document.querySelectorAll(".mf-msg-text[data-text]").forEach(b => { b.textContent = b.dataset.text; delete b.dataset.trFor; }); document.querySelectorAll(".mf-msg-orig").forEach(o => o.remove()); }
+      else { document.querySelectorAll(".mf-msg-text[data-text]").forEach(b => { b.innerHTML = linkify(b.dataset.text); delete b.dataset.trFor; }); document.querySelectorAll(".mf-msg-orig").forEach(o => o.remove()); }
     });
     trLang.addEventListener("change", () => {
       targetLang = trLang.value;
@@ -577,7 +596,7 @@
       const translated = await translateText(original, targetLang);
       b.dataset.trFor = targetLang;
       if (translated && translated !== original) {
-        b.textContent = translated;
+        b.innerHTML = linkify(translated);
         const row = b.closest(".mf-msg");
         if (row && !row.querySelector(".mf-msg-orig")) {
           const o = document.createElement("span"); o.className = "mf-msg-orig"; o.textContent = "original: " + original;
@@ -655,7 +674,7 @@
       }
     } else {
       row.innerHTML = nameHTML
-        + `<span class="mf-msg-text" data-text="${esc(m.text)}">${esc(m.text)}</span>${editedTag}`
+        + `<span class="mf-msg-text" data-text="${esc(m.text)}">${linkify(m.text)}</span>${editedTag}`
         + `<span class="mf-msg-time">${timeShort(m.t)}</span>`;
     }
 
