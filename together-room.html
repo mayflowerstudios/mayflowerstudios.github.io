@@ -284,7 +284,11 @@
     .hmKey:hover:not(:disabled){ background:rgba(196,181,253,.18); transform:translateY(-1px); }
     .hmKey.hit{ background:rgba(52,211,153,.2); border-color:rgba(52,211,153,.4); }
     .hmKey.miss{ background:rgba(251,113,133,.18); border-color:rgba(251,113,133,.35); opacity:.6; }
+    /* a disabled key that's neither a hit nor a miss (e.g. the whole board while
+       you're the setter watching) reads as clearly non-interactive */
+    .hmKey:disabled:not(.hit):not(.miss){ opacity:.35; cursor:default; }
     .hmKey:disabled{ cursor:default; }
+    .hmWatchTag{ font-size:13px; opacity:.7; margin:0; text-align:center; }
     .hmGuessed{ font-size:13px; opacity:.6; margin:0; min-height:18px; }
     .hmWait{ font-size:15px; opacity:.7; text-align:center; padding:30px 0; }
     @media (max-width:560px){
@@ -645,7 +649,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/shared.js?v=18"></script>
+  <script src="/shared.js?v=19"></script>
 
   <script>window._firefliesLoaded = true;</script>
   <script src="/fireflies.js"></script>
@@ -1895,9 +1899,13 @@
           $("hmWordInput").value = "";
         });
         $("hmNew").addEventListener("click", () => {
-          // whoever clicks becomes the new setter
-          remove(ref(db, `together/${ROOM}/hm`)).then(() => {
-            set(ref(db, `together/${ROOM}/hm`), { setter: myId, word:"", guessed:{}, scores: hmState?.scores || {}, t:Date.now() });
+          // Start a fresh round with whoever clicked as the setter. Reset the
+          // board (guessed letters, word) but KEEP the running scores so the
+          // tally carries across rounds. Writing the whole node in one set()
+          // avoids leftover state from the previous round sticking around —
+          // which was why the game stopped working after the first round.
+          set(ref(db, `together/${ROOM}/hm`), {
+            setter: myId, word: "", guessed: {}, scores: hmState?.scores || {}, t: Date.now()
           });
         });
       }
@@ -1918,13 +1926,16 @@
       const wrongCount = Object.keys(guessed).filter(l => !word.includes(l)).length;
       if (wrongCount >= HM_MAX) return;
       if (hmWon(word, guessed)) return;
-      update(ref(db, `together/${ROOM}/hm/guessed/${letter}`), true);
+      // Write the single guessed letter. update() requires an OBJECT of
+      // key→value pairs, so writing a bare `true` here silently failed and no
+      // guess ever persisted — set() on the leaf is the correct call.
+      set(ref(db, `together/${ROOM}/hm/guessed/${letter}`), true);
       // tally a win when the guesser completes the word
       const ng = { ...guessed, [letter]: true };
       if (hmWon(word, ng)){
         const scores = { ...(hmState.scores||{}) };
         scores[myId] = (scores[myId]||0) + 1;
-        update(ref(db, `together/${ROOM}/hm/scores`), scores);
+        set(ref(db, `together/${ROOM}/hm/scores`), scores);
       }
     }
 
@@ -1943,24 +1954,31 @@
       $("hmScoreMe").textContent = (hmState.scores||{})[myId] || 0;
       $("hmScoreThem").textContent = otherId ? ((hmState.scores||{})[otherId] || 0) : 0;
 
-      // no setter yet, or setter cleared the word → setter writes a word
-      if (!hmState.setter || (iAmSetter && !hasWord)){
-        if (!hmState.setter && !iAmSetter){
-          // claim the setter role passively only if nobody has it
-          setter.hidden = true; play.hidden = true; wait.hidden = false;
-          wait.textContent = "Tap “✏️ New word” to set a word for them 🌸";
-          return;
-        }
-        setter.hidden = false; play.hidden = true; wait.hidden = true;
+      // ---- decide which of the three sub-views to show ----
+      // Hide all first, then reveal exactly one. Doing this explicitly (rather
+      // than the old tangled branches) is what keeps later rounds working.
+      setter.hidden = true; play.hidden = true; wait.hidden = true;
+
+      if (!hmState.setter){
+        // Nobody is setting a word yet — either of us can start a round.
+        wait.hidden = false;
+        wait.textContent = "Tap “✏️ New word” to set a word for them 🌸";
         return;
       }
-
-      if (iAmSetter){
-        // setter watches the guesser play
-        setter.hidden = true; wait.hidden = true; play.hidden = false;
-      } else {
-        setter.hidden = true; wait.hidden = true; play.hidden = false;
+      if (iAmSetter && !hasWord){
+        // I'm the setter and haven't picked a word yet → show the input.
+        setter.hidden = false;
+        return;
       }
+      if (!iAmSetter && !hasWord){
+        // The other person is setting a word; wait for them to lock it in.
+        wait.hidden = false;
+        const nm = (otherId && qPresence[otherId] && qPresence[otherId].name) || "them";
+        wait.textContent = `Waiting for ${nm} to pick a word… 🌙`;
+        return;
+      }
+      // A word is in play: setter watches, guesser plays. Both render the board.
+      play.hidden = false;
 
       const word = hmState.word || "";
       const guessed = hmState.guessed || {};
@@ -1979,14 +1997,17 @@
         const slot = document.createElement("div");
         if (ch === " "){ slot.className = "hmSlot space"; }
         else {
-          const show = guessed[ch] || lost;
+          // The setter always sees their own word; the guesser sees a letter
+          // only once it's been guessed (or the round is lost).
+          const show = iAmSetter || guessed[ch] || lost;
           slot.className = "hmSlot" + (show ? " revealed" : "");
           slot.textContent = show ? ch : "";
         }
         wordEl.appendChild(slot);
       });
 
-      // keyboard (only the guesser uses it)
+      // keyboard (only the guesser uses it; the setter sees a live, read-only
+      // view of which letters have been tried so they can watch the guessing)
       const keys = $("hmKeys");
       keys.innerHTML = "";
       "abcdefghijklmnopqrstuvwxyz".split("").forEach(ch => {
@@ -1999,15 +2020,15 @@
         if (!iAmSetter) k.addEventListener("click", () => hmGuess(ch));
         keys.appendChild(k);
       });
-      keys.style.display = iAmSetter ? "none" : "grid";
+      keys.style.display = "grid";   // shown for both, but disabled for the setter
 
       $("hmGuessed").textContent = wrong.length ? "Misses: " + wrong.join(" ").toUpperCase() : "";
 
       const status = $("hmStatus");
       if (won){
-        status.textContent = iAmSetter ? "They guessed it! 🎉 — set a new word." : "You got it! 🎉 — tap New word to swap.";
+        status.textContent = iAmSetter ? "They guessed it! 🎉 — tap New word to set another." : "You got it! 🎉 — tap New word to take a turn setting.";
       } else if (lost){
-        status.textContent = iAmSetter ? `Out of guesses — the word was “${word}”. Set a new one.` : `Out of guesses 💜 the word was “${word}”.`;
+        status.textContent = iAmSetter ? `Out of guesses — your word was “${word}”. Tap New word.` : `Out of guesses 💜 the word was “${word}”. Tap New word to swap.`;
       } else {
         status.textContent = iAmSetter
           ? "They're guessing your word… 🌙"
