@@ -630,7 +630,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/shared.js?v=17"></script>
+  <script src="/shared.js?v=18"></script>
 
   <script src="fireflies.js"></script>
 
@@ -788,6 +788,7 @@
     let waitingRef = null;          // shared "who's buffering" node
     const WAIT_STALE_MS = 20000;    // ignore "waiting" entries older than this
     const presentClientIds = new Set();  // clientIds currently present (from presence)
+    const lastKnownNames = new Map();    // clientId -> last non-empty name we saw (anti-flicker)
     let waitHeartbeat = null;       // keeps our "waiting" timestamp fresh while buffering
 
     const fileVid = $("filevid");
@@ -1794,6 +1795,11 @@
       const prevPresent = new Set(presentClientIds);
       presentClientIds.clear();
       ids.forEach(id => presentClientIds.add(id));
+      // Forget cached names for clients that are truly gone, so the map stays
+      // bounded and a departed person's name can't be revived by a stale write.
+      for (const id of lastKnownNames.keys()) {
+        if (!presentClientIds.has(id)) lastKnownNames.delete(id);
+      }
 
       // Screen share: if we're broadcasting, open a peer to anyone who just
       // joined, and drop peers for anyone who left. Viewers clean up departed
@@ -1814,12 +1820,15 @@
       else setConn("on", `Connected · ${n} here`);
 
       // sort: you first, then by join time
-      const people = ids.map(id => ({
-        id,
-        name: (val[id] && val[id].name) || "Guest",
-        t: (val[id] && val[id].t) || 0,
-        me: id === clientId,
-      })).sort((a, b) => (b.me - a.me) || (a.t - b.t));
+      const people = ids.map(id => {
+        let nm = (val[id] && val[id].name) || "";
+        // A heartbeat that landed a beat before the name resolved (or an
+        // old-format entry) can momentarily lack a name. Fall back to the last
+        // name we saw for this client so it doesn't flicker to "Guest".
+        if (nm) lastKnownNames.set(id, nm);
+        else nm = lastKnownNames.get(id) || "Guest";
+        return { id, name: nm, t: (val[id] && val[id].t) || 0, me: id === clientId };
+      }).sort((a, b) => (b.me - a.me) || (a.t - b.t));
 
       presenceList.innerHTML = "";
       for (const p of people) {
@@ -2091,14 +2100,15 @@
     // Skips entirely while backgrounded (broadcast no-ops there anyway) so the
     // phone isn't woken up every few seconds for nothing.
     setInterval(() => {
+      // Refresh our presence timestamp FIRST, before any early-out. A phone with
+      // the screen locked or the tab backgrounded is still "in the room"; if we
+      // stop heartbeating, the other side prunes us after PRESENCE_TTL and our
+      // name vanishes from their list. Presence is cheap, so beat it regardless.
+      try { if (myPresRef) set(myPresRef, { name: myName, t: Date.now() }); } catch (_) {}
       if (pageHidden) return;
       if (lastHostId === clientId && currentKind) {
         try { if (isPlayingNow()) broadcast("playing"); } catch(_){}
       }
-      // Refresh our presence timestamp so we stay "fresh" and aren't pruned as
-      // stale by other clients. (Stale entries from reloads/crashes that never
-      // fired onDisconnect get filtered out by their old timestamp.)
-      try { if (myPresRef) set(myPresRef, { name: myName, t: Date.now() }); } catch (_) {}
       touchLobbyActivity();
     }, 8000);
 
@@ -2603,6 +2613,12 @@
       if (!parsed) { toast("Couldn't read that link"); return; }
       if (!FIREBASE_READY || !queueRef) { toast("Queue needs Firebase set up first"); return; }
       if (isInQueue(parsed.kind, parsed.src)) { toast("That's already in the queue"); return; }
+      // Don't let the currently-playing item be queued — when it ends it would
+      // just replay itself and look like the queue got wiped.
+      if (currentKind === parsed.kind && currentSrc === parsed.src) {
+        toast("That's already playing now");
+        return;
+      }
       // Use a title we already know if any; otherwise the queue render backfills
       // it asynchronously (and writes it back so everyone sees the real title).
       const known = parsed.kind === "yt" ? (titleCache[parsed.src] || null) : shortName(parsed.src);
@@ -2746,7 +2762,33 @@
           try { await set(claimRef, { by: clientId, t: now }); } catch (_) {}
         }
 
-        const [key, it] = entries[0];
+        // Pick the next item to play. When repeat is OFF, skip any leading
+        // entries whose source matches the one that JUST finished — otherwise a
+        // duplicate (or a repeat-all leftover) at the front replays the same
+        // video and, because we removed it, looks like the queue "got wiped."
+        // We remove those skipped duplicates as consumed.
+        const finishedSrc = (endedSrc != null) ? endedSrc : currentSrc;
+        let chosen = null;
+        if (repeatMode === "all") {
+          chosen = entries[0];   // repeat-all intentionally cycles, including repeats
+        } else {
+          for (const e of entries) {
+            const eSrc = e[1].src || e[1].videoId;
+            if (finishedSrc != null && eSrc === finishedSrc) {
+              removeQueued(e[0]);   // drop the stale duplicate, keep looking
+              continue;
+            }
+            chosen = e;
+            break;
+          }
+          // The whole queue was just duplicates of what finished.
+          if (!chosen) {
+            if (claimRef) { try { remove(claimRef); } catch (_) {} }
+            return;
+          }
+        }
+
+        const [key, it] = chosen;
         const kind = it.kind || (it.videoId ? "yt" : "file");
         const src  = it.src  || it.videoId;
 
