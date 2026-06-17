@@ -633,8 +633,19 @@
       history.replaceState(null, "", u);
     })();
 
-    MFRooms.whenReady(() => {
+    // Wait for the account system to come online (auth.js + rooms.js are
+    // injected asynchronously by shared.js, so neither may exist yet). Poll for
+    // MFAuth first — friends depend only on it — then wire everything.
+    (function waitForAuth(tries) {
+      if (window.MFAuth && MFAuth.isConfigured && MFAuth.isConfigured()) { boot(); return; }
+      if (window.MFAuth && MFAuth.isConfigured && !MFAuth.isConfigured()) { return; } // accounts off
+      if (tries > 150) return;
+      setTimeout(() => waitForAuth(tries + 1), 100);
+    })(0);
+
+    function boot() {
       let stopRooms = () => {}, stopInvites = () => {}, stopFriends = () => {};
+
       MFAuth.onChange((user, profile) => {
         signedIn = !!user;
         $("signedOut").hidden = signedIn;
@@ -650,20 +661,26 @@
           stopFriends = MFAuth.watchFriends(f => {
             myFriends = f || {};
             friendsLoaded = true;
+            console.log("[together] friends loaded:", Object.keys(myFriends).length, myFriends);
             if (!$("inviteField").hidden) renderFriendPicker("friendPick", selInvites);
             if ($("manageModal").classList.contains("open") && !$("manageInviteField").hidden)
               renderFriendPicker("manageFriendPick", manageInvites);
           });
         } else { myFriends = {}; friendsLoaded = false; }
 
-        try { stopRooms(); } catch(_) {}
-        stopRooms = MFRooms.watchVisible(rooms => { allRooms = rooms; renderRooms(); });
-
-        try { stopInvites(); } catch(_) {}
-        if (user) stopInvites = MFRooms.watchMyInvites(renderInvites);
-        else renderInvites({});
+        // rooms + invites need MFRooms; wire them once it's ready (it usually is
+        // by now, but guard so the friends path above never waits on it).
+        if (window.MFRooms && MFRooms.whenReady) {
+          MFRooms.whenReady(() => {
+            try { stopRooms(); } catch(_) {}
+            stopRooms = MFRooms.watchVisible(rooms => { allRooms = rooms; renderRooms(); });
+            try { stopInvites(); } catch(_) {}
+            if (user) stopInvites = MFRooms.watchMyInvites(renderInvites);
+            else renderInvites({});
+          });
+        }
       });
-    });
+    }
   </script>
 </body>
 </html>
