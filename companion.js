@@ -12,7 +12,8 @@
 
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getDatabase, ref, onValue, set, get, update, remove
+  getDatabase, ref, onValue, onChildAdded, set, get, update, remove,
+  push, onDisconnect, serverTimestamp, query, limitToLast
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const firebaseConfig = {
@@ -155,7 +156,14 @@ const userPetRef = (uid,id)=> ref(getDb(), "userPets/"+uid+"/"+id);
 async function savePet(){
   if (!bondId || !pet) return;
   suppressWrite = true;
-  try { await set(petRef(bondId), pet); }
+  try {
+    // Write only the core pet fields. The togetherness subtrees
+    // (presence, pulse, notes, care) are owned by separate writers and
+    // must not be clobbered by a full overwrite, so we strip them here.
+    const core = { ...pet };
+    delete core.presence; delete core.pulse; delete core.notes; delete core.care;
+    await update(petRef(bondId), core);
+  }
   finally { setTimeout(()=>{ suppressWrite = false; }, 200); }
 }
 
@@ -477,6 +485,9 @@ function enterBond(id, withName, withUid){
   $("withBadge").textContent = withName ? ("🤝 Raised together with "+withName) : "";
   buildShop();
   watchPet(id);
+  tgStart(id);
+  $("tgWidget").classList.add("shown");
+  renderPresence();
   // local decay ticker (visual cadence; authoritative decay also runs on each snapshot)
   if (window._cpTick) clearInterval(window._cpTick);
   window._cpTick = setInterval(()=>{ if(pet){ pet = applyDecay(pet); render(); } }, 1000);
@@ -485,7 +496,10 @@ function enterBond(id, withName, withUid){
 function leaveToGate(){
   if (window._cpTick) clearInterval(window._cpTick);
   if (petUnsub) petUnsub();
+  tgStop();
+  $("tgWidget").classList.remove("shown","open","active");
   pet = null; bondId = null; partnerUid = null; partnerName = null;
+  $("creature").classList.remove("together-glow");
   $("appView").classList.add("hide");
   $("gateView").classList.remove("hide");
   listExistingBonds();
@@ -495,6 +509,17 @@ $("deletePetBtn").onclick = ()=>{
   if (!bondId || !pet) return;
   confirmDelete(bondId, partnerUid, pet.name, !!partnerUid);
 };
+
+/* ---------- togetherness widget handlers ---------- */
+$("tgToggle").onclick = ()=>{
+  $("tgWidget").classList.toggle("open");
+};
+$("sendHeartBtn").onclick = ()=>{ emitPulse("heart","💗","sent a heart"); };
+$("petTogetherBtn").onclick = tryPetTogether;
+$("tgNoteSend").onclick = sendNote;
+$("tgNoteInput").addEventListener("keydown", (e)=>{ if (e.key==="Enter"){ e.preventDefault(); sendNote(); } });
+// tap the creature itself = a quick boop you both feel
+$("creature").addEventListener("click", ()=>{ if (pet && !pet.away){ emitPulse("boop","👉","booped "+pet.name); } });
 
 /* ============================================================
    RENDER
@@ -558,22 +583,23 @@ function bounce(){ const c=$("creature"); c.classList.remove("idle"); c.classLis
 
 function act(fn){ if(!pet||pet.away) return; fn(pet); render(); savePet(); }
 
-$("aFeed").onclick = ()=> act(p=>{
+$("aFeed").onclick = ()=>{ act(p=>{
   const f = bestFood(p);
   if (!f.def){ p.inventory[f.id]--; }
   p.hunger = clamp(p.hunger + f.restore); p.feedCount++; bumpCare(p);
   gainXp(p,6); p.coins += 2; pop("🍓"); bounce();
   pushLog(p,"🍓", myName+" fed "+p.name+" a "+f.nm.toLowerCase()+".");
-});
+}); emitPulse("action","🍓","fed "+(pet?pet.name:"the pet")); markCaredToday(); };
 $("aPlay").onclick = ()=>{
   if (pet && pet.energy<10){ toast(pet.name+" is too tired to play — let them rest."); return; }
   act(p=>{ p.happy=clamp(p.happy+22); p.energy=clamp(p.energy-8); p.playCount++; bumpCare(p);
     gainXp(p,7); p.coins+=3; pop("🪁"); bounce(); pushLog(p,"🪁", myName+" played with "+p.name+"."); });
+  emitPulse("action","🪁","played with "+(pet?pet.name:"the pet")); markCaredToday();
 };
-$("aSleep").onclick = ()=> act(p=>{ p.energy=clamp(p.energy+30); bumpCare(p); gainXp(p,3); pop("💤");
-  pushLog(p,"💤", p.name+" took a cozy nap."); });
-$("aClean").onclick = ()=> act(p=>{ p.clean=clamp(p.clean+34); bumpCare(p); gainXp(p,4); p.coins+=2; pop("🫧"); bounce();
-  pushLog(p,"🫧", myName+" gave "+p.name+" a bath."); });
+$("aSleep").onclick = ()=>{ act(p=>{ p.energy=clamp(p.energy+30); bumpCare(p); gainXp(p,3); pop("💤");
+  pushLog(p,"💤", p.name+" took a cozy nap."); }); emitPulse("action","💤","put "+(pet?pet.name:"the pet")+" down for a nap"); markCaredToday(); };
+$("aClean").onclick = ()=>{ act(p=>{ p.clean=clamp(p.clean+34); bumpCare(p); gainXp(p,4); p.coins+=2; pop("🫧"); bounce();
+  pushLog(p,"🫧", myName+" gave "+p.name+" a bath."); }); emitPulse("action","🫧","bathed "+(pet?pet.name:"the pet")); markCaredToday(); };
 
 $("renameBtn").onclick = ()=>{
   if (!pet) return;
@@ -588,8 +614,250 @@ function searchForPet(){
 }
 
 /* ============================================================
-   TABS / SHOP / DIARY
+   TOGETHERNESS LAYER
+   Presence, live action feed, reactions/nudges, notes, care
+   streak, and "pet together". All live under pets/{bondId}/* as
+   sibling subtrees that savePet() never overwrites.
 ============================================================ */
+const TG = {
+  clientId: Math.random().toString(36).slice(2,10),  // this tab/session
+  presence: {},          // uid -> {name, t}
+  unsubs: [],
+  lastPulseT: Date.now(),// ignore pulses older than join time
+  petTogether: { armed:false, mine:0, theirs:0 },
+};
+const todayKey = ()=>{ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+
+function tgStart(id){
+  tgStop();
+  const db = getDb();
+
+  // --- presence: write mine + onDisconnect cleanup, watch everyone's ---
+  const myPres = ref(db, "pets/"+id+"/presence/"+myId);
+  const writePres = ()=>{ set(myPres, { name: myName, client: TG.clientId, t: Date.now() }); onDisconnect(myPres).remove(); };
+  writePres();
+  const presHb = setInterval(writePres, 20000);
+  onValue(ref(db, ".info/connected"), (s)=>{ if (s.val()===true) writePres(); });
+  const offPres = onValue(ref(db, "pets/"+id+"/presence"), (snap)=>{
+    TG.presence = snap.exists() ? snap.val() : {};
+    renderPresence();
+  });
+
+  // --- live pulses (actions, hearts, boops, pet-together) ---
+  const pulsesQ = query(ref(db, "pets/"+id+"/pulse"), limitToLast(8));
+  const offPulse = onChildAdded(pulsesQ, (snap)=>{
+    const ev = snap.val(); if (!ev) return;
+    if (ev.t < TG.lastPulseT - 1500) return;      // skip backlog from before we joined
+    handlePulse(ev, snap.key);
+  });
+
+  // --- notes ---
+  const offNotes = onValue(ref(db, "pets/"+id+"/notes"), (snap)=>{
+    const raw = snap.exists() ? snap.val() : {};
+    renderNotes(raw);
+  });
+
+  // --- care map (for the streak) ---
+  const offCare = onValue(ref(db, "pets/"+id+"/care"), (snap)=>{
+    renderStreak(snap.exists() ? snap.val() : {});
+  });
+
+  TG.unsubs = [ ()=>clearInterval(presHb), offPres, offPulse, offNotes, offCare, ()=>{ try{ remove(myPres); }catch(_){} } ];
+  TG.lastPulseT = Date.now();
+}
+function tgStop(){ TG.unsubs.forEach(fn=>{ try{ fn(); }catch(_){} }); TG.unsubs = []; }
+
+/* ---------- emit a pulse (ephemeral live event) ---------- */
+function emitPulse(kind, emoji, label){
+  if (!bondId) return;
+  const db = getDb();
+  const pRef = push(ref(db, "pets/"+bondId+"/pulse"));
+  const ev = { kind, emoji: emoji||"", label: label||"", uid: myId, name: myName, client: TG.clientId, t: Date.now() };
+  set(pRef, ev);
+  // auto-expire so the node doesn't grow forever
+  setTimeout(()=>{ try{ remove(pRef); }catch(_){} }, 12000);
+}
+
+/* ---------- receive a pulse ---------- */
+function handlePulse(ev, key){
+  const mine = ev.uid === myId && ev.client === TG.clientId;
+
+  if (ev.kind === "pet-together"){
+    handlePetTogetherPulse(ev, mine);
+    return;
+  }
+
+  // float an emoji on the stage for everyone
+  if (ev.emoji) floatEmoji(ev.emoji, mine);
+
+  if (ev.kind === "heart" || ev.kind === "boop"){
+    if (ev.kind === "boop") bounce();
+    if (!mine) toast((ev.name||"Your partner")+(ev.kind==="heart" ? " sent a heart 💗" : " booped "+(pet?pet.name:"your pet")+" 👉"));
+    return;
+  }
+
+  // action pulses: only announce the partner's (you already saw your own)
+  if (ev.kind === "action" && !mine){
+    toast((ev.name||"Your partner")+" "+(ev.label||"did something"));
+  }
+}
+
+/* ---------- presence UI ---------- */
+function presentOthers(){
+  return Object.keys(TG.presence).filter(uid => uid !== myId && TG.presence[uid]);
+}
+function bothHere(){ return presentOthers().length > 0; }
+
+function renderPresence(){
+  const w = $("tgWidget"); if (!w) return;
+  const others = presentOthers();
+  const dot = $("tgPresenceDot"), dot2 = $("tgPresenceDot2"), txt = $("tgPresenceText");
+  if (others.length){
+    const nm = TG.presence[others[0]].name || partnerName || "Your partner";
+    if (dot) dot.className = "tg-dot on";
+    if (dot2) dot2.className = "tg-dot on";
+    txt.innerHTML = `<b>${escapeHtml(nm)}</b> is here too 💞`;
+    $("creature").classList.add("together-glow");
+    $("petTogetherBtn").classList.remove("hide");
+    $("tgWidget").classList.add("active");
+  } else {
+    if (dot) dot.className = "tg-dot off";
+    if (dot2) dot2.className = "tg-dot off";
+    txt.textContent = partnerUid ? ((partnerName||"Your partner")+" isn’t here right now") : "Just you right now";
+    $("creature").classList.remove("together-glow");
+    $("petTogetherBtn").classList.add("hide");
+    $("tgWidget").classList.remove("active");
+    TG.petTogether.armed = false;
+  }
+  $("tgWidget").classList.toggle("solo", !partnerUid);
+}
+
+/* ---------- notes ---------- */
+function sendNote(){
+  const input = $("tgNoteInput");
+  const text = (input.value||"").trim().slice(0,200);
+  if (!text){ return; }
+  const db = getDb();
+  const nRef = push(ref(db, "pets/"+bondId+"/notes"));
+  set(nRef, { uid: myId, name: myName, text, t: Date.now() });
+  input.value = "";
+  // also drop a gentle line in the diary
+  if (pet){ act(p=> pushLog(p,"💌", myName+" left a note.")); }
+  toast("Note left for "+(partnerName||"your partner")+" 💌");
+}
+function renderNotes(raw){
+  const list = $("tgNotesList"); if (!list) return;
+  const notes = Object.entries(raw).map(([id,n])=>({id,...n})).sort((a,b)=>b.t-a.t).slice(0,12);
+  $("tgNotesCount").textContent = notes.length ? String(notes.length) : "";
+  if (!notes.length){ list.innerHTML = `<div class="tg-note-empty">No notes yet — leave one for ${escapeHtml(partnerName||"your partner")}.</div>`; return; }
+  list.innerHTML = "";
+  notes.forEach(n=>{
+    const fromMe = n.uid === myId;
+    const div = document.createElement("div");
+    div.className = "tg-note-item"+(fromMe?" mine":"");
+    div.innerHTML = `<div class="tg-note-meta"><b>${escapeHtml(fromMe?"You":(n.name||"Partner"))}</b><span>${timeAgo(n.t)}</span></div>
+      <div class="tg-note-text">${escapeHtml(n.text)}</div>
+      ${fromMe?'<span class="tg-note-del" title="delete">×</span>':''}`;
+    const del = div.querySelector(".tg-note-del");
+    if (del) del.onclick = ()=>{ try{ remove(ref(getDb(),"pets/"+bondId+"/notes/"+n.id)); }catch(_){} };
+    list.appendChild(div);
+  });
+}
+
+/* ---------- care streak ----------
+   care/{dayKey}/{uid} = t. A day counts if EITHER caretaker tended.
+   Streak = consecutive days (ending today or yesterday) with any care. */
+function markCaredToday(){
+  if (!bondId) return;
+  try { set(ref(getDb(), "pets/"+bondId+"/care/"+todayKey()+"/"+myId), Date.now()); } catch(_){}
+}
+function renderStreak(care){
+  const el = $("tgStreak"); if (!el) return;
+  const days = Object.keys(care||{});
+  // compute consecutive-day streak ending today or yesterday
+  const has = (d)=> !!care[d];
+  const fmt = (date)=> date.getFullYear()+"-"+String(date.getMonth()+1).padStart(2,"0")+"-"+String(date.getDate()).padStart(2,"0");
+  let streak = 0; let cur = new Date();
+  if (!has(fmt(cur))) cur.setDate(cur.getDate()-1); // allow streak to count through yesterday
+  while (has(fmt(cur))){ streak++; cur.setDate(cur.getDate()-1); }
+
+  // "last tended by"
+  let lastBy = null, lastT = 0;
+  for (const d of days){
+    for (const uid of Object.keys(care[d])){
+      const t = care[d][uid];
+      if (t > lastT){ lastT = t; lastBy = uid; }
+    }
+  }
+  let lastStr = "";
+  if (lastBy){
+    const who = lastBy === myId ? "You" : (TG.presence[lastBy]?.name || partnerName || nameCache[lastBy] || "Partner");
+    lastStr = "Last tended by "+who+" "+timeAgo(lastT);
+  }
+  el.innerHTML = (streak>0 ? `<span class="tg-flame">🔥 ${streak} day${streak>1?"s":""}</span>` : `<span class="tg-flame off">No streak yet</span>`)
+    + (lastStr ? `<span class="tg-last">${escapeHtml(lastStr)}</span>` : "");
+}
+
+/* ---------- pet together ----------
+   Both online, both tap within the window -> bonus + special moment. */
+const PET_TOGETHER_WINDOW = 4000;
+function tryPetTogether(){
+  if (!bothHere()){ toast("This is a moment for when you’re both here 💞"); return; }
+  emitPulse("pet-together", "🫧", "wants to pet "+(pet?pet.name:"the pet")+" together");
+  TG.petTogether.armed = true;
+  TG.petTogether.mine = Date.now();
+  $("petTogetherBtn").classList.add("waiting");
+  $("petTogetherBtn").textContent = "waiting for "+(partnerName||"them")+"…";
+  // resolve if partner already tapped
+  maybeResolvePetTogether();
+  // reset prompt after the window
+  setTimeout(()=>{
+    if ($("petTogetherBtn")){ $("petTogetherBtn").classList.remove("waiting"); $("petTogetherBtn").textContent = "🫶 Pet together"; }
+  }, PET_TOGETHER_WINDOW+500);
+}
+function handlePetTogetherPulse(ev, mine){
+  if (mine) return;
+  TG.petTogether.theirs = Date.now();
+  if (!TG.petTogether.armed){
+    // they initiated — nudge me to join
+    toast((ev.name||"Your partner")+" wants to pet "+(pet?pet.name:"the pet")+" together 🫶");
+    const btn = $("petTogetherBtn");
+    if (btn){ btn.classList.add("pulse-invite"); setTimeout(()=>btn.classList.remove("pulse-invite"), 4000); }
+  }
+  maybeResolvePetTogether();
+}
+function maybeResolvePetTogether(){
+  const { mine, theirs } = TG.petTogether;
+  if (mine && theirs && Math.abs(mine - theirs) <= PET_TOGETHER_WINDOW){
+    const iApply = mine <= theirs;   // earlier tapper writes the bonus; both still celebrate
+    TG.petTogether = { armed:false, mine:0, theirs:0 };
+    const btn = $("petTogetherBtn");
+    if (btn){ btn.classList.remove("waiting","pulse-invite"); btn.textContent = "🫶 Pet together"; }
+    celebrateTogether();
+    if (iApply){
+      act(p=>{ p.happy=clamp(p.happy+18); p.coins+=8; gainXp(p,10);
+        pushLog(p,"🫶", myName+" and "+(partnerName||"partner")+" pet "+p.name+" together."); });
+      markCaredToday();
+    }
+  }
+}
+function celebrateTogether(){
+  for (let i=0;i<10;i++) setTimeout(()=> floatEmoji(["💞","✨","🫧","💗"][i%4], i%2===0), i*90);
+  bounce();
+  toast("You pet "+(pet?pet.name:"your companion")+" together 💞");
+}
+
+/* ---------- shared float helper ---------- */
+function floatEmoji(emoji, fromMe){
+  const s = document.querySelector(".stage"); if (!s) return;
+  const el = document.createElement("div");
+  el.className = "floatup"; el.textContent = emoji;
+  el.style.left = (fromMe ? 38+Math.random()*10 : 52+Math.random()*10)+"%";
+  el.style.top = "44%";
+  s.appendChild(el); setTimeout(()=>el.remove(), 1200);
+}
+
+
 document.querySelectorAll(".tab").forEach(t=> t.onclick=()=>{
   document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===t));
   const tab=t.dataset.tab;

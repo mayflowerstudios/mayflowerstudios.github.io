@@ -16,33 +16,21 @@
   <link rel="stylesheet" href="/style.css?v=26" />
 
   <style>
-    .cpWrap{ max-width:760px; margin:0 auto; padding:22px; }
-    .glass{
-      background: rgba(255,255,255,.045);
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 22px;
-      box-shadow: 0 18px 60px rgba(0,0,0,.45);
-      overflow:hidden; position:relative;
-    }
-    .glass::before{
-      content:""; position:absolute; inset:0;
-      background:
-        radial-gradient(900px 380px at 20% 0%, rgba(251,113,133,.10), transparent 60%),
-        radial-gradient(700px 320px at 90% 10%, rgba(196,181,253,.08), transparent 55%);
-      pointer-events:none;
-    }
-    .content{ position:relative; z-index:1; padding:26px; }
+    /* The page chrome (nav, .content width, .page-hero, .card) comes from
+       style.css so this page matches the rest of the site. Only pet-specific
+       styling lives here. */
+    .cpCard{ padding:26px; }
+    @media (max-width:560px){ .cpCard{ padding:20px; } }
 
-    .kicker{
-      display:inline-flex; gap:10px; align-items:center;
-      padding:7px 12px; border-radius:999px;
-      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05);
-      font-size:12.5px; letter-spacing:.06em;
+    /* inner tab panels (named locally so they don't clash with global .card/.content) */
+    .cpPanel{
+      border:1px solid var(--border); border-radius:var(--r-lg);
+      background:var(--glass); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+      overflow:hidden;
     }
-    .title{ font-family:'Cormorant Garamond',Georgia,serif; font-weight:600; font-size:46px; line-height:1.05; margin:12px 0 6px; }
-    .title em{ font-style:italic; background:linear-gradient(120deg,#f9a8d4,#c4b5fd); -webkit-background-clip:text; background-clip:text; color:transparent; }
-    .sub{ opacity:.82; line-height:1.6; max-width:60ch; font-size:14.5px; }
-    .divider{ height:1px; background:rgba(255,255,255,.1); margin:22px 0; }
+    .cpPanelInner{ padding:22px; }
+
+    .divider{ height:1px; background:var(--border); margin:22px 0; }
 
     .btn{ display:inline-flex; align-items:center; justify-content:center; gap:9px;
       padding:12px 18px; border-radius:14px; border:1px solid rgba(255,255,255,.14);
@@ -84,7 +72,7 @@
     .sceneBg{ position:absolute; inset:0; z-index:0; transition:.6s; }
     .stage > *{ position:relative; z-index:1; }
     .stageBadge{ font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; color:#c4b5fd; font-weight:700; }
-    .petName{ font-family:'Cormorant Garamond',Georgia,serif; font-size:34px; font-weight:600; margin:2px 0; }
+    .petName{ font-family:var(--font-d); font-size:34px; font-weight:600; margin:2px 0; }
     .petName .edit{ font-size:14px; opacity:.5; cursor:pointer; margin-left:6px; }
     .creature{ font-size:118px; line-height:1.1; margin:10px 0; cursor:pointer; user-select:none;
       filter:drop-shadow(0 14px 26px rgba(0,0,0,.5)); transition:transform .25s; }
@@ -116,7 +104,7 @@
     .xpwrap .lab{ font-size:12px; opacity:.65; margin-bottom:5px; display:flex; justify-content:space-between; }
     .xpbar{ height:7px; border-radius:5px; background:rgba(0,0,0,.35); overflow:hidden; }
     .xpbar i{ display:block; height:100%; background:#f3d9a0; transition:width .5s; }
-    .coins{ font-family:'Cormorant Garamond',Georgia,serif; font-size:22px; font-weight:600; color:#f3d9a0; white-space:nowrap; }
+    .coins{ font-family:var(--font-d); font-size:22px; font-weight:600; color:#f3d9a0; white-space:nowrap; }
 
     .actions{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:18px; }
     .act{ display:flex; flex-direction:column; align-items:center; gap:5px; padding:14px 6px; border-radius:16px;
@@ -164,26 +152,100 @@
     .toast.show{ transform:translateX(-50%) translateY(0); opacity:1; }
     .hide{ display:none !important; }
 
+    /* ---- together: presence glow on the pet ---- */
+    .creature.together-glow{ filter:drop-shadow(0 0 18px rgba(249,168,212,.55)) drop-shadow(0 14px 26px rgba(0,0,0,.5)); }
+
+    /* ---- floating togetherness widget ---- */
+    .tg-widget{ position:fixed; right:20px; bottom:20px; z-index:60; font-family:var(--font-b); display:none; }
+    .tg-widget.shown{ display:block; }
+    .tg-fab{ position:relative; width:58px; height:58px; border-radius:50%; cursor:pointer;
+      border:1px solid var(--border-2); background:linear-gradient(135deg, rgba(249,168,212,.22), rgba(196,181,253,.22));
+      backdrop-filter:blur(12px); box-shadow:0 10px 30px rgba(0,0,0,.4); transition:.2s; display:flex; align-items:center; justify-content:center; }
+    .tg-fab:hover{ transform:translateY(-2px); }
+    .tg-fab-emoji{ font-size:24px; }
+    .tg-widget.active .tg-fab{ box-shadow:0 0 0 3px rgba(249,168,212,.3), 0 10px 30px rgba(0,0,0,.4); animation:tgPulse 2.4s ease-in-out infinite; }
+    @keyframes tgPulse{ 0%,100%{ box-shadow:0 0 0 3px rgba(249,168,212,.28), 0 10px 30px rgba(0,0,0,.4);} 50%{ box-shadow:0 0 0 7px rgba(249,168,212,0), 0 10px 30px rgba(0,0,0,.4);} }
+
+    .tg-dot{ width:9px; height:9px; border-radius:50%; display:inline-block; flex-shrink:0; }
+    .tg-dot.on{ background:#6ee7b7; box-shadow:0 0 8px rgba(110,231,183,.8); }
+    .tg-dot.off{ background:var(--text-3); opacity:.5; }
+    .tg-fab .tg-dot{ position:absolute; top:9px; right:9px; }
+
+    .tg-panel{ position:absolute; right:0; bottom:70px; width:300px; max-width:84vw;
+      border:1px solid var(--border-2); border-radius:18px; background:var(--glass);
+      backdrop-filter:blur(16px); box-shadow:0 18px 50px rgba(0,0,0,.5); padding:16px;
+      display:none; flex-direction:column; gap:12px; }
+    .tg-widget.open .tg-panel{ display:flex; }
+
+    .tg-row{ display:flex; align-items:center; gap:9px; font-size:13.5px; }
+    .tg-presence{ color:var(--text-2); }
+    .tg-presence b{ color:var(--text); }
+
+    .tg-streak{ display:flex; flex-direction:column; gap:3px; font-size:12.5px; }
+    .tg-flame{ font-weight:700; color:#fbbf86; }
+    .tg-flame.off{ color:var(--text-3); font-weight:500; }
+    .tg-last{ color:var(--text-3); font-size:11.5px; }
+
+    .tg-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+    .tg-btn{ flex:1; min-width:120px; padding:10px; border-radius:12px; cursor:pointer; font:inherit; font-weight:600; font-size:13px;
+      border:1px solid var(--border-2); background:rgba(255,255,255,.05); color:inherit; transition:.16s; }
+    .tg-btn:hover{ background:rgba(255,255,255,.1); }
+    #petTogetherBtn{ background:linear-gradient(120deg,#f9a8d4,#c4b5fd); color:#241233; border-color:transparent; }
+    #petTogetherBtn.waiting{ opacity:.7; }
+    #petTogetherBtn.pulse-invite{ animation:tgInvite .8s ease-in-out 4; }
+    @keyframes tgInvite{ 50%{ transform:scale(1.06); box-shadow:0 0 16px rgba(249,168,212,.7);} }
+
+    .tg-notes-head{ font-size:12.5px; font-weight:700; color:var(--text-2); display:flex; align-items:center; gap:6px; }
+    .tg-notes-count{ font-size:11px; color:#241233; background:var(--rose); border-radius:10px; padding:0 7px; font-weight:700; }
+    .tg-notes-list{ display:flex; flex-direction:column; gap:8px; max-height:200px; overflow-y:auto; }
+    .tg-note-empty{ font-size:12px; color:var(--text-3); line-height:1.5; padding:4px 0; }
+    .tg-note-item{ position:relative; padding:9px 11px; border-radius:12px; background:rgba(255,255,255,.04); border:1px solid var(--border); }
+    .tg-note-item.mine{ background:rgba(249,168,212,.08); border-color:rgba(249,168,212,.18); }
+    .tg-note-meta{ display:flex; justify-content:space-between; font-size:10.5px; color:var(--text-3); margin-bottom:3px; }
+    .tg-note-meta b{ color:var(--text-2); }
+    .tg-note-text{ font-size:13px; line-height:1.45; word-wrap:break-word; }
+    .tg-note-del{ position:absolute; top:6px; right:9px; cursor:pointer; color:var(--text-3); font-size:15px; line-height:1; }
+    .tg-note-del:hover{ color:var(--rose); }
+    .tg-note-compose{ display:flex; gap:7px; }
+    .tg-note-field{ flex:1; padding:9px 11px; border-radius:11px; border:1px solid var(--border-2);
+      background:rgba(0,0,0,.25); color:inherit; font:inherit; font-size:13px; outline:none; }
+    .tg-note-field:focus{ border-color:var(--violet); }
+    .tg-note-send{ padding:9px 13px; border-radius:11px; border:none; cursor:pointer; font:inherit; font-weight:700; font-size:13px;
+      background:linear-gradient(120deg,#f9a8d4,#c4b5fd); color:#241233; }
+
+    /* solo pets: hide partner-only controls */
+    .tg-widget.solo #petTogetherBtn,
+    .tg-widget.solo #sendHeartBtn{ display:none; }
+    .tg-widget.solo .tg-notes{ display:none; }
+
     @media (max-width:560px){
       .title{ font-size:36px; } .actions{ grid-template-columns:repeat(2,1fr); }
       .shopGrid{ grid-template-columns:repeat(2,1fr); } .creature{ font-size:96px; }
       .content{ padding:20px; }
+      .tg-widget{ right:14px; bottom:14px; }
     }
   </style>
 </head>
 <body data-nav="together">
-  <div class="cpWrap">
+  <div class="site-page">
     <div id="site-nav"></div>
 
-    <section class="glass">
-      <div class="content">
-        <div class="kicker">🌱 Companion • alone or together</div>
-        <h1 class="title">A little life to <em>raise</em></h1>
-        <p class="sub">Feed it, play with it, keep it cozy — and watch it grow over days and weeks. Your companion lives with your account and keeps growing whether you visit alone or with a friend you’ve added.</p>
+    <div class="content">
+
+      <!-- HERO -->
+      <section class="page-hero reveal">
+        <div class="page-kicker">🌱 Companion</div>
+        <h1 class="page-title">A little life to <em>raise</em></h1>
+        <p class="page-sub">Feed it, play with it, keep it cozy — and watch it grow over days and weeks. Your companion lives with your account and keeps growing whether you visit alone or with a friend you’ve added.</p>
+      </section>
+
+      <!-- MAIN CARD -->
+      <section class="sec reveal">
+        <div class="card card-accent-top cpCard">
+          <div class="card-shine"></div>
 
         <!-- ============ GATE ============ -->
         <div id="gateView">
-          <div class="divider"></div>
 
           <!-- signed out -->
           <div id="gateSignedOut" class="hide">
@@ -228,7 +290,6 @@
 
         <!-- ============ APP ============ -->
         <div id="appView" class="hide">
-          <div class="divider"></div>
 
           <div class="stage">
             <div class="sceneBg" id="sceneBg"></div>
@@ -267,17 +328,17 @@
             <button class="tab" data-tab="log">📜 Diary</button>
           </div>
 
-          <div class="glass" id="tabGames"><div class="content"><div class="mg">
-            <div style="font-family:'Cormorant Garamond',Georgia,serif; font-size:22px;">Memory Bloom</div>
+          <div class="cpPanel" id="tabGames"><div class="cpPanelInner"><div class="mg">
+            <div style="font-family:var(--font-d); font-size:22px;">Memory Bloom</div>
             <p style="font-size:13px; opacity:.65; margin-top:4px;">Watch the petals light up, then repeat the order. Each round earns coins &amp; happiness.</p>
             <div class="grid" id="mgGrid"></div>
             <div id="mgStatus" style="font-size:14px; opacity:.82; min-height:20px; margin-bottom:10px;">Round <b id="mgRound">1</b></div>
             <button class="btn primary" id="mgStart" style="max-width:240px; margin:0 auto;">Start a round</button>
           </div></div></div>
 
-          <div class="glass hide" id="tabShop"><div class="content"><div class="shopGrid" id="shopGrid"></div></div></div>
+          <div class="cpPanel hide" id="tabShop"><div class="cpPanelInner"><div class="shopGrid" id="shopGrid"></div></div></div>
 
-          <div class="glass hide" id="tabLog"><div class="content"><div class="log" id="logList"></div></div></div>
+          <div class="cpPanel hide" id="tabLog"><div class="cpPanelInner"><div class="log" id="logList"></div></div></div>
 
           <div class="roomInfo">
             <span>Companion: <b id="bondLabel">—</b></span>
@@ -289,11 +350,43 @@
           </div>
         </div>
 
-      </div><!-- /content -->
-    </section>
+        </div><!-- /cpCard -->
+      </section>
+
+    </div><!-- /content -->
 
     <div id="site-footer"></div>
-  </div><!-- /cpWrap -->
+  </div><!-- /site-page -->
+
+  <!-- ============ TOGETHERNESS WIDGET (floating) ============ -->
+  <div class="tg-widget" id="tgWidget">
+    <button class="tg-fab" id="tgToggle" aria-label="Together panel">
+      <span class="tg-dot off" id="tgPresenceDot"></span>
+      <span class="tg-fab-emoji">💞</span>
+    </button>
+    <div class="tg-panel">
+      <div class="tg-row tg-presence">
+        <span class="tg-dot off" id="tgPresenceDot2"></span>
+        <span id="tgPresenceText">Just you right now</span>
+      </div>
+
+      <div class="tg-streak" id="tgStreak"></div>
+
+      <div class="tg-actions">
+        <button class="tg-btn" id="sendHeartBtn">💗 Send a heart</button>
+        <button class="tg-btn hide" id="petTogetherBtn">🫶 Pet together</button>
+      </div>
+
+      <div class="tg-notes">
+        <div class="tg-notes-head">💌 Notes <span class="tg-notes-count" id="tgNotesCount"></span></div>
+        <div class="tg-notes-list" id="tgNotesList"></div>
+        <div class="tg-note-compose">
+          <input class="tg-note-field" id="tgNoteInput" type="text" maxlength="200" placeholder="Leave a note…" />
+          <button class="tg-note-send" id="tgNoteSend">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="toast" id="toast"></div>
 
