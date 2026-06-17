@@ -12,7 +12,7 @@
 
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getDatabase, ref, onValue, set, get, update
+  getDatabase, ref, onValue, set, get, update, remove
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const firebaseConfig = {
@@ -91,7 +91,7 @@ function freshPet(){
     away:false, lowSince:null,
     feedCount:0, playCount:0, careSum:0, careN:0,
     inventory:{}, activeScene:"default", cosmetic:null,
-    log:[],
+    members:{}, log:[],
   };
 }
 function logEntry(icon,text){ return { icon, text, at:Date.now() }; }
@@ -229,6 +229,7 @@ function onSignedIn(){
       renderFriendPicker();
     });
     listExistingBonds();
+    watchMyInvites();
   }
 }
 
@@ -241,11 +242,15 @@ async function listExistingBonds(){
     const cards = [];
     for (const id of ids){
       const ps = await get(petRef(id));
-      if (!ps.exists()){ continue; }
+      if (!ps.exists()){
+        // pet was released (possibly by a partner) — prune the dangling index
+        try { await remove(userPetRef(myId, id)); } catch(_){}
+        continue;
+      }
       const p = applyDecay(ps.val());
       const withUid = all[id].with;
       let withName = withUid ? (nameCache[withUid] || (await safeName(withUid))) : null;
-      cards.push({ id, name:p.name, emoji:creatureEmoji(p), level:p.level, withName });
+      cards.push({ id, name:p.name, emoji:creatureEmoji(p), level:p.level, withName, withUid });
     }
     if (!cards.length){ $("existingBonds").classList.add("hide"); return; }
     $("existingBonds").classList.remove("hide");
@@ -256,8 +261,13 @@ async function listExistingBonds(){
       div.innerHTML = `<div class="em">${c.emoji}</div>
         <div class="bn"><b>${escapeHtml(c.name)}</b>
         <span>Level ${c.level} · ${c.withName ? "with "+escapeHtml(c.withName) : "just you"}</span></div>
-        <span class="btn">Open →</span>`;
-      div.onclick = ()=> enterBond(c.id, c.withName);
+        <span class="row" style="gap:8px;">
+          <span class="btn open-bond">Open →</span>
+          <span class="btn bond-del" title="Remove this companion" style="padding:8px 11px;">🗑️</span>
+        </span>`;
+      div.querySelector(".open-bond").onclick = (e)=>{ e.stopPropagation(); enterBond(c.id, c.withName, c.withUid); };
+      div.querySelector(".bond-del").onclick = (e)=>{ e.stopPropagation(); confirmDelete(c.id, c.withUid, c.name, !!c.withName); };
+      div.onclick = ()=> enterBond(c.id, c.withName, c.withUid);
       wrap.appendChild(div);
     });
   } catch(err){ console.error("listExistingBonds", err); }
@@ -265,6 +275,17 @@ async function listExistingBonds(){
 async function safeName(uid){
   try { const p = await MFAuth.getProfile(uid); const n=(p&&p.displayName)||"friend"; nameCache[uid]=n; return n; }
   catch(_){ return "friend"; }
+}
+
+function confirmDelete(id, withUid, petName, shared){
+  const msg = shared
+    ? `Step away from raising ${petName}?\n\nYour link is removed and you'll stop seeing ${petName}. ${nameCache[withUid]||"Your friend"} keeps the companion unless they leave too. This can't be undone.`
+    : `Release ${petName} for good?\n\nThis permanently deletes ${petName} and everything you've raised. This can't be undone.`;
+  if (window.confirm(msg)){
+    deleteBond(id, withUid, petName);
+    // if we're currently inside that bond, exit to the gate
+    if (bondId === id){ leaveToGate(); }
+  }
 }
 
 /* ---------- gate: mode toggle ---------- */
@@ -287,10 +308,103 @@ function renderFriendPicker(){
     const row = document.createElement("div");
     row.className = "friendRow";
     row.innerHTML = `<div class="fav">${escapeHtml((nm[0]||"?").toUpperCase())}</div>
-      <span class="fn">${escapeHtml(nm)}</span><span class="btn">Raise together →</span>`;
-    row.onclick = ()=> createSharedBond(uid, nm);
+      <span class="fn">${escapeHtml(nm)}</span><span class="btn">Invite to raise →</span>`;
+    row.onclick = ()=> sendPetInvite(uid, nm);
     list.appendChild(row);
   });
+}
+
+/* ---------- pet invites (consent flow) ----------
+   petInvites/{toUid}/{fromUid} = { name, username, t }
+   Mirrors the friendRequests pattern. The recipient must accept
+   before the shared bond + indexes are created. */
+const inviteRef = (toUid, fromUid)=> ref(getDb(), "petInvites/"+toUid+"/"+fromUid);
+
+async function sendPetInvite(otherUid, otherName){
+  try {
+    // already share a bond?
+    const id = [myId, otherUid].sort().join("_");
+    const existing = await get(userPetRef(myId, id));
+    if (existing.exists()){ toast("You already share a companion with "+otherName); return; }
+    await set(inviteRef(otherUid, myId), {
+      name: myName,
+      username: (MFAuth.profile && MFAuth.profile.username) || "",
+      t: Date.now(),
+    });
+    toast("Invite sent to "+otherName+" 💌");
+  } catch(err){
+    console.error("sendPetInvite", err);
+    toast("Couldn't send the invite — try again");
+  }
+}
+
+// Live-watch invites addressed to me, render them at the top of the gate.
+let invitesLoaded = false;
+function watchMyInvites(){
+  if (invitesLoaded) return; invitesLoaded = true;
+  onValue(ref(getDb(), "petInvites/"+myId), async (snap)=>{
+    const raw = snap.exists() ? snap.val() : {};
+    const fromUids = Object.keys(raw);
+    const box = $("petInvites");
+    if (!fromUids.length){ box.classList.add("hide"); box.innerHTML = ""; return; }
+    box.classList.remove("hide");
+    box.innerHTML = `<label style="font-size:14px; opacity:.85;">Companion invites</label>`;
+    const wrap = document.createElement("div");
+    wrap.className = "friendList"; wrap.style.marginBottom = "10px";
+    for (const fromUid of fromUids){
+      const nm = raw[fromUid].name || nameCache[fromUid] || (await safeName(fromUid));
+      const row = document.createElement("div");
+      row.className = "friendRow";
+      row.innerHTML = `<div class="fav">${escapeHtml((nm[0]||"?").toUpperCase())}</div>
+        <span class="fn">${escapeHtml(nm)} wants to raise a companion with you</span>
+        <span class="row" style="gap:6px;">
+          <span class="btn primary inv-accept">Accept</span>
+          <span class="btn inv-decline">Decline</span>
+        </span>`;
+      row.querySelector(".inv-accept").onclick = (e)=>{ e.stopPropagation(); acceptPetInvite(fromUid, nm); };
+      row.querySelector(".inv-decline").onclick = (e)=>{ e.stopPropagation(); declinePetInvite(fromUid, nm); };
+      wrap.appendChild(row);
+    }
+    box.appendChild(wrap);
+    const div = document.createElement("div"); div.className = "divider"; box.appendChild(div);
+  });
+}
+
+async function acceptPetInvite(fromUid, fromName){
+  try {
+    const id = [myId, fromUid].sort().join("_");
+    const exists = await get(petRef(id));
+    if (!exists.exists()){
+      const p = freshPet();
+      p.members = { [myId]: true, [fromUid]: true };
+      pushLog(p,"🤝", myName+" and "+fromName+" began raising a companion together.");
+      await set(petRef(id), p);
+    } else {
+      // pet already exists (e.g. re-accept) — make sure both are marked members
+      await update(ref(getDb()), {
+        ["pets/"+id+"/members/"+myId]: true,
+        ["pets/"+id+"/members/"+fromUid]: true,
+      });
+    }
+    // index for BOTH, then clear the invite
+    await update(ref(getDb()), {
+      ["userPets/"+myId+"/"+id]:    { with:fromUid, role:"shared", t:Date.now() },
+      ["userPets/"+fromUid+"/"+id]: { with:myId,   role:"shared", t:Date.now() },
+      ["petInvites/"+myId+"/"+fromUid]: null,
+    });
+    toast("You and "+fromName+" now share a companion 🌱");
+    enterBond(id, fromName, fromUid);
+  } catch(err){
+    console.error("acceptPetInvite", err);
+    toast("Couldn't accept — try again");
+  }
+}
+
+async function declinePetInvite(fromUid, fromName){
+  try {
+    await remove(inviteRef(myId, fromUid));
+    toast("Invite from "+fromName+" declined");
+  } catch(err){ console.error("declinePetInvite", err); }
 }
 
 /* ---------- create / enter bonds ---------- */
@@ -299,6 +413,7 @@ async function startSoloBond(){
   const exists = await get(petRef(bondId));
   if (!exists.exists()){
     pet = freshPet();
+    pet.members = { [myId]: true };
     pushLog(pet,"✨", myName+" welcomed a new companion into the nest.");
     await set(petRef(bondId), pet);
     await set(userPetRef(myId, bondId), { with:null, role:"solo", t:Date.now() });
@@ -307,21 +422,50 @@ async function startSoloBond(){
 }
 $("startSolo").onclick = ()=> startSoloBond().catch(err=>{ console.error(err); toast("Couldn't start — try again"); });
 
-async function createSharedBond(otherUid, otherName){
-  const id = [myId, otherUid].sort().join("_");
-  bondId = id;
-  const exists = await get(petRef(id));
-  if (!exists.exists()){
-    pet = freshPet();
-    pushLog(pet,"🤝", myName+" and "+otherName+" began raising a companion together.");
-    await set(petRef(id), pet);
+/* ---------- delete / leave a bond ----------
+   Solo: delete the pet record + my index outright.
+   Shared: remove MY index + my reference on the pet. The pet record is
+   only fully deleted once nobody is left raising it (last one out cleans
+   up), so one person can't delete a creature the other is still raising. */
+async function deleteBond(id, withUid, petName){
+  try {
+    if (!withUid){
+      // solo — remove everything
+      await update(ref(getDb()), {
+        ["pets/"+id]: null,
+        ["userPets/"+myId+"/"+id]: null,
+      });
+      toast(petName+" was released. 🍃");
+    } else {
+      // shared — read the pet to see who's still a member
+      const ps = await get(petRef(id));
+      const p = ps.exists() ? ps.val() : null;
+      const members = (p && p.members) || {};
+      const othersRemain = Object.keys(members).some(uid => uid !== myId && members[uid]);
+
+      if (!p || !othersRemain){
+        // I'm the last one — clean up the whole record + my index
+        await update(ref(getDb()), {
+          ["pets/"+id]: null,
+          ["userPets/"+myId+"/"+id]: null,
+        });
+        toast(petName+" was released. 🍃");
+      } else {
+        // leave: drop my membership + index, leave a note in the diary
+        pushLog(p, "👋", myName+" stepped away from raising "+petName+".");
+        await update(ref(getDb()), {
+          ["pets/"+id+"/members/"+myId]: null,
+          ["pets/"+id+"/log"]: p.log,
+          ["userPets/"+myId+"/"+id]: null,
+        });
+        toast("You stepped away. "+(nameCache[withUid]||"Your friend")+" still has "+petName+".");
+      }
+    }
+  } catch(err){
+    console.error("deleteBond", err);
+    toast("Couldn't remove — try again");
   }
-  // index for BOTH users so it shows in each person's list
-  await update(ref(getDb()), {
-    ["userPets/"+myId+"/"+id]:    { with:otherUid, role:"shared", t:Date.now() },
-    ["userPets/"+otherUid+"/"+id]:{ with:myId,    role:"shared", t:Date.now() },
-  });
-  enterBond(id, otherName, otherUid);
+  listExistingBonds();
 }
 
 function enterBond(id, withName, withUid){
@@ -338,13 +482,18 @@ function enterBond(id, withName, withUid){
   window._cpTick = setInterval(()=>{ if(pet){ pet = applyDecay(pet); render(); } }, 1000);
 }
 
-$("switchBtn").onclick = ()=>{
+function leaveToGate(){
   if (window._cpTick) clearInterval(window._cpTick);
   if (petUnsub) petUnsub();
-  pet = null; bondId = null;
+  pet = null; bondId = null; partnerUid = null; partnerName = null;
   $("appView").classList.add("hide");
   $("gateView").classList.remove("hide");
   listExistingBonds();
+}
+$("switchBtn").onclick = leaveToGate;
+$("deletePetBtn").onclick = ()=>{
+  if (!bondId || !pet) return;
+  confirmDelete(bondId, partnerUid, pet.name, !!partnerUid);
 };
 
 /* ============================================================
