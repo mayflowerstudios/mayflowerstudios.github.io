@@ -92,7 +92,7 @@
     .stat{ background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); border-radius:16px; padding:12px 14px; }
     .stat .top{ display:flex; justify-content:space-between; font-size:13px; font-weight:700; margin-bottom:7px; }
     .bar{ height:9px; border-radius:6px; background:rgba(0,0,0,.35); overflow:hidden; }
-    .bar i{ display:block; height:100%; border-radius:6px; transition:width .5s; }
+    .bar i{ display:block; height:100%; border-radius:6px; transition:width 1s linear; }
     .bar.hunger i{ background:linear-gradient(90deg,#f7b267,#f4845f); }
     .bar.happy i{ background:linear-gradient(90deg,#f9a8d4,#c4b5fd); }
     .bar.energy i{ background:linear-gradient(90deg,#7ec8e3,#9d7be0); }
@@ -391,6 +391,6 @@
   <div class="toast" id="toast"></div>
 
   <script src="/shared.js?v=26"></script>
-  <script type="module" src="/companion.js?v=1"></script>
+  <script type="module" src="/companion.js?v=3"></script>
 </body>
 </html>

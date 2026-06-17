@@ -45,7 +45,7 @@ function getDb(){
 /* ============================================================
    TUNABLES + STATIC DATA
 ============================================================ */
-const DECAY_PER_HOUR = { hunger:14, happy:10, energy:9, clean:8 };
+const DECAY_PER_HOUR = { hunger:8.3, happy:6, energy:5.4, clean:4.8 };
 const RUNAWAY_GRACE_HOURS = 48;
 const STAGES = [
   { key:"egg",   name:"Hatchling", minLevel:1,  emoji:"🥚" },
@@ -105,12 +105,21 @@ function pushLog(p, icon, text){
 /* ============================================================
    TIME PASSAGE — decay + neglect/runaway
    Computed from lastTick so the pet "lives" while nobody's online.
+
+   Stored stats are kept as floats internally so small per-second
+   decay isn't lost to rounding (the old bug: 14/hr ≈ 0.004%/s
+   rounded to 0 each tick, so bars looked frozen). The display
+   rounds for the % label but uses the float for the bar width, so
+   the bars visibly creep down in real time while you sit on the page.
 ============================================================ */
 function applyDecay(p){
   const now = Date.now();
   const hrs = (now - (p.lastTick||now)) / 3.6e6;
   if (hrs > 0 && !p.away){
-    for (const k in DECAY_PER_HOUR) p[k] = clamp(p[k] - DECAY_PER_HOUR[k]*hrs);
+    for (const k in DECAY_PER_HOUR){
+      const v = (typeof p[k]==="number" ? p[k] : 100) - DECAY_PER_HOUR[k]*hrs;
+      p[k] = Math.max(0, Math.min(100, v));   // keep as float, don't round here
+    }
     const avg = (p.hunger+p.happy+p.energy+p.clean)/4;
     if (avg < 12){
       if (!p.lowSince) p.lowSince = now;
@@ -485,12 +494,13 @@ function enterBond(id, withName, withUid){
   $("withBadge").textContent = withName ? ("🤝 Raised together with "+withName) : "";
   buildShop();
   watchPet(id);
-  tgStart(id);
+  // Show the widget + start the local ticker FIRST, so nothing below can
+  // prevent them. The togetherness sync is best-effort and must not block UI.
   $("tgWidget").classList.add("shown");
-  renderPresence();
-  // local decay ticker (visual cadence; authoritative decay also runs on each snapshot)
   if (window._cpTick) clearInterval(window._cpTick);
   window._cpTick = setInterval(()=>{ if(pet){ pet = applyDecay(pet); render(); } }, 1000);
+  try { tgStart(id); } catch(err){ console.error("tgStart failed:", err); }
+  renderPresence();
 }
 
 function leaveToGate(){
@@ -535,8 +545,12 @@ function moodText(p){
 }
 function setStat(label,val){
   const map={Hunger:["vHunger","bHunger"],Happy:["vHappy","bHappy"],Energy:["vEnergy","bEnergy"],Clean:["vClean","bClean"]};
-  const [v,b]=map[label]; $(v).textContent=val+"%"; const bar=$(b);
-  bar.style.width=val+"%"; bar.parentElement.classList.toggle("low", val<25);
+  const [v,b]=map[label];
+  const pct = Math.max(0, Math.min(100, val));
+  $(v).textContent = Math.round(pct)+"%";          // label: clean integer
+  const bar=$(b);
+  bar.style.width = pct.toFixed(2)+"%";             // bar: fractional, so it visibly creeps
+  bar.parentElement.classList.toggle("low", pct<25);
 }
 
 function render(){
