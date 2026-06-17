@@ -688,23 +688,68 @@ function bounce(){ const c=$("creature"); c.classList.remove("idle"); c.classLis
 
 function act(fn){ if(!pet||pet.away) return; fn(pet); render(); savePet(); }
 
-$("aFeed").onclick = ()=>{ act(p=>{
-  const f = bestFood(p);
-  if (!f.def){ p.inventory[f.id]--; }
-  p.hunger = clamp(p.hunger + f.restore); p.feedCount++; bumpCare(p);
-  gainXp(p,6); p.coins += 2; pop("🍓"); bounce();
-  pushLog(p,"🍓", myName+" fed "+p.name+" a "+f.nm.toLowerCase()+".");
-}); emitPulse("action","🍓","fed "+(pet?pet.name:"the pet")); markCaredToday(); };
-$("aPlay").onclick = ()=>{
-  if (pet && pet.energy<10){ toast(pet.name+" is too tired to play — let them rest."); return; }
-  act(p=>{ p.happy=clamp(p.happy+22); p.energy=clamp(p.energy-8); p.playCount++; bumpCare(p);
-    gainXp(p,7); p.coins+=3; pop("🪁"); bounce(); pushLog(p,"🪁", myName+" played with "+p.name+"."); });
-  emitPulse("action","🪁","played with "+(pet?pet.name:"the pet")); markCaredToday();
+/* ---------- anti-spam: cooldowns + need-based rewards ----------
+   You only earn XP/coins for actually meeting a need. Acting on an
+   already-satisfied stat does little and earns nothing, so mashing a
+   full pet is pointless. A short cooldown also stops rapid-fire taps. */
+const COOLDOWN_MS = 1500;
+const lastActionAt = { feed:0, play:0, sleep:0, clean:0 };
+
+function onCooldown(key){
+  const now = Date.now();
+  const left = COOLDOWN_MS - (now - (lastActionAt[key]||0));
+  if (left > 0) return true;
+  lastActionAt[key] = now;
+  return false;
+}
+// reward scales with how "needed" the action was: full stat -> ~0, empty -> full.
+function needFactor(statVal){ return Math.max(0, Math.min(1, (100 - statVal) / 100)); }
+function scaledXp(base, statVal){ return Math.round(base * needFactor(statVal)); }
+
+$("aFeed").onclick = ()=>{
+  if (!pet || pet.away) return;
+  if (pet.hunger >= 95){ toast(pet.name+" is full right now 🍓"); return; }
+  if (onCooldown("feed")){ return; }
+  const before = pet.hunger;
+  const f = bestFood(pet);
+  act(p=>{
+    if (!f.def){ p.inventory[f.id]--; }
+    p.hunger = clamp(p.hunger + f.restore); p.feedCount++; bumpCare(p);
+    const xp = scaledXp(6, before); gainXp(p, xp); p.coins += (xp>0?2:0);
+    pop("🍓"); bounce();
+    pushLog(p,"🍓", myName+" fed "+p.name+" a "+f.nm.toLowerCase()+".");
+  });
+  emitPulse("action","🍓","fed "+pet.name); markCaredToday();
 };
-$("aSleep").onclick = ()=>{ act(p=>{ p.energy=clamp(p.energy+30); bumpCare(p); gainXp(p,3); pop("💤");
-  pushLog(p,"💤", p.name+" took a cozy nap."); }); emitPulse("action","💤","put "+(pet?pet.name:"the pet")+" down for a nap"); markCaredToday(); };
-$("aClean").onclick = ()=>{ act(p=>{ p.clean=clamp(p.clean+34); bumpCare(p); gainXp(p,4); p.coins+=2; pop("🫧"); bounce();
-  pushLog(p,"🫧", myName+" gave "+p.name+" a bath."); }); emitPulse("action","🫧","bathed "+(pet?pet.name:"the pet")); markCaredToday(); };
+$("aPlay").onclick = ()=>{
+  if (!pet || pet.away) return;
+  if (pet.energy<10){ toast(pet.name+" is too tired to play — let them rest."); return; }
+  if (pet.happy >= 95){ toast(pet.name+" is having a great time already 🪁"); return; }
+  if (onCooldown("play")){ return; }
+  const before = pet.happy;
+  act(p=>{ p.happy=clamp(p.happy+22); p.energy=clamp(p.energy-8); p.playCount++; bumpCare(p);
+    const xp = scaledXp(7, before); gainXp(p, xp); p.coins += (xp>0?3:0);
+    pop("🪁"); bounce(); pushLog(p,"🪁", myName+" played with "+p.name+"."); });
+  emitPulse("action","🪁","played with "+pet.name); markCaredToday();
+};
+$("aSleep").onclick = ()=>{
+  if (!pet || pet.away) return;
+  if (pet.energy >= 95){ toast(pet.name+" is wide awake 💤"); return; }
+  if (onCooldown("sleep")){ return; }
+  const before = pet.energy;
+  act(p=>{ p.energy=clamp(p.energy+30); bumpCare(p); gainXp(p, scaledXp(3, before)); pop("💤");
+    pushLog(p,"💤", p.name+" took a cozy nap."); });
+  emitPulse("action","💤","put "+pet.name+" down for a nap"); markCaredToday();
+};
+$("aClean").onclick = ()=>{
+  if (!pet || pet.away) return;
+  if (pet.clean >= 95){ toast(pet.name+" is squeaky clean 🫧"); return; }
+  if (onCooldown("clean")){ return; }
+  const before = pet.clean;
+  act(p=>{ p.clean=clamp(p.clean+34); bumpCare(p); const xp=scaledXp(4, before); gainXp(p, xp); p.coins += (xp>0?2:0); pop("🫧"); bounce();
+    pushLog(p,"🫧", myName+" gave "+p.name+" a bath."); });
+  emitPulse("action","🫧","bathed "+pet.name); markCaredToday();
+};
 
 $("renameBtn").onclick = ()=>{
   if (!pet) return;
@@ -1031,10 +1076,18 @@ function renderLog(){
     cells[i].classList.add("lit"); setTimeout(()=>cells[i].classList.remove("lit"),200);
     input.push(i); const idx=input.length-1;
     if(input[idx]!==seq[idx]){
-      const reward=seq.length*4;
-      $("mgStatus").innerHTML="Oops — "+pet.name+" giggled. You reached round <b>"+seq.length+"</b>.";
-      act(p=>{ p.coins+=reward; p.happy=clamp(p.happy+seq.length*3); gainXp(p,seq.length*2);
-        pushLog(p,"🎲", myName+" played Memory Bloom — earned ✦"+reward+"."); });
+      const reached = seq.length;
+      // reward only really kicks in past round 1, so an instant fail isn't farmable
+      const reward = reached <= 1 ? 1 : reached*4;
+      $("mgStatus").innerHTML="Oops — "+pet.name+" giggled. You reached round <b>"+reached+"</b>.";
+      act(p=>{
+        p.coins+=reward;
+        // happiness from play still respects the "already happy" ceiling
+        const gain = Math.round(reached*3 * needFactor(p.happy));
+        p.happy=clamp(p.happy+gain);
+        gainXp(p, reached<=1 ? 0 : reached*2);
+        pushLog(p,"🎲", myName+" played Memory Bloom — earned ✦"+reward+".");
+      });
       seq=[]; return;
     }
     if(input.length===seq.length){ $("mgStatus").innerHTML="Nice! Next round…"; setTimeout(next,800); }
