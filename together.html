@@ -318,6 +318,7 @@
 
     let signedIn = false;
     let myFriends = {};          // uid -> true
+    let friendsLoaded = false;   // has watchFriends fired at least once?
     let friendProfiles = {};     // uid -> profile (name/avatar), lazily fetched
     let countSubs = {};          // roomId -> unsub
     let liveCounts = {};         // roomId -> n
@@ -364,7 +365,9 @@
       const box = $(boxId);
       const uids = Object.keys(myFriends);
       if (!uids.length) {
-        box.innerHTML = `<div class="friendsEmpty">No friends yet — add some from the chat panel, then you can invite them here. 🌸</div>`;
+        box.innerHTML = friendsLoaded
+          ? `<div class="friendsEmpty">No friends yet — add some from the chat panel (bottom-right), then you can invite them here. 🌸</div>`
+          : `<div class="friendsEmpty">Loading your friends…</div>`;
         return;
       }
       await Promise.all(uids.map(ensureFriendProfile));
@@ -631,19 +634,27 @@
     })();
 
     MFRooms.whenReady(() => {
-      let stopRooms = () => {}, stopInvites = () => {};
+      let stopRooms = () => {}, stopInvites = () => {}, stopFriends = () => {};
       MFAuth.onChange((user, profile) => {
         signedIn = !!user;
         $("signedOut").hidden = signedIn;
         $("createForm").style.opacity = signedIn ? "1" : ".55";
         $("createForm").style.pointerEvents = signedIn ? "" : "none";
 
+        // friends — keep ONE live subscription (onChange can fire several times
+        // as the session restores then the profile loads; without tearing the
+        // old one down we'd stack duplicate listeners). Whenever the friends
+        // list updates, refresh whichever friend picker is currently open.
+        try { stopFriends(); } catch(_) {}
         if (user && MFAuth.watchFriends) {
-          MFAuth.watchFriends(f => {
+          stopFriends = MFAuth.watchFriends(f => {
             myFriends = f || {};
-            if (selVis === "private") renderFriendPicker("friendPick", selInvites);
+            friendsLoaded = true;
+            if (!$("inviteField").hidden) renderFriendPicker("friendPick", selInvites);
+            if ($("manageModal").classList.contains("open") && !$("manageInviteField").hidden)
+              renderFriendPicker("manageFriendPick", manageInvites);
           });
-        } else { myFriends = {}; }
+        } else { myFriends = {}; friendsLoaded = false; }
 
         try { stopRooms(); } catch(_) {}
         stopRooms = MFRooms.watchVisible(rooms => { allRooms = rooms; renderRooms(); });
