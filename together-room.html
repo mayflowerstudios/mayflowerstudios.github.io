@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Together — Mayflower Studios</title>
-  <link rel="stylesheet" href="/style.css?v=26" />
+  <link rel="stylesheet" href="/style.css?v=29" />
 
   <style>
     .tWrap{ max-width:1100px; margin:0 auto; padding:22px; }
@@ -649,7 +649,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/shared.js?v=26"></script>
+  <script src="/shared.js?v=29"></script>
 
   <script>window._firefliesLoaded = true;</script>
   <script src="/fireflies.js"></script>
@@ -817,7 +817,10 @@
 
     // ---------- room entry ----------
     const params = new URLSearchParams(location.search);
-    const presetRoom = cleanName(params.get("room"));
+    // Registry ids are mixed-case; preserve them verbatim. Manual/legacy names
+    // typed into the gate still get lower-cased via cleanName().
+    function rawRoomId(s){ return (s||"").replace(/[.#$\[\]\/]/g,"").trim().slice(0,60); }
+    const presetRoom = rawRoomId(params.get("room"));
     if (presetRoom){ $("roomInput").value = presetRoom; }
 
     $("enterBtn").addEventListener("click", () => {
@@ -834,10 +837,36 @@
     });
 
     // auto-enter from a shared link, but only after everything below is defined
-    // and wrapped so a single error can't halt the rest of the script
+    // and wrapped so a single error can't halt the rest of the script. Routes
+    // through the unified room registry: a registry room must be a games room
+    // and we must be allowed in (public / friends / private+invite). Unknown
+    // ids fall back to the legacy "shared name" behaviour so old links work.
+    function gateAndEnter(room){
+      let tries = 0;
+      (function awaitRooms(){
+        if (window.MFRooms && MFRooms.whenReady){
+          MFRooms.whenReady(() => {
+            MFRooms.get(room).then((r) => {
+              if (!r){ enterRoom(room); return; }   // legacy / ad-hoc room name
+              if (r.type && r.type !== "games"){ location.href = MFRooms.urlFor(r); return; }
+              MFRooms.canEnter(r).then((access) => {
+                if (!access.ok){
+                  location.href = "together.html?denied=" + encodeURIComponent(access.reason) +
+                                  "&room=" + encodeURIComponent(room);
+                  return;
+                }
+                MFRooms.touch(room);
+                enterRoom(room);
+              });
+            }).catch(() => enterRoom(room));
+          });
+        } else if (++tries > 50){ enterRoom(room); }   // rooms.js never loaded — ad-hoc
+        else { setTimeout(awaitRooms, 100); }
+      })();
+    }
     window.addEventListener("DOMContentLoaded", () => {
       if (presetRoom && FIREBASE_READY){
-        try { enterRoom(presetRoom); }
+        try { gateAndEnter(presetRoom); }
         catch (err){ console.error("auto-enter failed:", err); }
       }
     });

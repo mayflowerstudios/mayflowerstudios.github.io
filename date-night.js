@@ -75,7 +75,10 @@ function refreshIdentity(){
 
 // ---------- room entry ----------
 const params = new URLSearchParams(location.search);
-const presetRoom = cleanName(params.get("room"));
+// Registry ids are mixed-case; keep them verbatim. Typed/legacy names still
+// pass through cleanName() below.
+function rawRoomId(s){ return (s||"").replace(/[.#$\[\]\/]/g,"").trim().slice(0,60); }
+const presetRoom = rawRoomId(params.get("room"));
 if (presetRoom) $("roomInput").value = presetRoom;
 
 $("enterBtn").addEventListener("click", () => {
@@ -115,8 +118,10 @@ waitForAuth(() => {
       // restore the normal gate if it was swapped for a sign-in prompt
       if (roomEntered){ /* already in a room; name updates handled in presence */ }
       if (ROOM){ set(P(`presence/${myId}/name`), displayName); }
-      // auto-enter from a shared link now that we're authed
-      if (presetRoom && !roomEntered){ try { enterRoom(presetRoom); } catch(err){ console.error(err); } }
+      // auto-enter from a shared link now that we're authed — but route through
+      // the unified registry so visibility/invites are enforced. Unknown ids
+      // fall back to the legacy shared-name behaviour.
+      if (presetRoom && !roomEntered){ try { gateAndEnter(presetRoom); } catch(err){ console.error(err); } }
     } else {
       showSignInGate();
     }
@@ -124,6 +129,29 @@ waitForAuth(() => {
 });
 
 let roomEntered = false;
+function gateAndEnter(room){
+  let tries = 0;
+  (function awaitRooms(){
+    if (window.MFRooms && MFRooms.whenReady){
+      MFRooms.whenReady(() => {
+        MFRooms.get(room).then((r) => {
+          if (!r){ enterRoom(room); return; }   // legacy / ad-hoc room name
+          if (r.type && r.type !== "date"){ location.href = MFRooms.urlFor(r); return; }
+          MFRooms.canEnter(r).then((access) => {
+            if (!access.ok){
+              location.href = "together.html?denied=" + encodeURIComponent(access.reason) +
+                              "&room=" + encodeURIComponent(room);
+              return;
+            }
+            MFRooms.touch(room);
+            enterRoom(room);
+          });
+        }).catch(() => enterRoom(room));
+      });
+    } else if (++tries > 50){ enterRoom(room); }   // rooms.js never loaded — ad-hoc
+    else { setTimeout(awaitRooms, 100); }
+  })();
+}
 function enterRoom(room){
   if (!FIREBASE_READY){ toast("Firebase not configured"); return; }
   if (!authOK){ promptSignIn(); return; }

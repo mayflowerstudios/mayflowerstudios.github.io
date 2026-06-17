@@ -4,41 +4,144 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Together — Mayflower Studios</title>
-  <meta name="description" content="A cozy little hub for doing things with someone — watch videos in sync, or play in a shared room with a canvas, question cards, and games." />
+  <meta name="description" content="One hub for being in the same moment as someone. Open a room — watch party, games, or date night — public, friends-only, or private, and invite your friends." />
   <meta property="og:title" content="Together — Mayflower Studios" />
-  <meta property="og:description" content="A cozy little hub for doing things with someone, in the same moment." />
+  <meta property="og:description" content="One hub for being in the same moment as someone. Watch party, games, or date night — your account, your friends." />
   <meta property="og:url" content="https://mayflowerstudios.net/together.html" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://mayflowerstudios.net/assets/og/together.png" />
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=2" />
-  <link rel="stylesheet" href="/style.css?v=26" />
+  <link rel="stylesheet" href="/style.css?v=29" />
 
   <style>
     .tg-hero { padding-top: 24px; }
-    .tg-hero .page-title em { display: inline; }
 
-    /* Doors */
-    .tg-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
-    @media (max-width: 940px) { .tg-grid { grid-template-columns: 1fr 1fr; } }
-    @media (max-width: 640px) { .tg-grid { grid-template-columns: 1fr; } }
+    .tg-cols { display:grid; grid-template-columns: 1.05fr .95fr; gap:22px; align-items:start; }
+    @media (max-width: 920px){ .tg-cols{ grid-template-columns:1fr; } }
 
-    .tg-card { display: flex; flex-direction: column; gap: 16px; padding: 32px 30px; min-height: 320px; }
-    .tg-card .tg-icon { font-size: 40px; line-height: 1; }
-    .tg-card h3 { font-size: 28px; }
-    .tg-card .tg-lead { font-size: 14.5px; color: var(--text-2); line-height: 1.7; flex: 1; }
-    .tg-feats { display: flex; flex-direction: column; gap: 8px; margin: 2px 0; }
-    .tg-feat { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--text-2); }
-    .tg-feat .tf { flex-shrink: 0; }
-    .tg-card .btn-pri, .tg-card .btn-violet { align-self: flex-start; }
-
-    .tg-note {
-      display: flex; gap: 12px; align-items: flex-start;
-      padding: 16px 18px; border-radius: var(--r-md);
-      border: 1px solid var(--border); background: rgba(255,255,255,.03);
+    .tg-panel{
+      border:1px solid var(--border); border-radius:var(--r-lg);
+      background:var(--glass-2); padding:24px; position:relative; overflow:hidden;
     }
-    .tg-note .tn { font-size: 18px; flex-shrink: 0; }
-    .tg-note p { font-size: 13px; color: var(--text-3); line-height: 1.65; }
+    .tg-panel h2{ font-size:21px; margin-bottom:4px; }
+    .tg-panel .lead{ font-size:13.5px; color:var(--text-2); line-height:1.6; margin-bottom:18px; }
+
+    .field{ margin-bottom:16px; }
+    .field > label{ display:block; font-size:13px; color:var(--text-2); margin-bottom:8px; font-weight:600; }
+
+    /* option cards (type + visibility) */
+    .optGrid{ display:grid; gap:9px; }
+    .optGrid.three{ grid-template-columns:1fr 1fr 1fr; }
+    @media (max-width: 480px){ .optGrid.three{ grid-template-columns:1fr; } }
+    .opt{
+      display:flex; flex-direction:column; gap:3px; cursor:pointer; user-select:none;
+      padding:13px 13px; border-radius:var(--r-md); outline:none; text-align:left;
+      border:1px solid var(--border); background:rgba(255,255,255,.025);
+      transition: background .14s var(--ease), border-color .14s var(--ease), transform .1s var(--ease);
+    }
+    .opt:hover{ background:rgba(255,255,255,.05); border-color:var(--border-2); }
+    .opt:focus-visible{ border-color:var(--violet); box-shadow:0 0 0 3px rgba(196,181,253,.18); }
+    .opt.active{ background:rgba(196,181,253,.14); border-color:rgba(196,181,253,.5); }
+    .opt .oIco{ font-size:22px; line-height:1; }
+    .opt .oName{ font-size:14.5px; font-weight:600; }
+    .opt .oDesc{ font-size:11.5px; color:var(--text-3); line-height:1.45; }
+    .opt.active .oDesc{ color:var(--text-2); }
+
+    .input{
+      width:100%; padding:12px 14px; border-radius:var(--r-md);
+      border:1px solid var(--border-2); background:rgba(0,0,0,.22);
+      color:inherit; font-size:15px; font-family:var(--font-b);
+    }
+    .input::placeholder{ color:var(--text-3); }
+    .input:focus{ outline:none; border-color:rgba(196,181,253,.5); }
+
+    .signedOut{
+      display:flex; gap:12px; align-items:flex-start; padding:14px 16px;
+      border-radius:var(--r-md); border:1px solid var(--border-2);
+      background:rgba(196,181,253,.07); font-size:13px; color:var(--text-2); line-height:1.6;
+      margin-bottom:16px;
+    }
+    .signedOut a{ color:var(--violet); font-weight:600; }
+
+    /* friend invite list (private) */
+    .inviteBox{ border:1px solid var(--border); border-radius:var(--r-md); background:rgba(0,0,0,.15); padding:8px; max-height:188px; overflow:auto; }
+    .friendRow{ display:flex; align-items:center; gap:10px; padding:8px 9px; border-radius:10px; cursor:pointer; transition:background .12s var(--ease); }
+    .friendRow:hover{ background:rgba(255,255,255,.05); }
+    .friendRow .fAv{ width:30px; height:30px; border-radius:50%; flex:0 0 auto; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:600; background:linear-gradient(135deg,var(--rose),var(--violet)); color:#0b1120; overflow:hidden; }
+    .friendRow .fAv img{ width:100%; height:100%; object-fit:cover; }
+    .friendRow .fName{ flex:1 1 auto; min-width:0; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .friendRow .fChk{ width:20px; height:20px; border-radius:6px; border:1.5px solid var(--border-2); flex:0 0 auto; display:flex; align-items:center; justify-content:center; font-size:12px; color:#0b1120; }
+    .friendRow.sel .fChk{ background:var(--violet); border-color:var(--violet); }
+    .friendsEmpty{ font-size:12.5px; color:var(--text-3); padding:14px 10px; text-align:center; line-height:1.5; }
+
+    .createBtn{ width:100%; justify-content:center; font-size:15px; padding:13px; }
+
+    /* room browser */
+    .browseHead{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
+    .browseHead h2{ margin:0; }
+    .filterRow{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+    .chip{
+      font-size:12px; padding:6px 12px; border-radius:999px; cursor:pointer;
+      border:1px solid var(--border-2); background:rgba(255,255,255,.04); color:var(--text-2);
+      transition: all .12s var(--ease);
+    }
+    .chip:hover{ color:var(--text); border-color:var(--violet); }
+    .chip.active{ background:rgba(196,181,253,.16); border-color:rgba(196,181,253,.5); color:var(--text); }
+
+    .roomList{ display:flex; flex-direction:column; gap:10px; min-height:80px; }
+    .roomCard{
+      display:flex; align-items:center; gap:12px; text-decoration:none; color:inherit;
+      position:relative; overflow:hidden; padding:13px 15px; border-radius:var(--r-md);
+      border:1px solid var(--border); background:rgba(255,255,255,.03);
+      transition: transform .12s var(--ease), background .12s var(--ease), border-color .12s var(--ease);
+    }
+    .roomCard:hover{ transform:translateY(-1px); background:rgba(255,255,255,.06); border-color:var(--border-2); }
+    .roomCard .rIcon{ font-size:22px; flex:0 0 auto; }
+    .roomCard .rMain{ flex:1 1 auto; min-width:0; }
+    .roomCard .rName{ font-size:15px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .roomCard .rMeta{ font-size:12px; color:var(--text-3); margin-top:3px; display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+    .rTag{ font-size:10.5px; padding:1px 8px; border-radius:999px; border:1px solid var(--border-2); }
+    .rTag.watch{ color:#fda4af; border-color:rgba(249,168,212,.3); }
+    .rTag.games{ color:var(--violet); border-color:rgba(196,181,253,.3); }
+    .rTag.date{ color:var(--gold); border-color:rgba(253,230,138,.3); }
+    .rTag.vis{ color:var(--text-2); }
+    .roomCard .rGo{ font-size:13px; color:var(--text-3); flex:0 0 auto; }
+    .roomCard .rBtn{
+      flex:0 0 auto; cursor:pointer; font-size:14px; line-height:1; padding:7px 9px; border-radius:10px; color:inherit;
+      border:1px solid var(--border-2); background:rgba(255,255,255,.04); transition: all .12s var(--ease);
+    }
+    .roomCard .rBtn:hover{ background:rgba(196,181,253,.18); }
+    .liveDot{ display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--emerald); box-shadow:0 0 0 0 rgba(110,231,183,.6); animation: livePulse 1.8s ease-out infinite; }
+    @keyframes livePulse{ 0%{box-shadow:0 0 0 0 rgba(110,231,183,.5);}70%{box-shadow:0 0 0 6px rgba(110,231,183,0);}100%{box-shadow:0 0 0 0 rgba(110,231,183,0);} }
+    .roomEmpty{ color:var(--text-3); font-size:14px; text-align:center; padding:28px 0; line-height:1.6; }
+
+    .joinByRow{ display:flex; gap:8px; margin-top:6px; }
+
+    /* invites inbox */
+    .inviteBanner{
+      display:flex; flex-direction:column; gap:10px; margin-bottom:22px;
+      border:1px solid rgba(253,230,138,.28); border-radius:var(--r-lg);
+      background:rgba(253,230,138,.06); padding:18px 20px;
+    }
+    .inviteBanner h3{ font-size:16px; display:flex; align-items:center; gap:8px; }
+    .inviteItem{ display:flex; align-items:center; gap:12px; padding:11px 13px; border-radius:var(--r-md); border:1px solid var(--border); background:rgba(255,255,255,.03); }
+    .inviteItem .iMain{ flex:1 1 auto; min-width:0; }
+    .inviteItem .iName{ font-size:14.5px; font-weight:600; }
+    .inviteItem .iMeta{ font-size:12px; color:var(--text-3); margin-top:2px; }
+    .inviteItem .iActs{ display:flex; gap:7px; flex:0 0 auto; }
+
+    /* modal (edit / invite-after) */
+    .modalBack{ position:fixed; inset:0; z-index:80; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(8,6,14,.62); backdrop-filter:blur(4px); }
+    .modalBack.open{ display:flex; }
+    .modal{ width:100%; max-width:420px; background:var(--bg-mid); border:1px solid var(--border-2); border-radius:var(--r-lg); padding:24px; box-shadow:0 24px 60px rgba(0,0,0,.55); max-height:86vh; overflow:auto; }
+    .modal h3{ font-size:19px; margin-bottom:4px; }
+    .modal p.mSub{ font-size:13px; color:var(--text-2); margin-bottom:16px; }
+    .modalBtns{ display:flex; gap:8px; margin-top:16px; }
+    .modalBtns .btn-pri, .modalBtns .btn-ghost{ flex:1; justify-content:center; }
+
+    .toast{ position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px); padding:11px 16px; border-radius:var(--r-md); background:var(--bg-mid); border:1px solid var(--border-2); box-shadow:0 12px 40px rgba(0,0,0,.5); opacity:0; pointer-events:none; transition:all .25s var(--ease); z-index:90; font-size:14px; }
+    .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
   </style>
 </head>
 <body data-nav="together">
@@ -51,90 +154,119 @@
       <!-- HERO -->
       <section class="page-hero tg-hero reveal">
         <div class="page-kicker">💞 Together</div>
-        <h1 class="page-title">Do something <em>together</em></h1>
+        <h1 class="page-title">Open a room, <em>together</em></h1>
         <p class="page-sub">
-          A little hub for being in the same moment as someone, even from far away.
-          Pick a door: <strong>watch something in sync</strong>, settle into a
-          <strong>cozy date night</strong>, or step into a <strong>shared room of games</strong>.
-          Everything updates live for everyone in the room.
+          One place for being in the same moment as someone. Make a room and pick what it's for —
+          a <strong>watch party</strong>, a <strong>games room</strong>, or a <strong>date night</strong> —
+          then choose who gets in: <strong>public</strong>, <strong>friends&nbsp;only</strong>, or
+          <strong>private</strong> with invites. It all runs on your account and your friends list.
         </p>
       </section>
 
-      <!-- THREE DOORS -->
-      <section class="sec reveal">
-        <div class="tg-grid">
-
-          <!-- Watch Together -->
-          <article class="card card-accent-top tg-card">
-            <div class="card-shine"></div>
-            <div class="tg-icon">📺</div>
-            <h3>Watch Together</h3>
-            <p class="tg-lead">Make a room and watch YouTube or videos perfectly in sync — pause, seek, and skip stays matched for everyone watching.</p>
-            <div class="tg-feats">
-              <div class="tg-feat"><span class="tf">▶</span><span>Synced playback across every screen</span></div>
-              <div class="tg-feat"><span class="tf">💬</span><span>Floating live chat as you watch</span></div>
-              <div class="tg-feat"><span class="tf">📋</span><span>Shared queue &amp; playlists with auto-advance</span></div>
-              <div class="tg-feat"><span class="tf">🔒</span><span>Public, locked, or hidden rooms</span></div>
-            </div>
-            <a href="/watch.html" class="btn-pri">Open the watch lobby →</a>
-          </article>
-
-          <!-- Date Night -->
-          <article class="card card-accent-top tg-card">
-            <div class="card-shine"></div>
-            <div class="tg-icon">🌙</div>
-            <h3>Date Night</h3>
-            <p class="tg-lead">A cozy space made for two. Set a shared scene, play music in sync, leave each other love notes, and keep a jar of reasons you love them.</p>
-            <div class="tg-feats">
-              <div class="tg-feat"><span class="tf">🕯️</span><span>Shared scene &amp; ambient sound</span></div>
-              <div class="tg-feat"><span class="tf">🎵</span><span>Listen to music together, in sync</span></div>
-              <div class="tg-feat"><span class="tf">💌</span><span>Love-notes wall that stays between dates</span></div>
-              <div class="tg-feat"><span class="tf">🫙</span><span>A “reasons I love you” jar to pull from</span></div>
-            </div>
-            <a href="/date-night.html" class="btn-pri">Open date night →</a>
-          </article>
-
-          <!-- Together room (games) -->
-          <article class="card card-accent-top tg-card">
-            <div class="card-shine"></div>
-            <div class="tg-icon">🎨</div>
-            <h3>Shared Room</h3>
-            <p class="tg-lead">Step into a private room and play in real time — draw together, trade question cards, or settle it with a quick game.</p>
-            <div class="tg-feats">
-              <div class="tg-feat"><span class="tf">🖌️</span><span>A canvas you both draw on, live</span></div>
-              <div class="tg-feat"><span class="tf">💬</span><span>Question cards — cute, deep, silly, or spicy</span></div>
-              <div class="tg-feat"><span class="tf">🎲</span><span>Tic-tac-toe, Connect Four, Hangman &amp; more</span></div>
-              <div class="tg-feat"><span class="tf">🔗</span><span>Just share a room name — no account needed</span></div>
-            </div>
-            <a href="/together-room.html" class="btn-violet">Open a shared room →</a>
-          </article>
-
-          <!-- Companion -->
-          <article class="card card-accent-top tg-card">
-            <div class="card-shine"></div>
-            <div class="tg-icon">🌱</div>
-            <h3>Companion</h3>
-            <p class="tg-lead">Raise a little creature together — feed it, play with it, and watch it grow over days and weeks. It keeps living whether you visit alone or together.</p>
-            <div class="tg-feats">
-              <div class="tg-feat"><span class="tf">🍓</span><span>Feed, play, rest &amp; bathe to keep it happy</span></div>
-              <div class="tg-feat"><span class="tf">🌟</span><span>Grows &amp; evolves over real days</span></div>
-              <div class="tg-feat"><span class="tf">🤝</span><span>Raise it solo or share one with a friend</span></div>
-              <div class="tg-feat"><span class="tf">🛍️</span><span>Earn coins for food, scenes &amp; cosmetics</span></div>
-            </div>
-            <a href="/companion.html" class="btn-pri">Meet your companion →</a>
-          </article>
-
+      <!-- INVITES INBOX (only shows when you have pending invites) -->
+      <section class="sec reveal" id="inviteSection" hidden>
+        <div class="inviteBanner">
+          <h3>💌 You're invited</h3>
+          <div id="inviteList"></div>
         </div>
       </section>
 
-      <!-- NOTE -->
       <section class="sec reveal">
-        <div class="tg-note">
-          <span class="tn">🌙</span>
-          <p>
-            Every room works the same friendly way: pick a name only you and your people would guess,
-            open it on each device, and you're in the same space. Nothing to install, nothing to sign up for.
-          </p>
+        <div class="tg-cols">
+
+          <!-- CREATE -->
+          <div class="tg-panel">
+            <h2>✨ Open a room</h2>
+            <p class="lead">Pick what you're doing, who can join, give it a name — and you're in.</p>
+
+            <div class="signedOut" id="signedOut" hidden>
+              <span>🔑</span>
+              <span>Rooms are tied to your account so your friends can find and join them.
+                <a href="/account.html?next=/together.html">Sign in or make an account →</a></span>
+            </div>
+
+            <div id="createForm">
+              <div class="field">
+                <label>What's it for?</label>
+                <div class="optGrid three" id="typePicker">
+                  <button class="opt active" data-type="watch" type="button">
+                    <span class="oIco">📺</span><span class="oName">Watch Party</span>
+                    <span class="oDesc">YouTube &amp; videos in perfect sync, with chat &amp; a queue.</span>
+                  </button>
+                  <button class="opt" data-type="games" type="button">
+                    <span class="oIco">🎲</span><span class="oName">Games Room</span>
+                    <span class="oDesc">Draw together, question cards, and quick games.</span>
+                  </button>
+                  <button class="opt" data-type="date" type="button">
+                    <span class="oIco">🌙</span><span class="oName">Date Night</span>
+                    <span class="oDesc">A cozy scene, synced music, and love notes.</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Who can join?</label>
+                <div class="optGrid three" id="visPicker">
+                  <button class="opt active" data-vis="public" type="button">
+                    <span class="oIco">🌐</span><span class="oName">Public</span>
+                    <span class="oDesc">Listed for everyone. Anyone can drop in.</span>
+                  </button>
+                  <button class="opt" data-vis="friends" type="button">
+                    <span class="oIco">💞</span><span class="oName">Friends only</span>
+                    <span class="oDesc">Only your friends see it &amp; can join.</span>
+                  </button>
+                  <button class="opt" data-vis="private" type="button">
+                    <span class="oIco">🔒</span><span class="oName">Private</span>
+                    <span class="oDesc">Hidden. Only people you invite get in.</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="roomName">Room name</label>
+                <input class="input" id="roomName" type="text" maxlength="48" placeholder="movie night 🌙" autocomplete="off" />
+              </div>
+
+              <!-- invite friends (private only) -->
+              <div class="field" id="inviteField" hidden>
+                <label>Invite friends</label>
+                <div class="inviteBox" id="friendPick">
+                  <div class="friendsEmpty">Loading your friends…</div>
+                </div>
+              </div>
+
+              <button class="btn-pri createBtn" id="createBtn">Open the room →</button>
+            </div>
+          </div>
+
+          <!-- BROWSE -->
+          <div class="tg-panel">
+            <div class="browseHead">
+              <h2>🛋️ Rooms you can join</h2>
+              <span class="chip" id="liveBadge" hidden></span>
+            </div>
+            <p class="lead">Public rooms, your friends' rooms, and ones you've been invited to.</p>
+
+            <div class="filterRow" id="filterRow">
+              <span class="chip active" data-filter="all">All</span>
+              <span class="chip" data-filter="watch">📺 Watch</span>
+              <span class="chip" data-filter="games">🎲 Games</span>
+              <span class="chip" data-filter="date">🌙 Date</span>
+            </div>
+
+            <div class="roomList" id="roomList">
+              <p class="roomEmpty" id="roomEmpty">No rooms here yet — open one to get started! 🌸</p>
+            </div>
+
+            <div class="divider" style="height:1px;background:var(--border);margin:18px 0;"></div>
+
+            <label style="display:block;font-size:13px;color:var(--text-2);margin-bottom:8px;font-weight:600;">🔗 Have a link or room code?</label>
+            <div class="joinByRow">
+              <input class="input" id="joinCode" type="text" placeholder="paste a room link or code" autocomplete="off" />
+              <button class="btn-violet sm" id="joinBtn" style="white-space:nowrap;">Join</button>
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -143,6 +275,384 @@
     <div id="site-footer"></div>
   </div><!-- /site-page -->
 
-  <script src="/shared.js?v=26"></script>
+  <!-- edit/manage room modal (owner) -->
+  <div class="modalBack" id="manageModal">
+    <div class="modal">
+      <h3>✏️ Manage room</h3>
+      <p class="mSub" id="manageSub">Change who can join, invite friends, or close the room.</p>
+
+      <div class="field">
+        <label>Who can join?</label>
+        <div class="optGrid three" id="manageVis">
+          <button class="opt" data-vis="public" type="button"><span class="oIco">🌐</span><span class="oName">Public</span></button>
+          <button class="opt" data-vis="friends" type="button"><span class="oIco">💞</span><span class="oName">Friends</span></button>
+          <button class="opt" data-vis="private" type="button"><span class="oIco">🔒</span><span class="oName">Private</span></button>
+        </div>
+      </div>
+
+      <div class="field" id="manageInviteField">
+        <label>Invite friends</label>
+        <div class="inviteBox" id="manageFriendPick"><div class="friendsEmpty">Loading…</div></div>
+      </div>
+
+      <div class="modalBtns">
+        <button class="btn-pri" id="manageSave">Save</button>
+        <button class="btn-ghost" id="manageClose">Close room</button>
+      </div>
+      <div class="modalBtns" style="margin-top:8px;">
+        <button class="btn-ghost" id="manageCancel" style="flex:1;justify-content:center;">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="/shared.js?v=29"></script>
+
+  <script type="module">
+    const $ = (id) => document.getElementById(id);
+    const toastEl = $("toast");
+    let toastTimer;
+    function toast(msg){ toastEl.textContent = msg; toastEl.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(()=>toastEl.classList.remove("show"), 2600); }
+    function esc(s){ return String(s||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    let signedIn = false;
+    let myFriends = {};          // uid -> true
+    let friendProfiles = {};     // uid -> profile (name/avatar), lazily fetched
+    let countSubs = {};          // roomId -> unsub
+    let liveCounts = {};         // roomId -> n
+    let allRooms = [];           // last visible snapshot
+    let typeFilter = "all";
+
+    // ---------- selection state ----------
+    let selType = "watch";
+    let selVis = "public";
+    let selInvites = new Set();  // uids chosen for a private room
+
+    function wirePicker(containerId, attr, onPick) {
+      const c = $(containerId);
+      c.querySelectorAll(".opt").forEach(opt => {
+        opt.addEventListener("click", () => {
+          c.querySelectorAll(".opt").forEach(o => o.classList.remove("active"));
+          opt.classList.add("active");
+          onPick(opt.dataset[attr]);
+        });
+      });
+    }
+    wirePicker("typePicker", "type", v => { selType = v; });
+    wirePicker("visPicker", "vis", v => {
+      selVis = v;
+      $("inviteField").hidden = (v !== "private");
+      if (v === "private") renderFriendPicker("friendPick", selInvites);
+    });
+
+    // ---------- friends ----------
+    async function ensureFriendProfile(uid) {
+      if (friendProfiles[uid]) return friendProfiles[uid];
+      try { friendProfiles[uid] = (await MFAuth.getProfile(uid)) || {}; }
+      catch (_) { friendProfiles[uid] = {}; }
+      return friendProfiles[uid];
+    }
+
+    function avatarHTML(profile) {
+      const av = MFAuth.avatarFor(profile || {}, (profile && profile.displayName) || "?");
+      if (av.kind === "photo") return `<img src="${esc(av.value)}" alt="">`;
+      return esc(av.value);
+    }
+
+    async function renderFriendPicker(boxId, selectedSet) {
+      const box = $(boxId);
+      const uids = Object.keys(myFriends);
+      if (!uids.length) {
+        box.innerHTML = `<div class="friendsEmpty">No friends yet — add some from the chat panel, then you can invite them here. 🌸</div>`;
+        return;
+      }
+      await Promise.all(uids.map(ensureFriendProfile));
+      box.innerHTML = "";
+      uids.forEach(uid => {
+        const p = friendProfiles[uid] || {};
+        const name = p.displayName || (p.username ? "@"+p.username : "friend");
+        const row = document.createElement("div");
+        row.className = "friendRow" + (selectedSet.has(uid) ? " sel" : "");
+        row.innerHTML = `<span class="fAv">${avatarHTML(p)}</span><span class="fName">${esc(name)}</span><span class="fChk">${selectedSet.has(uid)?"✓":""}</span>`;
+        row.addEventListener("click", () => {
+          if (selectedSet.has(uid)) selectedSet.delete(uid); else selectedSet.add(uid);
+          row.classList.toggle("sel", selectedSet.has(uid));
+          row.querySelector(".fChk").textContent = selectedSet.has(uid) ? "✓" : "";
+        });
+        box.appendChild(row);
+      });
+    }
+
+    // ---------- create ----------
+    $("createBtn").addEventListener("click", async () => {
+      if (!signedIn) { toast("Sign in to open a room"); setTimeout(()=>location.href="/account.html?next=/together.html", 800); return; }
+      const name = $("roomName").value.trim();
+      try {
+        const room = await MFRooms.create({
+          type: selType, vis: selVis, name,
+          invites: selVis === "private" ? Array.from(selInvites) : [],
+        });
+        location.href = MFRooms.urlFor(room);
+      } catch (err) {
+        console.error(err);
+        toast(err && err.message ? err.message : "Couldn't open the room");
+      }
+    });
+    $("roomName").addEventListener("keydown", e => { if (e.key === "Enter") $("createBtn").click(); });
+
+    // ---------- join by link/code ----------
+    function extractId(raw) {
+      const s = (raw||"").trim();
+      if (!s) return null;
+      const m = s.match(/[?&]room=([^&\s]+)/);
+      if (m) return decodeURIComponent(m[1]);
+      return s.replace(/^.*\//, "");   // bare code
+    }
+    $("joinBtn").addEventListener("click", async () => {
+      const id = extractId($("joinCode").value);
+      if (!id) { toast("Paste a room link or code"); return; }
+      const room = await MFRooms.get(id);
+      if (!room) { toast("No room found with that code"); return; }
+      const access = await MFRooms.canEnter(room);
+      if (!access.ok) {
+        if (access.reason === "signin") { toast("Sign in to join this room"); return; }
+        if (access.reason === "notinvited") { toast("That's a private room — ask the owner for an invite"); return; }
+        if (access.reason === "notfriend") { toast("That's a friends-only room — you'll need to be friends with the owner"); return; }
+        toast("You can't join that room"); return;
+      }
+      location.href = MFRooms.urlFor(room);
+    });
+    $("joinCode").addEventListener("keydown", e => { if (e.key === "Enter") $("joinBtn").click(); });
+
+    // ---------- filters ----------
+    $("filterRow").querySelectorAll(".chip").forEach(chip => {
+      chip.addEventListener("click", () => {
+        $("filterRow").querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+        chip.classList.add("active");
+        typeFilter = chip.dataset.filter;
+        renderRooms();
+      });
+    });
+
+    // ---------- room list ----------
+    function renderRooms() {
+      const list = $("roomList");
+      let empty = $("roomEmpty");
+      if (!empty) { empty = document.createElement("p"); empty.className = "roomEmpty"; empty.id = "roomEmpty"; }
+
+      const rooms = allRooms.filter(r => typeFilter === "all" || r.type === typeFilter);
+
+      // keep presence subscriptions in sync with what's listed
+      const liveIds = new Set(rooms.map(r => r.id));
+      Object.keys(countSubs).forEach(id => { if (!liveIds.has(id)) { try{countSubs[id]();}catch(_){} delete countSubs[id]; delete liveCounts[id]; } });
+      rooms.forEach(r => { if (!countSubs[r.id]) countSubs[r.id] = MFRooms.watchCount(r, (n) => { liveCounts[r.id] = n; updateCountsOnly(); }); });
+
+      const myUid = MFAuth.uid;
+      const frag = document.createDocumentFragment();
+      let rendered = 0;
+      for (const r of rooms) {
+        const info = MFRooms.typeInfo(r.type);
+        const visInfo = MFRooms.visInfo(r.vis);
+        const mine = myUid && r.owner === myUid;
+        const count = liveCounts[r.id] || 0;
+
+        const a = document.createElement("a");
+        a.className = "roomCard";
+        a.href = MFRooms.urlFor(r);
+        a.dataset.id = r.id;
+        a.innerHTML =
+          `<span class="rIcon">${info.emoji}</span>
+           <span class="rMain">
+             <span class="rName">${esc(r.name)}</span>
+             <span class="rMeta">
+               <span class="rTag ${r.type}">${esc(info.label)}</span>
+               <span class="rTag vis">${visInfo.emoji} ${esc(visInfo.label)}</span>
+               <span class="rCount">${count > 0 ? `<span class="liveDot"></span> ${count} here` : (mine ? "your room" : "by "+esc(r.ownerName||"someone"))}</span>
+             </span>
+           </span>
+           ${mine ? `<button class="rBtn" data-act="manage" data-id="${esc(r.id)}" title="Manage room">⚙️</button>` : ""}
+           <button class="rBtn" data-act="copy" data-id="${esc(r.id)}" title="Copy invite link">🔗</button>
+           <span class="rGo">Join →</span>`;
+        frag.appendChild(a);
+        rendered++;
+      }
+
+      list.innerHTML = "";
+      if (!rendered) {
+        empty.textContent = signedIn
+          ? "No rooms here yet — open one to get started! 🌸"
+          : "Sign in to see your friends' rooms — or open a public room above. 🌸";
+        list.appendChild(empty);
+      } else {
+        list.appendChild(frag);
+      }
+
+      list.querySelectorAll('.rBtn[data-act="copy"]').forEach(b =>
+        b.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); copyLink(b.dataset.id); }));
+      list.querySelectorAll('.rBtn[data-act="manage"]').forEach(b =>
+        b.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); openManage(b.dataset.id); }));
+
+      updateLiveBadge();
+    }
+
+    // Light update: just refresh counts + badge without rebuilding the DOM.
+    function updateCountsOnly() {
+      document.querySelectorAll("#roomList .roomCard").forEach(card => {
+        const r = allRooms.find(x => x.id === card.dataset.id);
+        if (!r) return;
+        const mine = MFAuth.uid && r.owner === MFAuth.uid;
+        const count = liveCounts[r.id] || 0;
+        const el = card.querySelector(".rCount");
+        if (el) el.innerHTML = count > 0 ? `<span class="liveDot"></span> ${count} here` : (mine ? "your room" : "by "+esc(r.ownerName||"someone"));
+      });
+      updateLiveBadge();
+    }
+    function updateLiveBadge() {
+      const total = Object.values(liveCounts).reduce((s,n)=>s+(n||0),0);
+      const badge = $("liveBadge");
+      if (total > 0) { badge.hidden = false; badge.innerHTML = `<span class="liveDot"></span> ${total} online`; }
+      else badge.hidden = true;
+    }
+
+    async function copyLink(id) {
+      const room = allRooms.find(r => r.id === id) || await MFRooms.get(id);
+      if (!room) return;
+      const url = MFRooms.urlFor(room);
+      try { await navigator.clipboard.writeText(url); toast("Invite link copied 🔗"); }
+      catch (_) {
+        const ta = document.createElement("textarea"); ta.value = url; ta.style.position="fixed"; ta.style.opacity="0";
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand("copy"); toast("Invite link copied 🔗"); } catch(_) { toast(url); }
+        document.body.removeChild(ta);
+      }
+    }
+
+    // ---------- manage modal ----------
+    let manageId = null, manageVisSel = "public";
+    const manageInvites = new Set();
+    function wireManageVis() {
+      $("manageVis").querySelectorAll(".opt").forEach(opt => {
+        opt.addEventListener("click", () => {
+          $("manageVis").querySelectorAll(".opt").forEach(o => o.classList.remove("active"));
+          opt.classList.add("active");
+          manageVisSel = opt.dataset.vis;
+          $("manageInviteField").hidden = (manageVisSel !== "private");
+        });
+      });
+    }
+    wireManageVis();
+
+    async function openManage(id) {
+      const room = await MFRooms.get(id);
+      if (!room) { toast("Room not found"); return; }
+      manageId = id;
+      manageVisSel = room.vis;
+      $("manageSub").textContent = `${MFRooms.typeInfo(room.type).emoji} ${room.name}`;
+      $("manageVis").querySelectorAll(".opt").forEach(o => o.classList.toggle("active", o.dataset.vis === room.vis));
+      $("manageInviteField").hidden = (room.vis !== "private");
+      manageInvites.clear();
+      Object.keys(room.invites || {}).forEach(u => manageInvites.add(u));
+      renderFriendPicker("manageFriendPick", manageInvites);
+      $("manageModal").classList.add("open");
+    }
+    $("manageCancel").addEventListener("click", () => $("manageModal").classList.remove("open"));
+    $("manageModal").addEventListener("click", e => { if (e.target === $("manageModal")) $("manageModal").classList.remove("open"); });
+
+    $("manageSave").addEventListener("click", async () => {
+      if (!manageId) return;
+      try {
+        const room = await MFRooms.get(manageId);
+        await MFRooms.update(manageId, { vis: manageVisSel });
+        if (manageVisSel === "private") {
+          const current = new Set(Object.keys(room.invites || {}));
+          for (const uid of manageInvites) if (!current.has(uid)) await MFRooms.invite(manageId, uid);
+          for (const uid of current) if (!manageInvites.has(uid)) await MFRooms.cancelInvite(manageId, uid);
+        }
+        toast("Saved ✓");
+        $("manageModal").classList.remove("open");
+      } catch (err) { console.error(err); toast(err.message || "Couldn't save"); }
+    });
+
+    $("manageClose").addEventListener("click", async () => {
+      if (!manageId) return;
+      if (!confirm("Close this room? Everyone in it will be sent back to the hub.")) return;
+      try { await MFRooms.remove(manageId); toast("Room closed"); $("manageModal").classList.remove("open"); }
+      catch (err) { toast(err.message || "Couldn't close it"); }
+    });
+
+    // ---------- invites inbox ----------
+    function renderInvites(invites) {
+      const ids = Object.keys(invites || {});
+      const sec = $("inviteSection"), list = $("inviteList");
+      if (!ids.length) { sec.hidden = true; list.innerHTML = ""; return; }
+      sec.hidden = false;
+      list.innerHTML = "";
+      ids.sort((a,b) => (invites[b].t||0) - (invites[a].t||0)).forEach(id => {
+        const inv = invites[id];
+        const info = MFRooms.typeInfo(inv.type);
+        const row = document.createElement("div");
+        row.className = "inviteItem";
+        row.innerHTML =
+          `<span class="rIcon" style="font-size:22px;">${info.emoji}</span>
+           <span class="iMain">
+             <span class="iName">${esc(inv.name)}</span>
+             <span class="iMeta">${esc(info.label)} · from ${esc(inv.fromName||"someone")}</span>
+           </span>
+           <span class="iActs">
+             <button class="btn-pri sm" data-act="accept" data-id="${esc(id)}">Join</button>
+             <button class="btn-ghost sm" data-act="dismiss" data-id="${esc(id)}">Dismiss</button>
+           </span>`;
+        list.appendChild(row);
+      });
+      list.querySelectorAll('[data-act="accept"]').forEach(b => b.addEventListener("click", async () => {
+        const room = await MFRooms.get(b.dataset.id);
+        if (!room) { toast("That room's no longer open"); MFRooms.clearMyInvite(b.dataset.id); return; }
+        location.href = MFRooms.urlFor(room);
+      }));
+      list.querySelectorAll('[data-act="dismiss"]').forEach(b => b.addEventListener("click", () => MFRooms.clearMyInvite(b.dataset.id)));
+    }
+
+    // ---------- boot ----------
+    // If we were bounced here from a room we couldn't enter, explain why.
+    (function explainBounce(){
+      const p = new URLSearchParams(location.search);
+      const why = p.get("denied");
+      if (!why) return;
+      const msg = {
+        missing:    "That room isn't open anymore 🌙",
+        signin:     "Sign in to join that room",
+        notinvited: "That's a private room — ask the owner for an invite 🔒",
+        notfriend:  "That's a friends-only room — you'll need to be friends with the owner 💞",
+      }[why] || "You couldn't join that room";
+      setTimeout(() => toast(msg), 400);
+      const u = new URL(location.href); u.searchParams.delete("denied"); u.searchParams.delete("room");
+      history.replaceState(null, "", u);
+    })();
+
+    MFRooms.whenReady(() => {
+      let stopRooms = () => {}, stopInvites = () => {};
+      MFAuth.onChange((user, profile) => {
+        signedIn = !!user;
+        $("signedOut").hidden = signedIn;
+        $("createForm").style.opacity = signedIn ? "1" : ".55";
+        $("createForm").style.pointerEvents = signedIn ? "" : "none";
+
+        if (user && MFAuth.watchFriends) {
+          MFAuth.watchFriends(f => {
+            myFriends = f || {};
+            if (selVis === "private") renderFriendPicker("friendPick", selInvites);
+          });
+        } else { myFriends = {}; }
+
+        try { stopRooms(); } catch(_) {}
+        stopRooms = MFRooms.watchVisible(rooms => { allRooms = rooms; renderRooms(); });
+
+        try { stopInvites(); } catch(_) {}
+        if (user) stopInvites = MFRooms.watchMyInvites(renderInvites);
+        else renderInvites({});
+      });
+    });
+  </script>
 </body>
 </html>

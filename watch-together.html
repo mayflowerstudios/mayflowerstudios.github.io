@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Watch Together — Mayflower Studios</title>
-  <link rel="stylesheet" href="/style.css?v=26" />
+  <link rel="stylesheet" href="/style.css?v=29" />
 
   <style>
     /* Ensure padding is included in element width so nothing overflows the
@@ -454,7 +454,7 @@
             </div>
 
             <div class="roomBar">
-              <a class="pillStat lobbyLink" href="watch.html" title="Back to the lobby">🏠 Lobby</a>
+              <a class="pillStat lobbyLink" href="together.html" title="Back to Together">🏠 Together</a>
               <button class="pillStat lobbyLink" id="copyRoomBtn" title="Copy room link">🔗 Copy link</button>
               <span class="pillStat"><span class="dot" id="connDot"></span><span id="connText">Connecting…</span></span>
               <span class="pillStat" id="roomStat">Room: <strong id="roomName" style="margin-left:4px">cozy</strong></span>
@@ -613,7 +613,7 @@
             <div class="panel">
               <h2>Sharing this room</h2>
               <p class="sub" style="font-size:14px">
-                Rooms are made over in the <a href="watch.html">lobby</a> — give it a name, pick public or private, and you're in.
+                Rooms are made over in the <a href="together.html">Together hub</a> — give it a name, pick who can join, and you're in.
               </p>
               <p class="tiny">
                 Tip: the <strong>Copy room link</strong> button copies this room's link so you can send it to everyone you want to watch with.
@@ -630,7 +630,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/shared.js?v=26"></script>
+  <script src="/shared.js?v=29"></script>
 
   <script src="fireflies.js"></script>
 
@@ -721,7 +721,10 @@
 
     // ---- Room ----
     const params = new URLSearchParams(location.search);
-    const ROOM = (params.get("room") || "cozy").toLowerCase().replace(/[.#$\[\]\/]/g, "").slice(0, 40) || "cozy";
+    // Room ids from the unified registry are mixed-case + up to ~20 chars (e.g.
+    // "r<base36ts><rand>"). Keep them verbatim; only strip path-unsafe chars.
+    // Legacy/manual names still work (lower-cased below in the gate fallback).
+    const ROOM = (params.get("room") || "cozy").replace(/[.#$\[\]\/]/g, "").slice(0, 60) || "cozy";
     roomNameEl.textContent = ROOM;
 
     // ---- helpers ----
@@ -1940,28 +1943,48 @@
         db = getDatabase(app);
         try { storage = getStorage(app); } catch (_) { storage = null; }
 
-        // Room gate: a room only exists if it was made in the lobby's create
-        // panel. If there's no lobby entry, bounce back to the lobby so the
-        // visitor can create it. Any room carrying a password (locked, or a
-        // password-protected hidden/legacy room) requires the session-held one.
-        get(ref(db, `lobby/${ROOM}`)).then((snap) => {
-          const entry = snap.val();
-          if (!entry) {
-            window.location.href = "watch.html?missing=" + encodeURIComponent(ROOM);
-            return;
-          }
-          if (entry.pass) {
-            const held = sessionStorage.getItem("wt_pass_" + ROOM);
-            if (!held || held !== entry.pass) {
-              window.location.href = "watch.html?join=" + encodeURIComponent(ROOM);
+        // Room gate (unified): the room must exist in the rooms registry and we
+        // must be allowed in per its visibility (public / friends / private).
+        // Falls back to the legacy lobby/ entry for rooms made before the
+        // overhaul so old links keep working.
+        function bounce(reason) {
+          window.location.href = "together.html?denied=" + encodeURIComponent(reason) +
+                                 "&room=" + encodeURIComponent(ROOM);
+        }
+        function legacyGate() {
+          get(ref(db, `lobby/${ROOM}`)).then((snap) => {
+            const entry = snap.val();
+            if (!entry) { bounce("missing"); return; }
+            if (entry.pass) {
+              const held = sessionStorage.getItem("wt_pass_" + ROOM);
+              if (!held || held !== entry.pass) { window.location.href = "watch.html?join=" + encodeURIComponent(ROOM); return; }
+            }
+            connectToRoom();
+          }).catch((err) => { console.error(err); setConn("off", "Connection failed"); });
+        }
+        function unifiedGate() {
+          MFRooms.get(ROOM).then((room) => {
+            if (!room) { legacyGate(); return; }   // maybe a legacy lobby room
+            if (room.type && room.type !== "watch") {
+              // wrong page for this room type — send to the right one
+              window.location.href = MFRooms.urlFor(room);
               return;
             }
-          }
-          connectToRoom();
-        }).catch((err) => {
-          console.error(err);
-          setConn("off", "Connection failed");
-        });
+            MFRooms.canEnter(room).then((access) => {
+              if (!access.ok) { bounce(access.reason); return; }
+              MFRooms.touch(ROOM);
+              connectToRoom();
+            });
+          }).catch((err) => { console.error(err); legacyGate(); });
+        }
+        // rooms.js is injected by shared.js asynchronously, so it may not be on
+        // window yet. Poll briefly; only fall back to the legacy gate if it
+        // truly never arrives.
+        (function awaitRooms(tries) {
+          if (window.MFRooms && MFRooms.whenReady) { MFRooms.whenReady(unifiedGate); return; }
+          if (tries > 50) { legacyGate(); return; }   // ~5s ceiling
+          setTimeout(() => awaitRooms(tries + 1), 100);
+        })(0);
       } catch (err) {
         console.error(err);
         setConn("off", "Connection failed");
@@ -2120,6 +2143,7 @@
       const now = Date.now();
       if (now - lastTouch < 7000) return;   // throttle
       lastTouch = now;
+      try { set(ref(db, `rooms/${ROOM}/lastActive`), now); } catch (_) {}
       try { set(ref(db, `lobby/${ROOM}/lastActive`), now); } catch (_) {}
     }
 

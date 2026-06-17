@@ -106,6 +106,7 @@
       mods = { appMod, authMod, dbMod, app, auth, db };
       MFAuth.db = db; // expose shared db so chat.js etc. reuse one connection
       MFAuth._app = app; // expose app so chat.js can init Storage on the same instance
+      MFAuth._dbmod = dbMod; // expose RTDB module fns (ref/get/set/update/onValue/...) for rooms.js etc.
 
       // ---- profile helpers ----
       async function loadProfile(uid) {
