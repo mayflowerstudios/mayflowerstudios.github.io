@@ -29,6 +29,11 @@
   try { muted = localStorage.getItem("mf_chat_muted") === "1"; } catch (_) {}
   let audioCtx = null;
   let myFriends = {};           // uid -> {t}, kept current for DM watchers
+  // DM header status + typing indicator state
+  let headStatusUnsub = null, headTypingUnsub = null;
+  let lastStatus = null, peerTyping = false;
+  // outgoing typing throttle
+  let typingActive = false, typingStopTimer = null, lastTypingPing = 0;
 
   function esc(s) {
     return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
@@ -109,6 +114,7 @@
           <button class="mf-ct" data-ctab="dm">💌 Friends</button>
         </div>
         <div class="mf-chat-headtools">
+          <button class="mf-tr-btn" id="mfInvisBtn" title="Appear offline">🟢</button>
           <button class="mf-tr-btn" id="mfMuteBtn" title="Mute message sounds">🔔</button>
           <button class="mf-tr-btn" id="mfTrBtn" title="Translate messages">🌐</button>
           <select class="mf-tr-lang" id="mfTrLang" hidden></select>
@@ -186,6 +192,25 @@
       if (!muted) { unlockAudio(); playChime(); }
     });
     updateMuteUI();
+
+    // appear-offline toggle (per-device privacy choice)
+    const invisBtn = panel.querySelector("#mfInvisBtn");
+    if (invisBtn) {
+      function updateInvisUI() {
+        const off = MFAuth.getAppearOffline ? MFAuth.getAppearOffline() : false;
+        invisBtn.textContent = off ? "⚫" : "🟢";
+        invisBtn.title = off ? "You appear offline — tap to go online" : "Appear online — tap to appear offline";
+        invisBtn.classList.toggle("on", !off);
+      }
+      invisBtn.addEventListener("click", () => {
+        if (!MFAuth.setAppearOffline) return;
+        const now = MFAuth.getAppearOffline();
+        MFAuth.setAppearOffline(!now);
+        updateInvisUI();
+        toast(!now ? "You now appear offline 👻" : "You're back online 🟢");
+      });
+      updateInvisUI();
+    }
   }
 
   // ---- DM chime (a soft two-note ping; synthesized, no audio file) ----
@@ -282,6 +307,12 @@
     const foot = document.getElementById("mfChatFoot");
     if (!body) return;
 
+    // tear down DM header watchers + stop broadcasting typing; they re-arm below
+    stopTyping();
+    if (headStatusUnsub) { try { headStatusUnsub(); } catch (_) {} headStatusUnsub = null; }
+    if (headTypingUnsub) { try { headTypingUnsub(); } catch (_) {} headTypingUnsub = null; }
+    lastStatus = null; peerTyping = false;
+
     if (!me) {
       body.innerHTML = `<div class="mf-chat-empty">
         <div style="font-size:30px">💬</div>
@@ -355,11 +386,41 @@
       mods.push(chatNode(), { uid: me, name: myName || "someone", text, t: Date.now() });
       afterSend();
       input.value = "";
+      stopTyping();
     };
     send.addEventListener("click", go);
     input.addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+    // typing indicator (DM only) — ping on input, throttled; auto-stop when idle
+    if (kind === "dm") {
+      input.addEventListener("input", () => {
+        if (input.value.trim()) pingTyping(); else stopTyping();
+      });
+      input.addEventListener("blur", stopTyping);
+    }
     wirePickers(input);
     setTimeout(() => input.focus(), 50);
+  }
+
+  // Broadcast "I'm typing" to the current DM peer, throttled to ~1 write/2.5s,
+  // and schedule an auto-stop ~3.5s after the last keystroke.
+  function pingTyping() {
+    if (view !== "dm" || !dmWith || !MFAuth.user || !MFAuth.setTyping) return;
+    const pk = pairKey(MFAuth.user.uid, dmWith);
+    const now = Date.now();
+    if (!typingActive || now - lastTypingPing > 2500) {
+      MFAuth.setTyping(pk, true);
+      typingActive = true; lastTypingPing = now;
+    }
+    if (typingStopTimer) clearTimeout(typingStopTimer);
+    typingStopTimer = setTimeout(stopTyping, 3500);
+  }
+  function stopTyping() {
+    if (typingStopTimer) { clearTimeout(typingStopTimer); typingStopTimer = null; }
+    if (!typingActive) return;
+    typingActive = false;
+    if (dmWith && MFAuth.user && MFAuth.setTyping) {
+      MFAuth.setTyping(pairKey(MFAuth.user.uid, dmWith), false);
+    }
   }
 
   // Push a media (image/GIF) message. Encoded into the `text` field with an
@@ -930,13 +991,58 @@
       const a = MFAuth.avatarFor(u, name);
       const avInner = a.kind === "photo" ? `<img src="${esc(a.value)}">` : esc(a.value);
       head.innerHTML = `<button class="mf-dm-back" id="mfDmBack">‹</button>
-        <span class="mf-dm-av sm" id="mfDmHeadAv">${avInner}</span>
-        <span class="mf-dm-headname" id="mfDmHeadName">${esc(name)}</span>`;
+        <span class="mf-dm-av sm" id="mfDmHeadAv">${avInner}<i class="mf-dm-dot" id="mfHeadDot"></i></span>
+        <span class="mf-dm-headwrap">
+          <span class="mf-dm-headname" id="mfDmHeadName">${esc(name)}</span>
+          <span class="mf-dm-headstatus" id="mfHeadStatus"></span>
+        </span>`;
       head.querySelector("#mfDmBack").addEventListener("click", () => { dmWith = null; render(); });
       const openProf = () => { if (window.MFProfile) MFProfile.show(dmWith); };
       head.querySelector("#mfDmHeadAv").addEventListener("click", openProf);
       head.querySelector("#mfDmHeadName").addEventListener("click", openProf);
+
+      // live online status + last seen in the header
+      if (headStatusUnsub) { try { headStatusUnsub(); } catch (_) {} headStatusUnsub = null; }
+      if (MFAuth.watchStatus) {
+        headStatusUnsub = MFAuth.watchStatus(dmWith, (st) => {
+          lastStatus = st;
+          paintHeadStatus();
+        });
+      }
+      // live typing indicator
+      if (headTypingUnsub) { try { headTypingUnsub(); } catch (_) {} headTypingUnsub = null; }
+      if (MFAuth.watchTyping && MFAuth.user) {
+        const pk = pairKey(MFAuth.user.uid, dmWith);
+        headTypingUnsub = MFAuth.watchTyping(pk, dmWith, (typing) => {
+          peerTyping = typing;
+          paintHeadStatus();
+        });
+      }
     });
+  }
+  // Paint the header sub-line: "typing…" wins, else Online / last seen.
+  function paintHeadStatus() {
+    const el = document.getElementById("mfHeadStatus");
+    const dot = document.getElementById("mfHeadDot");
+    if (!el) return;
+    const online = !!(lastStatus && lastStatus.state === "online");
+    if (dot) dot.classList.toggle("on", online);
+    if (peerTyping) {
+      el.textContent = "typing…";
+      el.className = "mf-dm-headstatus typing";
+      return;
+    }
+    el.className = "mf-dm-headstatus";
+    if (online) { el.textContent = "Online"; }
+    else if (lastStatus && lastStatus.last) { el.textContent = "last seen " + timeAgoShort(lastStatus.last); }
+    else { el.textContent = "Offline"; }
+  }
+  function timeAgoShort(t) {
+    const s = (Date.now() - t) / 1000;
+    if (s < 60) return "just now";
+    if (s < 3600) return Math.floor(s / 60) + "m ago";
+    if (s < 86400) return Math.floor(s / 3600) + "h ago";
+    return Math.floor(s / 86400) + "d ago";
   }
 
   // ---- background: count unseen global messages for the badge ----

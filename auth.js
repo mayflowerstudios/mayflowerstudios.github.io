@@ -318,22 +318,67 @@
         return url;
       };
 
-      // ---- presence (online + lastSeen) ----
-      function startPresence(uid) {
-        const stRef = dbMod.ref(db, `status/${uid}`);
-        const connRef = dbMod.ref(db, ".info/connected");
-        dbMod.onValue(connRef, (snap) => {
-          if (snap.val() !== true) return;
-          // On disconnect, mark offline with a timestamp; while connected, mark online.
-          dbMod.onDisconnect(stRef).set({ state: "offline", last: dbMod.serverTimestamp() });
-          dbMod.set(stRef, { state: "online", last: dbMod.serverTimestamp() });
-        });
+      // ---- presence (online + lastSeen) with optional "appear offline" ----
+      // Appear-offline is a per-device privacy choice stored locally. When on,
+      // we publish "offline" even while connected, so friends don't see us as
+      // online and our typing indicators are suppressed. We can still see them.
+      let _presenceUid = null;
+      function readAppearOffline() {
+        try { return localStorage.getItem("mf_appear_offline") === "1"; } catch (_) { return false; }
       }
+      function publishPresence() {
+        if (!_presenceUid) return;
+        const stRef = dbMod.ref(db, `status/${_presenceUid}`);
+        const invisible = readAppearOffline();
+        // Always set onDisconnect to offline; while connected, online unless invisible.
+        dbMod.onDisconnect(stRef).set({ state: "offline", last: dbMod.serverTimestamp() });
+        dbMod.set(stRef, { state: invisible ? "offline" : "online", last: dbMod.serverTimestamp() });
+      }
+      function startPresence(uid) {
+        _presenceUid = uid;
+        const connRef = dbMod.ref(db, ".info/connected");
+        dbMod.onValue(connRef, (snap) => { if (snap.val() === true) publishPresence(); });
+      }
+
+      MFAuth.getAppearOffline = readAppearOffline;
+      MFAuth.setAppearOffline = (on) => {
+        try { localStorage.setItem("mf_appear_offline", on ? "1" : "0"); } catch (_) {}
+        publishPresence();           // re-publish immediately so the change is live
+        return readAppearOffline();
+      };
 
       // expose a status watcher for other modules (chat, profile view)
       MFAuth.watchStatus = (uid, cb) => {
         const stRef = dbMod.ref(db, `status/${uid}`);
         return dbMod.onValue(stRef, (snap) => cb(snap.exists() ? snap.val() : null));
+      };
+
+      // ---- typing indicators for DMs ----
+      // Stored at dm/{pairKey}/typing/{uid} = timestamp. We set it (throttled)
+      // while typing and clear it on stop/send. Suppressed when appearing offline.
+      MFAuth.setTyping = (pairKey, isTyping) => {
+        if (!MFAuth.user || !pairKey) return;
+        const tRef = dbMod.ref(db, `dm/${pairKey}/typing/${MFAuth.user.uid}`);
+        if (isTyping && !readAppearOffline()) {
+          dbMod.set(tRef, dbMod.serverTimestamp());
+          dbMod.onDisconnect(tRef).remove();   // clear if the tab closes mid-type
+        } else {
+          dbMod.remove(tRef);
+        }
+      };
+      // Watch the OTHER person's typing flag. Calls cb(true/false). Treats a
+      // stale timestamp (>6s old) as not-typing in case a clear was missed.
+      MFAuth.watchTyping = (pairKey, otherUid, cb) => {
+        const tRef = dbMod.ref(db, `dm/${pairKey}/typing/${otherUid}`);
+        let timer = null;
+        const unsub = dbMod.onValue(tRef, (snap) => {
+          if (timer) { clearTimeout(timer); timer = null; }
+          const t = snap.exists() ? snap.val() : 0;
+          const fresh = t && (Date.now() - t < 6000);
+          cb(!!fresh);
+          if (fresh) timer = setTimeout(() => cb(false), 6000);  // auto-expire
+        });
+        return () => { if (timer) clearTimeout(timer); unsub(); };
       };
 
       // ---- auth state ----
