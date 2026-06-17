@@ -521,15 +521,106 @@ $("deletePetBtn").onclick = ()=>{
 };
 
 /* ---------- togetherness widget handlers ---------- */
-$("tgToggle").onclick = ()=>{
-  $("tgWidget").classList.toggle("open");
-};
-$("sendHeartBtn").onclick = ()=>{ emitPulse("heart","💗","sent a heart"); };
-$("petTogetherBtn").onclick = tryPetTogether;
-$("tgNoteSend").onclick = sendNote;
-$("tgNoteInput").addEventListener("keydown", (e)=>{ if (e.key==="Enter"){ e.preventDefault(); sendNote(); } });
-// tap the creature itself = a quick boop you both feel
-$("creature").addEventListener("click", ()=>{ if (pet && !pet.away){ emitPulse("boop","👉","booped "+pet.name); } });
+// Safe attach helper — never throws if an element is absent.
+function on(id, evt, fn){ const el = $(id); if (el) el.addEventListener(evt, fn); }
+
+// If the page's HTML predates the widget (stale deploy/cache), build it now
+// so the feature works regardless of which companion.html is live.
+function ensureWidget(){
+  if ($("tgWidget")) return;
+  const w = document.createElement("div");
+  w.className = "tg-widget"; w.id = "tgWidget";
+  w.innerHTML = `
+    <button class="tg-fab" id="tgToggle" aria-label="Together panel">
+      <span class="tg-dot off" id="tgPresenceDot"></span>
+      <span class="tg-fab-emoji">💞</span>
+    </button>
+    <div class="tg-panel">
+      <div class="tg-row tg-presence">
+        <span class="tg-dot off" id="tgPresenceDot2"></span>
+        <span id="tgPresenceText">Just you right now</span>
+      </div>
+      <div class="tg-streak" id="tgStreak"></div>
+      <div class="tg-actions">
+        <button class="tg-btn" id="sendHeartBtn">💗 Send a heart</button>
+        <button class="tg-btn hide" id="petTogetherBtn">🫶 Pet together</button>
+      </div>
+      <div class="tg-notes">
+        <div class="tg-notes-head">💌 Notes <span class="tg-notes-count" id="tgNotesCount"></span></div>
+        <div class="tg-notes-list" id="tgNotesList"></div>
+        <div class="tg-note-compose">
+          <input class="tg-note-field" id="tgNoteInput" type="text" maxlength="200" placeholder="Leave a note…" />
+          <button class="tg-note-send" id="tgNoteSend">Send</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(w);
+  ensureWidgetStyles();
+}
+
+// Inject the widget CSS too, in case a stale stylesheet lacks it.
+function ensureWidgetStyles(){
+  if (document.getElementById("tgWidgetStyles")) return;
+  const css = `
+  .tg-widget{ position:fixed; right:20px; bottom:20px; z-index:9999; font-family:var(--font-b,sans-serif); display:none; }
+  .tg-widget.shown{ display:block; }
+  .tg-fab{ position:relative; width:58px; height:58px; border-radius:50%; cursor:pointer;
+    border:1px solid var(--border-2,rgba(249,168,212,.2)); background:linear-gradient(135deg, rgba(249,168,212,.22), rgba(196,181,253,.22));
+    backdrop-filter:blur(12px); box-shadow:0 10px 30px rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center; }
+  .tg-fab:hover{ transform:translateY(-2px); }
+  .tg-fab-emoji{ font-size:24px; }
+  .tg-widget.active .tg-fab{ box-shadow:0 0 0 3px rgba(249,168,212,.3), 0 10px 30px rgba(0,0,0,.4); }
+  .tg-dot{ width:9px; height:9px; border-radius:50%; display:inline-block; flex-shrink:0; }
+  .tg-dot.on{ background:#6ee7b7; box-shadow:0 0 8px rgba(110,231,183,.8); }
+  .tg-dot.off{ background:#8d86a8; opacity:.5; }
+  .tg-fab .tg-dot{ position:absolute; top:9px; right:9px; }
+  .tg-panel{ position:absolute; right:0; bottom:70px; width:300px; max-width:84vw;
+    border:1px solid var(--border-2,rgba(249,168,212,.2)); border-radius:18px; background:var(--glass,rgba(11,17,32,.92));
+    backdrop-filter:blur(16px); box-shadow:0 18px 50px rgba(0,0,0,.5); padding:16px;
+    display:none; flex-direction:column; gap:12px; color:var(--text,#f3eefb); }
+  .tg-widget.open .tg-panel{ display:flex; }
+  .tg-row{ display:flex; align-items:center; gap:9px; font-size:13.5px; }
+  .tg-presence{ color:var(--text-2,#c9c2e0); } .tg-presence b{ color:var(--text,#fff); }
+  .tg-streak{ display:flex; flex-direction:column; gap:3px; font-size:12.5px; }
+  .tg-flame{ font-weight:700; color:#fbbf86; } .tg-flame.off{ color:#8d86a8; font-weight:500; }
+  .tg-last{ color:#8d86a8; font-size:11.5px; }
+  .tg-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .tg-btn{ flex:1; min-width:120px; padding:10px; border-radius:12px; cursor:pointer; font:inherit; font-weight:600; font-size:13px;
+    border:1px solid var(--border-2,rgba(249,168,212,.2)); background:rgba(255,255,255,.05); color:inherit; }
+  .tg-btn:hover{ background:rgba(255,255,255,.1); }
+  #petTogetherBtn{ background:linear-gradient(120deg,#f9a8d4,#c4b5fd); color:#241233; border-color:transparent; }
+  .tg-notes-head{ font-size:12.5px; font-weight:700; color:var(--text-2,#c9c2e0); display:flex; align-items:center; gap:6px; }
+  .tg-notes-count{ font-size:11px; color:#241233; background:#f9a8d4; border-radius:10px; padding:0 7px; font-weight:700; }
+  .tg-notes-list{ display:flex; flex-direction:column; gap:8px; max-height:200px; overflow-y:auto; }
+  .tg-note-empty{ font-size:12px; color:#8d86a8; line-height:1.5; padding:4px 0; }
+  .tg-note-item{ position:relative; padding:9px 11px; border-radius:12px; background:rgba(255,255,255,.04); border:1px solid rgba(249,168,212,.1); }
+  .tg-note-item.mine{ background:rgba(249,168,212,.08); border-color:rgba(249,168,212,.18); }
+  .tg-note-meta{ display:flex; justify-content:space-between; font-size:10.5px; color:#8d86a8; margin-bottom:3px; }
+  .tg-note-meta b{ color:var(--text-2,#c9c2e0); }
+  .tg-note-text{ font-size:13px; line-height:1.45; word-wrap:break-word; }
+  .tg-note-del{ position:absolute; top:6px; right:9px; cursor:pointer; color:#8d86a8; font-size:15px; line-height:1; }
+  .tg-note-del:hover{ color:#f9a8d4; }
+  .tg-note-compose{ display:flex; gap:7px; }
+  .tg-note-field{ flex:1; padding:9px 11px; border-radius:11px; border:1px solid var(--border-2,rgba(249,168,212,.2));
+    background:rgba(0,0,0,.25); color:inherit; font:inherit; font-size:13px; outline:none; }
+  .tg-note-send{ padding:9px 13px; border-radius:11px; border:none; cursor:pointer; font:inherit; font-weight:700; font-size:13px;
+    background:linear-gradient(120deg,#f9a8d4,#c4b5fd); color:#241233; }
+  .creature.together-glow{ filter:drop-shadow(0 0 18px rgba(249,168,212,.55)) drop-shadow(0 14px 26px rgba(0,0,0,.5)); }
+  .tg-widget.solo #petTogetherBtn, .tg-widget.solo #sendHeartBtn, .tg-widget.solo .tg-notes{ display:none; }
+  .hide{ display:none !important; }`;
+  const style = document.createElement("style");
+  style.id = "tgWidgetStyles"; style.textContent = css;
+  document.head.appendChild(style);
+}
+
+ensureWidget();   // build it now if the page didn't ship it
+
+on("tgToggle","click", ()=>{ $("tgWidget").classList.toggle("open"); });
+on("sendHeartBtn","click", ()=>{ emitPulse("heart","💗","sent a heart"); });
+on("petTogetherBtn","click", tryPetTogether);
+on("tgNoteSend","click", sendNote);
+on("tgNoteInput","keydown", (e)=>{ if (e.key==="Enter"){ e.preventDefault(); sendNote(); } });
+on("creature","click", ()=>{ if (pet && !pet.away){ emitPulse("boop","👉","booped "+pet.name); } });
 
 /* ============================================================
    RENDER
