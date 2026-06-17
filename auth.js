@@ -32,6 +32,7 @@
   let mods = null; // loaded firebase modules
 
   const MFAuth = {
+    _ver: "typing-dmTyping-1",   // bump marker: confirms the new typing path is loaded
     user: null,
     profile: null,
     get uid() { return MFAuth.user ? MFAuth.user.uid : null; },
@@ -361,12 +362,15 @@
       MFAuth.setTyping = (pairKey, isTyping) => {
         if (!MFAuth.user || !pairKey) return;
         const tRef = dbMod.ref(db, `dmTyping/${pairKey}/${MFAuth.user.uid}`);
-        if (isTyping && !readAppearOffline()) {
-          dbMod.set(tRef, dbMod.serverTimestamp());
-          dbMod.onDisconnect(tRef).remove();   // clear if the tab closes mid-type
-        } else {
-          dbMod.remove(tRef);
-        }
+        try {
+          if (isTyping && !readAppearOffline()) {
+            const p = dbMod.set(tRef, dbMod.serverTimestamp());
+            if (p && p.catch) p.catch(e => console.warn("[typing] write denied — is the dmTyping rule published?", e && e.message));
+            try { dbMod.onDisconnect(tRef).remove(); } catch (_) {}  // best-effort cleanup
+          } else {
+            dbMod.remove(tRef);
+          }
+        } catch (err) { console.warn("setTyping failed", err); }
       };
       // Watch the OTHER person's typing flag. Calls cb(true/false). Treats a
       // stale timestamp (>6s old) as not-typing in case a clear was missed.
