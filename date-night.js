@@ -69,25 +69,23 @@ function refreshIdentity(){
     displayName = MFAuth.name() || "someone";
     authOK = true;
   } else {
+    // Guest: stable per-device id + a remembered display name so public rooms
+    // (joined by link) work without an account.
     authOK = false;
+    if (!myId){
+      myId = localStorage.getItem("dn_guest_id");
+      if (!myId){ myId = "g" + Math.random().toString(36).slice(2,10); localStorage.setItem("dn_guest_id", myId); }
+    }
+    if (!displayName) displayName = localStorage.getItem("dn_guest_name") || "guest";
   }
 }
 
 // ---------- room entry ----------
 const params = new URLSearchParams(location.search);
-// Registry ids are mixed-case; keep them verbatim. Typed/legacy names still
-// pass through cleanName() below.
+// Room ids come only from the hub (mixed-case). Preserve them verbatim.
 function rawRoomId(s){ return (s||"").replace(/[.#$\[\]\/]/g,"").trim().slice(0,60); }
 const presetRoom = rawRoomId(params.get("room"));
-if (presetRoom) $("roomInput").value = presetRoom;
 
-$("enterBtn").addEventListener("click", () => {
-  if (!authOK){ promptSignIn(); return; }
-  const r = cleanName($("roomInput").value);
-  if (!r){ toast("Pick a room name first"); return; }
-  enterRoom(r);
-});
-$("roomInput").addEventListener("keydown", e => { if (e.key === "Enter") $("enterBtn").click(); });
 $("leaveBtn").addEventListener("click", () => { location.href = "together.html"; });
 $("copyBtn").addEventListener("click", async () => {
   const url = location.origin + location.pathname + "?room=" + encodeURIComponent(ROOM);
@@ -100,31 +98,28 @@ function promptSignIn(){
   setTimeout(() => { location.href = "/account.html?next=" + encodeURIComponent(location.pathname + location.search); }, 900);
 }
 
-function showSignInGate(){
+function showHubGate(msg){
   const gate = $("gateView");
   if (gate) gate.innerHTML = `
     <div class="divider"></div>
     <div class="row" style="flex-direction:column; align-items:flex-start; gap:14px; max-width:480px;">
-      <p style="margin:0; opacity:.85; line-height:1.6;">Date Night is a little space tied to your account, so your name and notes follow you. Sign in to open one. 💜</p>
-      <a class="btn primary" href="/account.html?next=${encodeURIComponent(location.pathname + location.search)}">Sign in to continue →</a>
+      <p style="margin:0; opacity:.85; line-height:1.6;">${msg || "Date nights are opened from the Together hub."}</p>
+      <a class="btn primary" href="/together.html">Go to the hub →</a>
     </div>`;
 }
 
+let bootRan = false;
 waitForAuth(() => {
   if (!window.MFAuth || !MFAuth.isConfigured()){ $("connText").textContent = "offline"; return; }
   MFAuth.onChange(() => {
     refreshIdentity();
-    if (authOK){
-      // restore the normal gate if it was swapped for a sign-in prompt
-      if (roomEntered){ /* already in a room; name updates handled in presence */ }
-      if (ROOM){ set(P(`presence/${myId}/name`), displayName); }
-      // auto-enter from a shared link now that we're authed — but route through
-      // the unified registry so visibility/invites are enforced. Unknown ids
-      // fall back to the legacy shared-name behaviour.
-      if (presetRoom && !roomEntered){ try { gateAndEnter(presetRoom); } catch(err){ console.error(err); } }
-    } else {
-      showSignInGate();
-    }
+    if (ROOM){ try { set(P(`presence/${myId}/name`), displayName); } catch(_){} }
+    // Resolve entry exactly once. Public date rooms admit guests; friends/private
+    // require an account. With no room id there's nothing to open here.
+    if (bootRan) return;
+    bootRan = true;
+    if (!presetRoom){ showHubGate("Date nights are opened from the Together hub. Pick “Date Night”, choose who can join, and share the link. 💜"); return; }
+    gateAndEnter(presetRoom);
   });
 });
 
@@ -135,26 +130,27 @@ function gateAndEnter(room){
     if (window.MFRooms && MFRooms.whenReady){
       MFRooms.whenReady(() => {
         MFRooms.get(room).then((r) => {
-          if (!r){ enterRoom(room); return; }   // legacy / ad-hoc room name
+          if (!r){ location.href = "together.html?denied=missing&room=" + encodeURIComponent(room); return; }
           if (r.type && r.type !== "date"){ location.href = MFRooms.urlFor(r); return; }
           MFRooms.canEnter(r).then((access) => {
             if (!access.ok){
+              // A signed-out visitor hitting a friends/private room: nudge to sign in.
+              if (access.reason === "signin"){ promptSignIn(); return; }
               location.href = "together.html?denied=" + encodeURIComponent(access.reason) +
                               "&room=" + encodeURIComponent(room);
               return;
             }
-            MFRooms.touch(room);
+            try { MFRooms.touch(room); } catch(_){}
             enterRoom(room);
           });
-        }).catch(() => enterRoom(room));
+        }).catch((e) => { console.error(e); location.href = "together.html?denied=missing&room=" + encodeURIComponent(room); });
       });
-    } else if (++tries > 50){ enterRoom(room); }   // rooms.js never loaded — ad-hoc
+    } else if (++tries > 50){ location.href = "together.html"; }
     else { setTimeout(awaitRooms, 100); }
   })();
 }
 function enterRoom(room){
   if (!FIREBASE_READY){ toast("Firebase not configured"); return; }
-  if (!authOK){ promptSignIn(); return; }
   if (roomEntered) return;
   roomEntered = true;
   ROOM = room;

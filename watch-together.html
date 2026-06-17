@@ -630,7 +630,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/shared.js?v=29"></script>
+  <script src="/shared.js?v=30"></script>
 
   <script src="fireflies.js"></script>
 
@@ -1943,28 +1943,16 @@
         db = getDatabase(app);
         try { storage = getStorage(app); } catch (_) { storage = null; }
 
-        // Room gate (unified): the room must exist in the rooms registry and we
-        // must be allowed in per its visibility (public / friends / private).
-        // Falls back to the legacy lobby/ entry for rooms made before the
-        // overhaul so old links keep working.
+        // Room gate (unified): the room must exist in the rooms registry, be a
+        // watch room, and we must be allowed in per its visibility. Public rooms
+        // admit guests (no account needed); friends/private require an account.
         function bounce(reason) {
           window.location.href = "together.html?denied=" + encodeURIComponent(reason) +
                                  "&room=" + encodeURIComponent(ROOM);
         }
-        function legacyGate() {
-          get(ref(db, `lobby/${ROOM}`)).then((snap) => {
-            const entry = snap.val();
-            if (!entry) { bounce("missing"); return; }
-            if (entry.pass) {
-              const held = sessionStorage.getItem("wt_pass_" + ROOM);
-              if (!held || held !== entry.pass) { window.location.href = "watch.html?join=" + encodeURIComponent(ROOM); return; }
-            }
-            connectToRoom();
-          }).catch((err) => { console.error(err); setConn("off", "Connection failed"); });
-        }
         function unifiedGate() {
           MFRooms.get(ROOM).then((room) => {
-            if (!room) { legacyGate(); return; }   // maybe a legacy lobby room
+            if (!room) { bounce("missing"); return; }
             if (room.type && room.type !== "watch") {
               // wrong page for this room type — send to the right one
               window.location.href = MFRooms.urlFor(room);
@@ -1972,17 +1960,16 @@
             }
             MFRooms.canEnter(room).then((access) => {
               if (!access.ok) { bounce(access.reason); return; }
-              MFRooms.touch(ROOM);
+              MFRooms.touch(ROOM);   // no-op for guests; records members for accounts
               connectToRoom();
             });
-          }).catch((err) => { console.error(err); legacyGate(); });
+          }).catch((err) => { console.error(err); setConn("off", "Connection failed"); });
         }
         // rooms.js is injected by shared.js asynchronously, so it may not be on
-        // window yet. Poll briefly; only fall back to the legacy gate if it
-        // truly never arrives.
+        // window yet. Poll briefly for it before giving up.
         (function awaitRooms(tries) {
           if (window.MFRooms && MFRooms.whenReady) { MFRooms.whenReady(unifiedGate); return; }
-          if (tries > 50) { legacyGate(); return; }   // ~5s ceiling
+          if (tries > 50) { setConn("off", "Couldn't load rooms"); return; }   // ~5s ceiling
           setTimeout(() => awaitRooms(tries + 1), 100);
         })(0);
       } catch (err) {
@@ -2143,8 +2130,7 @@
       const now = Date.now();
       if (now - lastTouch < 7000) return;   // throttle
       lastTouch = now;
-      try { set(ref(db, `rooms/${ROOM}/lastActive`), now); } catch (_) {}
-      try { set(ref(db, `lobby/${ROOM}/lastActive`), now); } catch (_) {}
+      try { if (window.MFRooms) MFRooms.touch(ROOM); } catch (_) {}
     }
 
     // ============================================================

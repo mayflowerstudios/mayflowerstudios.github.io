@@ -343,13 +343,8 @@
           <!-- GATE -->
           <div id="gateView">
             <div class="divider"></div>
-            <div class="row" style="flex-direction:column; align-items:stretch; gap:12px; max-width:480px;">
-              <label style="font-size:14px; opacity:.85;">Make or join your room — same name on both devices.</label>
-              <div class="row">
-                <input class="input" id="roomInput" type="text" maxlength="40" placeholder="our-date-night" autocomplete="off" spellcheck="false" style="flex:1;" />
-                <button class="btn primary" id="enterBtn">Enter →</button>
-              </div>
-              <p class="gateHint">Pick a name only the two of you would guess — no password needed. Open it on both your screens and you'll be in the same room. 💜</p>
+            <div class="row" style="flex-direction:column; align-items:flex-start; gap:14px; max-width:480px;">
+              <p style="margin:0; opacity:.75; line-height:1.6;">Opening your date night…</p>
             </div>
           </div>
 
@@ -466,10 +461,10 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/shared.js?v=29"></script>
+  <script src="/shared.js?v=30"></script>
   <script>window._firefliesLoaded = true;</script>
   <script src="/fireflies.js"></script>
 
-  <script type="module" src="/date-night.js?v=16"></script>
+  <script type="module" src="/date-night.js?v=17"></script>
 </body>
 </html>

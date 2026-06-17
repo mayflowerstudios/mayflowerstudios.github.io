@@ -375,12 +375,11 @@
           <div id="gateView">
             <div class="divider"></div>
             <div class="gate">
-              <label style="font-size:14px; opacity:.85;">Make or join a room — share the name (or the link) with her.</label>
+              <label style="font-size:14px; opacity:.85;">Games rooms are opened from the Together hub.</label>
               <div class="row">
-                <input class="input" id="roomInput" type="text" maxlength="40" placeholder="our-cozy-room" autocomplete="off" spellcheck="false" />
-                <button class="btn primary" id="enterBtn">Enter</button>
+                <a class="btn primary" href="/together.html">Go to the hub →</a>
               </div>
-              <p class="gateHint">Same room name on both devices = same canvas, same questions, same game. No password needed — just pick something only you two would guess. 💜</p>
+              <p class="gateHint">Pick “Games Room”, choose who can join, and share the link. 💜</p>
             </div>
           </div>
 
@@ -649,7 +648,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/shared.js?v=29"></script>
+  <script src="/shared.js?v=30"></script>
 
   <script>window._firefliesLoaded = true;</script>
   <script src="/fireflies.js"></script>
@@ -817,18 +816,10 @@
 
     // ---------- room entry ----------
     const params = new URLSearchParams(location.search);
-    // Registry ids are mixed-case; preserve them verbatim. Manual/legacy names
-    // typed into the gate still get lower-cased via cleanName().
+    // Room ids come only from the hub (mixed-case). Preserve them verbatim.
     function rawRoomId(s){ return (s||"").replace(/[.#$\[\]\/]/g,"").trim().slice(0,60); }
     const presetRoom = rawRoomId(params.get("room"));
-    if (presetRoom){ $("roomInput").value = presetRoom; }
 
-    $("enterBtn").addEventListener("click", () => {
-      const r = cleanName($("roomInput").value);
-      if (!r){ toast("Pick a room name first"); return; }
-      enterRoom(r);
-    });
-    $("roomInput").addEventListener("keydown", e => { if (e.key==="Enter") $("enterBtn").click(); });
     $("leaveBtn").addEventListener("click", () => { location.href = "together.html"; });
     $("copyBtn").addEventListener("click", async () => {
       const url = location.origin + location.pathname + "?room=" + encodeURIComponent(ROOM);
@@ -836,38 +827,40 @@
       catch { toast(url); }
     });
 
-    // auto-enter from a shared link, but only after everything below is defined
-    // and wrapped so a single error can't halt the rest of the script. Routes
-    // through the unified room registry: a registry room must be a games room
-    // and we must be allowed in (public / friends / private+invite). Unknown
-    // ids fall back to the legacy "shared name" behaviour so old links work.
+    // Enter only via the unified room registry: a games room must exist there,
+    // be of type "games", and admit us (public admits guests; friends/private
+    // need an account). Anything else sends us back to the hub.
+    function bounceToHub(reason, room){
+      location.href = "together.html?denied=" + encodeURIComponent(reason || "missing") +
+                      "&room=" + encodeURIComponent(room || "");
+    }
     function gateAndEnter(room){
       let tries = 0;
       (function awaitRooms(){
         if (window.MFRooms && MFRooms.whenReady){
           MFRooms.whenReady(() => {
             MFRooms.get(room).then((r) => {
-              if (!r){ enterRoom(room); return; }   // legacy / ad-hoc room name
+              if (!r){ bounceToHub("missing", room); return; }
               if (r.type && r.type !== "games"){ location.href = MFRooms.urlFor(r); return; }
               MFRooms.canEnter(r).then((access) => {
-                if (!access.ok){
-                  location.href = "together.html?denied=" + encodeURIComponent(access.reason) +
-                                  "&room=" + encodeURIComponent(room);
-                  return;
-                }
-                MFRooms.touch(room);
+                if (!access.ok){ bounceToHub(access.reason, room); return; }
+                MFRooms.touch(room);   // no-op for guests
                 enterRoom(room);
               });
-            }).catch(() => enterRoom(room));
+            }).catch((e) => { console.error(e); bounceToHub("missing", room); });
           });
-        } else if (++tries > 50){ enterRoom(room); }   // rooms.js never loaded — ad-hoc
+        } else if (++tries > 50){ location.href = "together.html"; }   // rooms.js never loaded
         else { setTimeout(awaitRooms, 100); }
       })();
     }
     window.addEventListener("DOMContentLoaded", () => {
+      // A games room is only reachable with a real ?room= id from the hub. With
+      // no id, there's nothing to enter — send people to the hub to make one.
       if (presetRoom && FIREBASE_READY){
         try { gateAndEnter(presetRoom); }
         catch (err){ console.error("auto-enter failed:", err); }
+      } else if (!presetRoom){
+        location.href = "together.html";
       }
     });
 
