@@ -562,7 +562,7 @@ function ensureWidget(){
 function ensureWidgetStyles(){
   if (document.getElementById("tgWidgetStyles")) return;
   const css = `
-  .tg-widget{ position:fixed; right:20px; bottom:20px; z-index:9999; font-family:var(--font-b,sans-serif); display:none; }
+  .tg-widget{ position:fixed; left:20px; bottom:20px; z-index:9999; font-family:var(--font-b,sans-serif); display:none; }
   .tg-widget.shown{ display:block; }
   .tg-fab{ position:relative; width:58px; height:58px; border-radius:50%; cursor:pointer;
     border:1px solid var(--border-2,rgba(249,168,212,.2)); background:linear-gradient(135deg, rgba(249,168,212,.22), rgba(196,181,253,.22));
@@ -574,36 +574,39 @@ function ensureWidgetStyles(){
   .tg-dot.on{ background:#6ee7b7; box-shadow:0 0 8px rgba(110,231,183,.8); }
   .tg-dot.off{ background:#8d86a8; opacity:.5; }
   .tg-fab .tg-dot{ position:absolute; top:9px; right:9px; }
-  .tg-panel{ position:absolute; right:0; bottom:70px; width:300px; max-width:84vw;
+  .tg-panel{ position:absolute; left:0; bottom:70px; width:300px; max-width:84vw;
     border:1px solid var(--border-2,rgba(249,168,212,.2)); border-radius:18px; background:var(--glass,rgba(11,17,32,.92));
-    backdrop-filter:blur(16px); box-shadow:0 18px 50px rgba(0,0,0,.5); padding:16px;
-    display:none; flex-direction:column; gap:12px; color:var(--text,#f3eefb); }
+    backdrop-filter:blur(16px); box-shadow:0 18px 50px rgba(0,0,0,.5); padding:18px;
+    display:none; flex-direction:column; gap:16px; color:var(--text,#f3eefb); }
   .tg-widget.open .tg-panel{ display:flex; }
-  .tg-row{ display:flex; align-items:center; gap:9px; font-size:13.5px; }
+  .tg-row{ display:flex; align-items:center; gap:10px; font-size:13.5px; line-height:1.4; }
   .tg-presence{ color:var(--text-2,#c9c2e0); } .tg-presence b{ color:var(--text,#fff); }
-  .tg-streak{ display:flex; flex-direction:column; gap:3px; font-size:12.5px; }
-  .tg-flame{ font-weight:700; color:#fbbf86; } .tg-flame.off{ color:#8d86a8; font-weight:500; }
+  .tg-streak{ display:flex; flex-direction:column; gap:5px; font-size:12.5px;
+    padding:11px 12px; border-radius:12px; background:rgba(255,255,255,.03); border:1px solid rgba(249,168,212,.08); }
+  .tg-flame{ font-weight:700; color:#fbbf86; font-size:13.5px; } .tg-flame.off{ color:#8d86a8; font-weight:500; font-size:12.5px; }
   .tg-last{ color:#8d86a8; font-size:11.5px; }
   .tg-actions{ display:flex; gap:8px; flex-wrap:wrap; }
-  .tg-btn{ flex:1; min-width:120px; padding:10px; border-radius:12px; cursor:pointer; font:inherit; font-weight:600; font-size:13px;
+  .tg-btn{ flex:1; min-width:120px; padding:11px; border-radius:12px; cursor:pointer; font:inherit; font-weight:600; font-size:13px;
     border:1px solid var(--border-2,rgba(249,168,212,.2)); background:rgba(255,255,255,.05); color:inherit; }
   .tg-btn:hover{ background:rgba(255,255,255,.1); }
   #petTogetherBtn{ background:linear-gradient(120deg,#f9a8d4,#c4b5fd); color:#241233; border-color:transparent; }
-  .tg-notes-head{ font-size:12.5px; font-weight:700; color:var(--text-2,#c9c2e0); display:flex; align-items:center; gap:6px; }
-  .tg-notes-count{ font-size:11px; color:#241233; background:#f9a8d4; border-radius:10px; padding:0 7px; font-weight:700; }
+  .tg-notes{ display:flex; flex-direction:column; gap:10px; padding-top:16px; border-top:1px solid rgba(249,168,212,.1); }
+  .tg-notes-head{ font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--text-2,#c9c2e0); display:flex; align-items:center; gap:7px; }
+  .tg-notes-count{ font-size:11px; color:#241233; background:#f9a8d4; border-radius:10px; padding:1px 8px; font-weight:700; line-height:1.5; }
   .tg-notes-list{ display:flex; flex-direction:column; gap:8px; max-height:200px; overflow-y:auto; }
-  .tg-note-empty{ font-size:12px; color:#8d86a8; line-height:1.5; padding:4px 0; }
-  .tg-note-item{ position:relative; padding:9px 11px; border-radius:12px; background:rgba(255,255,255,.04); border:1px solid rgba(249,168,212,.1); }
+  .tg-note-empty{ font-size:12px; color:#8d86a8; line-height:1.55; padding:2px 0; }
+  .tg-note-item{ position:relative; padding:10px 12px; border-radius:12px; background:rgba(255,255,255,.04); border:1px solid rgba(249,168,212,.1); }
   .tg-note-item.mine{ background:rgba(249,168,212,.08); border-color:rgba(249,168,212,.18); }
-  .tg-note-meta{ display:flex; justify-content:space-between; font-size:10.5px; color:#8d86a8; margin-bottom:3px; }
-  .tg-note-meta b{ color:var(--text-2,#c9c2e0); }
-  .tg-note-text{ font-size:13px; line-height:1.45; word-wrap:break-word; }
-  .tg-note-del{ position:absolute; top:6px; right:9px; cursor:pointer; color:#8d86a8; font-size:15px; line-height:1; }
+  .tg-note-meta{ display:flex; justify-content:space-between; align-items:baseline; font-size:10.5px; color:#8d86a8; margin-bottom:5px; padding-right:16px; }
+  .tg-note-meta b{ color:var(--text-2,#c9c2e0); font-size:11.5px; }
+  .tg-note-text{ font-size:13px; line-height:1.45; word-wrap:break-word; padding-right:14px; }
+  .tg-note-del{ position:absolute; top:8px; right:10px; cursor:pointer; color:#8d86a8; font-size:16px; line-height:1; }
   .tg-note-del:hover{ color:#f9a8d4; }
-  .tg-note-compose{ display:flex; gap:7px; }
-  .tg-note-field{ flex:1; padding:9px 11px; border-radius:11px; border:1px solid var(--border-2,rgba(249,168,212,.2));
+  .tg-note-compose{ display:flex; gap:8px; margin-top:2px; }
+  .tg-note-field{ flex:1; min-width:0; padding:10px 12px; border-radius:11px; border:1px solid var(--border-2,rgba(249,168,212,.2));
     background:rgba(0,0,0,.25); color:inherit; font:inherit; font-size:13px; outline:none; }
-  .tg-note-send{ padding:9px 13px; border-radius:11px; border:none; cursor:pointer; font:inherit; font-weight:700; font-size:13px;
+  .tg-note-field:focus{ border-color:#c4b5fd; }
+  .tg-note-send{ padding:10px 15px; border-radius:11px; border:none; cursor:pointer; font:inherit; font-weight:700; font-size:13px; flex-shrink:0;
     background:linear-gradient(120deg,#f9a8d4,#c4b5fd); color:#241233; }
   .creature.together-glow{ filter:drop-shadow(0 0 18px rgba(249,168,212,.55)) drop-shadow(0 14px 26px rgba(0,0,0,.5)); }
   .tg-widget.solo #petTogetherBtn, .tg-widget.solo #sendHeartBtn, .tg-widget.solo .tg-notes{ display:none; }
