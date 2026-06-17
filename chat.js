@@ -686,8 +686,11 @@
     if (log) log.innerHTML = "";
     msgRows = new Map();
     const q = mods.query(node, mods.limitToLast(100));
-    const onAdd = (snap) => { const m = snap.val(); if (m) renderMsg(snap.key, m); };
-    const onChange = (snap) => { const m = snap.val(); if (m) renderMsg(snap.key, m); };
+    // Only render genuine messages — ignore any stray non-message children
+    // (e.g. legacy typing data) so they never appear as garbled messages.
+    const isMsg = (m) => m && typeof m === "object" && typeof m.uid === "string" && (typeof m.t === "number");
+    const onAdd = (snap) => { const m = snap.val(); if (isMsg(m)) renderMsg(snap.key, m); };
+    const onChange = (snap) => { const m = snap.val(); if (isMsg(m)) renderMsg(snap.key, m); };
     const onRemove = (snap) => {
       // Hard removal from the DB (rare — we soft-delete instead). Drop the row.
       const row = msgRows.get(snap.key);

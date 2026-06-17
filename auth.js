@@ -354,11 +354,13 @@
       };
 
       // ---- typing indicators for DMs ----
-      // Stored at dm/{pairKey}/typing/{uid} = timestamp. We set it (throttled)
-      // while typing and clear it on stop/send. Suppressed when appearing offline.
+      // Stored at dmTyping/{pairKey}/{uid} = timestamp — a SEPARATE node from
+      // the messages (dm/{pairKey}/$msg), so the message subscription never
+      // sees typing events. Set (throttled) while typing, cleared on stop/send.
+      // Suppressed when appearing offline.
       MFAuth.setTyping = (pairKey, isTyping) => {
         if (!MFAuth.user || !pairKey) return;
-        const tRef = dbMod.ref(db, `dm/${pairKey}/typing/${MFAuth.user.uid}`);
+        const tRef = dbMod.ref(db, `dmTyping/${pairKey}/${MFAuth.user.uid}`);
         if (isTyping && !readAppearOffline()) {
           dbMod.set(tRef, dbMod.serverTimestamp());
           dbMod.onDisconnect(tRef).remove();   // clear if the tab closes mid-type
@@ -369,7 +371,7 @@
       // Watch the OTHER person's typing flag. Calls cb(true/false). Treats a
       // stale timestamp (>6s old) as not-typing in case a clear was missed.
       MFAuth.watchTyping = (pairKey, otherUid, cb) => {
-        const tRef = dbMod.ref(db, `dm/${pairKey}/typing/${otherUid}`);
+        const tRef = dbMod.ref(db, `dmTyping/${pairKey}/${otherUid}`);
         let timer = null;
         const unsub = dbMod.onValue(tRef, (snap) => {
           if (timer) { clearTimeout(timer); timer = null; }
