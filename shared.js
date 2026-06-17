@@ -484,6 +484,7 @@
       { href: '/together.html', label: 'Together', key: 'together' },
       { href: '/sakari.html',   label: 'Stories',  key: 'stories'  },
       { href: '/projects.html', label: 'Projects', key: 'projects' },
+      { href: '/contact.html',  label: 'Contact',  key: 'contact'  },
     ];
     const linksHtml = links.map(l =>
       `<a href="${l.href}"${l.key === key ? ' class="nav-active"' : ''}>${l.label}</a>`
@@ -510,6 +511,7 @@
           <a href="/together.html">Together</a>
           <a href="/sakari.html">Stories</a>
           <a href="/projects.html">Projects</a>
+          <a href="/contact.html">Contact</a>
           <a href="https://ko-fi.com/mayflowerstudiosteam" target="_blank" rel="noopener">Support ↗</a>
           <a href="/privacy.html">Privacy</a>
           <a href="/tos.html">Terms</a>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact • Mayflower Studios</title>
+  <meta name="description" content="Get in touch with Mayflower Studios — questions, bug reports, kind words, or anything in between." />
+  <meta property="og:title" content="Contact • Mayflower Studios" />
+  <meta property="og:description" content="Get in touch with Mayflower Studios — questions, bug reports, kind words, or anything in between." />
+  <meta property="og:url" content="https://mayflowerstudios.net/contact.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://mayflowerstudios.net/assets/og/home.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=2" />
+  <link rel="apple-touch-icon" href="/assets/icons/favicon.png?v=2" />
+  <link rel="stylesheet" href="/style.css?v=26" />
+
+  <style>
+    /* ───────────── Contact-only flourishes (structure comes from style.css) ───────────── */
+    .contact-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+    @media (max-width: 760px) { .contact-grid { grid-template-columns: 1fr; } }
+
+    .contact-card {
+      display: flex; flex-direction: column; gap: 12px;
+      padding: 28px 26px; min-height: 180px;
+      text-decoration: none; color: inherit;
+      transition: transform 240ms var(--ease), border-color 240ms var(--ease), box-shadow 240ms var(--ease);
+    }
+    .contact-card:hover { transform: translateY(-5px); }
+    .contact-card .c-icon {
+      font-size: 26px; line-height: 1; width: 52px; height: 52px;
+      display: grid; place-items: center; border-radius: 15px;
+      background: rgba(255,255,255,.04); border: 1px solid var(--border);
+      transition: transform 240ms var(--ease);
+    }
+    .contact-card:hover .c-icon { transform: scale(1.08) rotate(-4deg); }
+    .contact-card h3 { font-size: 21px; }
+    .contact-card p { flex: 1; font-size: 14px; color: var(--text-2); line-height: 1.7; }
+    .contact-card .c-go {
+      font-size: 13px; color: var(--rose); display: inline-flex; align-items: center; gap: 6px;
+      opacity: .85; transition: opacity 160ms var(--ease), transform 160ms var(--ease);
+    }
+    .contact-card:hover .c-go { opacity: 1; transform: translateX(2px); }
+
+    .contact-note { padding: 26px 28px; }
+    .contact-note p { font-size: 14.5px; color: var(--text-2); line-height: 1.85; margin-bottom: 12px; }
+    .contact-note p:last-child { margin-bottom: 0; }
+    .contact-note em { color: var(--rose); font-style: italic; }
+  </style>
+</head>
+<body data-nav="contact">
+
+  <div class="site-page">
+    <div id="site-nav"></div>
+
+    <main class="content">
+
+      <!-- ══ HERO ══ -->
+      <section class="page-hero reveal">
+        <p class="page-kicker">✦ Say hello</p>
+        <h1 class="page-title">Contact</h1>
+        <p class="page-sub">
+          Got a question, found a bug, or just want to share a kind word? I'd love to hear from you.
+          It's a one-person studio, so replies might take a little while — but every message is read.
+        </p>
+        <div class="page-actions">
+          <a href="mailto:contact@mayflowerstudios.net" class="btn-pri">✉️ Send an email</a>
+          <a href="/" class="btn-ghost">🏡 Back home</a>
+        </div>
+      </section>
+
+      <!-- ══ WAYS TO REACH ══ -->
+      <section class="sec reveal">
+        <div class="sec-head">
+          <div class="sec-kicker">🌿 Ways to reach me</div>
+          <h2 class="sec-title">Pick whatever's easiest</h2>
+        </div>
+
+        <div class="contact-grid reveal stagger">
+          <a class="card card-accent-top contact-card" href="mailto:contact@mayflowerstudios.net">
+            <div class="card-shine"></div>
+            <div class="c-icon">✉️</div>
+            <h3>Email</h3>
+            <p>The best way to reach me for anything — questions, bug reports, feedback, or collaboration. I'll get back to you when I can.</p>
+            <span class="c-go">contact@mayflowerstudios.net →</span>
+          </a>
+
+          <a class="card card-accent-top contact-card" href="https://ko-fi.com/mayflowerstudiosteam" target="_blank" rel="noopener">
+            <div class="card-shine"></div>
+            <div class="c-icon">☕</div>
+            <h3>Ko-fi</h3>
+            <p>You can leave a message along with a tip on Ko-fi, or just drop by to say hi. Everything goes toward keeping the rooms running.</p>
+            <span class="c-go">Open Ko-fi ↗</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- ══ A LITTLE NOTE ══ -->
+      <section class="sec reveal">
+        <div class="card contact-note">
+          <p>
+            If you're reporting a bug, it helps a lot to include <em>what you were doing</em>, the
+            page or room you were in, and your browser — even a quick screenshot makes things much
+            easier to track down.
+          </p>
+          <p>
+            And if something here brought you a nice moment with someone? That's exactly what these
+            little things are for. Thank you for being here. 🌸
+          </p>
+        </div>
+      </section>
+
+    </main><!-- /content -->
+
+    <div id="site-footer"></div>
+  </div><!-- /site-page -->
+
+  <script src="/shared.js?v=26"></script>
+</body>
+</html>
