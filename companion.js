@@ -662,6 +662,9 @@ function setStat(label,val){
 
 function render(){
   if (!pet) return;
+  // The scene backdrop is independent of the pet's state — apply it always,
+  // before any away short-circuit, so scene changes show even when away.
+  $("sceneBg").style.background = SCENES[pet.activeScene] || SCENES.default;
   if (pet.away){ renderAway(); return; }
   $("petNameText").textContent = pet.name;
   $("stageBadge").textContent = currentStage(pet).name;
