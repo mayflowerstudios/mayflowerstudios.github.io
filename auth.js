@@ -198,8 +198,9 @@
         } catch (err) {
           // Surface a useful message instead of Firebase's generic wording.
           const code = (err && err.code) || "";
-          if (/permission/i.test(code) || /PERMISSION_DENIED/.test(err && err.message)) {
-            throw new Error("Couldn't save — the database rules need updating (see database-rules.json).");
+          const raw = (err && err.message) || "";
+          if (/permission/i.test(code) || /PERMISSION_DENIED/.test(raw)) {
+            throw new Error("Couldn't save — the Realtime Database rules are rejecting this. Re-publish the rules (the users rule must include the fields being saved). [" + (code || raw).slice(0,80) + "]");
           }
           throw err;
         }
@@ -339,7 +340,19 @@
         const sref = storageMod.ref(storage, path);
         await storageMod.uploadBytes(sref, file, { contentType: file.type });
         const url = await storageMod.getDownloadURL(sref);
+        // Write the URL to the profile, then read it straight back to confirm it
+        // actually persisted (RTDB applies writes optimistically and silently
+        // rolls back if a rule rejects them — this catches that case loudly).
         await MFAuth.updateProfile({ bannerURL: url });
+        try {
+          const check = await dbMod.get(dbMod.ref(db, `users/${MFAuth.user.uid}/bannerURL`));
+          if (!check.exists() || check.val() !== url) {
+            throw new Error("The banner image uploaded, but saving it to your profile was blocked. Re-publish the Realtime Database rules (the users rule needs the bannerURL field).");
+          }
+        } catch (err) {
+          if (err && /blocked/.test(err.message)) throw err;
+          // a read failure here isn't fatal; the write above already succeeded or threw
+        }
         return url;
       };
       MFAuth.clearBanner = async () => {
