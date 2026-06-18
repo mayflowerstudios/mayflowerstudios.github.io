@@ -81,13 +81,25 @@
     .creature.idle{ animation:bob 3.4s ease-in-out infinite; }
     .creature.happy{ animation:hop .55s ease; }
     .creature.sad{ filter:grayscale(.55) drop-shadow(0 8px 18px rgba(0,0,0,.5)); opacity:.82; }
-    .creatureWrap{ position:relative; display:inline-block; }
-    .cosmetic{ position:absolute; top:-2px; left:50%; transform:translateX(-50%);
-      font-size:46px; line-height:1; pointer-events:none; user-select:none;
-      filter:drop-shadow(0 3px 6px rgba(0,0,0,.45)); animation:bob 3.4s ease-in-out infinite; }
-    @media (max-width:560px){ .cosmetic{ font-size:38px; } }
+    /* fixed-width wrapper so the hat centers on the same point regardless of which
+       emoji (egg/sprout/kit…) is showing — emoji glyph widths vary otherwise */
+    .creatureWrap{ position:relative; display:flex; align-items:center; justify-content:center;
+      width:130px; height:148px; margin:10px auto; }
+    @media (max-width:560px){ .creatureWrap{ width:108px; height:120px; } }
+    .creatureWrap .creature{ margin:0; }
+    /* the hat sits over the top of the emoji and rides the SAME bob/hop timeline as
+       the creature, so they move together instead of drifting apart */
+    .cosmetic{ position:absolute; top:8px; left:50%; font-size:46px; line-height:1;
+      pointer-events:none; user-select:none; filter:drop-shadow(0 3px 6px rgba(0,0,0,.45));
+      transform:translateX(-50%); }
+    .cosmetic.idle{ animation:bobHat 3.4s ease-in-out infinite; }
+    .cosmetic.happy{ animation:hopHat .55s ease; }
+    @media (max-width:560px){ .cosmetic{ font-size:38px; top:6px; } }
     @keyframes bob{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-12px);} }
     @keyframes hop{ 0%{transform:translateY(0)} 30%{transform:translateY(-30px) scale(1.05)} 60%{transform:translateY(0)} 80%{transform:translateY(-10px)} 100%{transform:translateY(0)} }
+    /* same motion as bob/hop but preserves the hat's horizontal centering */
+    @keyframes bobHat{ 0%,100%{ transform:translateX(-50%) translateY(0);} 50%{ transform:translateX(-50%) translateY(-12px);} }
+    @keyframes hopHat{ 0%{transform:translateX(-50%) translateY(0)} 30%{transform:translateX(-50%) translateY(-30px) scale(1.05)} 60%{transform:translateX(-50%) translateY(0)} 80%{transform:translateX(-50%) translateY(-10px)} 100%{transform:translateX(-50%) translateY(0)} }
     .mood{ font-size:14px; opacity:.82; font-style:italic; min-height:20px; }
     .withBadge{ font-size:12px; opacity:.6; margin-top:8px; }
     .floatup{ position:absolute; font-size:26px; pointer-events:none; animation:floatup 1.1s ease-out forwards; z-index:5; }
@@ -476,6 +488,6 @@
   <div class="toast" id="toast"></div>
 
   <script src="/shared.js?v=32"></script>
-  <script type="module" src="/companion.js?v=10"></script>
+  <script type="module" src="/companion.js?v=11"></script>
 </body>
 </html>

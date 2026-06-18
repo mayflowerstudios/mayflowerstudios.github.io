@@ -663,8 +663,12 @@ function render(){
   const cosEl = $("cosmetic");
   if (cosEl){
     const cosEmoji = (!pet.away && pet.cosmetic) ? cosmeticEmoji(pet.cosmetic) : "";
-    if (cosEmoji){ cosEl.textContent = cosEmoji; cosEl.hidden = false; }
-    else { cosEl.hidden = true; cosEl.textContent = ""; }
+    if (cosEmoji){
+      cosEl.textContent = cosEmoji; cosEl.hidden = false;
+      cosEl.classList.add("idle");   // ride the same gentle bob as the creature
+    } else {
+      cosEl.hidden = true; cosEl.textContent = ""; cosEl.classList.remove("idle","happy");
+    }
   }
   setStat("Hunger",pet.hunger); setStat("Happy",pet.happy); setStat("Energy",pet.energy); setStat("Clean",pet.clean);
   $("lvl").textContent = pet.level;
@@ -702,7 +706,9 @@ function pop(emoji){
   s.appendChild(el); setTimeout(()=>el.remove(),1100);
 }
 function bounce(){ const c=$("creature"); c.classList.remove("idle"); c.classList.add("happy");
-  setTimeout(()=>{ c.classList.remove("happy"); c.classList.add("idle"); },560); }
+  const h=$("cosmetic"); if(h && !h.hidden){ h.classList.remove("idle"); h.classList.add("happy"); }
+  setTimeout(()=>{ c.classList.remove("happy"); c.classList.add("idle");
+    if(h && !h.hidden){ h.classList.remove("happy"); h.classList.add("idle"); } },560); }
 
 function act(fn){ if(!pet||pet.away) return; fn(pet); render(); savePet(); }
 
