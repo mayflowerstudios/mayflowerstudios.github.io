@@ -108,24 +108,37 @@
     /* ── enriched profile additions ── */
     /* live preview card — how others see you */
     .previewCard {
-      position: relative; border-radius: var(--r-lg); padding: 20px 20px 18px;
+      position: relative; border-radius: var(--r-lg);
       border: 1px solid var(--border-2); background: rgba(255,255,255,.03);
       overflow: hidden; margin-bottom: 22px;
     }
-    .previewCard::before {
-      content: ""; position: absolute; inset: 0 0 auto 0; height: 64px;
-      background: linear-gradient(135deg, var(--pvAccent, #f9a8d4), transparent 70%);
-      opacity: .22; pointer-events: none;
+    /* banner: real image when set, else an accent gradient */
+    .pvBanner {
+      height: 96px; position: relative;
+      background: linear-gradient(135deg, var(--pvAccent, #f9a8d4), rgba(196,181,253,.5));
+      background-size: cover; background-position: center;
     }
-    .pvTop { display: flex; align-items: center; gap: 14px; position: relative; }
+    .pvBanner.hasImg { background-blend-mode: normal; }
+    .pvBannerTools {
+      position: absolute; top: 8px; right: 8px; display: flex; gap: 6px;
+    }
+    .pvBannerBtn {
+      padding: 5px 9px; border-radius: 8px; cursor: pointer; font-size: 11.5px; font-weight: 600;
+      color: var(--text); background: rgba(11,17,32,.55); border: 1px solid rgba(255,255,255,.18);
+      backdrop-filter: blur(6px); transition: all 130ms var(--ease); line-height: 1;
+    }
+    .pvBannerBtn:hover { background: rgba(11,17,32,.8); }
+    .pvBody { padding: 0 20px 18px; }
+    .pvTop { display: flex; align-items: flex-end; gap: 14px; position: relative; margin-top: -28px; }
     .pvAvatar {
-      width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
-      display: flex; align-items: center; justify-content: center; font-size: 28px;
+      width: 72px; height: 72px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+      display: flex; align-items: center; justify-content: center; font-size: 30px;
       color: #0b1120; font-family: var(--font-d);
       background: linear-gradient(135deg, var(--rose), var(--violet));
-      box-shadow: 0 0 0 3px rgba(0,0,0,.25), 0 0 0 5px var(--pvAccent, var(--rose));
+      box-shadow: 0 0 0 4px var(--bg, #0b1120);
     }
     .pvAvatar img { width: 100%; height: 100%; object-fit: cover; }
+    .pvTopText { padding-bottom: 2px; min-width: 0; }
     .pvNameRow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .pvName { font-family: var(--font-d); font-size: 22px; line-height: 1.1; }
     .pvDot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
@@ -133,7 +146,7 @@
     .pvDot.offline { background: var(--text-3); }
     .pvHandle { font-size: 13px; color: var(--pvAccent, var(--rose)); font-weight: 600; }
     .pvPron { font-size: 12px; color: var(--text-3); }
-    .pvStatus { font-size: 13.5px; color: var(--text-2); margin-top: 10px; line-height: 1.5; }
+    .pvStatus { font-size: 13.5px; color: var(--text-2); margin-top: 12px; line-height: 1.5; }
     .pvBio { font-size: 13px; color: var(--text-3); margin-top: 6px; line-height: 1.55; white-space: pre-wrap; }
     .pvMeta { display: flex; gap: 18px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
     .pvStat { display: flex; flex-direction: column; gap: 2px; }
@@ -227,22 +240,31 @@
 
         <!-- live preview: how others see you -->
         <div class="previewCard" id="previewCard">
-          <div class="pvTop">
-            <div class="pvAvatar" id="pvAvatar">🌸</div>
-            <div style="min-width:0;">
-              <div class="pvNameRow">
-                <span class="pvDot offline" id="pvDot" title="Your online status"></span>
-                <span class="pvName" id="pvName">—</span>
-                <span class="pvPron" id="pvPron"></span>
-              </div>
-              <div class="pvHandle" id="pvHandle"></div>
+          <div class="pvBanner" id="pvBanner">
+            <div class="pvBannerTools">
+              <button class="pvBannerBtn" id="bannerUpBtn" type="button">🖼️ Banner</button>
+              <button class="pvBannerBtn" id="bannerRmBtn" type="button" hidden>✕</button>
             </div>
           </div>
-          <div class="pvStatus" id="pvStatus" hidden></div>
-          <div class="pvBio" id="pvBio" hidden></div>
-          <div class="pvMeta">
-            <div class="pvStat"><b id="pvFriends">0</b><span>FRIENDS</span></div>
-            <div class="pvStat"><b id="pvSince">—</b><span>MEMBER SINCE</span></div>
+          <input type="file" id="bannerFile" accept="image/*" hidden />
+          <div class="pvBody">
+            <div class="pvTop">
+              <div class="pvAvatar" id="pvAvatar">🌸</div>
+              <div class="pvTopText">
+                <div class="pvNameRow">
+                  <span class="pvDot offline" id="pvDot" title="Your online status"></span>
+                  <span class="pvName" id="pvName">—</span>
+                  <span class="pvPron" id="pvPron"></span>
+                </div>
+                <div class="pvHandle" id="pvHandle"></div>
+              </div>
+            </div>
+            <div class="pvStatus" id="pvStatus" hidden></div>
+            <div class="pvBio" id="pvBio" hidden></div>
+            <div class="pvMeta">
+              <div class="pvStat"><b id="pvFriends">0</b><span>FRIENDS</span></div>
+              <div class="pvStat"><b id="pvSince">—</b><span>MEMBER SINCE</span></div>
+            </div>
           </div>
         </div>
 
@@ -388,6 +410,7 @@
     const ACCENTS = ["#f9a8d4","#c4b5fd","#fb7185","#fde68a","#6ee7b7","#7dd3fc","#fca5a5","#a78bfa"];
     let chosenEmoji = null;     // tracks emoji selection in the editor
     let chosenPhoto = null;     // tracks a freshly uploaded photo URL
+    let pendingBanner = undefined; // undefined = use saved; "" = cleared; string = new url
 
     function buildEmojiGrid() {
       const grid = $("emojiGrid");
@@ -430,6 +453,7 @@
       $("editAccent").value = p.accent || "#f9a8d4";
 
       // reflect emoji selection in the grid
+      pendingBanner = undefined;   // use the saved bannerURL on (re)load
       chosenEmoji = (p.avatarType === "emoji") ? (p.avatarEmoji || null) : null;
       const grid = $("emojiGrid");
       if (grid) grid.querySelectorAll("button").forEach(x => x.classList.toggle("on", x.textContent === chosenEmoji));
@@ -467,6 +491,21 @@
       $("pvName").textContent = name;
       $("pvHandle").textContent = uname ? "@" + uname : "";
       $("pvPron").textContent = pron;
+
+      // banner: uploaded image (live preview or saved) over the accent gradient
+      const banner = $("pvBanner");
+      const bUrl = pendingBanner !== undefined ? pendingBanner
+                 : ((MFAuth.profile && MFAuth.profile.bannerURL) || "");
+      if (bUrl) {
+        banner.style.backgroundImage =
+          `linear-gradient(to top, rgba(11,17,32,.35), transparent 60%), url("${bUrl}")`;
+        banner.classList.add("hasImg");
+        $("bannerRmBtn").hidden = false;
+      } else {
+        banner.style.backgroundImage = "";
+        banner.classList.remove("hasImg");
+        $("bannerRmBtn").hidden = true;
+      }
 
       const st = $("pvStatus"); st.textContent = status; st.hidden = !status;
       const bi = $("pvBio"); bi.textContent = bio; bi.hidden = !bio;
@@ -573,6 +612,32 @@
       // live-update the preview card as the editor changes
       ["editName","editUsername","editPronouns","editStatus","editBio","editAccent"]
         .forEach(id => { const el = $(id); if (el) el.addEventListener("input", renderPreview); });
+
+      // banner upload / remove (saved immediately, like the avatar)
+      $("bannerUpBtn").addEventListener("click", () => $("bannerFile").click());
+      $("bannerFile").addEventListener("change", async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        clearMsg($("profMsg"));
+        $("bannerUpBtn").textContent = "Uploading…";
+        try {
+          const url = await MFAuth.uploadBanner(file);
+          pendingBanner = url;
+          renderPreview();
+          msg($("profMsg"), "Banner updated 🖼️", "ok");
+        } catch (err) { msg($("profMsg"), friendlyError(err), "err"); }
+        $("bannerUpBtn").textContent = "🖼️ Banner";
+        e.target.value = "";
+      });
+      $("bannerRmBtn").addEventListener("click", async () => {
+        clearMsg($("profMsg"));
+        try {
+          await MFAuth.clearBanner();
+          pendingBanner = "";
+          renderPreview();
+          msg($("profMsg"), "Banner removed", "ok");
+        } catch (err) { msg($("profMsg"), friendlyError(err), "err"); }
+      });
 
       // appear-offline toggle (moved here from the chat header). Per-device.
       const aoTog = $("appearOfflineToggle");

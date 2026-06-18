@@ -320,6 +320,29 @@
         return url;
       };
 
+      // Profile banner (Discord-style header image). Stored separately from the
+      // avatar; saved to users/$uid/bannerURL. Allow a slightly larger file
+      // since banners are wider. Pass null to clear it.
+      MFAuth.uploadBanner = async (file) => {
+        if (!MFAuth.user) throw new Error("Not signed in");
+        if (!file) throw new Error("No file");
+        if (!/^image\//.test(file.type)) throw new Error("Please choose an image file");
+        if (file.size > 8 * 1024 * 1024) throw new Error("Banner must be under 8 MB");
+        if (!storageMod) storageMod = await import(`https://www.gstatic.com/firebasejs/${FB_VERSION}/firebase-storage.js`);
+        if (!storage) storage = storageMod.getStorage(app);
+        const ext = (file.name.split(".").pop() || "jpg").toLowerCase().slice(0, 5);
+        const path = `banners/${MFAuth.user.uid}/banner.${ext}`;
+        const sref = storageMod.ref(storage, path);
+        await storageMod.uploadBytes(sref, file, { contentType: file.type });
+        const url = await storageMod.getDownloadURL(sref);
+        await MFAuth.updateProfile({ bannerURL: url });
+        return url;
+      };
+      MFAuth.clearBanner = async () => {
+        if (!MFAuth.user) throw new Error("Not signed in");
+        await MFAuth.updateProfile({ bannerURL: "" });
+      };
+
       // ---- presence (online + lastSeen) with optional "appear offline" ----
       // Appear-offline is a per-device privacy choice stored locally. When on,
       // we publish "offline" even while connected, so friends don't see us as

@@ -64,10 +64,14 @@
       : `<span>${esc(a.value)}</span>`;
     const isMe = MFAuth.uid === uid;
 
+    const bannerStyle = (prof.bannerURL && /^https?:\/\//.test(prof.bannerURL))
+      ? ` style="background-image:linear-gradient(to top,rgba(11,17,32,.4),transparent 60%),url('${esc(prof.bannerURL)}');background-size:cover;background-position:center;opacity:1;"`
+      : "";
+
     card.style.setProperty("--prof-accent", accent);
     card.innerHTML = `
       <button class="mf-prof-x" id="mfProfX" aria-label="Close">✕</button>
-      <div class="mf-prof-banner"></div>
+      <div class="mf-prof-banner"${bannerStyle}></div>
       <div class="mf-prof-avatar">${avatarHTML}</div>
       <div class="mf-prof-body">
         <div class="mf-prof-name">${esc(name)} ${prof.pronouns ? `<span class="mf-prof-pron">${esc(prof.pronouns)}</span>` : ""}</div>
