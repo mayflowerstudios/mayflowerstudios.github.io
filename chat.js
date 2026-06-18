@@ -114,7 +114,6 @@
           <button class="mf-ct" data-ctab="dm">💌 Friends</button>
         </div>
         <div class="mf-chat-headtools">
-          <button class="mf-tr-btn" id="mfInvisBtn" title="Appear offline">🟢</button>
           <button class="mf-tr-btn" id="mfMuteBtn" title="Mute message sounds">🔔</button>
           <button class="mf-tr-btn" id="mfTrBtn" title="Translate messages">🌐</button>
           <select class="mf-tr-lang" id="mfTrLang" hidden></select>
@@ -193,24 +192,6 @@
     });
     updateMuteUI();
 
-    // appear-offline toggle (per-device privacy choice)
-    const invisBtn = panel.querySelector("#mfInvisBtn");
-    if (invisBtn) {
-      function updateInvisUI() {
-        const off = MFAuth.getAppearOffline ? MFAuth.getAppearOffline() : false;
-        invisBtn.textContent = off ? "⚫" : "🟢";
-        invisBtn.title = off ? "You appear offline — tap to go online" : "Appear online — tap to appear offline";
-        invisBtn.classList.toggle("on", !off);
-      }
-      invisBtn.addEventListener("click", () => {
-        if (!MFAuth.setAppearOffline) return;
-        const now = MFAuth.getAppearOffline();
-        MFAuth.setAppearOffline(!now);
-        updateInvisUI();
-        toast(!now ? "You now appear offline 👻" : "You're back online 🟢");
-      });
-      updateInvisUI();
-    }
   }
 
   // ---- DM chime (a soft two-note ping; synthesized, no audio file) ----

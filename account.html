@@ -104,6 +104,81 @@
     .userAt { padding: 0 4px 0 14px; color: var(--text-3); font-size: 15px; }
     .userRow input { flex: 1; border: 0; background: none; padding: 12px 14px 12px 2px; color: var(--text); font-size: 15px; font-family: var(--font-b); }
     .userRow input:focus { outline: none; }
+
+    /* ── enriched profile additions ── */
+    /* live preview card — how others see you */
+    .previewCard {
+      position: relative; border-radius: var(--r-lg); padding: 20px 20px 18px;
+      border: 1px solid var(--border-2); background: rgba(255,255,255,.03);
+      overflow: hidden; margin-bottom: 22px;
+    }
+    .previewCard::before {
+      content: ""; position: absolute; inset: 0 0 auto 0; height: 64px;
+      background: linear-gradient(135deg, var(--pvAccent, #f9a8d4), transparent 70%);
+      opacity: .22; pointer-events: none;
+    }
+    .pvTop { display: flex; align-items: center; gap: 14px; position: relative; }
+    .pvAvatar {
+      width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+      display: flex; align-items: center; justify-content: center; font-size: 28px;
+      color: #0b1120; font-family: var(--font-d);
+      background: linear-gradient(135deg, var(--rose), var(--violet));
+      box-shadow: 0 0 0 3px rgba(0,0,0,.25), 0 0 0 5px var(--pvAccent, var(--rose));
+    }
+    .pvAvatar img { width: 100%; height: 100%; object-fit: cover; }
+    .pvNameRow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .pvName { font-family: var(--font-d); font-size: 22px; line-height: 1.1; }
+    .pvDot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .pvDot.online { background: var(--emerald); box-shadow: 0 0 8px rgba(110,231,183,.7); }
+    .pvDot.offline { background: var(--text-3); }
+    .pvHandle { font-size: 13px; color: var(--pvAccent, var(--rose)); font-weight: 600; }
+    .pvPron { font-size: 12px; color: var(--text-3); }
+    .pvStatus { font-size: 13.5px; color: var(--text-2); margin-top: 10px; line-height: 1.5; }
+    .pvBio { font-size: 13px; color: var(--text-3); margin-top: 6px; line-height: 1.55; white-space: pre-wrap; }
+    .pvMeta { display: flex; gap: 18px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+    .pvStat { display: flex; flex-direction: column; gap: 2px; }
+    .pvStat b { font-size: 16px; font-family: var(--font-d); }
+    .pvStat span { font-size: 11px; color: var(--text-3); letter-spacing: .3px; }
+
+    /* section headers inside the editor */
+    .secLabel {
+      font-size: 12px; color: var(--text-3); letter-spacing: .6px; text-transform: uppercase;
+      font-weight: 600; margin: 24px 0 12px; padding-top: 18px; border-top: 1px solid var(--border);
+    }
+    .secLabel:first-of-type { border-top: 0; padding-top: 0; }
+
+    /* share-handle row */
+    .shareRow { display: flex; gap: 8px; align-items: center; }
+    .shareRow input { flex: 1; }
+    .shareBtn {
+      flex-shrink: 0; padding: 11px 14px; border-radius: var(--r-md); cursor: pointer;
+      font-family: var(--font-b); font-size: 13px; font-weight: 600; color: var(--violet);
+      background: rgba(196,181,253,.12); border: 1px solid rgba(196,181,253,.3);
+      transition: all 140ms var(--ease); white-space: nowrap;
+    }
+    .shareBtn:hover { background: rgba(196,181,253,.2); }
+
+    /* toggle row (privacy: appear offline) */
+    .toggleRow {
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+      padding: 14px 16px; border-radius: var(--r-md);
+      border: 1px solid var(--border-2); background: rgba(255,255,255,.03);
+    }
+    .toggleRow .tgInfo { display: flex; flex-direction: column; gap: 3px; }
+    .toggleRow .tgTitle { font-size: 14px; font-weight: 500; }
+    .toggleRow .tgHint { font-size: 12px; color: var(--text-3); line-height: 1.45; }
+    .switch { position: relative; width: 46px; height: 26px; flex-shrink: 0; cursor: pointer; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .switchTrack {
+      position: absolute; inset: 0; border-radius: 999px; transition: all 180ms var(--ease);
+      background: rgba(255,255,255,.12); border: 1px solid var(--border-2);
+    }
+    .switchTrack::before {
+      content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
+      border-radius: 50%; background: var(--text-2); transition: all 180ms var(--ease);
+    }
+    .switch input:checked + .switchTrack { background: rgba(110,231,183,.25); border-color: rgba(110,231,183,.5); }
+    .switch input:checked + .switchTrack::before { transform: translateX(20px); background: var(--emerald); }
   </style>
 </head>
 <body data-nav="account">
@@ -149,13 +224,32 @@
 
       <!-- PROFILE (signed in) -->
       <div class="card acctCard" id="profileView" style="display:none;">
-        <div class="profRow">
-          <div class="profAvatar" id="profAvatar">🌸</div>
-          <div>
-            <div class="profName" id="profName">—</div>
-            <div class="profEmail" id="profEmail"></div>
+
+        <!-- live preview: how others see you -->
+        <div class="previewCard" id="previewCard">
+          <div class="pvTop">
+            <div class="pvAvatar" id="pvAvatar">🌸</div>
+            <div style="min-width:0;">
+              <div class="pvNameRow">
+                <span class="pvDot offline" id="pvDot" title="Your online status"></span>
+                <span class="pvName" id="pvName">—</span>
+                <span class="pvPron" id="pvPron"></span>
+              </div>
+              <div class="pvHandle" id="pvHandle"></div>
+            </div>
+          </div>
+          <div class="pvStatus" id="pvStatus" hidden></div>
+          <div class="pvBio" id="pvBio" hidden></div>
+          <div class="pvMeta">
+            <div class="pvStat"><b id="pvFriends">0</b><span>FRIENDS</span></div>
+            <div class="pvStat"><b id="pvSince">—</b><span>MEMBER SINCE</span></div>
           </div>
         </div>
+
+        <p class="profEmail" id="profEmail" style="margin:-10px 0 4px;"></p>
+
+        <!-- ── identity ── -->
+        <div class="secLabel">Your look</div>
 
         <div class="avatarPick">
           <label class="fieldLabel">Avatar</label>
@@ -173,25 +267,38 @@
         </div>
 
         <div class="field">
-          <label for="editUsername">Username <span style="opacity:.6">(how friends add you)</span></label>
+          <label for="editAccent">Accent color</label>
+          <div class="accentRow">
+            <input id="editAccent" type="color" value="#f9a8d4" />
+            <div class="swatchRow" id="swatchRow"></div>
+          </div>
+        </div>
+
+        <!-- ── how friends find you ── -->
+        <div class="secLabel">How friends find you</div>
+
+        <div class="field">
+          <label for="editUsername">Username</label>
           <div class="userRow">
             <span class="userAt">@</span>
             <input id="editUsername" type="text" maxlength="20" placeholder="yourname" autocomplete="off" spellcheck="false" />
           </div>
         </div>
 
-        <div class="fieldRow">
-          <div class="field">
-            <label for="editPronouns">Pronouns</label>
-            <input id="editPronouns" type="text" maxlength="32" placeholder="she/her, they/them…" />
+        <div class="field">
+          <label class="fieldLabel">Share your handle</label>
+          <div class="shareRow">
+            <input id="shareHandle" type="text" readonly value="" placeholder="set a username first" />
+            <button class="shareBtn" id="copyHandleBtn" type="button">🔗 Copy</button>
           </div>
-          <div class="field">
-            <label for="editAccent">Accent color</label>
-            <div class="accentRow">
-              <input id="editAccent" type="color" value="#f9a8d4" />
-              <div class="swatchRow" id="swatchRow"></div>
-            </div>
-          </div>
+        </div>
+
+        <!-- ── about you ── -->
+        <div class="secLabel">About you</div>
+
+        <div class="field">
+          <label for="editPronouns">Pronouns</label>
+          <input id="editPronouns" type="text" maxlength="32" placeholder="she/her, they/them…" />
         </div>
 
         <div class="field">
@@ -200,11 +307,26 @@
         </div>
 
         <div class="field">
-          <label for="editBio">About you</label>
+          <label for="editBio">Bio</label>
           <textarea id="editBio" maxlength="300" rows="3" placeholder="a little about you…"></textarea>
         </div>
 
         <button class="acctBtn" id="saveProfileBtn">Save profile</button>
+
+        <!-- ── privacy ── -->
+        <div class="secLabel">Privacy</div>
+
+        <div class="toggleRow">
+          <div class="tgInfo">
+            <span class="tgTitle">👻 Appear offline</span>
+            <span class="tgHint">Friends won't see you as online, and your typing won't show. You can still see them. Saved on this device.</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="appearOfflineToggle" />
+            <span class="switchTrack"></span>
+          </label>
+        </div>
+
         <button class="ghostBtn" id="signOutBtn">Sign out</button>
         <div class="acctMsg" id="profMsg"></div>
       </div>
@@ -276,7 +398,7 @@
         b.addEventListener("click", () => {
           chosenEmoji = e; chosenPhoto = null;
           grid.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
-          const av = $("profAvatar"); av.innerHTML = ""; av.textContent = e;
+          renderPreview();
         });
         grid.appendChild(b);
       });
@@ -287,7 +409,7 @@
       ACCENTS.forEach(c => {
         const b = document.createElement("button");
         b.type = "button"; b.style.background = c; b.title = c;
-        b.addEventListener("click", () => { $("editAccent").value = c; });
+        b.addEventListener("click", () => { $("editAccent").value = c; renderPreview(); });
         row.appendChild(b);
       });
     }
@@ -299,7 +421,6 @@
 
       const p = profile || {};
       const name = p.displayName || MFAuth.name() || "friend";
-      $("profName").textContent = name;
       $("profEmail").textContent = user.email || (user.providerData[0] && user.providerData[0].providerId) || "";
       $("editName").value = name;
       $("editUsername").value = p.username || "";
@@ -308,16 +429,75 @@
       $("editBio").value = p.bio || "";
       $("editAccent").value = p.accent || "#f9a8d4";
 
-      // avatar preview
-      const av = $("profAvatar");
-      const a = MFAuth.avatarFor(p, name);
-      if (a.kind === "photo") av.innerHTML = `<img src="${a.value}" alt="">`;
-      else { av.innerHTML = ""; av.textContent = a.value; }
-
       // reflect emoji selection in the grid
       chosenEmoji = (p.avatarType === "emoji") ? (p.avatarEmoji || null) : null;
       const grid = $("emojiGrid");
       if (grid) grid.querySelectorAll("button").forEach(x => x.classList.toggle("on", x.textContent === chosenEmoji));
+
+      // member-since (createdAt stored as a server timestamp in ms)
+      if (p.createdAt) {
+        const d = new Date(p.createdAt);
+        $("pvSince").textContent = d.toLocaleDateString(undefined, { month: "short", year: "numeric" });
+      } else {
+        $("pvSince").textContent = "—";
+      }
+
+      // appear-offline toggle reflects the per-device setting
+      const tog = $("appearOfflineToggle");
+      if (tog && MFAuth.getAppearOffline) tog.checked = !!MFAuth.getAppearOffline();
+
+      // online dot reflects current (real) presence, dimmed when appearing offline
+      updateOnlineDot();
+
+      renderPreview();   // paint the live preview card from the form values
+    }
+
+    // ---- live preview card ----
+    // Mirrors whatever is currently in the editor so you see exactly how your
+    // profile reads to others, updating as you type.
+    function renderPreview() {
+      const name = ($("editName").value || "friend").trim() || "friend";
+      const uname = ($("editUsername").value || "").trim().toLowerCase().replace(/^@+/, "");
+      const pron = ($("editPronouns").value || "").trim();
+      const status = ($("editStatus").value || "").trim();
+      const bio = ($("editBio").value || "").trim();
+      const accent = $("editAccent").value || "#f9a8d4";
+
+      $("previewCard").style.setProperty("--pvAccent", accent);
+      $("pvName").textContent = name;
+      $("pvHandle").textContent = uname ? "@" + uname : "";
+      $("pvPron").textContent = pron;
+
+      const st = $("pvStatus"); st.textContent = status; st.hidden = !status;
+      const bi = $("pvBio"); bi.textContent = bio; bi.hidden = !bio;
+
+      // avatar: photo > chosen emoji > current profile emoji/letter
+      const av = $("pvAvatar");
+      const p = MFAuth.profile || {};
+      if (p.avatarType === "photo" && p.photoURL) {
+        av.innerHTML = `<img src="${p.photoURL}" alt="">`;
+      } else if (chosenEmoji) {
+        av.innerHTML = ""; av.textContent = chosenEmoji;
+      } else if (p.avatarEmoji && p.avatarType === "emoji") {
+        av.innerHTML = ""; av.textContent = p.avatarEmoji;
+      } else if (p.photoURL) {
+        av.innerHTML = `<img src="${p.photoURL}" alt="">`;
+      } else {
+        av.innerHTML = ""; av.textContent = (name[0] || "?").toUpperCase();
+      }
+
+      // share handle
+      const share = $("shareHandle");
+      if (uname) { share.value = "@" + uname; share.placeholder = ""; }
+      else { share.value = ""; share.placeholder = "set a username first"; }
+    }
+
+    function updateOnlineDot() {
+      const dot = $("pvDot");
+      if (!dot) return;
+      const invisible = MFAuth.getAppearOffline ? MFAuth.getAppearOffline() : false;
+      dot.className = "pvDot " + (invisible ? "offline" : "online");
+      dot.title = invisible ? "Appearing offline" : "Online";
     }
 
     waitAuth(() => {
@@ -382,13 +562,47 @@
         try {
           const url = await MFAuth.uploadAvatar(file);
           chosenPhoto = url; chosenEmoji = null;
-          const av = $("profAvatar"); av.innerHTML = `<img src="${url}" alt="">`;
           $("emojiGrid").querySelectorAll("button").forEach(x => x.classList.remove("on"));
+          renderPreview();
           msg($("profMsg"), "Photo updated 🌸", "ok");
         } catch (err) { msg($("profMsg"), friendlyError(err), "err"); }
         $("avatarUpBtn").textContent = "📷 Upload photo";
         e.target.value = "";
       });
+
+      // live-update the preview card as the editor changes
+      ["editName","editUsername","editPronouns","editStatus","editBio","editAccent"]
+        .forEach(id => { const el = $(id); if (el) el.addEventListener("input", renderPreview); });
+
+      // appear-offline toggle (moved here from the chat header). Per-device.
+      const aoTog = $("appearOfflineToggle");
+      if (aoTog) {
+        aoTog.addEventListener("change", () => {
+          if (MFAuth.setAppearOffline) MFAuth.setAppearOffline(aoTog.checked);
+          updateOnlineDot();
+          msg($("profMsg"), aoTog.checked ? "You now appear offline 👻" : "You're back online 🟢", "ok");
+        });
+      }
+
+      // copy your @handle so friends can add you
+      $("copyHandleBtn").addEventListener("click", async () => {
+        const v = $("shareHandle").value.trim();
+        if (!v) { msg($("profMsg"), "Set a username first, then save 🌸", "err"); return; }
+        try { await navigator.clipboard.writeText(v); msg($("profMsg"), "Handle copied — share it with a friend 🔗", "ok"); }
+        catch (_) {
+          const t = $("shareHandle"); t.removeAttribute("readonly"); t.select();
+          try { document.execCommand("copy"); msg($("profMsg"), "Handle copied 🔗", "ok"); } catch (_) {}
+          t.setAttribute("readonly", "");
+        }
+      });
+
+      // live friends count in the preview card
+      if (MFAuth.watchFriends) {
+        MFAuth.watchFriends(f => {
+          const n = Object.keys(f || {}).length;
+          const el = $("pvFriends"); if (el) el.textContent = n;
+        });
+      }
 
       $("saveProfileBtn").addEventListener("click", async () => {
         clearMsg($("profMsg"));
