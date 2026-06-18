@@ -74,9 +74,9 @@ const SHOP = [
 ];
 const SCENES = {
   default:"radial-gradient(600px 300px at 50% 0%, rgba(157,123,224,.18), transparent 60%)",
-  garden:"radial-gradient(600px 320px at 50% 10%, rgba(232,160,196,.28), transparent 65%), linear-gradient(180deg, rgba(143,224,192,.12), transparent)",
-  night:"radial-gradient(500px 300px at 70% 0%, rgba(110,79,176,.35), transparent 60%), radial-gradient(300px 200px at 20% 20%, rgba(243,217,160,.18), transparent 60%)",
-  beach:"radial-gradient(600px 320px at 50% 0%, rgba(125,211,252,.28), transparent 60%), linear-gradient(180deg, rgba(253,224,138,.14), transparent 70%)",
+  garden:"radial-gradient(600px 320px at 50% 8%, rgba(232,160,196,.45), transparent 62%), linear-gradient(180deg, rgba(86,166,138,.32), rgba(40,90,72,.22))",
+  night:"radial-gradient(500px 300px at 70% 0%, rgba(140,104,210,.5), transparent 58%), radial-gradient(280px 200px at 22% 24%, rgba(243,217,160,.28), transparent 55%), linear-gradient(180deg, rgba(34,24,64,.55), rgba(14,10,32,.3))",
+  beach:"radial-gradient(600px 320px at 50% 0%, rgba(125,211,252,.5), transparent 60%), linear-gradient(180deg, rgba(96,178,224,.3), rgba(244,214,150,.34))",
 };
 
 const clamp = (n)=> Math.max(0, Math.min(100, Math.round(n)));
