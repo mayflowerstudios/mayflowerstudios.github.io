@@ -18,7 +18,7 @@ const SKIP_DIRS = new Set([
 ]);
 
 // File patterns to exclude (admin, drafts, etc.)
-function shouldSkipFile(relPath, fileName) {
+function shouldSkipFile(relPath, fileName, absPath) {
   const rel = relPath.replace(/\\/g, "/");
 
   // Skip admin pages anywhere
@@ -28,8 +28,19 @@ function shouldSkipFile(relPath, fileName) {
   // Skip templates/partials if you have any .html hiding there
   if (rel.startsWith("partials/")) return true;
 
-  // If you ever have internal-only pages, you can add:
-  // if (fileName.startsWith("_")) return true;
+  // Never list utility / dynamic-app pages we don't want indexed
+  const ALWAYS_SKIP = new Set([
+    "404.html", "watch.html", "account.html",
+    "watch-together.html", "together-room.html", "date-night.html",
+  ]);
+  if (ALWAYS_SKIP.has(rel)) return true;
+
+  // Auto-skip anything explicitly marked noindex, so the sitemap can never
+  // disagree with a page's own robots meta tag.
+  try {
+    const head = fs.readFileSync(absPath, "utf8").slice(0, 4000);
+    if (/<meta[^>]+name=["']robots["'][^>]*noindex/i.test(head)) return true;
+  } catch (_) {}
 
   return false;
 }
@@ -48,7 +59,7 @@ function walk(dirAbs) {
 
     if (!entry.isFile()) continue;
     if (!entry.name.endsWith(".html")) continue;
-    if (shouldSkipFile(rel, entry.name)) continue;
+    if (shouldSkipFile(rel, entry.name, abs)) continue;
 
     out.push(rel.replace(/\\/g, "/"));
   }

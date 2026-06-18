@@ -8,6 +8,7 @@
   <meta property="og:title" content="Together — Mayflower Studios" />
   <meta property="og:description" content="One hub for being in the same moment as someone. Watch party, games, or date night — your account, your friends." />
   <meta property="og:url" content="https://mayflowerstudios.net/together.html" />
+  <link rel="canonical" href="https://mayflowerstudios.net/together.html" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://mayflowerstudios.net/assets/og/together.png" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -691,7 +692,6 @@
           stopFriends = MFAuth.watchFriends(f => {
             myFriends = f || {};
             friendsLoaded = true;
-            console.log("[together] friends loaded:", Object.keys(myFriends).length, myFriends);
             if (!$("inviteField").hidden) renderFriendPicker("friendPick", selInvites);
             if ($("manageModal").classList.contains("open") && !$("manageInviteField").hidden)
               renderFriendPicker("manageFriendPick", manageInvites);
