@@ -1788,6 +1788,7 @@
         }
       }
       val = fresh;
+      const ids = Object.keys(val);
       // Collapse multiple sessions of the SAME person (e.g. two computers, or a
       // phone + laptop) into one. Entries carry an identity key (idk = account
       // uid when signed in, else the per-device id); we keep the freshest entry
