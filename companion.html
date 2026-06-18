@@ -139,6 +139,29 @@
     .mg .cell:hover{ background:rgba(255,255,255,.08); }
     .mg .cell.lit{ background:linear-gradient(120deg,#f9a8d4,#c4b5fd); transform:scale(1.05); }
 
+    /* game picker */
+    .gamePick{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:6px; }
+    .gpBtn{ padding:8px 14px; border-radius:20px; cursor:pointer; font:inherit; font-size:13px; font-weight:600;
+      color:rgba(255,255,255,.7); background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12);
+      transition:.15s; }
+    .gpBtn:hover{ background:rgba(255,255,255,.08); color:#fff; }
+    .gpBtn.on{ background:linear-gradient(120deg,#f9a8d4,#c4b5fd); color:#241233; border-color:transparent; }
+
+    /* Firefly Catch */
+    .ffField{ position:relative; height:240px; margin:18px 0; border-radius:16px; overflow:hidden;
+      background:radial-gradient(120% 120% at 50% 0%, rgba(40,30,70,.6), rgba(12,12,30,.6));
+      border:1px solid rgba(255,255,255,.1); }
+    .firefly{ position:absolute; width:42px; height:42px; border-radius:50%; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; font-size:26px; user-select:none;
+      filter:drop-shadow(0 0 8px rgba(253,224,138,.9)); transition:transform .1s; }
+    .firefly:active{ transform:scale(.8); }
+
+    /* Lucky Petals */
+    .grid.lp{ grid-template-columns:repeat(3,84px); }
+    .grid.lp .cell{ height:84px; font-size:40px; }
+    .grid.lp .cell.reveal{ background:linear-gradient(120deg,#6ee7b7,#34d399); }
+    .grid.lp .cell.miss{ background:rgba(251,113,133,.25); }
+
     .roomInfo{ display:flex; justify-content:space-between; align-items:center; font-size:13px; opacity:.7;
       margin-top:18px; padding-top:16px; border-top:1px solid rgba(255,255,255,.1); }
     .roomInfo b{ color:#f9a8d4; }
@@ -331,13 +354,42 @@
             <button class="tab" data-tab="log">📜 Diary</button>
           </div>
 
-          <div class="cpPanel" id="tabGames"><div class="cpPanelInner"><div class="mg">
-            <div style="font-family:var(--font-d); font-size:22px;">Memory Bloom</div>
-            <p style="font-size:13px; opacity:.65; margin-top:4px;">Watch the petals light up, then repeat the order. Each round earns coins &amp; happiness.</p>
-            <div class="grid" id="mgGrid"></div>
-            <div id="mgStatus" style="font-size:14px; opacity:.82; min-height:20px; margin-bottom:10px;">Round <b id="mgRound">1</b></div>
-            <button class="btn primary" id="mgStart" style="max-width:240px; margin:0 auto;">Start a round</button>
-          </div></div></div>
+          <div class="cpPanel" id="tabGames"><div class="cpPanelInner">
+
+            <div class="gamePick" id="gamePick">
+              <button class="gpBtn on" data-game="memory">🌸 Memory Bloom</button>
+              <button class="gpBtn" data-game="firefly">✨ Firefly Catch</button>
+              <button class="gpBtn" data-game="petals">🍃 Lucky Petals</button>
+            </div>
+
+            <!-- Memory Bloom -->
+            <div class="mg gamePanel" id="gameMemory">
+              <div style="font-family:var(--font-d); font-size:22px;">Memory Bloom</div>
+              <p style="font-size:13px; opacity:.65; margin-top:4px;">Watch the petals light up, then repeat the order. Each round earns coins &amp; happiness.</p>
+              <div class="grid" id="mgGrid"></div>
+              <div id="mgStatus" style="font-size:14px; opacity:.82; min-height:20px; margin-bottom:10px;">Round <b id="mgRound">1</b></div>
+              <button class="btn primary" id="mgStart" style="max-width:240px; margin:0 auto;">Start a round</button>
+            </div>
+
+            <!-- Firefly Catch -->
+            <div class="mg gamePanel hide" id="gameFirefly">
+              <div style="font-family:var(--font-d); font-size:22px;">Firefly Catch</div>
+              <p style="font-size:13px; opacity:.65; margin-top:4px;">Tap the fireflies before they drift away. You have 15 seconds — every catch is a coin.</p>
+              <div class="ffField" id="ffField"></div>
+              <div id="ffStatus" style="font-size:14px; opacity:.82; min-height:20px; margin-bottom:10px;">Caught <b id="ffScore">0</b> · <b id="ffTime">15</b>s left</div>
+              <button class="btn primary" id="ffStart" style="max-width:240px; margin:0 auto;">Start catching</button>
+            </div>
+
+            <!-- Lucky Petals -->
+            <div class="mg gamePanel hide" id="gamePetals">
+              <div style="font-family:var(--font-d); font-size:22px;">Lucky Petals</div>
+              <p style="font-size:13px; opacity:.65; margin-top:4px;">A treat is hidden under one of three leaves. Pick right and your companion gets a happy surprise.</p>
+              <div class="grid lp" id="lpGrid"></div>
+              <div id="lpStatus" style="font-size:14px; opacity:.82; min-height:20px; margin-bottom:10px;">Where's the treat? 🍓</div>
+              <button class="btn primary" id="lpStart" style="max-width:240px; margin:0 auto;">Shuffle &amp; play</button>
+            </div>
+
+          </div></div>
 
           <div class="cpPanel hide" id="tabShop"><div class="cpPanelInner"><div class="shopGrid" id="shopGrid"></div></div></div>
 
@@ -394,6 +446,6 @@
   <div class="toast" id="toast"></div>
 
   <script src="/shared.js?v=32"></script>
-  <script type="module" src="/companion.js?v=7"></script>
+  <script type="module" src="/companion.js?v=8"></script>
 </body>
 </html>

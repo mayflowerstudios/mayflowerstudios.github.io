@@ -1098,5 +1098,134 @@ function renderLog(){
   $("mgStart").onclick=start; build();
 })();
 
+/* ============================================================
+   GAME PICKER — switch between the mini-games
+============================================================ */
+(function gamePicker(){
+  const pick = $("gamePick");
+  if (!pick) return;
+  const panels = { memory:$("gameMemory"), firefly:$("gameFirefly"), petals:$("gamePetals") };
+  pick.querySelectorAll(".gpBtn").forEach(btn=>{
+    btn.onclick = ()=>{
+      pick.querySelectorAll(".gpBtn").forEach(b=>b.classList.toggle("on", b===btn));
+      const g = btn.dataset.game;
+      for (const k in panels){ if (panels[k]) panels[k].classList.toggle("hide", k!==g); }
+    };
+  });
+})();
+
+/* ============================================================
+   MINI GAME — Firefly Catch (a 15s reaction game)
+============================================================ */
+(function fireflyCatch(){
+  const field = $("ffField"); if (!field) return;
+  let running=false, caught=0, timeLeft=15, tickIv=null, spawnIv=null;
+
+  function spawn(){
+    if (!running) return;
+    const f = document.createElement("div");
+    f.className = "firefly"; f.textContent = "✨";
+    const w = field.clientWidth - 42, h = field.clientHeight - 42;
+    f.style.left = Math.max(0, Math.random()*w) + "px";
+    f.style.top  = Math.max(0, Math.random()*h) + "px";
+    let gone = setTimeout(()=>{ f.remove(); }, 1100);   // drifts away if not tapped
+    f.onclick = ()=>{
+      if (!running) return;
+      clearTimeout(gone); f.remove();
+      caught++; $("ffScore").textContent = caught;
+      pop("✨");
+    };
+    field.appendChild(f);
+  }
+
+  function end(){
+    running=false; clearInterval(tickIv); clearInterval(spawnIv);
+    field.querySelectorAll(".firefly").forEach(f=>f.remove());
+    $("ffStart").disabled=false; $("ffStart").textContent="Play again";
+    const finalCaught = caught;
+    // reward: a coin per catch, happiness scaled by need (anti-farm), xp modest.
+    // zero catches earns nothing, so idling isn't rewarded.
+    if (finalCaught>0){
+      act(p=>{
+        p.coins += finalCaught;
+        const gain = Math.round(finalCaught*2 * needFactor(p.happy));
+        p.happy = clamp(p.happy + gain);
+        gainXp(p, Math.min(finalCaught, 12));
+        pushLog(p,"✨", myName+" played Firefly Catch with "+p.name+" — caught "+finalCaught+" (✦"+finalCaught+").");
+      });
+      emitPulse && emitPulse("action","✨","played Firefly Catch");
+    }
+    // status line: result message, then the counters get restored on next start
+    $("ffStatus").innerHTML = "Time! "+pet.name+" chased down <b>"+finalCaught+"</b> "+(finalCaught===1?"firefly":"fireflies")+".";
+  }
+
+  function resetStatus(){
+    $("ffStatus").innerHTML = 'Caught <b id="ffScore">0</b> · <b id="ffTime">15</b>s left';
+  }
+
+  function start(){
+    if (running || !pet || pet.away) { if(pet&&pet.away) toast(pet.name+" is away right now"); return; }
+    running=true; caught=0; timeLeft=15;
+    resetStatus();
+    $("ffScore").textContent="0"; $("ffTime").textContent="15";
+    $("ffStart").disabled=true; $("ffStart").textContent="Catching…";
+    spawnIv = setInterval(spawn, 650); spawn();
+    tickIv = setInterval(()=>{
+      timeLeft--; const tEl=$("ffTime"); if(tEl) tEl.textContent=timeLeft;
+      if (timeLeft<=0) end();
+    }, 1000);
+  }
+  $("ffStart").onclick = start;
+})();
+
+/* ============================================================
+   MINI GAME — Lucky Petals (guess which leaf hides the treat)
+============================================================ */
+(function luckyPetals(){
+  const grid = $("lpGrid"); if (!grid) return;
+  let where=-1, locked=true; const cells=[];
+
+  function build(){
+    grid.innerHTML=""; cells.length=0;
+    for (let i=0;i<3;i++){
+      const c=document.createElement("div");
+      c.className="cell"; c.textContent="🍃"; c.onclick=()=>guess(i);
+      grid.appendChild(c); cells[i]=c;
+    }
+  }
+  function shuffle(){
+    if (!pet || pet.away){ if(pet&&pet.away) toast(pet.name+" is away right now"); return; }
+    where = Math.random()*3|0; locked=false;
+    cells.forEach(c=>{ c.className="cell"; c.textContent="🍃"; });
+    $("lpStatus").innerHTML="Where's the treat? 🍓";
+    $("lpStart").textContent="Shuffle again";
+  }
+  function guess(i){
+    if (locked || where<0) return;
+    locked=true;
+    cells[where].classList.add("reveal"); cells[where].textContent="🍓";
+    const win = (i===where);
+    if (!win){ cells[i].classList.add("miss"); cells[i].textContent="🍂"; }
+    if (win){
+      $("lpStatus").innerHTML="🎉 Found it! "+pet.name+" did a happy wiggle.";
+      // win pays a small flat coin + need-scaled happiness; can't be farmed past full
+      act(p=>{
+        p.coins += 6;
+        const gain = Math.round(8 * needFactor(p.happy));
+        p.happy = clamp(p.happy + gain);
+        gainXp(p, 4);
+        pushLog(p,"🍃", myName+" played Lucky Petals — found the treat (✦6).");
+      });
+      pop("🎉"); bounce();
+      emitPulse && emitPulse("action","🍃","won Lucky Petals");
+    } else {
+      $("lpStatus").innerHTML="So close! It was under that one. Try again? 🍃";
+      act(p=>{ p.coins += 1; });   // tiny consolation, not farmable
+    }
+  }
+  $("lpStart").onclick = shuffle;
+  build();
+})();
+
 /* ---------- not configured fallback ---------- */
 if (!FIREBASE_READY){ showSignedOut(); }
