@@ -133,6 +133,25 @@
       background:linear-gradient(120deg,#f9a8d4,#c4b5fd); color:#241233; font:inherit; font-weight:700; font-size:12px; cursor:pointer; }
     .shopItem button:disabled{ opacity:.35; cursor:not-allowed; }
 
+    /* inventory / bag */
+    .bag{ display:flex; flex-direction:column; gap:18px; }
+    .bagSection .bagHead{ font-size:12px; letter-spacing:.5px; text-transform:uppercase; opacity:.55; font-weight:700; margin-bottom:10px; }
+    .bagRow{ display:flex; flex-direction:column; gap:8px; }
+    .bagItem{ display:flex; align-items:center; gap:12px; padding:11px 13px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.04); }
+    .bagItem .bi-e{ font-size:28px; line-height:1; flex-shrink:0; }
+    .bagItem .bi-main{ flex:1; min-width:0; }
+    .bagItem .bi-nm{ font-size:14px; font-weight:700; }
+    .bagItem .bi-sub{ font-size:11.5px; opacity:.6; margin-top:1px; }
+    .bagItem .bi-count{ font-size:13px; font-weight:700; color:#f3d9a0; flex-shrink:0; }
+    .bagItem .bi-btn{ flex-shrink:0; padding:7px 14px; border-radius:10px; border:none; cursor:pointer;
+      font:inherit; font-weight:700; font-size:12px; background:linear-gradient(120deg,#f9a8d4,#c4b5fd); color:#241233; }
+    .bagItem .bi-btn.ghost{ background:rgba(255,255,255,.08); color:#fff; border:1px solid rgba(255,255,255,.16); }
+    .bagItem .bi-btn:disabled{ opacity:.4; cursor:not-allowed; }
+    .bagItem.activeItem{ outline:2px solid #8fe0c0; outline-offset:-2px; }
+    .bagEmpty{ text-align:center; padding:26px 16px; opacity:.6; font-size:14px; line-height:1.6; }
+    .bagEmpty a{ color:#f9a8d4; font-weight:700; }
+
     .log{ max-height:220px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; }
     .logItem{ font-size:13px; opacity:.88; padding:9px 12px; border-radius:12px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); }
     .logItem .t{ font-size:11px; opacity:.5; float:right; }
@@ -359,6 +378,7 @@
           <div class="tabs">
             <button class="tab on" data-tab="games">🎲 Play</button>
             <button class="tab" data-tab="shop">🛍️ Shop</button>
+            <button class="tab" data-tab="bag">🎒 Bag</button>
             <button class="tab" data-tab="log">📜 Diary</button>
           </div>
 
@@ -400,6 +420,8 @@
           </div></div>
 
           <div class="cpPanel hide" id="tabShop"><div class="cpPanelInner"><div class="shopGrid" id="shopGrid"></div></div></div>
+
+          <div class="cpPanel hide" id="tabBag"><div class="cpPanelInner"><div class="bag" id="bagInner"></div></div></div>
 
           <div class="cpPanel hide" id="tabLog"><div class="cpPanelInner"><div class="log" id="logList"></div></div></div>
 
@@ -454,6 +476,6 @@
   <div class="toast" id="toast"></div>
 
   <script src="/shared.js?v=32"></script>
-  <script type="module" src="/companion.js?v=9"></script>
+  <script type="module" src="/companion.js?v=10"></script>
 </body>
 </html>

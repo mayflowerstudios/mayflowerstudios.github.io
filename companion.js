@@ -675,6 +675,9 @@ function render(){
   $("sceneBg").style.background = SCENES[pet.activeScene] || SCENES.default;
   $("feedItem").textContent = bestFood(pet).nm;
   renderLog();
+  // keep the bag fresh if it's the visible tab (counts, worn state, scene)
+  const bagPanel = $("tabBag");
+  if (bagPanel && !bagPanel.classList.contains("hide")) buildBag();
 }
 function renderAway(){
   $("stageBadge").textContent = "Away";
@@ -721,12 +724,15 @@ function onCooldown(key){
 function needFactor(statVal){ return Math.max(0, Math.min(1, (100 - statVal) / 100)); }
 function scaledXp(base, statVal){ return Math.round(base * needFactor(statVal)); }
 
-$("aFeed").onclick = ()=>{
+// Feed the pet a specific food (def = a SHOP food entry). Shared by the Feed
+// button (auto-picks best) and the Bag (pick a specific item).
+function feedWith(f){
   if (!pet || pet.away) return;
+  if (!f) return;
   if (pet.hunger >= 95){ toast(pet.name+" is full right now 🍓"); return; }
+  if (!f.def && !(pet.inventory && pet.inventory[f.id] > 0)){ toast("You're out of "+f.nm+"."); return; }
   if (onCooldown("feed")){ return; }
   const before = pet.hunger;
-  const f = bestFood(pet);
   act(p=>{
     if (!f.def){ p.inventory[f.id]--; }
     p.hunger = clamp(p.hunger + f.restore); p.feedCount++; bumpCare(p);
@@ -735,7 +741,10 @@ $("aFeed").onclick = ()=>{
     pushLog(p,"🍓", myName+" fed "+p.name+" a "+f.nm.toLowerCase()+".");
   });
   emitPulse("action","🍓","fed "+pet.name); markCaredToday();
-};
+  if (typeof buildBag === "function") buildBag();   // refresh counts if bag is open
+}
+
+$("aFeed").onclick = ()=>{ feedWith(bestFood(pet)); };
 $("aPlay").onclick = ()=>{
   if (!pet || pet.away) return;
   if (pet.energy<10){ toast(pet.name+" is too tired to play — let them rest."); return; }
@@ -1028,7 +1037,10 @@ document.querySelectorAll(".tab").forEach(t=> t.onclick=()=>{
   const tab=t.dataset.tab;
   $("tabGames").classList.toggle("hide",tab!=="games");
   $("tabShop").classList.toggle("hide",tab!=="shop");
+  $("tabBag").classList.toggle("hide",tab!=="bag");
   $("tabLog").classList.toggle("hide",tab!=="log");
+  if (tab==="bag") buildBag();
+  if (tab==="shop") buildShop();
 });
 
 function buildShop(){
@@ -1058,15 +1070,21 @@ function labelFor(s){
 // free. Anything already being worn counts as owned too (covers cosmetics bought
 // before ownership was tracked).
 function cosmeticOwned(p, id){ return !!(p.inventory && p.inventory["cos_"+id]) || p.cosmetic===id; }
+function sceneOwned(p, scene){ return !!(p.inventory && p.inventory["scn_"+scene]) || p.activeScene===scene; }
 function buy(s){
   if (!pet) return;
   const ownsCosmetic = (s.type==="cosmetic" && cosmeticOwned(pet, s.id));
+  const ownsScene = (s.type==="scene" && sceneOwned(pet, s.scene));
   // Only charge when actually purchasing (food always; scene/cosmetic if not owned).
-  const mustPay = !(s.type==="cosmetic" && ownsCosmetic);
+  const mustPay = !(ownsCosmetic || ownsScene);
   if (mustPay && pet.coins<s.pr){ toast("Not enough ✦ — care for "+pet.name+" to earn more"); return; }
   act(p=>{
     if (s.type==="food"){ p.coins-=s.pr; p.inventory[s.id]=(p.inventory[s.id]||0)+1; toast("Bought "+s.nm+" ×1"); pushLog(p,"🛍️", myName+" got "+s.nm+" for "+p.name+"."); }
-    if (s.type==="scene"){ p.coins-=s.pr; p.activeScene=s.scene; toast("Scene changed to "+s.nm); pushLog(p,"🛍️", myName+" set the "+s.nm+" for "+p.name+"."); }
+    if (s.type==="scene"){
+      if (!ownsScene){ p.coins-=s.pr; pushLog(p,"🛍️", myName+" got the "+s.nm+" for "+p.name+"."); }
+      p.inventory = p.inventory||{}; p.inventory["scn_"+s.scene]=1;   // remember ownership
+      p.activeScene=s.scene; toast("Scene changed to "+s.nm);
+    }
     if (s.type==="cosmetic"){
       if (!ownsCosmetic){ p.coins-=s.pr; pushLog(p,"🛍️", myName+" got "+s.nm+" for "+p.name+"."); }
       p.inventory = p.inventory||{}; p.inventory["cos_"+s.id]=1;   // remember ownership (also migrates old buys)
@@ -1076,6 +1094,7 @@ function buy(s){
     }
   });
   buildShop();
+  if (typeof buildBag === "function") buildBag();
 }
 
 function renderLog(){
@@ -1085,6 +1104,98 @@ function renderLog(){
     d.innerHTML=`<span class="t">${timeAgo(e.at)}</span>${e.icon} ${escapeHtml(e.text)}`;
     l.appendChild(d);
   });
+}
+
+/* ---------- inventory / bag ---------- */
+function buildBag(){
+  const root = $("bagInner"); if (!root || !pet) return;
+  const inv = pet.inventory || {};
+  root.innerHTML = "";
+
+  // owned food (count > 0), best first
+  const foods = SHOP.filter(s => s.type==="food" && !s.def && (inv[s.id]||0) > 0)
+                    .sort((a,b)=> b.restore - a.restore);
+  // owned cosmetics
+  const cosmetics = SHOP.filter(s => s.type==="cosmetic" && cosmeticOwned(pet, s.id));
+  // owned scenes
+  const scenes = SHOP.filter(s => s.type==="scene" && sceneOwned(pet, s.scene));
+
+  if (!foods.length && !cosmetics.length && !scenes.length){
+    root.innerHTML = `<div class="bagEmpty">Your bag is empty. 🍃<br>Earn ✦ by caring for ${escapeHtml(pet.name)} and playing games, then pick up treats and trinkets in the <a id="bagToShop">Shop</a>.</div>`;
+    const link = $("bagToShop");
+    if (link) link.onclick = ()=> document.querySelector('.tab[data-tab="shop"]').click();
+    return;
+  }
+
+  function section(title, itemsHTML){
+    const sec = document.createElement("div");
+    sec.className = "bagSection";
+    sec.innerHTML = `<div class="bagHead">${title}</div><div class="bagRow"></div>`;
+    const row = sec.querySelector(".bagRow");
+    itemsHTML.forEach(node => row.appendChild(node));
+    root.appendChild(sec);
+  }
+
+  // ---- food ----
+  if (foods.length){
+    const nodes = foods.map(f=>{
+      const n = inv[f.id]||0;
+      const div = document.createElement("div");
+      div.className = "bagItem";
+      const full = pet.hunger >= 95;
+      div.innerHTML =
+        `<span class="bi-e">${f.e}</span>
+         <span class="bi-main"><div class="bi-nm">${f.nm}</div><div class="bi-sub">restores ~${f.restore} hunger</div></span>
+         <span class="bi-count">×${n}</span>
+         <button class="bi-btn" ${full?"disabled":""}>Feed</button>`;
+      div.querySelector(".bi-btn").onclick = ()=> feedWith(f);
+      return div;
+    });
+    section("Food", nodes);
+  }
+
+  // ---- cosmetics ----
+  if (cosmetics.length){
+    const nodes = cosmetics.map(s=>{
+      const worn = pet.cosmetic===s.id;
+      const div = document.createElement("div");
+      div.className = "bagItem" + (worn?" activeItem":"");
+      div.innerHTML =
+        `<span class="bi-e">${s.e}</span>
+         <span class="bi-main"><div class="bi-nm">${s.nm}</div><div class="bi-sub">${worn?"Currently worn":"Accessory"}</div></span>
+         <button class="bi-btn ${worn?"ghost":""}">${worn?"Remove":"Wear"}</button>`;
+      div.querySelector(".bi-btn").onclick = ()=> buy(s);   // buy() toggles wear (free once owned)
+      return div;
+    });
+    section("Accessories", nodes);
+  }
+
+  // ---- scenes ----
+  if (scenes.length){
+    const nodes = scenes.map(s=>{
+      const active = pet.activeScene===s.scene;
+      const div = document.createElement("div");
+      div.className = "bagItem" + (active?" activeItem":"");
+      div.innerHTML =
+        `<span class="bi-e">${s.e}</span>
+         <span class="bi-main"><div class="bi-nm">${s.nm}</div><div class="bi-sub">${active?"Active backdrop":"Backdrop"}</div></span>
+         <button class="bi-btn ${active?"ghost":""}" ${active?"disabled":""}>${active?"Active":"Use"}</button>`;
+      if (!active) div.querySelector(".bi-btn").onclick = ()=> buy(s);
+      return div;
+    });
+    // also offer the default scene if a non-default is active
+    if (pet.activeScene && pet.activeScene !== "default"){
+      const div = document.createElement("div");
+      div.className = "bagItem";
+      div.innerHTML =
+        `<span class="bi-e">🌙</span>
+         <span class="bi-main"><div class="bi-nm">Default</div><div class="bi-sub">The plain night glow</div></span>
+         <button class="bi-btn ghost">Use</button>`;
+      div.querySelector(".bi-btn").onclick = ()=> act(p=>{ p.activeScene="default"; toast("Back to the default scene"); });
+      nodes.push(div);
+    }
+    section("Scenes", nodes);
+  }
 }
 
 /* ============================================================
