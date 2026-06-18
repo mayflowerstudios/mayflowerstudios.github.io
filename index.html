@@ -13,7 +13,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=2" />
   <link rel="apple-touch-icon" href="/assets/icons/favicon.png?v=2" />
-  <link rel="stylesheet" href="/style.css?v=26" />
+  <link rel="stylesheet" href="/style.css?v=32" />
 
   <style>
     /* ───────────── Home-only flourishes (structure comes from style.css) ───────────── */
@@ -77,8 +77,9 @@
     .hero-stat + .hero-stat { padding-left: 22px; border-left: 1px solid var(--border); }
 
     /* The three things — large, calm cards */
-    .make-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-    @media (max-width: 880px) { .make-grid { grid-template-columns: 1fr; } }
+    .make-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; }
+    @media (max-width: 880px) { .make-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 560px) { .make-grid { grid-template-columns: 1fr; } }
     .make-card {
       display: flex; flex-direction: column; gap: 14px;
       padding: 30px 28px 26px; min-height: 280px;
@@ -212,7 +213,7 @@
       <section id="make" class="sec reveal">
         <div class="sec-head">
           <div class="sec-kicker">✦ What I make</div>
-          <h2 class="sec-title">Three little things</h2>
+          <h2 class="sec-title">Four little things</h2>
           <p class="sec-sub">Small in scope, made with care — each one designed to bring people into the same moment.</p>
         </div>
 
@@ -241,6 +242,19 @@
               <span class="make-tag">mini-games</span>
             </div>
             <a href="/together.html" class="btn-pri sm">Open a room</a>
+          </article>
+
+          <article class="card card-accent-top make-card">
+            <div class="card-shine"></div>
+            <div class="make-icon">🌱</div>
+            <h3>Companion</h3>
+            <p>Raise a little creature that lives with your account — feed it, play with it, and watch it grow over days and weeks. Keep it to yourself, or share one with a friend and raise it together.</p>
+            <div class="make-tags">
+              <span class="make-tag">grows over time</span>
+              <span class="make-tag">solo or shared</span>
+              <span class="make-tag">always cozy</span>
+            </div>
+            <a href="/companion.html" class="btn-pri sm">Meet your companion</a>
           </article>
 
           <article class="card card-accent-top make-card">
