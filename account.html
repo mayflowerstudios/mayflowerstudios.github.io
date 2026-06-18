@@ -11,7 +11,18 @@
   <link rel="stylesheet" href="/style.css?v=32" />
   <style>
     .acctWrap { max-width: 460px; margin: 0 auto; }
+    /* when the profile is showing, allow a wider two-column canvas */
+    .acctWrap.wide { max-width: 920px; }
     .acctCard { padding: 30px 28px; }
+
+    /* profile two-column layout */
+    .profCols { display: grid; grid-template-columns: minmax(280px, 360px) 1fr; gap: 30px; align-items: start; }
+    .profShowcase { position: sticky; top: 90px; display: flex; flex-direction: column; }
+    .profEditor { min-width: 0; }
+    @media (max-width: 860px) {
+      .profCols { grid-template-columns: 1fr; gap: 4px; }
+      .profShowcase { position: static; }
+    }
     .acctCard h1 { font-family: var(--font-d); font-weight: 400; font-size: 32px; margin-bottom: 6px; }
     .acctCard .lead { font-size: 14px; color: var(--text-2); margin-bottom: 22px; line-height: 1.6; }
 
@@ -61,7 +72,7 @@
     .profAvatar { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--rose), var(--violet)); display: flex; align-items: center; justify-content: center; font-size: 24px; color: #0b1120; font-family: var(--font-d); flex-shrink: 0; overflow: hidden; }
     .profAvatar img { width: 100%; height: 100%; object-fit: cover; }
     .profName { font-family: var(--font-d); font-size: 24px; }
-    .profEmail { font-size: 13px; color: var(--text-3); }
+    .profEmail { font-size: 13px; color: var(--text-3); margin: 10px 2px 0; }
     .ghostBtn { width: 100%; padding: 12px; border-radius: var(--r-md); cursor: pointer; font-family: var(--font-b); font-weight: 500; font-size: 14px; color: var(--text-2); background: rgba(255,255,255,.06); border: 1px solid var(--border-2); transition: all 160ms var(--ease); margin-top: 10px; }
     .ghostBtn:hover { color: var(--text); background: rgba(255,255,255,.10); }
 
@@ -213,7 +224,7 @@
     .petsEmpty a { color: var(--violet); font-weight: 600; }
 
     /* ── achievements ── */
-    .achGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+    .achGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 9px; }
     .achBadge {
       display: flex; flex-direction: column; align-items: center; text-align: center; gap: 5px;
       padding: 14px 10px; border-radius: var(--r-md); border: 1px solid var(--border);
@@ -271,6 +282,10 @@
 
       <!-- PROFILE (signed in) -->
       <div class="card acctCard" id="profileView" style="display:none;">
+       <div class="profCols">
+
+        <!-- LEFT: showcase -->
+        <div class="profShowcase">
 
         <!-- live preview: how others see you -->
         <div class="previewCard" id="previewCard">
@@ -303,7 +318,7 @@
           </div>
         </div>
 
-        <p class="profEmail" id="profEmail" style="margin:-10px 0 4px;"></p>
+        <p class="profEmail" id="profEmail"></p>
 
         <!-- ── companions ── -->
         <div class="secLabel">Your companions</div>
@@ -315,6 +330,11 @@
         <div class="secLabel">Achievements</div>
         <div class="achCount" id="achCount">—</div>
         <div class="achGrid" id="achGrid"></div>
+
+        </div><!-- /profShowcase -->
+
+        <!-- RIGHT: editor -->
+        <div class="profEditor">
 
         <!-- ── identity ── -->
         <div class="secLabel">Your look</div>
@@ -329,16 +349,17 @@
           <div class="emojiGrid" id="emojiGrid"></div>
         </div>
 
-        <div class="field">
-          <label for="editName">Display name</label>
-          <input id="editName" type="text" maxlength="32" placeholder="your name" />
-        </div>
-
-        <div class="field">
-          <label for="editAccent">Accent color</label>
-          <div class="accentRow">
-            <input id="editAccent" type="color" value="#f9a8d4" />
-            <div class="swatchRow" id="swatchRow"></div>
+        <div class="fieldRow">
+          <div class="field">
+            <label for="editName">Display name</label>
+            <input id="editName" type="text" maxlength="32" placeholder="your name" />
+          </div>
+          <div class="field">
+            <label for="editAccent">Accent color</label>
+            <div class="accentRow">
+              <input id="editAccent" type="color" value="#f9a8d4" />
+              <div class="swatchRow" id="swatchRow"></div>
+            </div>
           </div>
         </div>
 
@@ -365,13 +386,13 @@
         <div class="secLabel">About you</div>
 
         <div class="field">
-          <label for="editPronouns">Pronouns</label>
-          <input id="editPronouns" type="text" maxlength="32" placeholder="she/her, they/them…" />
+          <label for="editStatus">Status / mood</label>
+          <input id="editStatus" type="text" maxlength="120" placeholder="thinking of you 💭" />
         </div>
 
         <div class="field">
-          <label for="editStatus">Status / mood</label>
-          <input id="editStatus" type="text" maxlength="120" placeholder="thinking of you 💭" />
+          <label for="editPronouns">Pronouns</label>
+          <input id="editPronouns" type="text" maxlength="32" placeholder="she/her, they/them…" />
         </div>
 
         <div class="field">
@@ -397,6 +418,10 @@
 
         <button class="ghostBtn" id="signOutBtn">Sign out</button>
         <div class="acctMsg" id="profMsg"></div>
+
+        </div><!-- /profEditor -->
+
+       </div><!-- /profCols -->
       </div>
 
     </div>
@@ -484,8 +509,9 @@
     }
 
     function renderProfile(user, profile) {
-      if (!user) { show($("authView"), true); show($("profileView"), false); return; }
-      show($("authView"), false); show($("profileView"), true);
+      const wrap = document.querySelector(".acctWrap");
+      if (!user) { show($("authView"), true); show($("profileView"), false); if (wrap) wrap.classList.remove("wide"); return; }
+      show($("authView"), false); show($("profileView"), true); if (wrap) wrap.classList.add("wide");
       buildEmojiGrid(); buildSwatches();
 
       const p = profile || {};
