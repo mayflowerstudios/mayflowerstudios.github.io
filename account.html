@@ -192,6 +192,40 @@
     }
     .switch input:checked + .switchTrack { background: rgba(110,231,183,.25); border-color: rgba(110,231,183,.5); }
     .switch input:checked + .switchTrack::before { transform: translateX(20px); background: var(--emerald); }
+
+    /* ── pets strip ── */
+    .petsStrip { display: flex; gap: 10px; flex-wrap: wrap; }
+    .petCard {
+      display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit;
+      padding: 10px 13px; border-radius: var(--r-md); flex: 1 1 160px; min-width: 0;
+      border: 1px solid var(--border-2); background: rgba(255,255,255,.03);
+      transition: transform 130ms var(--ease), border-color 130ms var(--ease), background 130ms var(--ease);
+    }
+    .petCard:hover { transform: translateY(-1px); border-color: rgba(196,181,253,.4); background: rgba(255,255,255,.06); }
+    .petCard .petEmoji { font-size: 26px; line-height: 1; flex-shrink: 0; }
+    .petCard .petMain { min-width: 0; }
+    .petCard .petName { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .petCard .petSub { font-size: 11.5px; color: var(--text-3); }
+    .petsEmpty {
+      display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: var(--r-md);
+      border: 1px dashed var(--border-2); background: rgba(255,255,255,.02); color: var(--text-2); font-size: 13px;
+    }
+    .petsEmpty a { color: var(--violet); font-weight: 600; }
+
+    /* ── achievements ── */
+    .achGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+    .achBadge {
+      display: flex; flex-direction: column; align-items: center; text-align: center; gap: 5px;
+      padding: 14px 10px; border-radius: var(--r-md); border: 1px solid var(--border);
+      background: rgba(255,255,255,.02); transition: all 150ms var(--ease);
+    }
+    .achBadge.earned { border-color: rgba(253,230,138,.35); background: rgba(253,230,138,.07); }
+    .achBadge .achIcon { font-size: 26px; line-height: 1; filter: grayscale(1) opacity(.4); transition: filter 150ms var(--ease); }
+    .achBadge.earned .achIcon { filter: none; }
+    .achBadge .achName { font-size: 11.5px; font-weight: 600; line-height: 1.2; }
+    .achBadge .achDesc { font-size: 10.5px; color: var(--text-3); line-height: 1.35; }
+    .achBadge.earned .achName { color: var(--gold); }
+    .achCount { font-size: 12px; color: var(--text-3); margin-bottom: 10px; }
   </style>
 </head>
 <body data-nav="account">
@@ -263,12 +297,24 @@
             <div class="pvBio" id="pvBio" hidden></div>
             <div class="pvMeta">
               <div class="pvStat"><b id="pvFriends">0</b><span>FRIENDS</span></div>
+              <div class="pvStat"><b id="pvRooms">0</b><span>ROOMS</span></div>
               <div class="pvStat"><b id="pvSince">—</b><span>MEMBER SINCE</span></div>
             </div>
           </div>
         </div>
 
         <p class="profEmail" id="profEmail" style="margin:-10px 0 4px;"></p>
+
+        <!-- ── companions ── -->
+        <div class="secLabel">Your companions</div>
+        <div class="petsStrip" id="petsStrip">
+          <div class="petsEmpty" id="petsEmpty">Loading…</div>
+        </div>
+
+        <!-- ── achievements ── -->
+        <div class="secLabel">Achievements</div>
+        <div class="achCount" id="achCount">—</div>
+        <div class="achGrid" id="achGrid"></div>
 
         <!-- ── identity ── -->
         <div class="secLabel">Your look</div>
@@ -661,13 +707,109 @@
         }
       });
 
-      // live friends count in the preview card
+      // ── live stats + extras (friends, pets, rooms, achievements) ──
+      const stats = { friends: 0, pets: 0, topLevel: 0, rooms: 0, hasBanner: false, hasBio: false, ageDays: 0 };
+
       if (MFAuth.watchFriends) {
         MFAuth.watchFriends(f => {
-          const n = Object.keys(f || {}).length;
-          const el = $("pvFriends"); if (el) el.textContent = n;
+          stats.friends = Object.keys(f || {}).length;
+          const el = $("pvFriends"); if (el) el.textContent = stats.friends;
+          renderAchievements();
         });
       }
+
+      async function loadExtras() {
+        const p = MFAuth.profile || {};
+        stats.hasBanner = !!p.bannerURL;
+        stats.hasBio = !!(p.bio && p.bio.trim());
+        if (p.createdAt) stats.ageDays = Math.floor((Date.now() - p.createdAt) / 86400000);
+
+        // pets
+        try {
+          const pets = MFAuth.listMyPets ? await MFAuth.listMyPets() : [];
+          stats.pets = pets.length;
+          stats.topLevel = pets.reduce((m, x) => Math.max(m, x.level || 0), 0);
+          renderPets(pets);
+        } catch (_) { renderPets([]); }
+
+        // rooms owned
+        try {
+          if (window.MFRooms && MFRooms.whenReady) {
+            MFRooms.whenReady(async () => {
+              const c = await MFRooms.countOwned(MFAuth.uid);
+              stats.rooms = c.total;
+              const el = $("pvRooms"); if (el) el.textContent = c.total;
+              renderAchievements();
+            });
+          }
+        } catch (_) {}
+
+        renderAchievements();
+      }
+
+      function renderPets(pets) {
+        const strip = $("petsStrip");
+        if (!pets.length) {
+          strip.innerHTML = `<div class="petsEmpty">🌱 No companion yet — <a href="/companion.html">raise a little creature</a> and it'll show up here.</div>`;
+          return;
+        }
+        strip.innerHTML = "";
+        pets.forEach(pt => {
+          const a = document.createElement("a");
+          a.className = "petCard";
+          a.href = "/companion.html";
+          a.innerHTML =
+            `<span class="petEmoji">${pt.emoji}</span>
+             <span class="petMain">
+               <span class="petName">${escapeForHtml(pt.name)}</span>
+               <span class="petSub">Lvl ${pt.level} · ${pt.shared ? (pt.withName ? "with " + escapeForHtml(pt.withName) : "shared") : "just you"}</span>
+             </span>`;
+          strip.appendChild(a);
+        });
+      }
+
+      // Achievements derive entirely from data we already have — no extra
+      // storage, so they're always accurate and never stuck at zero.
+      function achievementList() {
+        return [
+          { id: "joined",   icon: "🌸", name: "Welcome",      desc: "Made an account",          earned: true },
+          { id: "named",    icon: "🪪", name: "Identity",     desc: "Set a username",            earned: !!(MFAuth.profile && MFAuth.profile.username) },
+          { id: "decorated",icon: "🖼️", name: "Decorated",    desc: "Added a banner",            earned: stats.hasBanner },
+          { id: "open",     icon: "📖", name: "Open Book",    desc: "Wrote a bio",               earned: stats.hasBio },
+          { id: "friend1",  icon: "🤝", name: "Made a Friend",desc: "Added 1 friend",            earned: stats.friends >= 1 },
+          { id: "social",   icon: "💞", name: "Social",       desc: "5 friends",                 earned: stats.friends >= 5 },
+          { id: "host",     icon: "🚪", name: "Host",         desc: "Opened a room",             earned: stats.rooms >= 1 },
+          { id: "regular",  icon: "🏡", name: "Regular",      desc: "Opened 5 rooms",            earned: stats.rooms >= 5 },
+          { id: "caretaker",icon: "🌱", name: "Caretaker",    desc: "Raised a companion",        earned: stats.pets >= 1 },
+          { id: "grower",   icon: "🌟", name: "Grower",       desc: "A companion reached lvl 5", earned: stats.topLevel >= 5 },
+          { id: "devoted",  icon: "🦄", name: "Devoted",      desc: "A companion reached lvl 18",earned: stats.topLevel >= 18 },
+          { id: "veteran",  icon: "🗓️", name: "Settled In",   desc: "30 days as a member",       earned: stats.ageDays >= 30 },
+        ];
+      }
+      function renderAchievements() {
+        const grid = $("achGrid");
+        if (!grid) return;
+        const list = achievementList();
+        const earned = list.filter(a => a.earned).length;
+        $("achCount").textContent = `${earned} of ${list.length} unlocked`;
+        grid.innerHTML = "";
+        list.forEach(a => {
+          const d = document.createElement("div");
+          d.className = "achBadge" + (a.earned ? " earned" : "");
+          d.title = a.earned ? "Unlocked!" : "Locked";
+          d.innerHTML =
+            `<span class="achIcon">${a.icon}</span>
+             <span class="achName">${a.name}</span>
+             <span class="achDesc">${a.desc}</span>`;
+          grid.appendChild(d);
+        });
+      }
+
+      function escapeForHtml(s){ return String(s||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+      // load extras whenever the profile (re)renders
+      MFAuth.onChange((user) => { if (user) loadExtras(); });
+      loadExtras();
 
       $("saveProfileBtn").addEventListener("click", async () => {
         clearMsg($("profMsg"));

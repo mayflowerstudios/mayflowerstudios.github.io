@@ -319,5 +319,27 @@
     return () => m.off(r, "value", h);
   };
 
+  // Count rooms the given user owns (one-shot read; for profile stats). Returns
+  // { total, watch, games, date }.
+  MFRooms.countOwned = async function (uid) {
+    const empty = { total: 0, watch: 0, games: 0, date: 0 };
+    if (!ready() || !uid) return empty;
+    const m = dbmod(), d = db();
+    try {
+      const snap = await m.get(m.ref(d, "rooms"));
+      if (!snap.exists()) return empty;
+      const all = snap.val() || {};
+      const out = { ...empty };
+      for (const id in all) {
+        const r = all[id];
+        if (r && r.owner === uid) {
+          out.total++;
+          if (out[r.type] !== undefined) out[r.type]++;
+        }
+      }
+      return out;
+    } catch (_) { return empty; }
+  };
+
   window.MFRooms = MFRooms;
 })();

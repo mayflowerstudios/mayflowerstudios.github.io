@@ -343,6 +343,57 @@
         await MFAuth.updateProfile({ bannerURL: "" });
       };
 
+      // ---- pet summaries (for the profile page) ----
+      // Reads the user's bond index (userPets/$uid), then each pet record.
+      // Returns [{ bondId, name, level, emoji, shared, withName }]. Safe to call
+      // when signed out (returns []). Errors degrade to an empty list.
+      const PET_STAGES = [
+        { minLevel: 1, emoji: "🥚" }, { minLevel: 2, emoji: "🐣" },
+        { minLevel: 5, emoji: "🦊" }, { minLevel: 10, emoji: "🌟" },
+        { minLevel: 18, emoji: "🦄" },
+      ];
+      function petEmoji(p) {
+        let e = "🥚";
+        for (const st of PET_STAGES) if ((p.level || 1) >= st.minLevel) e = st.emoji;
+        return e;
+      }
+      MFAuth.listMyPets = async () => {
+        if (!MFAuth.user) return [];
+        const uid = MFAuth.user.uid;
+        try {
+          const idxSnap = await dbMod.get(dbMod.ref(db, `userPets/${uid}`));
+          if (!idxSnap.exists()) return [];
+          const idx = idxSnap.val() || {};
+          const out = [];
+          for (const bondId of Object.keys(idx)) {
+            try {
+              const ps = await dbMod.get(dbMod.ref(db, `pets/${bondId}`));
+              if (!ps.exists()) continue;
+              const p = ps.val();
+              const entry = idx[bondId] || {};
+              let withName = "";
+              if (entry.with) {
+                try {
+                  const wp = await dbMod.get(dbMod.ref(db, `users/${entry.with}`));
+                  if (wp.exists()) withName = (wp.val().displayName) || "";
+                } catch (_) {}
+              }
+              out.push({
+                bondId,
+                name: p.name || "Pip",
+                level: p.level || 1,
+                emoji: petEmoji(p),
+                shared: entry.role === "shared",
+                withName,
+              });
+            } catch (_) {}
+          }
+          // newest/strongest first
+          out.sort((a, b) => b.level - a.level);
+          return out;
+        } catch (_) { return []; }
+      };
+
       // ---- presence (online + lastSeen) with optional "appear offline" ----
       // Appear-offline is a per-device privacy choice stored locally. When on,
       // we publish "offline" even while connected, so friends don't see us as
