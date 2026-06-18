@@ -188,6 +188,10 @@
           patch.photoURL = fields.photoURL.slice(0, 500);
           patch.avatarType = "photo";
         }
+        // bannerURL: a string sets it; an empty string clears it (both valid)
+        if (typeof fields.bannerURL === "string") {
+          patch.bannerURL = fields.bannerURL.slice(0, 500);
+        }
         if (!Object.keys(patch).length) return MFAuth.profile;
         try {
           await dbMod.update(dbMod.ref(db, `users/${MFAuth.user.uid}`), patch);
