@@ -1981,10 +1981,24 @@
             });
           }).catch((err) => { console.error(err); setConn("off", "Connection failed"); });
         }
+        // Wait for auth to SETTLE before gating. The room's rules require a
+        // valid auth token for non-public rooms; connecting before the session
+        // is restored writes presence as a guest and gets PERMISSION_DENIED,
+        // leaving us stuck on "Connecting…". onChange fires immediately if auth
+        // is already resolved, otherwise on first resolution — either way we
+        // only proceed once we truly know whether we're signed in.
+        function gateAfterAuth() {
+          if (window.MFAuth && MFAuth.onChange) {
+            let started = false;
+            MFAuth.onChange(() => { if (!started) { started = true; unifiedGate(); } });
+          } else {
+            unifiedGate();
+          }
+        }
         // rooms.js is injected by shared.js asynchronously, so it may not be on
         // window yet. Poll briefly for it before giving up.
         (function awaitRooms(tries) {
-          if (window.MFRooms && MFRooms.whenReady) { MFRooms.whenReady(unifiedGate); return; }
+          if (window.MFRooms && MFRooms.whenReady) { MFRooms.whenReady(gateAfterAuth); return; }
           if (tries > 50) { setConn("off", "Couldn't load rooms"); return; }   // ~5s ceiling
           setTimeout(() => awaitRooms(tries + 1), 100);
         })(0);
@@ -2000,7 +2014,11 @@
         const presRef = ref(db, `watch/${ROOM}/presence/${clientId}`);
         myPresRef = presRef;
 
-        set(presRef, { name: myName, idk: identityId(), t: Date.now() });
+        set(presRef, { name: myName || "Guest", idk: identityId(), t: Date.now() })
+          .catch((err) => {
+            console.error("presence write rejected:", err && err.code, err);
+            setConn("off", "Can't join (permission)");
+          });
         onDisconnect(presRef).remove();
 
         // Last-one-out safety: if we're closing the tab and no one else is here,
