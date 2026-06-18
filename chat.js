@@ -364,6 +364,18 @@
     const go = () => {
       const text = input.value.trim();
       if (!text) return;
+      // If the whole message is just an image/GIF URL, send it as inline media
+      // instead of a plain text link so it renders in the chat.
+      const media = mediaUrlInfo(text);
+      if (media) {
+        input.value = ""; stopTyping();
+        measureRemoteImage(media.url).then((dims) => {
+          sendMedia({ kind: media.kind, url: media.url, w: dims.w, h: dims.h });
+        }).catch(() => {
+          sendMedia({ kind: media.kind, url: media.url });
+        });
+        return;
+      }
       mods.push(chatNode(), { uid: me, name: myName || "someone", text, t: Date.now() });
       afterSend();
       input.value = "";
@@ -421,6 +433,39 @@
       return { kind: p.k === "gif" ? "gif" : "image", url: p.u, w: p.w, h: p.h };
     } catch (_) { return null; }
   }
+  // Detect a message that is nothing but a single image/GIF URL, so it can be
+  // posted as inline media. Accepts common image extensions plus the popular
+  // GIF hosts (Giphy/Tenor/Klipy) whose share links don't end in .gif.
+  function mediaUrlInfo(text) {
+    if (!/^https?:\/\/\S+$/i.test(text) || /\s/.test(text)) return null;
+    let u;
+    try { u = new URL(text); } catch (_) { return null; }
+    const path = u.pathname.toLowerCase();
+    const host = u.hostname.toLowerCase();
+    const isGifExt = /\.gif($|\?)/i.test(text) || /\.gif$/i.test(path);
+    const isImgExt = /\.(png|jpe?g|webp|bmp|avif)($|\?)/i.test(text) || /\.(png|jpe?g|webp|bmp|avif)$/i.test(path);
+    // Direct media CDNs serve the image bytes themselves; their share-page
+    // counterparts (e.g. tenor.com/view/..., giphy.com/gifs/...) do NOT and
+    // would just 404 in an <img>, so those stay as plain links.
+    const isDirectGifHost = /(^|\.)(media\.tenor\.com|c\.tenor\.com)$/i.test(host)
+      || /(^|\.)(media\d*\.giphy\.com|i\.giphy\.com)$/i.test(host)
+      || /(^|\.)klipy\.(com|co)$/i.test(host);
+    if (isGifExt || isDirectGifHost) return { kind: "gif", url: text };
+    if (isImgExt) return { kind: "image", url: text };
+    return null;
+  }
+  // Load a remote image just to read its natural dimensions (best-effort).
+  function measureRemoteImage(url) {
+    return new Promise((resolve, reject) => {
+      const im = new Image();
+      let done = false;
+      const t = setTimeout(() => { if (!done) { done = true; reject(new Error("timeout")); } }, 6000);
+      im.onload = () => { if (done) return; done = true; clearTimeout(t); resolve({ w: im.naturalWidth || undefined, h: im.naturalHeight || undefined }); };
+      im.onerror = () => { if (done) return; done = true; clearTimeout(t); reject(new Error("load")); };
+      im.src = url;
+    });
+  }
+
   function sendMedia({ kind, url, w, h }) {
     if (!url) return Promise.reject();
     return Promise.resolve(
