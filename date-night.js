@@ -40,13 +40,22 @@ function timeAgo(ts){
 let myId = null;
 let displayName = "";
 
+// Combined connection + presence status for the single status pill.
+let dnOnline = false, dnHere = 1;
+function paintConn(){
+  const el = $("connText");
+  if (!el) return;
+  if (!dnOnline){ el.textContent = "Offline"; return; }
+  el.textContent = dnHere <= 1 ? "Connected · waiting for others" : `Connected · ${dnHere} here`;
+}
+
 let db = null;
 if (FIREBASE_READY){
   const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   db = getDatabase(app);
-  $("connText").textContent = "ready";
+  $("connText").textContent = "Connecting…";
 } else {
-  $("connText").textContent = "offline";
+  $("connText").textContent = "Offline";
 }
 
 let ROOM = null;
@@ -78,6 +87,13 @@ function refreshIdentity(){
     }
     if (!displayName) displayName = localStorage.getItem("dn_guest_name") || "guest";
   }
+  // Reflect into the bar's name field: account name fills + locks it; guests can type.
+  const ni = $("nameInput");
+  if (ni){
+    ni.value = displayName === "guest" ? "" : displayName;
+    ni.readOnly = authOK;
+    ni.title = authOK ? "From your account" : "";
+  }
 }
 
 // ---------- room entry ----------
@@ -86,11 +102,17 @@ const params = new URLSearchParams(location.search);
 function rawRoomId(s){ return (s||"").replace(/[.#$\[\]\/]/g,"").trim().slice(0,60); }
 const presetRoom = rawRoomId(params.get("room"));
 
-$("leaveBtn").addEventListener("click", () => { location.href = "together.html"; });
-$("copyBtn").addEventListener("click", async () => {
+$("copyRoomBtn").addEventListener("click", async () => {
   const url = location.origin + location.pathname + "?room=" + encodeURIComponent(ROOM);
   try { await navigator.clipboard.writeText(url); toast("Link copied 🔗"); }
   catch { toast(url); }
+});
+// Guests can set their own display name from the bar.
+$("nameInput").addEventListener("input", () => {
+  if (authOK) return;                       // signed-in name is locked
+  displayName = ($("nameInput").value || "").slice(0,24) || "guest";
+  try { localStorage.setItem("dn_guest_name", displayName); } catch(_){}
+  if (ROOM){ try { set(P(`presence/${myId}/name`), displayName); } catch(_){} }
 });
 
 function promptSignIn(){
@@ -156,7 +178,6 @@ function enterRoom(room){
   ROOM = room;
   $("gateView").style.display = "none";
   $("roomView").style.display = "block";
-  $("roomLabel").textContent = room;
   const u = new URL(location.href); u.searchParams.set("room", room); history.replaceState(null,"",u);
 
   setupTabs();
@@ -195,8 +216,9 @@ function setupPresence(){
   setInterval(write, 20000);
   onValue(ref(db, ".info/connected"), (snap) => {
     const on = snap.val() === true;
+    dnOnline = on;
     $("connDot").className = "dot " + (on ? "on" : "off");
-    $("connText").textContent = on ? "connected" : "offline";
+    paintConn();
     if (on) write();
   });
   onValue(P("presence"), (snap) => {
@@ -209,7 +231,8 @@ function setupPresence(){
       else { try { set(P(`presence/${id}`), null); } catch(_){} }
     });
     const ids = Object.keys(all);
-    $("hereCount").textContent = ids.length;
+    dnHere = ids.length;
+    paintConn();
     const note = $("missNote");
     if (ids.length < 2){ note.style.display = "block"; note.textContent = "Waiting for your person to join… share the link with the 🔗 button above. 💕"; }
     else { note.style.display = "none"; }

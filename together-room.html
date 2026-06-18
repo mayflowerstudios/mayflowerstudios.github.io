@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Together — Mayflower Studios</title>
-  <link rel="stylesheet" href="/style.css?v=29" />
+  <link rel="stylesheet" href="/style.css?v=31" />
 
   <style>
     .tWrap{ max-width:1100px; margin:0 auto; padding:22px; }
@@ -35,7 +35,7 @@
     .title{ margin:10px 0 6px; font-family:var(--font-d); font-weight:400; font-size:44px; letter-spacing:.2px; line-height:1.05; }
     .sub{ margin:0; opacity:.78; line-height:1.6; max-width:70ch; }
 
-    .roomBar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:16px; }
+    .roomBar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:16px; justify-content:flex-end; }
     .pillStat{
       font-size:13px; opacity:.9;
       padding:7px 12px; border-radius:999px;
@@ -45,12 +45,23 @@
     .dot{ width:9px;height:9px;border-radius:50%; background:#facc15; box-shadow:0 0 8px rgba(250,204,21,.6); }
     .dot.on{ background:#34d399; box-shadow:0 0 8px rgba(52,211,153,.7); }
     .dot.off{ background:#fb7185; box-shadow:0 0 8px rgba(251,113,133,.6); }
+    .namePill{ padding-top:3px; padding-bottom:3px; }
+    .lobbyLink{
+      text-decoration:none; color:inherit; cursor:pointer;
+      border-color:rgba(196,181,253,.30); background:rgba(196,181,253,.12);
+      transition:filter .12s ease, transform .12s ease, background .12s ease;
+      font-family:inherit; font-size:13px;
+    }
+    .lobbyLink:hover{ filter:brightness(1.1); transform:translateY(-1px); background:rgba(196,181,253,.20); }
+    #copyRoomBtn{ margin-right:auto; }
     .nameInput{
-      width:120px; background:transparent; border:0; color:inherit;
+      width:96px; background:transparent; border:0; color:inherit;
       font-size:13px; padding:2px 0; border-bottom:1px solid rgba(255,255,255,.18);
     }
     .nameInput:focus{ outline:none; border-bottom-color: rgba(196,181,253,.6); }
     .nameInput::placeholder{ opacity:.5 }
+    .nameInput[readonly]{ border-bottom-color: transparent; cursor: default; opacity:.95; }
+    .nameInput[readonly]:focus{ border-bottom-color: transparent; }
 
     .divider{ height:1px; background: rgba(255,255,255,.10); margin:20px 0; }
 
@@ -386,12 +397,13 @@
           <!-- ROOM: shown after entering -->
           <div id="roomView" style="display:none;">
             <div class="roomBar">
-              <span class="pillStat">🚪 <b id="roomLabel">—</b></span>
-              <span class="pillStat"><span class="dot" id="connDot"></span> <span id="connText">connecting…</span></span>
-              <span class="pillStat">💞 <span id="hereCount">1</span> here</span>
-              <span class="pillStat">🪪 <input class="nameInput" id="nameInput" type="text" maxlength="24" placeholder="your name" /></span>
-              <button class="btn ghost" id="copyBtn" style="padding:7px 12px; font-size:13px;">🔗 Copy link</button>
-              <button class="btn ghost" id="leaveBtn" style="padding:7px 12px; font-size:13px;">↩ Leave</button>
+              <a class="pillStat lobbyLink" href="together.html" title="Back to Together">🏠 Together</a>
+              <button class="pillStat lobbyLink" id="copyRoomBtn" title="Copy room link">🔗 Copy link</button>
+              <span class="pillStat"><span class="dot" id="connDot"></span><span id="connText">Connecting…</span></span>
+              <span class="pillStat namePill">You:
+                <input id="nameInput" class="nameInput" type="text" maxlength="24"
+                       placeholder="your name" autocomplete="off" spellcheck="false" />
+              </span>
             </div>
 
             <div class="whoHere" id="whoHere"></div>
@@ -648,7 +660,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/shared.js?v=30"></script>
+  <script src="/shared.js?v=31"></script>
 
   <script>window._firefliesLoaded = true;</script>
   <script src="/fireflies.js"></script>
@@ -782,14 +794,24 @@
       const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
       db = getDatabase(app);
       try { storage = getStorage(app); } catch(_){ storage = null; }
-      $("connText").textContent = "ready";
+      $("connText").textContent = "Connecting…";
     } else {
-      $("connText").textContent = "offline";
+      $("connText").textContent = "Offline";
     }
 
     let ROOM = null;
     let displayName = localStorage.getItem("tg_name") || "";
     let mySymbol = null; // "X" or "O" for tic-tac-toe seat
+
+    // Combined connection + presence status, painted into the single status pill
+    // (mirrors the Watch page: "Connected · N here").
+    let connOnline = false, hereCount = 1;
+    function paintConn(){
+      const el = $("connText");
+      if (!el) return;
+      if (!connOnline){ el.textContent = "Offline"; return; }
+      el.textContent = hereCount <= 1 ? "Connected · waiting for others" : `Connected · ${hereCount} here`;
+    }
 
     // If signed in, the account name is the source of truth and the name field
     // is filled + locked. Signed-out visitors can still type a name to join
@@ -820,8 +842,7 @@
     function rawRoomId(s){ return (s||"").replace(/[.#$\[\]\/]/g,"").trim().slice(0,60); }
     const presetRoom = rawRoomId(params.get("room"));
 
-    $("leaveBtn").addEventListener("click", () => { location.href = "together.html"; });
-    $("copyBtn").addEventListener("click", async () => {
+    $("copyRoomBtn").addEventListener("click", async () => {
       const url = location.origin + location.pathname + "?room=" + encodeURIComponent(ROOM);
       try { await navigator.clipboard.writeText(url); toast("Link copied 🔗"); }
       catch { toast(url); }
@@ -872,7 +893,6 @@
       ROOM = room;
       $("gateView").style.display = "none";
       $("roomView").style.display = "block";
-      $("roomLabel").textContent = room;
       const u = new URL(location.href); u.searchParams.set("room", room); history.replaceState(null,"",u);
 
       $("nameInput").value = displayName;
@@ -927,8 +947,9 @@
 
       onValue(ref(db, ".info/connected"), (snap) => {
         const on = snap.val() === true;
+        connOnline = on;
         $("connDot").className = "dot " + (on ? "on" : "off");
-        $("connText").textContent = on ? "connected" : "offline";
+        paintConn();
         if (on){ set(pRef, { name: displayName || "someone", tab: currentTab, joined: serverTimestamp(), t: Date.now() }); onDisconnect(pRef).remove(); }
       });
 
@@ -945,7 +966,8 @@
           else { try { remove(ref(db, `together/${ROOM}/presence/${id}`)); } catch(_){} }
         });
         const ids = Object.keys(all);
-        $("hereCount").textContent = ids.length;
+        hereCount = ids.length;
+        paintConn();
         // assign tic-tac-toe seat: earliest-joined present id = X
         const sorted = ids.map(id => ({id, j: all[id].joined || all[id].t || 0}))
                           .sort((a,b) => a.j - b.j);

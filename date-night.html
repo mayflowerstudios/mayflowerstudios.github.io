@@ -13,7 +13,7 @@
   <meta property="og:image" content="https://mayflowerstudios.net/assets/og/together.png" />
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=2" />
-  <link rel="stylesheet" href="/style.css?v=29" />
+  <link rel="stylesheet" href="/style.css?v=31" />
 
   <style>
     .dnWrap{ max-width:1060px; margin:0 auto; padding:22px; }
@@ -73,7 +73,7 @@
     .gateHint{ margin:12px 0 0; font-size:13px; opacity:.6; line-height:1.6; }
 
     /* room bar */
-    .roomBar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .roomBar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
     .pillStat{
       font-size:13px; opacity:.9; padding:7px 12px; border-radius:999px;
       border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05);
@@ -82,12 +82,23 @@
     .dot{ width:9px;height:9px;border-radius:50%; background:#facc15; box-shadow:0 0 8px rgba(250,204,21,.6); }
     .dot.on{ background:#34d399; box-shadow:0 0 8px rgba(52,211,153,.7); }
     .dot.off{ background:#fb7185; box-shadow:0 0 8px rgba(251,113,133,.6); }
+    .namePill{ padding-top:3px; padding-bottom:3px; }
+    .lobbyLink{
+      text-decoration:none; color:inherit; cursor:pointer;
+      border-color:rgba(196,181,253,.30); background:rgba(196,181,253,.12);
+      transition:filter .12s ease, transform .12s ease, background .12s ease;
+      font-family:var(--font-b); font-size:13px;
+    }
+    .lobbyLink:hover{ filter:brightness(1.1); transform:translateY(-1px); background:rgba(196,181,253,.20); }
+    #copyRoomBtn{ margin-right:auto; }
     .nameInput{
-      width:120px; background:transparent; border:0; color:inherit;
+      width:96px; background:transparent; border:0; color:inherit;
       font-size:13px; padding:2px 0; border-bottom:1px solid rgba(255,255,255,.18); font-family:var(--font-b);
     }
     .nameInput:focus{ outline:none; border-bottom-color: rgba(196,181,253,.6); }
     .nameInput::placeholder{ opacity:.5 }
+    .nameInput[readonly]{ border-bottom-color: transparent; cursor: default; opacity:.95; }
+    .nameInput[readonly]:focus{ border-bottom-color: transparent; }
 
     .missNote{
       margin:14px 0 0; padding:12px 14px; border-radius:14px;
@@ -351,11 +362,13 @@
           <!-- ROOM -->
           <div id="roomView" style="display:none;">
             <div class="roomBar">
-              <span class="pillStat">🚪 <b id="roomLabel">—</b></span>
-              <span class="pillStat"><span class="dot" id="connDot"></span> <span id="connText">connecting…</span></span>
-              <span class="pillStat">💞 <span id="hereCount">1</span> here</span>
-              <button class="btn ghost sm" id="copyBtn">🔗 Copy link</button>
-              <button class="btn ghost sm" id="leaveBtn">↩ Leave</button>
+              <a class="pillStat lobbyLink" href="together.html" title="Back to Together">🏠 Together</a>
+              <button class="pillStat lobbyLink" id="copyRoomBtn" title="Copy room link">🔗 Copy link</button>
+              <span class="pillStat"><span class="dot" id="connDot"></span><span id="connText">Connecting…</span></span>
+              <span class="pillStat namePill">You:
+                <input id="nameInput" class="nameInput" type="text" maxlength="24"
+                       placeholder="your name" autocomplete="off" spellcheck="false" />
+              </span>
             </div>
             <div class="missNote" id="missNote" style="display:none;"></div>
 
@@ -461,10 +474,10 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/shared.js?v=30"></script>
+  <script src="/shared.js?v=31"></script>
   <script>window._firefliesLoaded = true;</script>
   <script src="/fireflies.js"></script>
 
-  <script type="module" src="/date-night.js?v=17"></script>
+  <script type="module" src="/date-night.js?v=18"></script>
 </body>
 </html>
