@@ -629,7 +629,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/shared.js?v=31"></script>
+  <script src="/shared.js?v=32"></script>
 
   <script src="fireflies.js"></script>
 
@@ -1728,7 +1728,7 @@
       if (!FIREBASE_READY || !waitingRef || !db) return;
       const myWaitRef = ref(db, `watch/${ROOM}/waiting/${clientId}`);
       if (isBuffering) {
-        safeWrite(() => set(myWaitRef, { name: myName, t: Date.now() }));
+        safeWrite(() => set(myWaitRef, { name: myName, idk: identityId(), t: Date.now() }));
         try { onDisconnect(myWaitRef).remove(); } catch(_) {}
         // Refresh the timestamp while we're still buffering, so a long-but-real
         // buffer isn't mistaken for a stale/crashed entry (WAIT_STALE_MS) and
@@ -1736,7 +1736,7 @@
         clearInterval(waitHeartbeat);
         waitHeartbeat = setInterval(() => {
           if (!localBuffering) { clearInterval(waitHeartbeat); return; }
-          safeWrite(() => set(myWaitRef, { name: myName, t: Date.now() }));
+          safeWrite(() => set(myWaitRef, { name: myName, idk: identityId(), t: Date.now() }));
         }, WAIT_STALE_MS / 2);
       } else {
         clearInterval(waitHeartbeat);
@@ -1787,11 +1787,24 @@
         }
       }
       val = fresh;
-      const ids = Object.keys(val);
-      const n = ids.length;
+      // Collapse multiple sessions of the SAME person (e.g. two computers, or a
+      // phone + laptop) into one. Entries carry an identity key (idk = account
+      // uid when signed in, else the per-device id); we keep the freshest entry
+      // per identity. Older entries without an idk fall back to their own id so
+      // they still each count once.
+      const byIdentity = new Map();   // idk -> { id, val, t }
+      for (const id of ids) {
+        const v = val[id] || {};
+        const key = v.idk || id;
+        const t = v.t || 0;
+        const cur = byIdentity.get(key);
+        if (!cur || t > cur.t) byIdentity.set(key, { id, val: v, t });
+      }
+      const n = byIdentity.size;
       lastPresenceCount = n;
       // Track who's actually here, so stale "waiting" entries from clients that
-      // already left can be ignored (and cleaned up).
+      // already left can be ignored (and cleaned up). This still tracks every
+      // live clientId (for screen-share peers), not the deduped identities.
       const prevPresent = new Set(presentClientIds);
       presentClientIds.clear();
       ids.forEach(id => presentClientIds.add(id));
@@ -1812,22 +1825,27 @@
       }
 
       // A partner who just left should immediately stop showing as "waiting".
-      if (partnerWaiting && !ids.some(id => id !== clientId)) {
+      // "Someone else" = an entry whose identity differs from mine (so your own
+      // second device doesn't count as a partner).
+      const someoneElseHere = ids.some(id => {
+        const v = val[id] || {};
+        return (v.idk ? v.idk !== identityId() : id !== clientId);
+      });
+      if (partnerWaiting && !someoneElseHere) {
         partnerWaiting = false;
         updateWaitingOverlay();
       }
       if (n <= 1) setConn("on", "Connected · waiting for others");
       else setConn("on", `Connected · ${n} here`);
 
-      // sort: you first, then by join time
-      const people = ids.map(id => {
-        let nm = (val[id] && val[id].name) || "";
-        // A heartbeat that landed a beat before the name resolved (or an
-        // old-format entry) can momentarily lack a name. Fall back to the last
-        // name we saw for this client so it doesn't flicker to "Guest".
+      // sort: you first, then by join time — built from the deduped identities
+      const myKey = identityId();
+      const people = Array.from(byIdentity.values()).map(({ id, val: v, t }) => {
+        let nm = v.name || "";
         if (nm) lastKnownNames.set(id, nm);
         else nm = lastKnownNames.get(id) || "Guest";
-        return { id, name: nm, t: (val[id] && val[id].t) || 0, me: id === clientId };
+        const mine = (v.idk ? v.idk === myKey : id === clientId);
+        return { id, name: nm, t, me: mine };
       }).sort((a, b) => (b.me - a.me) || (a.t - b.t));
 
       presenceList.innerHTML = "";
@@ -1875,7 +1893,7 @@
       nameInput.title = lock ? "Using your account name — change it on your account page" : "";
       nameInput.placeholder = lock ? "" : "your name";
       // push to everyone
-      if (myPresRef) set(myPresRef, { name: myName, t: Date.now() });
+      if (myPresRef) set(myPresRef, { name: myName, idk: identityId(), t: Date.now() });
       if (lastHostId === clientId && currentKind) {
         try { broadcast(isPlayingNow() ? "playing" : "paused"); } catch (_) {}
       }
@@ -1918,7 +1936,7 @@
       if (authUid) return;   // locked when signed in
       saveName();
       // reflect the new name in the presence list for everyone
-      if (myPresRef) set(myPresRef, { name: myName, t: Date.now() });
+      if (myPresRef) set(myPresRef, { name: myName, idk: identityId(), t: Date.now() });
       // if we're currently the host, refresh the broadcast so partner sees the new name
       if (lastHostId === clientId && currentKind) broadcast(isPlayingNow() ? "playing" : "paused");
     });
@@ -1981,7 +1999,7 @@
         const presRef = ref(db, `watch/${ROOM}/presence/${clientId}`);
         myPresRef = presRef;
 
-        set(presRef, { name: myName, t: Date.now() });
+        set(presRef, { name: myName, idk: identityId(), t: Date.now() });
         onDisconnect(presRef).remove();
 
         // Last-one-out safety: if we're closing the tab and no one else is here,
@@ -2002,7 +2020,7 @@
         window.addEventListener("beforeunload", unloadCleanup);
 
         onValue(ref(db, ".info/connected"), (snap) => {
-          if (snap.val() === true) { set(presRef, { name: myName, t: Date.now() }); onDisconnect(presRef).remove(); }
+          if (snap.val() === true) { set(presRef, { name: myName, idk: identityId(), t: Date.now() }); onDisconnect(presRef).remove(); }
         });
 
         presenceRef = ref(db, `watch/${ROOM}/presence`);
@@ -2111,7 +2129,7 @@
       // the screen locked or the tab backgrounded is still "in the room"; if we
       // stop heartbeating, the other side prunes us after PRESENCE_TTL and our
       // name vanishes from their list. Presence is cheap, so beat it regardless.
-      try { if (myPresRef) set(myPresRef, { name: myName, t: Date.now() }); } catch (_) {}
+      try { if (myPresRef) set(myPresRef, { name: myName, idk: identityId(), t: Date.now() }); } catch (_) {}
       if (pageHidden) return;
       if (lastHostId === clientId && currentKind) {
         try { if (isPlayingNow()) broadcast("playing"); } catch(_){}

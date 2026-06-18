@@ -660,7 +660,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/shared.js?v=31"></script>
+  <script src="/shared.js?v=32"></script>
 
   <script>window._firefliesLoaded = true;</script>
   <script src="/fireflies.js"></script>
@@ -787,6 +787,11 @@
     // stable per-device id
     let myId = localStorage.getItem("wt_id");
     if (!myId){ myId = "u" + Math.random().toString(36).slice(2,10); localStorage.setItem("wt_id", myId); }
+
+    // identity key: the account uid when signed in, else the per-device id.
+    // Used to collapse the same PERSON across multiple devices in the count and
+    // the "who's here" list. (Game seats still key off the per-device id.)
+    function identityKey(){ return (window.MFAuth && MFAuth.uid) ? MFAuth.uid : myId; }
 
     let db = null;
     let storage = null;
@@ -937,12 +942,12 @@
     // ---------- presence ----------
     function setupPresence(){
       const pRef = ref(db, `together/${ROOM}/presence/${myId}`);
-      set(pRef, { name: displayName || "someone", tab: currentTab, joined: serverTimestamp(), t: Date.now() });
+      set(pRef, { name: displayName || "someone", tab: currentTab, idk: identityKey(), joined: serverTimestamp(), t: Date.now() });
       onDisconnect(pRef).remove();
 
       // Heartbeat so we stay "fresh" and aren't pruned as stale by peers.
       setInterval(() => {
-        try { set(pRef, { name: displayName || "someone", tab: currentTab, joined: serverTimestamp(), t: Date.now() }); } catch(_){}
+        try { set(pRef, { name: displayName || "someone", tab: currentTab, idk: identityKey(), joined: serverTimestamp(), t: Date.now() }); } catch(_){}
       }, 20000);
 
       onValue(ref(db, ".info/connected"), (snap) => {
@@ -950,7 +955,7 @@
         connOnline = on;
         $("connDot").className = "dot " + (on ? "on" : "off");
         paintConn();
-        if (on){ set(pRef, { name: displayName || "someone", tab: currentTab, joined: serverTimestamp(), t: Date.now() }); onDisconnect(pRef).remove(); }
+        if (on){ set(pRef, { name: displayName || "someone", tab: currentTab, idk: identityKey(), joined: serverTimestamp(), t: Date.now() }); onDisconnect(pRef).remove(); }
       });
 
       onValue(ref(db, `together/${ROOM}/presence`), (snap) => {
@@ -966,7 +971,19 @@
           else { try { remove(ref(db, `together/${ROOM}/presence/${id}`)); } catch(_){} }
         });
         const ids = Object.keys(all);
-        hereCount = ids.length;
+
+        // Collapse the same person across devices for the count + who's-here
+        // list (game seating below still uses the per-device ids). Keep the
+        // freshest entry per identity; entries without an idk fall back to id.
+        const byIdentity = new Map();
+        ids.forEach(id => {
+          const v = all[id] || {};
+          const key = v.idk || id;
+          const t = v.t || 0;
+          const cur = byIdentity.get(key);
+          if (!cur || t > cur.t) byIdentity.set(key, { id, v, t });
+        });
+        hereCount = byIdentity.size;
         paintConn();
         // assign tic-tac-toe seat: earliest-joined present id = X
         const sorted = ids.map(id => ({id, j: all[id].joined || all[id].t || 0}))
@@ -979,21 +996,24 @@
         if (typeof renderRPS === "function") renderRPS();
         if (typeof renderHM === "function") renderHM();
 
-        // who's here + which game each person is in
+        // who's here + which game each person is in (one chip per person)
+        const myKey = identityKey();
         const who = $("whoHere");
         who.innerHTML = "";
-        sorted.forEach(({id}) => {
-          const p = all[id] || {};
-          const chip = document.createElement("div");
-          chip.className = "whoChip" + (id === myId ? " me" : "");
-          const nm = escapeHtml(p.name || "someone") + (id === myId ? " (you)" : "");
-          const tab = TAB_LABELS[p.tab] || "🌙 idle";
-          chip.innerHTML = `<span class="whoName">${nm}</span><span class="whoTab">· ${tab}</span>`;
-          who.appendChild(chip);
-        });
+        Array.from(byIdentity.values())
+          .sort((a,b) => (a.v.joined||a.t||0) - (b.v.joined||b.t||0))
+          .forEach(({ v, id }) => {
+            const mine = (v.idk ? v.idk === myKey : id === myId);
+            const chip = document.createElement("div");
+            chip.className = "whoChip" + (mine ? " me" : "");
+            const nm = escapeHtml(v.name || "someone") + (mine ? " (you)" : "");
+            const tab = TAB_LABELS[v.tab] || "🌙 idle";
+            chip.innerHTML = `<span class="whoName">${nm}</span><span class="whoTab">· ${tab}</span>`;
+            who.appendChild(chip);
+          });
 
         const note = $("missNote");
-        if (ids.length < 2){ note.style.display="block"; note.textContent = "Waiting for the other person to join this room… share the link with the 🔗 button above."; }
+        if (byIdentity.size < 2){ note.style.display="block"; note.textContent = "Waiting for the other person to join this room… share the link with the 🔗 button above."; }
         else { note.style.display="none"; }
       });
     }

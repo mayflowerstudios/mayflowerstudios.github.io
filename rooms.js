@@ -301,7 +301,21 @@
     const m = dbmod(), d = db();
     const ns = NS[room.type] || "watch";
     const r = m.ref(d, `${ns}/${room.id}/presence`);
-    const h = m.onValue(r, (snap) => cb(snap.exists() ? Object.keys(snap.val()).length : 0));
+    const h = m.onValue(r, (snap) => {
+      if (!snap.exists()) { cb(0); return; }
+      const v = snap.val() || {};
+      // Count one per person: collapse entries that share an identity key (the
+      // account uid when signed in, else the per-device id). Fresh entries only.
+      const now = Date.now();
+      const ids = new Set();
+      for (const k of Object.keys(v)) {
+        const e = v[k] || {};
+        const t = e.t || 0;
+        if (t && (now - t) > 70000) continue;   // stale
+        ids.add(e.idk || k);
+      }
+      cb(ids.size);
+    });
     return () => m.off(r, "value", h);
   };
 

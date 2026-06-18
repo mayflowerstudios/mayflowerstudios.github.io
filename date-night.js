@@ -48,6 +48,9 @@ function paintConn(){
   if (!dnOnline){ el.textContent = "Offline"; return; }
   el.textContent = dnHere <= 1 ? "Connected · waiting for others" : `Connected · ${dnHere} here`;
 }
+// Identity key: account uid when signed in, else the per-device guest id. Lets
+// the same person on two devices count once.
+function identityKey(){ return (window.MFAuth && MFAuth.uid) ? MFAuth.uid : myId; }
 
 let db = null;
 if (FIREBASE_READY){
@@ -210,7 +213,7 @@ function setupTabs(){
 // ---------- presence ----------
 function setupPresence(){
   const pRef = P(`presence/${myId}`);
-  const write = () => { set(pRef, { name: displayName || "someone", t: Date.now() }); onDisconnect(pRef).remove(); };
+  const write = () => { set(pRef, { name: displayName || "someone", idk: identityKey(), t: Date.now() }); onDisconnect(pRef).remove(); };
   write();
   // Heartbeat so we stay "fresh"; stale reload/crash entries age out.
   setInterval(write, 20000);
@@ -230,11 +233,13 @@ function setupPresence(){
       if (id === myId || (now - t) < 70000) all[id] = raw[id];
       else { try { set(P(`presence/${id}`), null); } catch(_){} }
     });
-    const ids = Object.keys(all);
-    dnHere = ids.length;
+    // Count one per person, not per device.
+    const identities = new Set();
+    Object.keys(all).forEach(id => identities.add((all[id] && all[id].idk) || id));
+    dnHere = identities.size;
     paintConn();
     const note = $("missNote");
-    if (ids.length < 2){ note.style.display = "block"; note.textContent = "Waiting for your person to join… share the link with the 🔗 button above. 💕"; }
+    if (dnHere < 2){ note.style.display = "block"; note.textContent = "Waiting for your person to join… share the link with the 🔗 button above. 💕"; }
     else { note.style.display = "none"; }
   });
 }
