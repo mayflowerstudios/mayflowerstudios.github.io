@@ -59,16 +59,24 @@ const ADULT_FORMS = { fed:"🐉", played:"🦋", cared:"🦄" };
 const SHOP = [
   { id:"berry",    e:"🍓", nm:"Berry",         pr:0,   type:"food", restore:18, def:true },
   { id:"honey",    e:"🍯", nm:"Honey",         pr:20,  type:"food", restore:34 },
+  { id:"cookie",   e:"🍪", nm:"Star Cookie",   pr:38,  type:"food", restore:46 },
   { id:"feast",    e:"🍰", nm:"Moon Cake",     pr:60,  type:"food", restore:60 },
+  { id:"sundae",   e:"🍨", nm:"Dream Sundae",  pr:95,  type:"food", restore:85 },
   { id:"bg_garden",e:"🌸", nm:"Garden Scene",  pr:120, type:"scene", scene:"garden" },
   { id:"bg_night", e:"🌌", nm:"Starfall Scene",pr:180, type:"scene", scene:"night" },
+  { id:"bg_beach", e:"🏖️", nm:"Seaside Scene", pr:160, type:"scene", scene:"beach" },
   { id:"hat",      e:"🎀", nm:"Ribbon",        pr:90,  type:"cosmetic" },
+  { id:"flower",   e:"🌷", nm:"Flower Crown",  pr:130, type:"cosmetic" },
+  { id:"party",    e:"🎉", nm:"Party Hat",     pr:140, type:"cosmetic" },
+  { id:"halo",     e:"😇", nm:"Halo",          pr:200, type:"cosmetic" },
   { id:"crown",    e:"👑", nm:"Tiny Crown",    pr:250, type:"cosmetic" },
+  { id:"wizard",   e:"🧙", nm:"Wizard Hat",    pr:300, type:"cosmetic" },
 ];
 const SCENES = {
   default:"radial-gradient(600px 300px at 50% 0%, rgba(157,123,224,.18), transparent 60%)",
   garden:"radial-gradient(600px 320px at 50% 10%, rgba(232,160,196,.28), transparent 65%), linear-gradient(180deg, rgba(143,224,192,.12), transparent)",
   night:"radial-gradient(500px 300px at 70% 0%, rgba(110,79,176,.35), transparent 60%), radial-gradient(300px 200px at 20% 20%, rgba(243,217,160,.18), transparent 60%)",
+  beach:"radial-gradient(600px 320px at 50% 0%, rgba(125,211,252,.28), transparent 60%), linear-gradient(180deg, rgba(253,224,138,.14), transparent 70%)",
 };
 
 const clamp = (n)=> Math.max(0, Math.min(100, Math.round(n)));

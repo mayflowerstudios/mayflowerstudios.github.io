@@ -89,12 +89,12 @@
     .creatureWrap .creature{ margin:0; }
     /* the hat sits over the top of the emoji and rides the SAME bob/hop timeline as
        the creature, so they move together instead of drifting apart */
-    .cosmetic{ position:absolute; top:8px; left:50%; font-size:46px; line-height:1;
+    .cosmetic{ position:absolute; top:-12px; left:50%; font-size:46px; line-height:1;
       pointer-events:none; user-select:none; filter:drop-shadow(0 3px 6px rgba(0,0,0,.45));
       transform:translateX(-50%); }
     .cosmetic.idle{ animation:bobHat 3.4s ease-in-out infinite; }
     .cosmetic.happy{ animation:hopHat .55s ease; }
-    @media (max-width:560px){ .cosmetic{ font-size:38px; top:6px; } }
+    @media (max-width:560px){ .cosmetic{ font-size:38px; top:-8px; } }
     @keyframes bob{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-12px);} }
     @keyframes hop{ 0%{transform:translateY(0)} 30%{transform:translateY(-30px) scale(1.05)} 60%{transform:translateY(0)} 80%{transform:translateY(-10px)} 100%{transform:translateY(0)} }
     /* same motion as bob/hop but preserves the hat's horizontal centering */
@@ -488,6 +488,6 @@
   <div class="toast" id="toast"></div>
 
   <script src="/shared.js?v=32"></script>
-  <script type="module" src="/companion.js?v=11"></script>
+  <script type="module" src="/companion.js?v=12"></script>
 </body>
 </html>
