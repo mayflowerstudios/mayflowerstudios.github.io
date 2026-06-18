@@ -146,6 +146,11 @@ function creatureEmoji(p){
   return st.emoji;
 }
 function xpForLevel(lvl){ return 100 + (lvl-1)*60; }
+// Look up a cosmetic's emoji from the SHOP by id (so it stays in sync).
+function cosmeticEmoji(id){
+  const s = SHOP.find(x => x.id === id && x.type === "cosmetic");
+  return s ? s.e : "";
+}
 function gainXp(p, amt){
   p.xp += amt;
   while (p.xp >= xpForLevel(p.level)){
@@ -654,6 +659,13 @@ function render(){
   $("stageBadge").textContent = currentStage(pet).name;
   const cr = $("creature"); cr.textContent = creatureEmoji(pet);
   cr.classList.toggle("sad", avgStat(pet)<30);
+  // cosmetic overlay (ribbon / crown) — hidden when none or when away
+  const cosEl = $("cosmetic");
+  if (cosEl){
+    const cosEmoji = (!pet.away && pet.cosmetic) ? cosmeticEmoji(pet.cosmetic) : "";
+    if (cosEmoji){ cosEl.textContent = cosEmoji; cosEl.hidden = false; }
+    else { cosEl.hidden = true; cosEl.textContent = ""; }
+  }
   setStat("Hunger",pet.hunger); setStat("Happy",pet.happy); setStat("Energy",pet.energy); setStat("Clean",pet.clean);
   $("lvl").textContent = pet.level;
   $("xpTxt").textContent = pet.xp+" / "+xpForLevel(pet.level)+" xp";
@@ -1036,17 +1048,32 @@ function buildShop(){
 function labelFor(s){
   if (s.type==="food") return "Buy";
   if (s.type==="scene") return (pet && pet.activeScene===s.scene)?"Active":"Use";
-  if (s.type==="cosmetic") return (pet && pet.cosmetic===s.id)?"On":"Wear";
+  if (s.type==="cosmetic"){
+    if (pet && pet.cosmetic===s.id) return "On";
+    if (pet && cosmeticOwned(pet, s.id)) return "Wear";   // already bought
+    return "Buy";
+  }
 }
+// A cosmetic is owned once bought; we remember it in inventory so re-wearing is
+// free. Anything already being worn counts as owned too (covers cosmetics bought
+// before ownership was tracked).
+function cosmeticOwned(p, id){ return !!(p.inventory && p.inventory["cos_"+id]) || p.cosmetic===id; }
 function buy(s){
   if (!pet) return;
-  if (pet.coins<s.pr){ toast("Not enough ✦ — care for "+pet.name+" to earn more"); return; }
+  const ownsCosmetic = (s.type==="cosmetic" && cosmeticOwned(pet, s.id));
+  // Only charge when actually purchasing (food always; scene/cosmetic if not owned).
+  const mustPay = !(s.type==="cosmetic" && ownsCosmetic);
+  if (mustPay && pet.coins<s.pr){ toast("Not enough ✦ — care for "+pet.name+" to earn more"); return; }
   act(p=>{
-    p.coins-=s.pr;
-    if (s.type==="food"){ p.inventory[s.id]=(p.inventory[s.id]||0)+1; toast("Bought "+s.nm+" ×1"); }
-    if (s.type==="scene"){ p.activeScene=s.scene; toast("Scene changed to "+s.nm); }
-    if (s.type==="cosmetic"){ p.cosmetic=(p.cosmetic===s.id?null:s.id); toast(p.name+" tried on the "+s.nm); }
-    pushLog(p,"🛍️", myName+" got "+s.nm+" for "+p.name+".");
+    if (s.type==="food"){ p.coins-=s.pr; p.inventory[s.id]=(p.inventory[s.id]||0)+1; toast("Bought "+s.nm+" ×1"); pushLog(p,"🛍️", myName+" got "+s.nm+" for "+p.name+"."); }
+    if (s.type==="scene"){ p.coins-=s.pr; p.activeScene=s.scene; toast("Scene changed to "+s.nm); pushLog(p,"🛍️", myName+" set the "+s.nm+" for "+p.name+"."); }
+    if (s.type==="cosmetic"){
+      if (!ownsCosmetic){ p.coins-=s.pr; pushLog(p,"🛍️", myName+" got "+s.nm+" for "+p.name+"."); }
+      p.inventory = p.inventory||{}; p.inventory["cos_"+s.id]=1;   // remember ownership (also migrates old buys)
+      // toggle wear on/off (free once owned)
+      p.cosmetic = (p.cosmetic===s.id ? null : s.id);
+      toast(p.cosmetic ? (p.name+" is wearing the "+s.nm+" 🎀") : ("Took off the "+s.nm));
+    }
   });
   buildShop();
 }

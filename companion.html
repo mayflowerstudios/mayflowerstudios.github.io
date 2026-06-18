@@ -81,6 +81,11 @@
     .creature.idle{ animation:bob 3.4s ease-in-out infinite; }
     .creature.happy{ animation:hop .55s ease; }
     .creature.sad{ filter:grayscale(.55) drop-shadow(0 8px 18px rgba(0,0,0,.5)); opacity:.82; }
+    .creatureWrap{ position:relative; display:inline-block; }
+    .cosmetic{ position:absolute; top:-2px; left:50%; transform:translateX(-50%);
+      font-size:46px; line-height:1; pointer-events:none; user-select:none;
+      filter:drop-shadow(0 3px 6px rgba(0,0,0,.45)); animation:bob 3.4s ease-in-out infinite; }
+    @media (max-width:560px){ .cosmetic{ font-size:38px; } }
     @keyframes bob{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-12px);} }
     @keyframes hop{ 0%{transform:translateY(0)} 30%{transform:translateY(-30px) scale(1.05)} 60%{transform:translateY(0)} 80%{transform:translateY(-10px)} 100%{transform:translateY(0)} }
     .mood{ font-size:14px; opacity:.82; font-style:italic; min-height:20px; }
@@ -321,7 +326,10 @@
             <div class="sceneBg" id="sceneBg"></div>
             <div class="stageBadge" id="stageBadge">Hatchling</div>
             <div class="petName"><span id="petNameText">…</span><span class="edit" id="renameBtn" title="rename">✎</span></div>
-            <div class="creature idle" id="creature">🥚</div>
+            <div class="creatureWrap">
+              <div class="creature idle" id="creature">🥚</div>
+              <div class="cosmetic" id="cosmetic" hidden></div>
+            </div>
             <div class="mood" id="mood">A new little life stirs…</div>
             <div class="withBadge" id="withBadge"></div>
           </div>
@@ -446,6 +454,6 @@
   <div class="toast" id="toast"></div>
 
   <script src="/shared.js?v=32"></script>
-  <script type="module" src="/companion.js?v=8"></script>
+  <script type="module" src="/companion.js?v=9"></script>
 </body>
 </html>
