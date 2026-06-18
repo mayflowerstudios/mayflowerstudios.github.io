@@ -1092,21 +1092,25 @@ function buy(s){
   // Only charge when actually purchasing (food always; scene/cosmetic if not owned).
   const mustPay = !(ownsCosmetic || ownsScene);
   if (mustPay && pet.coins<s.pr){ toast("Not enough ✦ — care for "+pet.name+" to earn more"); return; }
-  act(p=>{
-    if (s.type==="food"){ p.coins-=s.pr; p.inventory[s.id]=(p.inventory[s.id]||0)+1; toast("Bought "+s.nm+" ×1"); pushLog(p,"🛍️", myName+" got "+s.nm+" for "+p.name+"."); }
-    if (s.type==="scene"){
-      if (!ownsScene){ p.coins-=s.pr; pushLog(p,"🛍️", myName+" got the "+s.nm+" for "+p.name+"."); }
-      p.inventory = p.inventory||{}; p.inventory["scn_"+s.scene]=1;   // remember ownership
-      p.activeScene=s.scene; toast("Scene changed to "+s.nm);
-    }
-    if (s.type==="cosmetic"){
-      if (!ownsCosmetic){ p.coins-=s.pr; pushLog(p,"🛍️", myName+" got "+s.nm+" for "+p.name+"."); }
-      p.inventory = p.inventory||{}; p.inventory["cos_"+s.id]=1;   // remember ownership (also migrates old buys)
-      // toggle wear on/off (free once owned)
-      p.cosmetic = (p.cosmetic===s.id ? null : s.id);
-      toast(p.cosmetic ? (p.name+" is wearing the "+s.nm+" 🎀") : ("Took off the "+s.nm));
-    }
-  });
+  // Shop actions (food / scene / cosmetic) are allowed regardless of the pet's
+  // away state — they're inventory/cosmetic changes, not care actions, so we
+  // apply + persist directly instead of through act() (which bails when away).
+  if (!pet) return;
+  const p = pet;
+  if (s.type==="food"){ p.coins-=s.pr; p.inventory[s.id]=(p.inventory[s.id]||0)+1; toast("Bought "+s.nm+" ×1"); pushLog(p,"🛍️", myName+" got "+s.nm+" for "+p.name+"."); }
+  if (s.type==="scene"){
+    if (!ownsScene){ p.coins-=s.pr; pushLog(p,"🛍️", myName+" got the "+s.nm+" for "+p.name+"."); }
+    p.inventory = p.inventory||{}; p.inventory["scn_"+s.scene]=1;   // remember ownership
+    p.activeScene=s.scene; toast("Scene changed to "+s.nm);
+  }
+  if (s.type==="cosmetic"){
+    if (!ownsCosmetic){ p.coins-=s.pr; pushLog(p,"🛍️", myName+" got "+s.nm+" for "+p.name+"."); }
+    p.inventory = p.inventory||{}; p.inventory["cos_"+s.id]=1;   // remember ownership (also migrates old buys)
+    // toggle wear on/off (free once owned)
+    p.cosmetic = (p.cosmetic===s.id ? null : s.id);
+    toast(p.cosmetic ? (p.name+" is wearing the "+s.nm+" 🎀") : ("Took off the "+s.nm));
+  }
+  render(); savePet();
   buildShop();
   if (typeof buildBag === "function") buildBag();
 }
@@ -1205,7 +1209,7 @@ function buildBag(){
         `<span class="bi-e">🌙</span>
          <span class="bi-main"><div class="bi-nm">Default</div><div class="bi-sub">The plain night glow</div></span>
          <button class="bi-btn ghost">Use</button>`;
-      div.querySelector(".bi-btn").onclick = ()=> act(p=>{ p.activeScene="default"; toast("Back to the default scene"); });
+      div.querySelector(".bi-btn").onclick = ()=>{ if(!pet) return; pet.activeScene="default"; toast("Back to the default scene"); render(); savePet(); if (typeof buildBag==="function") buildBag(); };
       nodes.push(div);
     }
     section("Scenes", nodes);
