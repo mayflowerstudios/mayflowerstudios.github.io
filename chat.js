@@ -433,9 +433,28 @@
       return { kind: p.k === "gif" ? "gif" : "image", url: p.u, w: p.w, h: p.h };
     } catch (_) { return null; }
   }
+  // Giphy share/media/embed links all carry the asset ID, which maps to a
+  // direct CDN file at i.giphy.com/<id>.gif. We rewrite those so a pasted
+  // Giphy link renders inline instead of staying a plain link.
+  //   giphy.com/gifs/<slug>-<id>   media.giphy.com/media/<id>/giphy.gif
+  //   giphy.com/embed/<id>         i.giphy.com/media/<id>/giphy.gif
+  function giphyDirect(u) {
+    const host = u.hostname.toLowerCase();
+    if (!/(^|\.)giphy\.com$/i.test(host)) return null;
+    const path = u.pathname;
+    let id = null;
+    let m;
+    if ((m = path.match(/\/media\/(?:[^/]+\/)?([A-Za-z0-9]+)/))) id = m[1];      // /media/<id>/giphy.gif
+    else if ((m = path.match(/\/embed\/([A-Za-z0-9]+)/))) id = m[1];            // /embed/<id>
+    else if ((m = path.match(/\/gifs\/(?:.*-)?([A-Za-z0-9]+)\/?$/))) id = m[1]; // /gifs/<slug>-<id>
+    else if ((m = path.match(/\/clips\/(?:.*-)?([A-Za-z0-9]+)\/?$/))) id = m[1];
+    if (!id || id.length < 6) return null; // guard against grabbing a slug word
+    return "https://i.giphy.com/" + id + ".gif";
+  }
+
   // Detect a message that is nothing but a single image/GIF URL, so it can be
-  // posted as inline media. Accepts common image extensions plus the popular
-  // GIF hosts (Giphy/Tenor/Klipy) whose share links don't end in .gif.
+  // posted as inline media. Accepts common image extensions, direct GIF CDNs,
+  // and Giphy share/embed links (rewritten to their direct CDN file).
   function mediaUrlInfo(text) {
     if (!/^https?:\/\/\S+$/i.test(text) || /\s/.test(text)) return null;
     let u;
@@ -444,14 +463,18 @@
     const host = u.hostname.toLowerCase();
     const isGifExt = /\.gif($|\?)/i.test(text) || /\.gif$/i.test(path);
     const isImgExt = /\.(png|jpe?g|webp|bmp|avif)($|\?)/i.test(text) || /\.(png|jpe?g|webp|bmp|avif)$/i.test(path);
-    // Direct media CDNs serve the image bytes themselves; their share-page
-    // counterparts (e.g. tenor.com/view/..., giphy.com/gifs/...) do NOT and
-    // would just 404 in an <img>, so those stay as plain links.
+    // Direct media CDNs serve the image bytes themselves.
     const isDirectGifHost = /(^|\.)(media\.tenor\.com|c\.tenor\.com)$/i.test(host)
       || /(^|\.)(media\d*\.giphy\.com|i\.giphy\.com)$/i.test(host)
       || /(^|\.)klipy\.(com|co)$/i.test(host);
+    // Giphy share/embed pages -> direct CDN gif.
+    const gd = giphyDirect(u);
+    if (gd) return { kind: "gif", url: gd };
     if (isGifExt || isDirectGifHost) return { kind: "gif", url: text };
     if (isImgExt) return { kind: "image", url: text };
+    // Tenor share pages (tenor.com/view/...) don't expose the media GUID in the
+    // URL, so there's no reliable static rewrite — they stay as plain links
+    // rather than render a broken <img>. (The GIF picker still works for Tenor.)
     return null;
   }
   // Load a remote image just to read its natural dimensions (best-effort).

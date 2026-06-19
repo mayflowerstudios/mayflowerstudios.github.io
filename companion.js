@@ -723,9 +723,17 @@ function bestFood(p){
 }
 function bumpCare(p){ p.careSum += avgStat(p); p.careN++; }
 function pop(emoji){
-  const s=document.querySelector(".stage"); const el=document.createElement("div");
-  el.className="floatup"; el.textContent=emoji; el.style.left=(40+Math.random()*20)+"%"; el.style.top="42%";
-  s.appendChild(el); setTimeout(()=>el.remove(),1100);
+  // Anchor the float to the creature box (fixed-size, centered) so it pops
+  // over the pet. Appending to .stage and positioning by % both mis-placed it
+  // (the stage is tall, so 42% landed off the pet) and let the animated
+  // transform expand the stage's scroll height — which stretched .sceneBg.
+  const host = document.querySelector(".creatureWrap") || document.querySelector(".stage");
+  if (!host) return;
+  const el = document.createElement("div");
+  el.className = "floatup"; el.textContent = emoji;
+  el.style.left = (50 + (Math.random()*20 - 10)) + "%";   // ~center, slight jitter
+  el.style.top = "10%";
+  host.appendChild(el); setTimeout(()=>el.remove(), 1100);
 }
 function bounce(){ const c=$("creature"); c.classList.remove("idle"); c.classList.add("happy");
   const h=$("cosmetic"); if(h && !h.hidden){ h.classList.remove("idle"); h.classList.add("happy"); }
@@ -1051,12 +1059,14 @@ function celebrateTogether(){
 
 /* ---------- shared float helper ---------- */
 function floatEmoji(emoji, fromMe){
-  const s = document.querySelector(".stage"); if (!s) return;
+  const host = document.querySelector(".creatureWrap") || document.querySelector(".stage");
+  if (!host) return;
   const el = document.createElement("div");
   el.className = "floatup"; el.textContent = emoji;
-  el.style.left = (fromMe ? 38+Math.random()*10 : 52+Math.random()*10)+"%";
-  el.style.top = "44%";
-  s.appendChild(el); setTimeout(()=>el.remove(), 1200);
+  // Lean mine slightly left, partner's slightly right, around the pet's center.
+  el.style.left = (fromMe ? 40+Math.random()*8 : 52+Math.random()*8)+"%";
+  el.style.top = "10%";
+  host.appendChild(el); setTimeout(()=>el.remove(), 1200);
 }
 
 
