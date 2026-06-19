@@ -32,10 +32,25 @@ let detachers = [];
 
 const setStatus = (t) => { statusEl.textContent = t; };
 
-// shared.js loads auth.js dynamically, so window.MFAuth (and the restored
-// session) aren't ready at parse time. Poll until MFAuth appears, then let
-// onChange tell us the real signed-in state once persistence has restored.
+// We need window.MFAuth (from auth.js). On normal pages shared.js injects it,
+// but to be self-sufficient this page loads it directly if it's not present.
+// Then we wait until MFAuth reports ready before deciding signed-in vs not.
+function ensureAuthScript() {
+  if (window.MFAuth) return;
+  if (document.querySelector('script[data-mf-src="/auth.js"]') ||
+      document.querySelector('script[data-mf-auth]')) return; // already loading
+  const s = document.createElement("script");
+  // Match shared.js's cache-busting query if present, else load plain.
+  const ver = (window.MF_ASSET_VER || "").toString();
+  s.src = "/auth.js" + (ver ? "?v=" + ver : "");
+  s.setAttribute("data-mf-src", "/auth.js");
+  s.setAttribute("data-mf-auth", "1");
+  document.body.appendChild(s);
+}
+
 function wireAuth() {
+  // onChange fires immediately if MFAuth is already ready, otherwise when it
+  // becomes ready — covering both load orders.
   MFAuth.onChange((user) => {
     me = user || null;
     $("remChecking").classList.add("rem-hidden");
@@ -51,14 +66,29 @@ function wireAuth() {
 }
 
 function boot() {
+  ensureAuthScript();
   let waited = 0;
   const tick = () => {
-    if (window.MFAuth && MFAuth.isConfigured()) { wireAuth(); return; }
+    // Wait for MFAuth to exist AND finish its async init (isReady), so we don't
+    // read a transient signed-out state before the session restores.
+    if (window.MFAuth && typeof MFAuth.onChange === "function" && MFAuth.isReady && MFAuth.isReady()) {
+      wireAuth();
+      return;
+    }
+    // If MFAuth exists but has no isReady (older build), just wire it.
+    if (window.MFAuth && typeof MFAuth.onChange === "function" && !MFAuth.isReady) {
+      wireAuth();
+      return;
+    }
     waited += 100;
-    if (waited >= 8000) {
-      // auth.js never showed up — likely a load/config problem, not a logged-out user.
+    if (waited >= 10000) {
       const c = $("remChecking");
-      if (c) c.querySelector(".rem-gate").textContent = "Sign-in didn't load. Try a hard refresh (Ctrl/Cmd+Shift+R).";
+      const present = !!window.MFAuth;
+      console.warn("[remote] auth gate timed out. window.MFAuth present:", present,
+        present ? { isConfigured: MFAuth.isConfigured && MFAuth.isConfigured(), isReady: MFAuth.isReady && MFAuth.isReady() } : "(auth.js never loaded)");
+      if (c) c.querySelector(".rem-gate").innerHTML = present
+        ? 'Sign-in is taking too long. Try a hard refresh (Ctrl/Cmd+Shift+R). If it persists, check the console.'
+        : 'Sign-in didn\u2019t load on this page. Make sure auth.js is deployed, then hard-refresh. <a href="/account.html">Sign in here</a>.';
       return;
     }
     setTimeout(tick, 100);
@@ -106,7 +136,36 @@ async function connect() {
   $("remRoomLabel").textContent = room;
 
   pc = new RTCPeerConnection(RTC_CONFIG);
-  pc.ontrack = (e) => { video.srcObject = e.streams[0]; showViewer(); };
+
+  // Build our own MediaStream from incoming tracks rather than trusting
+  // e.streams[0], which can be empty depending on how the host added them.
+  const inboundStream = new MediaStream();
+  pc.ontrack = (e) => {
+    if (e.streams && e.streams[0]) {
+      video.srcObject = e.streams[0];
+    } else {
+      inboundStream.addTrack(e.track);
+      video.srcObject = inboundStream;
+    }
+    showViewer();
+    // Autoplay of a freshly assigned srcObject is often blocked; force it.
+    video.play().catch((err) => {
+      console.warn("[remote] autoplay blocked:", err);
+      setStatus("Tap the video to start playback.");
+      video.addEventListener("click", () => video.play().catch(()=>{}), { once: true });
+    });
+  };
+
+  pc.oniceconnectionstatechange = () => {
+    console.log("[remote] ICE state:", pc.iceConnectionState);
+    if (pc.iceConnectionState === "failed") {
+      setStatus("Connection failed — likely a network that needs a TURN server.");
+    } else if (pc.iceConnectionState === "disconnected") {
+      setStatus("Connection dropped.");
+    }
+  };
+  pc.onconnectionstatechange = () => console.log("[remote] PC state:", pc.connectionState);
+
   pc.ondatachannel = (e) => {
     e.channel.onmessage = (m) => {
       const p = JSON.parse(m.data);

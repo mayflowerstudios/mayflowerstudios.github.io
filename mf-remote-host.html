@@ -225,6 +225,9 @@ async function createPeer(clientId){
   pc.onicecandidate = (e)=>{ if(e.candidate)
     set(ref(db, `remote/${room}/host/ice/${clientId}/${Date.now()}-${Math.random().toString(36).slice(2)}`), e.candidate.toJSON()); };
 
+  pc.oniceconnectionstatechange = ()=> console.log("[host] ICE state:", pc.iceConnectionState);
+  pc.onconnectionstatechange = ()=> console.log("[host] PC state:", pc.connectionState);
+
   const firstId = screens.keys().next().value;
   if(firstId){
     watching.set(clientId, firstId);
