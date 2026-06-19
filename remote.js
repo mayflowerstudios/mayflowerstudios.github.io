@@ -32,28 +32,44 @@ let detachers = [];
 
 const setStatus = (t) => { statusEl.textContent = t; };
 
-// Wait for MFAuth, then reveal either the gate or the connect form.
-function boot() {
-  if (!window.MFAuth || !MFAuth.isConfigured()) {
-    setStatus("Sign-in isn't available right now.");
-    return;
-  }
+// shared.js loads auth.js dynamically, so window.MFAuth (and the restored
+// session) aren't ready at parse time. Poll until MFAuth appears, then let
+// onChange tell us the real signed-in state once persistence has restored.
+function wireAuth() {
   MFAuth.onChange((user) => {
     me = user || null;
+    $("remChecking").classList.add("rem-hidden");
     if (me) {
       $("remGate").classList.add("rem-hidden");
       $("remConnect").classList.remove("rem-hidden");
-      try { db = getDatabase(getApp()); } catch (e) { setStatus("Couldn't reach the database."); }
+      if (!db) { try { db = getDatabase(getApp()); } catch (e) { setStatus("Couldn't reach the database."); } }
     } else {
       $("remGate").classList.remove("rem-hidden");
       $("remConnect").classList.add("rem-hidden");
     }
   });
 }
+
+function boot() {
+  let waited = 0;
+  const tick = () => {
+    if (window.MFAuth && MFAuth.isConfigured()) { wireAuth(); return; }
+    waited += 100;
+    if (waited >= 8000) {
+      // auth.js never showed up — likely a load/config problem, not a logged-out user.
+      const c = $("remChecking");
+      if (c) c.querySelector(".rem-gate").textContent = "Sign-in didn't load. Try a hard refresh (Ctrl/Cmd+Shift+R).";
+      return;
+    }
+    setTimeout(tick, 100);
+  };
+  tick();
+}
+
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => setTimeout(boot, 0));
+  document.addEventListener("DOMContentLoaded", boot);
 } else {
-  setTimeout(boot, 0);
+  boot();
 }
 
 $("remConnectBtn").onclick = connect;
