@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Remote · Mayflower Studios</title>
+<meta name="description" content="Connect to your shared screen." />
+<link rel="stylesheet" href="/style.css?v=MFVER" />
+<style>
+  .rem-wrap { max-width: 760px; margin: 0 auto; }
+  .rem-card {
+    background: var(--glass, rgba(255,255,255,0.06));
+    border: 1px solid var(--glass-border, rgba(255,255,255,0.12));
+    border-radius: 18px; padding: 1.75rem;
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  }
+  .rem-field { margin-bottom: 1.1rem; }
+  .rem-field label {
+    display: block; font-size: .8rem; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--muted, #b9a8d0); margin-bottom: .4rem;
+  }
+  .rem-field input {
+    width: 100%; padding: .7rem .85rem; font: inherit; color: var(--text, #f3eefb);
+    background: rgba(10,8,24,0.55);
+    border: 1px solid var(--glass-border, rgba(255,255,255,0.14)); border-radius: 12px;
+  }
+  .rem-field input:focus {
+    outline: none; border-color: var(--rose, #f9a8d4);
+    box-shadow: 0 0 0 3px rgba(249,168,212,0.18);
+  }
+  .rem-btn {
+    font: inherit; cursor: pointer; font-weight: 600;
+    padding: .75rem 1.4rem; border-radius: 12px; border: none; color: #1a0f2e;
+    background: linear-gradient(135deg, var(--rose, #f9a8d4), var(--violet, #c4b5fd));
+    transition: filter .15s, transform .15s;
+  }
+  .rem-btn:hover { filter: brightness(1.07); transform: translateY(-1px); }
+  .rem-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; filter: none; }
+  .rem-btn.ghost {
+    background: transparent; color: var(--text, #f3eefb);
+    border: 1px solid var(--glass-border, rgba(255,255,255,0.18));
+  }
+  .rem-btn.small { padding: .45rem .8rem; font-size: .9rem; }
+  .rem-status { color: var(--muted, #b9a8d0); margin-top: 1rem; font-size: .92rem; }
+  .rem-gate { color: var(--muted, #b9a8d0); }
+  .rem-gate a { color: var(--rose, #f9a8d4); }
+
+  .rem-viewer { position: fixed; inset: 0; z-index: 9000; background: #05030f; display: flex; flex-direction: column; }
+  .rem-toolbar {
+    display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; padding: .55rem 1rem;
+    background: rgba(12,8,28,0.92);
+    border-bottom: 1px solid var(--glass-border, rgba(255,255,255,0.12));
+  }
+  .rem-toolbar select {
+    font: inherit; color: var(--text, #f3eefb); background: rgba(10,8,24,0.7);
+    border: 1px solid var(--glass-border, rgba(255,255,255,0.16)); border-radius: 10px; padding: .35rem .55rem;
+  }
+  .rem-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted, #b9a8d0); }
+  .rem-dot.on { background: #6ee7b7; box-shadow: 0 0 9px #6ee7b7; }
+  .rem-toggle { display: flex; align-items: center; gap: .4rem; color: var(--muted, #b9a8d0); font-size: .9rem; }
+  .rem-stage { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .rem-stage video { max-width: 100%; max-height: 100%; }
+  .rem-hidden { display: none !important; }
+  .rem-spacer { flex: 1; }
+</style>
+</head>
+<body class="site-page">
+  <div id="site-nav"></div>
+
+  <main class="content">
+    <div class="rem-wrap">
+      <h1 class="page-title">Remote</h1>
+      <p class="page-sub">Connect to a screen you're sharing from another computer. Runs right in this page — nothing to install.</p>
+
+      <div class="rem-card" id="remGate">
+        <p class="rem-gate">You need to be signed in to connect. <a href="/account.html">Sign in</a> and come back.</p>
+      </div>
+
+      <div class="rem-card rem-hidden" id="remConnect">
+        <div class="rem-field">
+          <label for="remRoom">Room</label>
+          <input id="remRoom" value="home" autocomplete="off" />
+        </div>
+        <button class="rem-btn" id="remConnectBtn">Connect</button>
+        <p class="rem-status" id="remStatus">Make sure the host computer is sharing this room.</p>
+      </div>
+    </div>
+  </main>
+
+  <div class="rem-viewer rem-hidden" id="remViewer">
+    <div class="rem-toolbar">
+      <span class="rem-dot" id="remDot"></span>
+      <span id="remRoomLabel" style="font-weight:600;"></span>
+      <select id="remScreenSelect" title="Choose monitor"></select>
+      <label class="rem-toggle"><input type="checkbox" id="remControl" /> Control</label>
+      <span class="rem-spacer"></span>
+      <button class="rem-btn ghost small" id="remFs">Fullscreen</button>
+      <button class="rem-btn ghost small" id="remLeave">Leave</button>
+    </div>
+    <div class="rem-stage"><video id="remVideo" autoplay playsinline></video></div>
+  </div>
+
+  <script src="/shared.js?v=MFVER"></script>
+  <script type="module" src="/remote.js?v=MFVER"></script>
+</body>
+</html>

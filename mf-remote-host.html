@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mayflower Remote — Host</title>
+<style>
+  :root {
+    --bg:#0b1120; --rose:#f9a8d4; --violet:#c4b5fd;
+    --text:#f3eefb; --muted:#b9a8d0; --border:rgba(255,255,255,0.14);
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; min-height:100vh; color:var(--text);
+    font:15px/1.5 "DM Sans", system-ui, sans-serif;
+    background:radial-gradient(1200px 700px at 70% -10%, #2a1c4d 0%, var(--bg) 55%);
+    padding:6vh 1rem;
+  }
+  .wrap { max-width:760px; margin:0 auto; }
+  h1 { font-family:"Cormorant Garamond", Georgia, serif; font-size:2.4rem; font-weight:600; margin:0 0 .2rem; }
+  .sub { color:var(--muted); margin:0 0 1.6rem; }
+  .card {
+    background:rgba(255,255,255,0.06); border:1px solid var(--border);
+    border-radius:18px; padding:1.6rem; backdrop-filter:blur(14px); margin-bottom:1rem;
+  }
+  .field { margin-bottom:1.1rem; }
+  label { display:block; font-size:.78rem; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin-bottom:.4rem; }
+  input {
+    width:100%; padding:.7rem .85rem; font:inherit; color:var(--text);
+    background:rgba(10,8,24,0.55); border:1px solid var(--border); border-radius:12px;
+  }
+  input:focus { outline:none; border-color:var(--rose); box-shadow:0 0 0 3px rgba(249,168,212,.18); }
+  .btn {
+    font:inherit; font-weight:600; cursor:pointer; border:none; color:#1a0f2e;
+    padding:.75rem 1.4rem; border-radius:12px;
+    background:linear-gradient(135deg, var(--rose), var(--violet));
+  }
+  .btn:hover { filter:brightness(1.07); }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+  .btn.small { padding:.45rem .8rem; font-size:.9rem; }
+  .btn.ghost { background:transparent; color:var(--text); border:1px solid var(--border); }
+  .status { color:var(--muted); margin-top:1rem; font-size:.92rem; }
+  .who { color:var(--muted); font-size:.9rem; margin-top:.4rem; }
+  .who b { color:var(--text); }
+  .screens { display:flex; flex-wrap:wrap; gap:.8rem; margin-top:1.5rem; align-items:flex-start; }
+  .thumb { width:200px; display:flex; flex-direction:column; gap:.35rem; }
+  .thumb video { width:100%; border-radius:10px; border:1px solid var(--border); background:#000; }
+  .thumb span { font-size:.74rem; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .viewers { color:var(--muted); margin-top:1rem; font-size:.9rem; }
+  .hidden { display:none !important; }
+  .row { display:flex; gap:.6rem; align-items:center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Mayflower Remote</h1>
+  <p class="sub">Run this on the computer you want to share. Sign in as yourself, pick a room, and share your screens. Connect from mayflowerstudios.net/remote with the same account.</p>
+
+  <!-- Sign in -->
+  <div class="card" id="authCard">
+    <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="username" /></div>
+    <div class="field"><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" /></div>
+    <div class="row">
+      <button class="btn" id="signin">Sign in</button>
+      <button class="btn ghost" id="google">Sign in with Google</button>
+    </div>
+    <p class="status" id="authStatus">Sign in with your Mayflower account.</p>
+  </div>
+
+  <!-- Share -->
+  <div class="card hidden" id="setup">
+    <p class="who">Signed in as <b id="meName">—</b> · <button class="btn ghost small" id="signout">Sign out</button></p>
+    <div class="field" style="margin-top:1rem;"><label for="room">Room</label><input id="room" value="home" autocomplete="off" /></div>
+    <button class="btn" id="start">Start sharing</button>
+    <p class="status" id="status">Idle.</p>
+    <div class="screens" id="screens"></div>
+    <p class="viewers" id="viewers"></p>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut, setPersistence, browserLocalPersistence }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getDatabase, ref, set, onValue, onChildAdded, remove, onDisconnect }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+// Same project the site uses.
+const firebaseConfig = {
+  apiKey: "AIzaSyDVJ0Tiq0gimaB-epcD9HQlVBrOWHq-IXI",
+  authDomain: "watchtogether-95d7d.firebaseapp.com",
+  databaseURL: "https://watchtogether-95d7d-default-rtdb.firebaseio.com",
+  projectId: "watchtogether-95d7d",
+};
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+const RTC_CONFIG = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+setPersistence(auth, browserLocalPersistence).catch(()=>{});
+
+const $ = (id) => document.getElementById(id);
+let me = null, room = null;
+const screens = new Map();   // screenId -> { stream, label }
+const peers = new Map();     // clientId -> { pc, dc }
+const watching = new Map();  // clientId -> screenId
+
+const setAuthStatus = (t) => $("authStatus").textContent = t;
+const setStatus = (t) => $("status").textContent = t;
+
+// ---- Auth ----
+onAuthStateChanged(auth, (user) => {
+  me = user || null;
+  if (me) {
+    $("authCard").classList.add("hidden");
+    $("setup").classList.remove("hidden");
+    $("meName").textContent = me.displayName || me.email || me.uid.slice(0,8);
+  } else {
+    $("authCard").classList.remove("hidden");
+    $("setup").classList.add("hidden");
+  }
+});
+
+$("signin").onclick = async () => {
+  try {
+    setAuthStatus("Signing in…");
+    await signInWithEmailAndPassword(auth, $("email").value.trim(), $("pw").value);
+  } catch (e) { setAuthStatus(mapErr(e)); }
+};
+$("google").onclick = async () => {
+  try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+  catch (e) { setAuthStatus(mapErr(e)); }
+};
+$("signout").onclick = async () => {
+  await stopSharing();
+  await signOut(auth);
+};
+function mapErr(e){
+  const c=(e&&e.code)||"";
+  return ({
+    "auth/invalid-credential":"Email or password didn't match.",
+    "auth/wrong-password":"Email or password didn't match.",
+    "auth/user-not-found":"No account with that email.",
+    "auth/popup-blocked":"Your browser blocked the popup.",
+    "auth/popup-closed-by-user":"Sign-in window closed.",
+    "auth/network-request-failed":"Network problem.",
+  })[c] || (e&&e.message) || "Sign-in failed.";
+}
+
+// ---- Sharing ----
+$("start").onclick = async () => {
+  if (!me) { setStatus("Sign in first."); return; }
+  room = ($("room").value||"").trim().toLowerCase();
+  if (!room) { setStatus("Room name required."); return; }
+
+  // Claim/refresh the room as owner, then mark online.
+  try {
+    await set(ref(db, `remote/${room}`), { owner: me.uid });
+  } catch (e) {
+    setStatus("That room name is owned by another account. Pick a different one.");
+    return;
+  }
+  await set(ref(db, `remote/${room}/hostOnline`), true);
+  onDisconnect(ref(db, `remote/${room}/hostOnline`)).set(false);
+
+  setStatus(`Sharing room "${room}". Add a screen below.`);
+  await addScreen();
+  watchForClients();
+};
+
+async function stopSharing(){
+  for (const {pc} of peers.values()) { try { pc.close(); } catch {} }
+  peers.clear(); watching.clear();
+  for (const {stream} of screens.values()) { try { stream.getTracks().forEach(t=>t.stop()); } catch {} }
+  screens.clear();
+  if (room) { try { await remove(ref(db, `remote/${room}`)); } catch {} }
+  room = null;
+  $("screens").innerHTML = ""; $("viewers").textContent = "";
+}
+
+async function addScreen(){
+  try {
+    const stream = await navigator.mediaDevices.getDisplayMedia({ video:{ frameRate:30 }, audio:false });
+    const id = "scr-"+(screens.size+1);
+    const track = stream.getVideoTracks()[0];
+    screens.set(id, { stream, label: track.label || `Screen ${screens.size+1}` });
+    renderScreens();
+    broadcastScreenList();
+    track.onended = () => { screens.delete(id); renderScreens(); broadcastScreenList(); };
+  } catch { setStatus("Screen capture cancelled."); }
+}
+
+function renderScreens(){
+  const el = $("screens"); el.innerHTML="";
+  for(const [,s] of screens){
+    const w=document.createElement("div"); w.className="thumb";
+    const v=document.createElement("video"); v.autoplay=true; v.muted=true; v.playsInline=true; v.srcObject=s.stream;
+    const c=document.createElement("span"); c.textContent=s.label;
+    w.append(v,c); el.appendChild(w);
+  }
+  const add=document.createElement("button"); add.className="btn ghost small"; add.textContent="+ Add screen"; add.onclick=addScreen;
+  el.appendChild(add);
+}
+
+function screenList(){ return [...screens.entries()].map(([id,s])=>({id,label:s.label})); }
+function broadcastScreenList(){
+  const list=screenList();
+  for(const {dc} of peers.values()) if(dc && dc.readyState==="open") dc.send(JSON.stringify({type:"screens",list}));
+}
+
+function watchForClients(){
+  onChildAdded(ref(db, `remote/${room}/clients`), async (snap)=>{
+    const clientId = snap.key;
+    if(peers.has(clientId)) return;
+    // Rules already guarantee only the owner can write here, so any client is us.
+    await createPeer(clientId);
+  });
+}
+
+async function createPeer(clientId){
+  const pc = new RTCPeerConnection(RTC_CONFIG);
+  const dc = pc.createDataChannel("meta");
+  peers.set(clientId, { pc, dc });
+  dc.onopen = () => dc.send(JSON.stringify({ type:"screens", list:screenList() }));
+
+  pc.onicecandidate = (e)=>{ if(e.candidate)
+    set(ref(db, `remote/${room}/host/ice/${clientId}/${Date.now()}-${Math.random().toString(36).slice(2)}`), e.candidate.toJSON()); };
+
+  const firstId = screens.keys().next().value;
+  if(firstId){
+    watching.set(clientId, firstId);
+    for(const t of screens.get(firstId).stream.getTracks()) pc.addTrack(t, screens.get(firstId).stream);
+  }
+
+  onValue(ref(db, `remote/${room}/clients/${clientId}/answer`), async (s)=>{
+    const ans=s.val(); if(ans && !pc.currentRemoteDescription) await pc.setRemoteDescription(ans).catch(()=>{});
+  });
+  onChildAdded(ref(db, `remote/${room}/clients/${clientId}/ice`), (s)=>{
+    const c=s.val(); if(c) pc.addIceCandidate(c).catch(()=>{});
+  });
+  onValue(ref(db, `remote/${room}/clients/${clientId}/screen`), (s)=>{
+    const sid=s.val(); if(sid) switchScreen(clientId, sid);
+  });
+  onChildAdded(ref(db, `remote/${room}/clients/${clientId}/input`), (s)=>{ handleInput(s.val()); });
+  onValue(ref(db, `remote/${room}/clients/${clientId}`), (s)=>{ if(!s.exists()) cleanup(clientId); });
+
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  await set(ref(db, `remote/${room}/host/offer/${clientId}`), { type:offer.type, sdp:offer.sdp });
+  updateViewers();
+}
+
+async function switchScreen(clientId, screenId){
+  const peer = peers.get(clientId); const target = screens.get(screenId);
+  if(!peer || !target) return;
+  const sender = peer.pc.getSenders().find(s=>s.track && s.track.kind==="video");
+  if(sender) await sender.replaceTrack(target.stream.getVideoTracks()[0]);
+  watching.set(clientId, screenId);
+}
+
+function cleanup(clientId){
+  const peer = peers.get(clientId);
+  if(peer) peer.pc.close();
+  peers.delete(clientId); watching.delete(clientId);
+  remove(ref(db, `remote/${room}/host/offer/${clientId}`)).catch(()=>{});
+  remove(ref(db, `remote/${room}/host/ice/${clientId}`)).catch(()=>{});
+  updateViewers();
+}
+
+function updateViewers(){
+  $("viewers").textContent = peers.size ? `${peers.size} viewer(s) connected.` : "No viewers yet.";
+}
+
+function handleInput(ev){
+  // Browsers can't move the real OS cursor. Wire to a local nut.js/robotjs agent
+  // to enable true control. Viewing + monitor switching work without it.
+}
+</script>
+</body>
+</html>
