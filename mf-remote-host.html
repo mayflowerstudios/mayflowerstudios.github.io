@@ -191,14 +191,45 @@ async function addScreen(){
 
 function renderScreens(){
   const el = $("screens"); el.innerHTML="";
-  for(const [,s] of screens){
+  for(const [id,s] of screens){
     const w=document.createElement("div"); w.className="thumb";
     const v=document.createElement("video"); v.autoplay=true; v.muted=true; v.playsInline=true; v.srcObject=s.stream;
+    v.play().catch(()=>{});
     const c=document.createElement("span"); c.textContent=s.label;
-    w.append(v,c); el.appendChild(w);
+    const rm=document.createElement("button"); rm.className="btn ghost small"; rm.textContent="Remove";
+    rm.style.marginTop=".25rem";
+    rm.onclick=()=>removeScreen(id);
+    w.append(v,c,rm); el.appendChild(w);
   }
   const add=document.createElement("button"); add.className="btn ghost small"; add.textContent="+ Add screen"; add.onclick=addScreen;
   el.appendChild(add);
+}
+
+async function removeScreen(id){
+  const s = screens.get(id);
+  if(!s) return;
+  // Stop the OS capture for this screen.
+  try { s.stream.getTracks().forEach(t=>t.stop()); } catch {}
+  screens.delete(id);
+  // Any viewer watching this screen gets moved to another one (or a blank
+  // sender if none remain).
+  const fallback = screens.keys().next().value || null;
+  for(const [clientId, peer] of peers){
+    if(watching.get(clientId) === id){
+      const sender = peer.pc.getSenders().find(x=>x.track && x.track.kind==="video");
+      if(sender){
+        if(fallback){
+          await sender.replaceTrack(screens.get(fallback).stream.getVideoTracks()[0]).catch(()=>{});
+          watching.set(clientId, fallback);
+        } else {
+          await sender.replaceTrack(null).catch(()=>{});
+          watching.delete(clientId);
+        }
+      }
+    }
+  }
+  renderScreens();
+  broadcastScreenList();
 }
 
 function screenList(){ return [...screens.entries()].map(([id,s])=>({id,label:s.label})); }
@@ -234,11 +265,29 @@ async function createPeer(clientId){
     for(const t of screens.get(firstId).stream.getTracks()) pc.addTrack(t, screens.get(firstId).stream);
   }
 
+  // ICE candidates can arrive before the answer is processed. Queue them and
+  // flush once the remote description is set, otherwise addIceCandidate throws
+  // and the candidate is lost — a common cause of a stuck/black connection.
+  let remoteSet = false;
+  const pendingIce = [];
+  async function flushIce(){
+    while(pendingIce.length){
+      const c = pendingIce.shift();
+      try { await pc.addIceCandidate(c); } catch(e){ console.warn("[host] addIceCandidate failed", e); }
+    }
+  }
+
   onValue(ref(db, `remote/${room}/clients/${clientId}/answer`), async (s)=>{
-    const ans=s.val(); if(ans && !pc.currentRemoteDescription) await pc.setRemoteDescription(ans).catch(()=>{});
+    const ans=s.val(); if(ans && !pc.currentRemoteDescription){
+      await pc.setRemoteDescription(ans).catch(e=>console.warn("[host] setRemoteDescription", e));
+      remoteSet = true;
+      await flushIce();
+    }
   });
-  onChildAdded(ref(db, `remote/${room}/clients/${clientId}/ice`), (s)=>{
-    const c=s.val(); if(c) pc.addIceCandidate(c).catch(()=>{});
+  onChildAdded(ref(db, `remote/${room}/clients/${clientId}/ice`), async (s)=>{
+    const c=s.val(); if(!c) return;
+    if(remoteSet){ try { await pc.addIceCandidate(c); } catch(e){ console.warn("[host] addIceCandidate", e); } }
+    else pendingIce.push(c);
   });
   onValue(ref(db, `remote/${room}/clients/${clientId}/screen`), (s)=>{
     const sid=s.val(); if(sid) switchScreen(clientId, sid);

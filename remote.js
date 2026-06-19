@@ -176,20 +176,35 @@ async function connect() {
     if (e.candidate) push(ref(db, `remote/${room}/clients/${clientId}/ice`), e.candidate.toJSON());
   };
 
+  // Queue host ICE candidates until we've set the remote description (the
+  // offer), then flush. Dropping early candidates is a common black-screen cause.
+  let remoteSet = false;
+  const pendingIce = [];
+  async function flushIce(){
+    while(pendingIce.length){
+      const c = pendingIce.shift();
+      try { await pc.addIceCandidate(c); } catch(e){ console.warn("[remote] addIceCandidate failed", e); }
+    }
+  }
+
   // Wait for the host's offer.
   detachers.push(onValue(ref(db, `remote/${room}/host/offer/${clientId}`), async (s) => {
     const offer = s.val();
     if (!offer || pc.currentRemoteDescription) return;
     await pc.setRemoteDescription(offer);
+    remoteSet = true;
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
     await set(ref(db, `remote/${room}/clients/${clientId}/answer`), { type: answer.type, sdp: answer.sdp });
+    await flushIce();
   }));
 
   // Host ICE candidates.
-  detachers.push(onChildAdded(ref(db, `remote/${room}/host/ice/${clientId}`), (s) => {
+  detachers.push(onChildAdded(ref(db, `remote/${room}/host/ice/${clientId}`), async (s) => {
     const c = s.val();
-    if (c) pc.addIceCandidate(c).catch(() => {});
+    if (!c) return;
+    if (remoteSet) { try { await pc.addIceCandidate(c); } catch(e){ console.warn("[remote] addIceCandidate", e); } }
+    else pendingIce.push(c);
   }));
 
   setStatus("Waiting for the host's stream…");
@@ -200,6 +215,30 @@ function showViewer() {
   $("remViewer").classList.remove("rem-hidden");
   $("remDot").classList.add("on");
   setStatus("Live.");
+  startStats();
+}
+
+// Poll WebRTC stats so we can see whether frames are actually arriving.
+let statsTimer = null;
+function startStats() {
+  const el = document.getElementById("remStats");
+  if (!el || !pc) return;
+  let lastBytes = 0, lastTime = 0;
+  statsTimer = setInterval(async () => {
+    try {
+      const stats = await pc.getStats();
+      let inbound = null;
+      stats.forEach((r) => { if (r.type === "inbound-rtp" && r.kind === "video") inbound = r; });
+      if (inbound) {
+        const now = inbound.timestamp;
+        const kbps = lastTime ? Math.round(((inbound.bytesReceived - lastBytes) * 8) / (now - lastTime)) : 0;
+        lastBytes = inbound.bytesReceived; lastTime = now;
+        el.textContent = `ICE ${pc.iceConnectionState} · ${kbps} kbps · frames ${inbound.framesDecoded || 0} · ${inbound.frameWidth||0}×${inbound.frameHeight||0}`;
+      } else {
+        el.textContent = `ICE ${pc.iceConnectionState} · no inbound video track yet`;
+      }
+    } catch {}
+  }, 1000);
 }
 
 function populateScreens(list) {
@@ -220,6 +259,7 @@ $("remFs").onclick = () => { if (video.requestFullscreen) video.requestFullscree
 $("remLeave").onclick = leave;
 
 async function leave() {
+  if (statsTimer) { clearInterval(statsTimer); statsTimer = null; }
   for (const d of detachers) { try { d(); } catch {} }
   detachers = [];
   if (pc) pc.close();
