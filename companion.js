@@ -79,6 +79,18 @@ const SCENES = {
   beach:"radial-gradient(600px 320px at 50% 0%, rgba(125,211,252,.5), transparent 60%), linear-gradient(180deg, rgba(96,178,224,.3), rgba(244,214,150,.34))",
 };
 
+// Only repaint the scene backdrop when it actually changes. Reassigning the
+// same gradient on every render re-fires the .sceneBg CSS transition, which
+// makes the background flicker/re-fade on every feed/play/pet/clean action.
+let _lastSceneKey = null;
+function applyScene(scene){
+  const key = scene || "default";
+  if (key === _lastSceneKey) return;
+  _lastSceneKey = key;
+  const el = $("sceneBg"); if (!el) return;
+  el.style.background = SCENES[key] || SCENES.default;
+}
+
 const clamp = (n)=> Math.max(0, Math.min(100, Math.round(n)));
 
 /* ============================================================
@@ -664,7 +676,7 @@ function render(){
   if (!pet) return;
   // The scene backdrop is independent of the pet's state — apply it always,
   // before any away short-circuit, so scene changes show even when away.
-  $("sceneBg").style.background = SCENES[pet.activeScene] || SCENES.default;
+  applyScene(pet.activeScene);
   if (pet.away){ renderAway(); return; }
   $("petNameText").textContent = pet.name;
   $("stageBadge").textContent = currentStage(pet).name;
@@ -687,7 +699,6 @@ function render(){
   $("xpBar").style.width = (100*pet.xp/xpForLevel(pet.level))+"%";
   $("coins").textContent = pet.coins;
   $("mood").textContent = moodText(pet);
-  $("sceneBg").style.background = SCENES[pet.activeScene] || SCENES.default;
   $("feedItem").textContent = bestFood(pet).nm;
   renderLog();
   // keep the bag fresh if it's the visible tab (counts, worn state, scene)
