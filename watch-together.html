@@ -2234,6 +2234,23 @@
     loadBtn.addEventListener("click", loadFromInput);
     urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") loadFromInput(); });
 
+    // ── Bridge for the self-hosted Library picker (mf-library.js) ──
+    // Lets the 🎬 Library panel feed videos into this room's synced player
+    // and shared queue, using the same paths as the URL box and ＋ Add.
+    window.MFWatch = {
+      playUrl(url, title) {
+        startSource({ kind: "file", src: url, title: title || null });
+        if (title) { currentTitle = title; }
+        toast("Loaded — everyone will catch up ✨");
+      },
+      queueUrl(url, title) {
+        if (!FIREBASE_READY || !queueRef) { toast("Queue needs the room connection to be live"); return; }
+        if (isInQueue("file", url)) { toast("That's already in the queue"); return; }
+        safeWrite(() => push(queueRef, { kind: "file", src: url, title: title || shortName(url), t: Date.now(), by: myName }), "Couldn't add to queue");
+        toast("Added to queue 🎞️");
+      },
+    };
+
     // ============================================================
     //  Upload a video (Firebase Storage, Blaze plan)
     //  - One slot per room at uploads/{ROOM}/current.<ext>
@@ -3231,5 +3248,6 @@
     ytImportBtn.addEventListener("click", () => { importYouTubePlaylist(ytImportInput.value); ytImportInput.value = ""; });
     ytImportInput.addEventListener("keydown", (e) => { if (e.key === "Enter") ytImportBtn.click(); });
   </script>
+  <script src="mf-library.js?v=2"></script>
 </body>
 </html>
