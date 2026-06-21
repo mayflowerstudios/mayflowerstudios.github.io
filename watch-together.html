@@ -2249,6 +2249,19 @@
         safeWrite(() => push(queueRef, { kind: "file", src: url, title: title || shortName(url), t: Date.now(), by: myName }), "Couldn't add to queue");
         toast("Added to queue 🎞️");
       },
+      // queue a run of items at once (used for "auto-play" a TV show in order),
+      // skipping anything already queued/playing. Returns how many were added.
+      queueMany(items) {
+        if (!FIREBASE_READY || !queueRef) { toast("Queue needs the room connection to be live"); return 0; }
+        let n = 0, base = Date.now();
+        items.forEach((it) => {
+          if (isInQueue("file", it.url)) return;
+          if (currentKind === "file" && currentSrc === it.url) return;
+          safeWrite(() => push(queueRef, { kind: "file", src: it.url, title: it.title || shortName(it.url), t: base + (n++), by: myName }), "Couldn't add to queue");
+        });
+        if (n) toast(`Queued ${n} episode${n === 1 ? "" : "s"} ▶`);
+        return n;
+      },
     };
 
     // ============================================================
