@@ -434,6 +434,8 @@
 <meta name="twitter:description" content="A cozy private space to watch YouTube and videos together, perfectly in sync." />
 <meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/watch-together.png" />
 <!-- OG:END -->
+<!-- hls.js: lets non-Safari browsers play the HLS streams from the media server -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
 </head>
 
 <body data-nav="watch">
@@ -795,6 +797,45 @@
     const fileVid = $("filevid");
     const ytEl = $("ytplayer");
 
+    // ── HLS-aware video source setter ──
+    // Self-hosted transcoded movies come as .m3u8 (HLS) so they stream reliably
+    // through the relay. Native <video> only plays HLS on Safari, so elsewhere we
+    // use hls.js. Direct files (mp4/webm) just set .src as before.
+    let _hls = null;
+    function teardownHls() {
+      if (_hls) { try { _hls.destroy(); } catch (_) {} _hls = null; }
+    }
+    function setFileSource(url) {
+      teardownHls();
+      const isHls = /\.m3u8(\?|$)/i.test(url);
+      if (isHls) {
+        // Safari (and some mobile) can play HLS natively
+        if (fileVid.canPlayType("application/vnd.apple.mpegurl")) {
+          fileVid.src = url;
+          return;
+        }
+        if (window.Hls && window.Hls.isSupported()) {
+          _hls = new window.Hls({ lowLatencyMode: false, enableWorker: true });
+          _hls.loadSource(url);
+          _hls.attachMedia(fileVid);
+          _hls.on(window.Hls.Events.ERROR, (evt, data) => {
+            if (data && data.fatal) {
+              console.warn("[hls] fatal", data.type, data.details);
+              if (data.type === window.Hls.ErrorTypes.NETWORK_ERROR) { try { _hls.startLoad(); } catch(_){} }
+              else if (data.type === window.Hls.ErrorTypes.MEDIA_ERROR) { try { _hls.recoverMediaError(); } catch(_){} }
+            }
+          });
+          return;
+        }
+        // no HLS support at all — fall back to setting src (will likely fail, but
+        // better than nothing); most browsers here do support hls.js though.
+        fileVid.src = url;
+        return;
+      }
+      // plain file
+      fileVid.src = url;
+    }
+
     function showPlayer(kind) {
       currentKind = kind;
       ytEl.style.display    = kind === "yt"   ? "block" : "none";
@@ -1102,7 +1143,7 @@
             currentSrc = src;
             cancelDriftCorrection();
             setNowPlaying("file", src, s.title);
-            fileVid.src = src;
+            setFileSource(src);
             const start = estimatePos(s);
             const onMeta = () => {
               try { fileVid.currentTime = start; } catch(_) {}
@@ -2203,7 +2244,7 @@
       } else {
         showPlayer("file");
         setNowPlaying("file", parsed.src);
-        fileVid.src = parsed.src;
+        setFileSource(parsed.src);
         fileVid.load();
         fileVid.play().catch((err) => {
           // Autoplay (esp. with sound) can be blocked until the user interacts.

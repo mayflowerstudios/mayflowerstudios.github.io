@@ -70,6 +70,13 @@
     return `${conn.base}${pathAndQuery}${sep}token=${encodeURIComponent(conn.token)}`;
   }
   function streamUrl(id) { return api(`/stream?id=${encodeURIComponent(id)}`); }
+  // Transcode-needed files play via HLS (.m3u8) for reliable relay streaming;
+  // direct-play files use the plain /stream endpoint with range support.
+  function playUrlFor(item) {
+    return item.direct
+      ? api(`/stream?id=${encodeURIComponent(item.id)}`)
+      : api(`/hls/index.m3u8?id=${encodeURIComponent(item.id)}`);
+  }
   function posterUrl(id) { return api(`/api/poster?id=${encodeURIComponent(id)}`); }
 
   // ---- styles (scoped under #mfLib) ---------------------------------------
@@ -417,8 +424,8 @@
   function playFromEpisode(eps, idx) {
     if (!window.MFWatch) return alert('Player bridge missing — add the MFWatch snippet to watch-together.html');
     const first = eps[idx];
-    window.MFWatch.playUrl(streamUrl(first.id), first.title);
-    const rest = eps.slice(idx + 1).map(e => ({ url: streamUrl(e.id), title: e.title }));
+    window.MFWatch.playUrl(playUrlFor(first), first.title);
+    const rest = eps.slice(idx + 1).map(e => ({ url: playUrlFor(e), title: e.title }));
     if (rest.length && window.MFWatch.queueMany) window.MFWatch.queueMany(rest);
     close();
   }
@@ -451,13 +458,13 @@
       e.stopPropagation();
       if (onPlay) { onPlay(); return; }
       if (!window.MFWatch) return alert('Player bridge missing — add the MFWatch snippet to watch-together.html');
-      window.MFWatch.playUrl(streamUrl(it.id), it.title);
+      window.MFWatch.playUrl(playUrlFor(it), it.title);
       close();
     });
     card.querySelector('.queue').addEventListener('click', (e) => {
       e.stopPropagation();
       if (!window.MFWatch) return;
-      window.MFWatch.queueUrl(streamUrl(it.id), it.title);
+      window.MFWatch.queueUrl(playUrlFor(it), it.title);
       const b = e.target; const old = b.textContent;
       b.textContent = '✓ Queued'; setTimeout(() => b.textContent = old, 1200);
     });
