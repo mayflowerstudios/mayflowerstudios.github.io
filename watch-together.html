@@ -815,14 +815,39 @@
           return;
         }
         if (window.Hls && window.Hls.isSupported()) {
-          _hls = new window.Hls({ lowLatencyMode: false, enableWorker: true });
+          // Transcoded HLS starts "cold": ffmpeg needs a moment to write the
+          // first playlist + segment. Configure generous retries so the initial
+          // load waits/retries instead of failing on the first miss.
+          _hls = new window.Hls({
+            lowLatencyMode: false,
+            enableWorker: true,
+            manifestLoadingMaxRetry: 8,
+            manifestLoadingRetryDelay: 800,
+            manifestLoadingMaxRetryTimeout: 20000,
+            levelLoadingMaxRetry: 8,
+            levelLoadingRetryDelay: 800,
+            fragLoadingMaxRetry: 8,
+            fragLoadingRetryDelay: 800,
+            fragLoadingMaxRetryTimeout: 20000,
+          });
+          let recovered = 0;
           _hls.loadSource(url);
           _hls.attachMedia(fileVid);
           _hls.on(window.Hls.Events.ERROR, (evt, data) => {
-            if (data && data.fatal) {
-              console.warn("[hls] fatal", data.type, data.details);
-              if (data.type === window.Hls.ErrorTypes.NETWORK_ERROR) { try { _hls.startLoad(); } catch(_){} }
-              else if (data.type === window.Hls.ErrorTypes.MEDIA_ERROR) { try { _hls.recoverMediaError(); } catch(_){} }
+            if (!data) return;
+            if (!data.fatal) return;
+            console.warn("[hls] fatal", data.type, data.details);
+            if (data.type === window.Hls.ErrorTypes.NETWORK_ERROR) {
+              // manifest or level load error — reload the source a few times,
+              // giving ffmpeg time to produce the playlist on first play.
+              if (recovered < 6) {
+                recovered++;
+                setTimeout(() => { try { _hls.loadSource(url); _hls.startLoad(); } catch(_){} }, 1000);
+              } else {
+                toast("Still preparing the video… give it a moment, then press play ▶");
+              }
+            } else if (data.type === window.Hls.ErrorTypes.MEDIA_ERROR) {
+              try { _hls.recoverMediaError(); } catch(_){}
             }
           });
           return;
