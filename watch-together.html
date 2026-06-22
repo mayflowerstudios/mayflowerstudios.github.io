@@ -434,8 +434,6 @@
 <meta name="twitter:description" content="A cozy private space to watch YouTube and videos together, perfectly in sync." />
 <meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/watch-together.png" />
 <!-- OG:END -->
-<!-- hls.js (self-hosted): lets non-Safari browsers play the HLS media streams -->
-<script src="hls.min.js?v=1"></script>
 </head>
 
 <body data-nav="watch">
@@ -797,80 +795,6 @@
     const fileVid = $("filevid");
     const ytEl = $("ytplayer");
 
-    // ── HLS-aware video source setter ──
-    // Self-hosted transcoded movies come as .m3u8 (HLS) so they stream reliably
-    // through the relay. Native <video> only plays HLS on Safari, so elsewhere we
-    // use hls.js. Direct files (mp4/webm) just set .src as before.
-    let _hls = null;
-    function teardownHls() {
-      if (_hls) { try { _hls.destroy(); } catch (_) {} _hls = null; }
-    }
-    function setFileSource(url) {
-      teardownHls();
-      const isHls = /\.m3u8(\?|$)/i.test(url);
-      if (isHls) {
-        // Safari (and some mobile) can play HLS natively
-        if (fileVid.canPlayType("application/vnd.apple.mpegurl")) {
-          fileVid.src = url;
-          return;
-        }
-        // Otherwise we NEED hls.js. If it isn't loaded yet (slow script), wait
-        // for it rather than falling through to a native <video> attempt, which
-        // fails with "can't play that file type".
-        startHlsWhenReady(url, 0);
-        return;
-      }
-      // plain file
-      fileVid.src = url;
-    }
-
-    function startHlsWhenReady(url, attempt) {
-      if (window.Hls && window.Hls.isSupported()) { attachHls(url); return; }
-      if (attempt === 0) { setBuffering(true); }
-      if (attempt > 50) {   // ~10s of waiting for the script
-        setBuffering(false);
-        toast("Couldn't load the video player. Refresh the page and try again.");
-        return;
-      }
-      setTimeout(() => startHlsWhenReady(url, attempt + 1), 200);
-    }
-
-    function attachHls(url) {
-      teardownHls();
-      // Transcoded HLS starts "cold": ffmpeg needs a moment to write the first
-      // playlist + segment. Generous retries so the initial load recovers.
-      _hls = new window.Hls({
-        lowLatencyMode: false,
-        enableWorker: true,
-        manifestLoadingMaxRetry: 8,
-        manifestLoadingRetryDelay: 800,
-        manifestLoadingMaxRetryTimeout: 20000,
-        levelLoadingMaxRetry: 8,
-        levelLoadingRetryDelay: 800,
-        fragLoadingMaxRetry: 8,
-        fragLoadingRetryDelay: 800,
-        fragLoadingMaxRetryTimeout: 20000,
-      });
-      let recovered = 0;
-      _hls.loadSource(url);
-      _hls.attachMedia(fileVid);
-      _hls.on(window.Hls.Events.ERROR, (evt, data) => {
-        if (!data || !data.fatal) return;
-        console.warn("[hls] fatal", data.type, data.details);
-        if (data.type === window.Hls.ErrorTypes.NETWORK_ERROR) {
-          if (recovered < 6) {
-            recovered++;
-            setTimeout(() => { try { _hls.loadSource(url); _hls.startLoad(); } catch(_){} }, 1000);
-          } else {
-            setBuffering(false);
-            toast("Still preparing the video… give it a moment, then press play ▶");
-          }
-        } else if (data.type === window.Hls.ErrorTypes.MEDIA_ERROR) {
-          try { _hls.recoverMediaError(); } catch(_){}
-        }
-      });
-    }
-
     function showPlayer(kind) {
       currentKind = kind;
       ytEl.style.display    = kind === "yt"   ? "block" : "none";
@@ -1178,7 +1102,7 @@
             currentSrc = src;
             cancelDriftCorrection();
             setNowPlaying("file", src, s.title);
-            setFileSource(src);
+            fileVid.src = src;
             const start = estimatePos(s);
             const onMeta = () => {
               try { fileVid.currentTime = start; } catch(_) {}
@@ -2279,7 +2203,7 @@
       } else {
         showPlayer("file");
         setNowPlaying("file", parsed.src);
-        setFileSource(parsed.src);
+        fileVid.src = parsed.src;
         fileVid.load();
         fileVid.play().catch((err) => {
           // Autoplay (esp. with sound) can be blocked until the user interacts.
@@ -2309,36 +2233,6 @@
 
     loadBtn.addEventListener("click", loadFromInput);
     urlInput.addEventListener("keydown", (e) => { if (e.key === "Enter") loadFromInput(); });
-
-    // ── Bridge for the self-hosted Library picker (mf-library.js) ──
-    // Lets the 🎬 Library panel feed videos into this room's synced player
-    // and shared queue, using the same paths as the URL box and ＋ Add.
-    window.MFWatch = {
-      playUrl(url, title) {
-        startSource({ kind: "file", src: url, title: title || null });
-        if (title) { currentTitle = title; }
-        toast("Loaded — everyone will catch up ✨");
-      },
-      queueUrl(url, title) {
-        if (!FIREBASE_READY || !queueRef) { toast("Queue needs the room connection to be live"); return; }
-        if (isInQueue("file", url)) { toast("That's already in the queue"); return; }
-        safeWrite(() => push(queueRef, { kind: "file", src: url, title: title || shortName(url), t: Date.now(), by: myName }), "Couldn't add to queue");
-        toast("Added to queue 🎞️");
-      },
-      // queue a run of items at once (used for "auto-play" a TV show in order),
-      // skipping anything already queued/playing. Returns how many were added.
-      queueMany(items) {
-        if (!FIREBASE_READY || !queueRef) { toast("Queue needs the room connection to be live"); return 0; }
-        let n = 0, base = Date.now();
-        items.forEach((it) => {
-          if (isInQueue("file", it.url)) return;
-          if (currentKind === "file" && currentSrc === it.url) return;
-          safeWrite(() => push(queueRef, { kind: "file", src: it.url, title: it.title || shortName(it.url), t: base + (n++), by: myName }), "Couldn't add to queue");
-        });
-        if (n) toast(`Queued ${n} episode${n === 1 ? "" : "s"} ▶`);
-        return n;
-      },
-    };
 
     // ============================================================
     //  Upload a video (Firebase Storage, Blaze plan)
@@ -3337,6 +3231,5 @@
     ytImportBtn.addEventListener("click", () => { importYouTubePlaylist(ytImportInput.value); ytImportInput.value = ""; });
     ytImportInput.addEventListener("keydown", (e) => { if (e.key === "Enter") ytImportBtn.click(); });
   </script>
-  <script src="mf-library.js?v=3"></script>
 </body>
 </html>
