@@ -1018,11 +1018,16 @@
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "hidden") {
         pageHidden = true;
+        cancelDriftCorrection();  // kill any in-flight rate nudge; the OS has paused us
         syncWakeLock();   // release the screen lock; nothing to broadcast
       } else {
         // back in the foreground: re-sync to wherever the room is now, rather
         // than pushing our stale (paused-by-OS) position onto everyone else
         pageHidden = false;
+        // Re-stamp presence right away. A backgrounded phone's heartbeat gets
+        // throttled by the OS, so its timestamp may be minutes old; refreshing
+        // on return keeps it comfortably fresh for everyone else's view.
+        try { if (myPresRef) set(myPresRef, { name: myName, idk: identityId(), t: Date.now() }); } catch (_) {}
         syncWakeLock();
         resyncToRoom();
       }
@@ -1036,6 +1041,35 @@
         const s = snap.val();
         if (s && s.by !== clientId) applyState(s, true);
       } catch (_) {}
+    }
+
+    // Remembers the last remote state we acted on, so we can tell a real change
+    // (new video, play/pause, a deliberate seek) apart from the host's periodic
+    // "still playing" keep-alive — which arrives every ~8s with only the clock
+    // moved forward. Returning false for those avoids a needless seek/decode
+    // cycle on the viewer every few seconds (a real battery cost on phones).
+    let _lastRemote = null;
+    function _stateChanged(s) {
+      const prev = _lastRemote;
+      _lastRemote = s;
+      if (!prev) return true;
+      if (prev.kind !== s.kind || prev.src !== s.src || prev.status !== s.status) return true;
+      if (!!prev.live !== !!s.live) return true;
+      // Same src + same status. A live stream has no meaningful position, so a
+      // repeat push carries no new info.
+      if (s.live) return false;
+      // If our current playback position already matches where the host now is
+      // (within the soft-drift tolerance), the keep-alive tells us nothing we
+      // need to act on. Only re-apply when we've actually drifted apart.
+      try {
+        const target = estimatePos(s);
+        const cur = (currentKind === "yt")
+          ? (player && player.getCurrentTime ? (player.getCurrentTime() || 0) : 0)
+          : (fileVid.currentTime || 0);
+        return Math.abs(cur - target) > driftThreshold();
+      } catch (_) {
+        return true;  // if we can't tell, err toward applying
+      }
     }
 
     function applyState(s, force) {
@@ -1126,6 +1160,10 @@
           }
         }
       } catch (_) {}
+      // A forced apply (resync, return-to-foreground, new-video load) is now the
+      // authoritative baseline; record it so the next keep-alive is compared
+      // against where we actually are, not a pre-background snapshot.
+      if (force) _lastRemote = s;
       setTimeout(() => { applyingRemote = false; }, 600);
     }
 
@@ -1166,8 +1204,15 @@
         // 5% rate change is inaudible/imperceptible for video; catches up ~0.05s
         // per playback-second, so up to ~2.5s drift closes within a reasonable window.
         const rate = delta > 0 ? 1.05 : 0.95;
+        // Anchor the clock BEFORE arming the timer — the first tick reads
+        // _driftAnchor, so setting it afterward made that tick use a stale value
+        // and occasionally nudge the wrong way.
+        _driftAnchor = Date.now();
         setRate(rate);
         _driftRateTimer = setInterval(() => {
+          // Bail if backgrounded — the OS has paused our video and getCur() is
+          // frozen, so this would just burn cycles (and battery) for nothing.
+          if (pageHidden) { setRate(1.0); clearInterval(_driftRateTimer); _driftRateTimer = null; return; }
           const d = target + ((Date.now() - _driftAnchor) / 1000) - getCur();
           // Once close enough (or direction flips), snap back to normal speed.
           if (Math.abs(d) < 0.12 || (delta > 0) !== (d > 0)) {
@@ -1175,7 +1220,6 @@
             clearInterval(_driftRateTimer); _driftRateTimer = null;
           }
         }, 250);
-        _driftAnchor = Date.now();
       } catch (_) { try { setRate(1.0); } catch (__) {} }
     }
     let _driftAnchor = Date.now();
@@ -1331,6 +1375,7 @@
     let activeShare = null;        // { by, byName } of whoever is sharing (anyone)
     const peers = new Map();       // peerClientId -> RTCPeerConnection
     const pendingIce = new Map();   // peerClientId -> [candidate,...] queued before remoteDescription
+    const signalChildUnsubs = new Map(); // fromId -> unsubscribe fn for that sender's nested listener
     let signalsBound = false;
 
     function rtcInit() {
@@ -1362,14 +1407,29 @@
         signalsBound = true;
         onChildAdded(mySignalsRef, (fromSnap) => {
           const fromId = fromSnap.key;
-          onChildAdded(child(mySignalsRef, fromId), async (msgSnap) => {
+          // Each sender gets ONE nested listener. Guard against re-binding the
+          // same fromId (the outer callback can re-fire across reconnects),
+          // which previously stacked duplicate live subscriptions that never
+          // detached — a steady drain that grew with every reconnect.
+          if (signalChildUnsubs.has(fromId)) return;
+          const unsub = onChildAdded(child(mySignalsRef, fromId), async (msgSnap) => {
             const msg = msgSnap.val();
             // consume it so the queue doesn't grow unbounded
             try { remove(msgSnap.ref); } catch (_) {}
             if (msg) await handleSignal(fromId, msg);
           });
+          signalChildUnsubs.set(fromId, unsub);
         });
       }
+    }
+
+    // Detach the nested signal listener for a sender and drop their (now-empty)
+    // signal node, so a peer that comes and goes doesn't leave a live listener
+    // behind. Called from closePeer.
+    function teardownSignalChannel(fromId) {
+      const unsub = signalChildUnsubs.get(fromId);
+      if (unsub) { try { unsub(); } catch (_) {} signalChildUnsubs.delete(fromId); }
+      try { if (db) remove(ref(db, `watch/${ROOM}/rtc/signals/${clientId}/${fromId}`)); } catch (_) {}
     }
 
     function sendSignal(toId, type, data) {
@@ -1562,7 +1622,10 @@
           await flushPendingIce(fromId);
         } else if (msg.type === "answer") {
           const pc = peers.get(fromId);
-          if (pc && pc.signalingState !== "stable") {
+          // Only a peer that has sent an offer and is waiting (have-local-offer)
+          // should accept an answer. The old "!== stable" check also matched
+          // have-remote-offer, where applying an answer throws InvalidStateError.
+          if (pc && pc.signalingState === "have-local-offer") {
             await pc.setRemoteDescription(new RTCSessionDescription(msg.data));
             await flushPendingIce(fromId);
           }
@@ -1592,8 +1655,9 @@
 
     function closePeer(peerId) {
       const pc = peers.get(peerId);
-      if (pc) { try { pc.ontrack = null; pc.onicecandidate = null; pc.close(); } catch (_) {} peers.delete(peerId); }
+      if (pc) { try { pc.ontrack = null; pc.onicecandidate = null; pc.onconnectionstatechange = null; pc.close(); } catch (_) {} peers.delete(peerId); }
       pendingIce.delete(peerId);
+      teardownSignalChannel(peerId);
     }
 
     // Viewer: if no peers remain and we're not broadcasting, drop back to idle.
@@ -1770,13 +1834,22 @@
       hostName.textContent = isMe ? "You" : name;
     }
 
-    const PRESENCE_TTL = 70000;   // entries older than this are treated as gone
+    // How long a presence entry can go without a heartbeat before we treat it
+    // as a crashed/abandoned session. This is deliberately long: the real signal
+    // that someone left is Firebase's onDisconnect removing their node the moment
+    // their connection drops (tab closed, network lost). A live entry only stops
+    // heartbeating when the OS throttles a backgrounded/locked phone — and that
+    // person is still very much "on the page". So the TTL is only a fallback for
+    // genuine crashes (where onDisconnect somehow didn't fire), set high enough
+    // that a phone sitting in someone's pocket keeps its name visible.
+    const PRESENCE_TTL = 15 * 60 * 1000;   // 15 min — crash fallback only
     function renderPresence(val) {
       val = val || {};
       const now = Date.now();
-      // Drop stale entries: sessions that reloaded or crashed without their
-      // onDisconnect firing leave behind an entry whose timestamp stops moving.
-      // Anyone still here heartbeats every 8s, so a stale entry ages out quickly.
+      // Drop only truly stale entries (see PRESENCE_TTL above). A connected
+      // device's node is removed by onDisconnect when it actually leaves, so
+      // anything still present here is either heartbeating or a backgrounded
+      // tab that's still connected — keep it either way.
       const fresh = {};
       for (const id of Object.keys(val)) {
         const t = (val[id] && val[id].t) || 0;
@@ -2079,6 +2152,15 @@
           const s = snap.val();
           if (!s) return;
           if (s.by === clientId) return;      // ignore our own writes
+          // While backgrounded the OS has frozen our player; applying remote
+          // state (seeks/playbackRate) here does nothing useful and just wakes
+          // the device. resyncToRoom() runs on return-to-foreground instead.
+          if (pageHidden) return;
+          // Coalesce the host's periodic keep-alive re-broadcasts. If nothing
+          // material changed (same src/status, and the position is consistent
+          // with the time elapsed since the last push), skip the work — this is
+          // what was driving a seek/decode cycle every 8s on the partner's phone.
+          if (!_stateChanged(s)) return;
           applyState(s, false);
         });
 

@@ -57,7 +57,7 @@ code { font-family: var(--font-m); font-size: .9em; }
   position: fixed; inset: 0; z-index: -3; pointer-events: none;
   background:
     linear-gradient(180deg, rgba(11,17,32,.58) 0%, rgba(11,17,32,.75) 100%),
-    url('/assets/cherry-bg.png') center / cover no-repeat;
+    url('/assets/cherry-bg.webp') center / cover no-repeat;
 }
 .bg-glow {
   position: fixed; inset: 0; z-index: -2; pointer-events: none;
