@@ -237,6 +237,48 @@
     .achBadge .achDesc { font-size: 10.5px; color: var(--text-3); line-height: 1.35; }
     .achBadge.earned .achName { color: var(--gold); }
     .achCount { font-size: 12px; color: var(--text-3); margin-bottom: 10px; }
+
+
+    /* ── profile social dashboard (your own public-profile activity) ── */
+    .acctSocialStack { display: grid; gap: 12px; }
+    .acctSocialCard {
+      border: 1px solid var(--border-2); border-radius: var(--r-lg);
+      background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+      padding: 15px; overflow: hidden;
+    }
+    .acctSocialHead { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom: 12px; }
+    .acctSocialHead h3 { margin:0; font-size:14px; font-family:var(--font-b); font-weight:700; color:var(--text); }
+    .acctSocialHead span { color:var(--text-3); font-size:12px; }
+    .acctRelPreview {
+      padding: 13px 14px; border-radius: var(--r-md);
+      background: radial-gradient(circle at 20% 0%, rgba(249,168,212,.18), transparent 45%), rgba(0,0,0,.16);
+      border: 1px solid rgba(249,168,212,.18); color: var(--text-2); line-height:1.5; font-size:13.5px;
+    }
+    .acctRelPreview b { color: var(--rose); }
+    .acctRelPreview span { display:block; color: var(--text-3); font-size:12px; margin-top:2px; }
+    .acctGiftCollection { display:flex; gap:8px; overflow-x:auto; padding-bottom:2px; scrollbar-width: thin; }
+    .acctGiftStat {
+      min-width: 74px; display:flex; flex-direction:column; align-items:center; gap:3px;
+      padding:10px 8px; border-radius:14px; border:1px solid var(--border);
+      background:rgba(255,255,255,.035); text-align:center;
+    }
+    .acctGiftStat b { font-size:24px; line-height:1; }
+    .acctGiftStat small { max-width:64px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-3); font-size:10.5px; }
+    .acctGiftStat strong { color:var(--text); font-size:12px; }
+    .acctRecentList, .acctGuestList { display:grid; gap:8px; margin-top:10px; }
+    .acctRecentItem, .acctGuestItem {
+      display:grid; grid-template-columns:auto 1fr auto; gap:10px; align-items:start;
+      padding:11px 12px; border-radius:var(--r-md); background:rgba(0,0,0,.16); border:1px solid var(--border);
+    }
+    .acctRecentIcon { font-size:22px; line-height:1; }
+    .acctRecentMain, .acctGuestMain { min-width:0; }
+    .acctRecentMain b, .acctGuestMain b { color:var(--rose); font-size:12.5px; }
+    .acctRecentMain span, .acctGuestTime { color:var(--text-3); font-size:11.5px; }
+    .acctRecentMain p, .acctGuestMain p { margin:4px 0 0; color:var(--text-2); font-size:12.5px; line-height:1.4; overflow-wrap:anywhere; }
+    .acctGuestActions { display:flex; align-items:center; gap:6px; }
+    .acctTinyBtn { border:1px solid var(--border-2); background:rgba(255,255,255,.05); color:var(--text-2); border-radius:999px; padding:5px 9px; cursor:pointer; font-size:11.5px; font-family:var(--font-b); }
+    .acctTinyBtn:hover { color:var(--text); border-color:rgba(249,168,212,.32); background:rgba(249,168,212,.08); }
+    .acctEmpty { color:var(--text-3); font-size:12.5px; padding:10px 0; line-height:1.5; }
   </style>
 </head>
 <body data-nav="account">
@@ -319,6 +361,27 @@
         </div>
 
         <p class="profEmail" id="profEmail"></p>
+
+        <!-- ── your public profile activity ── -->
+        <div class="secLabel">Your profile activity</div>
+        <div class="acctSocialStack">
+          <section class="acctSocialCard">
+            <div class="acctSocialHead"><h3>💕 Relationship</h3><span>shown publicly</span></div>
+            <div class="acctRelPreview" id="acctRelPreview">Loading…</div>
+          </section>
+
+          <section class="acctSocialCard">
+            <div class="acctSocialHead"><h3>🎁 Gifts received</h3><span id="acctGiftTotal">0 total</span></div>
+            <div class="acctGiftCollection" id="acctGiftCollection"><div class="acctEmpty">Loading gifts…</div></div>
+            <div class="acctRecentList" id="acctGiftRecent"></div>
+          </section>
+
+          <section class="acctSocialCard">
+            <div class="acctSocialHead"><h3>📝 Guestbook</h3><span id="acctGuestTotal">0 notes</span></div>
+            <div class="acctGuestList" id="acctGuestList"><div class="acctEmpty">Loading guestbook…</div></div>
+          </section>
+        </div>
+
 
         <!-- ── companions ── -->
         <div class="secLabel">Your companions</div>
@@ -752,7 +815,82 @@
       });
 
       // ── live stats + extras (friends, pets, rooms, achievements) ──
-      const stats = { friends: 0, pets: 0, topLevel: 0, rooms: 0, hasBanner: false, hasBio: false, ageDays: 0 };
+      const stats = { friends: 0, pets: 0, topLevel: 0, rooms: 0, gifts: 0, guestbook: 0, hasBanner: false, hasBio: false, ageDays: 0 };
+
+
+
+      function acctTimeAgo(t) {
+        if (!t) return "";
+        const sec = Math.floor((Date.now() - t) / 1000);
+        if (sec < 60) return "just now";
+        if (sec < 3600) return Math.floor(sec / 60) + "m ago";
+        if (sec < 86400) return Math.floor(sec / 3600) + "h ago";
+        const d = Math.floor(sec / 86400);
+        return d === 1 ? "yesterday" : d + "d ago";
+      }
+      function acctNewest(obj) {
+        return Object.entries(obj || {}).map(([id, v]) => ({ id, ...(v || {}) })).sort((a,b) => (b.t || 0) - (a.t || 0));
+      }
+      function renderAcctRelPreview(rel) {
+        const el = $("acctRelPreview");
+        if (!el) return;
+        if (rel) {
+          const partner = rel.partnerUsername ? "@" + rel.partnerUsername : (rel.partnerName || "someone");
+          el.innerHTML = `♡ In a relationship with <b>${escapeForHtml(partner)}</b><span>Since ${escapeForHtml(relNiceDate(rel.startedAt))}</span>`;
+        } else {
+          el.innerHTML = `No relationship shown yet.<span>Use the relationship controls on the right to add one.</span>`;
+        }
+      }
+      function renderAcctGifts(gifts) {
+        const list = acctNewest(gifts);
+        const total = $("acctGiftTotal");
+        const collection = $("acctGiftCollection");
+        const recent = $("acctGiftRecent");
+        stats.gifts = list.length;
+        if (total) total.textContent = list.length === 1 ? "1 total" : `${list.length} total`;
+        const counts = {};
+        list.forEach(g => {
+          const id = g.giftId || (g.emoji || "🎁") + "_" + (g.name || "Gift");
+          counts[id] = counts[id] || { emoji: g.emoji || "🎁", name: g.name || "Gift", n: 0 };
+          counts[id].n++;
+        });
+        const top = Object.values(counts).sort((a,b) => b.n - a.n);
+        if (collection) collection.innerHTML = top.length
+          ? top.map(g => `<div class="acctGiftStat"><b>${escapeForHtml(g.emoji)}</b><small>${escapeForHtml(g.name)}</small><strong>×${g.n}</strong></div>`).join("")
+          : `<div class="acctEmpty">No gifts yet — when people send you gifts, they’ll collect here.</div>`;
+        if (recent) recent.innerHTML = list.slice(0, 3).map(g => {
+          const from = g.fromUsername ? "@" + g.fromUsername : (g.fromName || "Someone");
+          return `<div class="acctRecentItem">
+            <div class="acctRecentIcon">${escapeForHtml(g.emoji || "🎁")}</div>
+            <div class="acctRecentMain"><b>${escapeForHtml(from)}</b> <span>sent ${escapeForHtml(g.name || "a gift")}</span>${g.note ? `<p>${escapeForHtml(g.note)}</p>` : ""}</div>
+            <span class="acctGuestTime">${escapeForHtml(acctTimeAgo(g.t))}</span>
+          </div>`;
+        }).join("");
+        renderAchievements();
+      }
+      function renderAcctGuestbook(posts) {
+        const list = acctNewest(posts);
+        const total = $("acctGuestTotal");
+        const box = $("acctGuestList");
+        stats.guestbook = list.length;
+        if (total) total.textContent = list.length === 1 ? "1 note" : `${list.length} notes`;
+        if (!box) return;
+        box.innerHTML = list.slice(0, 5).map(p => {
+          const from = p.fromUsername ? "@" + p.fromUsername : (p.fromName || "Someone");
+          return `<div class="acctGuestItem" data-post="${escapeForHtml(p.id)}">
+            <div class="acctRecentIcon">💌</div>
+            <div class="acctGuestMain"><b>${escapeForHtml(from)}</b><span class="acctGuestTime"> · ${escapeForHtml(acctTimeAgo(p.t))}</span><p>${escapeForHtml(p.text || "")}</p></div>
+            <div class="acctGuestActions"><button class="acctTinyBtn" type="button" data-delgb="${escapeForHtml(p.id)}">Delete</button></div>
+          </div>`;
+        }).join("") || `<div class="acctEmpty">No guestbook notes yet — they’ll show here when people leave one on your profile.</div>`;
+        box.querySelectorAll("[data-delgb]").forEach(btn => btn.addEventListener("click", async () => {
+          btn.disabled = true;
+          try { await MFAuth.deleteGuestbookPost(MFAuth.uid, btn.getAttribute("data-delgb")); }
+          catch (e) { msg($("profMsg"), friendlyError(e), "err"); btn.disabled = false; }
+        }));
+        renderAchievements();
+      }
+
 
       if (MFAuth.watchFriends) {
         MFAuth.watchFriends(f => {
@@ -761,6 +899,11 @@
           renderAchievements();
         });
       }
+
+
+
+      if (MFAuth.watchGifts) MFAuth.watchGifts(MFAuth.uid, renderAcctGifts, 80);
+      if (MFAuth.watchGuestbook) MFAuth.watchGuestbook(MFAuth.uid, renderAcctGuestbook, 80);
 
       async function loadExtras() {
         const p = MFAuth.profile || {};
@@ -822,6 +965,8 @@
           { id: "open",     icon: "📖", name: "Open Book",    desc: "Wrote a bio",               earned: stats.hasBio },
           { id: "friend1",  icon: "🤝", name: "Made a Friend",desc: "Added 1 friend",            earned: stats.friends >= 1 },
           { id: "social",   icon: "💞", name: "Social",       desc: "5 friends",                 earned: stats.friends >= 5 },
+          { id: "gifted",   icon: "🎁", name: "Gifted",       desc: "Received a gift",          earned: stats.gifts >= 1 },
+          { id: "guestbook",icon: "💌", name: "Signed",       desc: "Got a guestbook note",      earned: stats.guestbook >= 1 },
           { id: "host",     icon: "🚪", name: "Host",         desc: "Opened a room",             earned: stats.rooms >= 1 },
           { id: "regular",  icon: "🏡", name: "Regular",      desc: "Opened 5 rooms",            earned: stats.rooms >= 5 },
           { id: "caretaker",icon: "🌱", name: "Caretaker",    desc: "Raised a companion",        earned: stats.pets >= 1 },
@@ -872,8 +1017,10 @@
         const cur = $("relCurrent");
         const setup = $("relSetup");
         if (!cur || !setup) return;
+        renderAcctRelPreview(rel);
         if (rel) {
-          cur.innerHTML = `♡ In a relationship with <b>${escapeForHtml(rel.partnerName || "someone")}</b><br><span>Since ${escapeForHtml(relNiceDate(rel.startedAt))}</span>`;
+          const partnerLabel = rel.partnerUsername ? "@" + rel.partnerUsername : (rel.partnerName || "someone");
+          cur.innerHTML = `♡ In a relationship with <b>${escapeForHtml(partnerLabel)}</b><br><span>Since ${escapeForHtml(relNiceDate(rel.startedAt))}</span>`;
           setup.style.display = "none";
           if (!$("relClearBtn")) {
             const b = document.createElement("button");
