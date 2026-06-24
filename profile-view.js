@@ -59,32 +59,41 @@
   function renderGifts(uid, gifts) {
     const recent = document.getElementById("mfProfGiftRecent");
     const collection = document.getElementById("mfProfGiftCollection");
+    const countEl = document.getElementById("mfProfGiftCount");
     if (!recent || !collection) return;
     const list = sortNewest(gifts);
     const counts = {};
     list.forEach(g => {
-      const key = (g.emoji || "🎁") + " " + (g.name || "Gift");
-      counts[key] = (counts[key] || 0) + 1;
+      const id = g.giftId || (g.emoji || "🎁") + "_" + (g.name || "Gift");
+      counts[id] = counts[id] || { emoji: g.emoji || "🎁", name: g.name || "Gift", n: 0 };
+      counts[id].n++;
     });
-    collection.innerHTML = Object.keys(counts).length
-      ? Object.entries(counts).map(([k, n]) => `<span class="mf-prof-pill">${esc(k)} ×${n}</span>`).join("")
+    if (countEl) countEl.textContent = String(list.length);
+    const top = Object.values(counts).sort((a,b) => b.n - a.n);
+    collection.innerHTML = top.length
+      ? top.map(g => `<span class="mf-prof-giftstat"><b>${esc(g.emoji)}</b><span>${esc(g.name)}</span><strong>×${g.n}</strong></span>`).join("")
       : `<span class="mf-prof-dim">No gifts yet.</span>`;
-    recent.innerHTML = list.slice(0, 5).map(g => `
-      <div class="mf-prof-line">
-        <b>${esc(g.emoji || "🎁")}</b>
-        <span>${esc(g.fromName || "Someone")} sent ${esc(g.name || "a gift")}${g.note ? `<em>“${esc(g.note)}”</em>` : ""}</span>
-        <small>${esc(timeAgo(g.t))}</small>
-      </div>`).join("") || `<div class="mf-prof-empty">Be the first to send something sweet.</div>`;
+    recent.innerHTML = list.slice(0, 6).map(g => {
+      const from = g.fromUsername ? "@" + g.fromUsername : (g.fromName || "Someone");
+      return `<div class="mf-prof-giftcard">
+        <div class="mf-prof-gifticon">${esc(g.emoji || "🎁")}</div>
+        <div class="mf-prof-giftmain"><b>${esc(from)}</b><span>sent ${esc(g.name || "a gift")}</span>${g.note ? `<p>${esc(g.note)}</p>` : ""}</div>
+        <time>${esc(timeAgo(g.t))}</time>
+      </div>`;
+    }).join("") || `<div class="mf-prof-empty">Be the first to send something sweet.</div>`;
   }
 
   function renderGuestbook(uid, posts) {
     const box = document.getElementById("mfProfGuestPosts");
+    const countEl = document.getElementById("mfProfGuestCount");
     if (!box) return;
     const list = sortNewest(posts);
+    if (countEl) countEl.textContent = String(list.length);
     box.innerHTML = list.slice(0, 12).map(p => {
       const canDelete = MFAuth.uid === uid || MFAuth.uid === p.fromUid;
+      const from = p.fromUsername ? "@" + p.fromUsername : (p.fromName || "Someone");
       return `<div class="mf-prof-gbpost" data-post="${esc(p.id)}">
-        <div><b>${esc(p.fromName || "Someone")}</b><small>${esc(timeAgo(p.t))}</small></div>
+        <div class="mf-prof-gbmeta"><b>${esc(from)}</b><small>${esc(timeAgo(p.t))}</small></div>
         <p>${esc(p.text || "")}</p>
         ${canDelete ? `<button class="mf-prof-mini" data-del="${esc(p.id)}">Delete</button>` : ""}
       </div>`;
@@ -97,8 +106,8 @@
   function giftPicker(uid) {
     const catalog = (MFAuth && MFAuth.giftCatalog) || {};
     return `<div class="mf-prof-giftpick" id="mfProfGiftPick">
-      ${Object.entries(catalog).map(([id, g]) => `<button type="button" data-gift="${esc(id)}" title="${esc(g.name)}">${esc(g.emoji)}</button>`).join("")}
-      <input id="mfProfGiftNote" maxlength="160" placeholder="optional note…" />
+      ${Object.entries(catalog).map(([id, g]) => `<button type="button" data-gift="${esc(id)}" title="${esc(g.name)}"><span>${esc(g.emoji)}</span><small>${esc(g.name)}</small></button>`).join("")}
+      <input id="mfProfGiftNote" maxlength="160" placeholder="optional gift note…" />
     </div>`;
   }
 
@@ -133,37 +142,64 @@
       : "";
 
     card.style.setProperty("--prof-accent", accent);
+    const handle = prof.username ? "@" + prof.username : "";
     card.innerHTML = `
       <button class="mf-prof-x" id="mfProfX" aria-label="Close">✕</button>
       <div class="mf-prof-banner"${bannerStyle}></div>
-      <div class="mf-prof-avatar">${avatarHTML}</div>
-      <div class="mf-prof-body">
-        <div class="mf-prof-name">${esc(name)} ${prof.pronouns ? `<span class="mf-prof-pron">${esc(prof.pronouns)}</span>` : ""}</div>
-        <div class="mf-prof-presence" id="mfProfPresence"><span class="mf-prof-dot"></span><span id="mfProfPresText">—</span></div>
-        ${rel ? `<div class="mf-prof-rel">♡ In a relationship with <b>${esc(rel.partnerName || "someone")}</b><span>Since ${esc(niceDate(rel.startedAt))}</span></div>` : ""}
-        ${prof.status ? `<div class="mf-prof-status">“${esc(prof.status)}”</div>` : ""}
-        ${prof.bio ? `<p class="mf-prof-bio">${esc(prof.bio)}</p>` : `<p class="mf-prof-bio dim">No bio yet.</p>`}
+      <div class="mf-prof-head">
+        <div class="mf-prof-avatar">${avatarHTML}</div>
+        <div class="mf-prof-intro">
+          <div class="mf-prof-name">${esc(name)} ${prof.pronouns ? `<span class="mf-prof-pron">${esc(prof.pronouns)}</span>` : ""}</div>
+          ${handle ? `<div class="mf-prof-handle">${esc(handle)}</div>` : ""}
+          <div class="mf-prof-presence" id="mfProfPresence"><span class="mf-prof-dot"></span><span id="mfProfPresText">—</span></div>
+          ${prof.status ? `<div class="mf-prof-status">“${esc(prof.status)}”</div>` : ""}
+          ${prof.bio ? `<p class="mf-prof-bio">${esc(prof.bio)}</p>` : `<p class="mf-prof-bio dim">No bio yet.</p>`}
+        </div>
         <div class="mf-prof-actions" id="mfProfActions">
           ${isMe ? `<a class="mf-prof-btn" href="/account.html">Edit your profile</a>` : `<span class="mf-prof-dim">…</span>`}
         </div>
+      </div>
 
-        <div class="mf-prof-section">
-          <h3>🎁 Gifts</h3>
-          ${!isMe ? giftPicker(uid) : ""}
-          <div class="mf-prof-collection" id="mfProfGiftCollection"><span class="mf-prof-dim">Loading…</span></div>
-          <div id="mfProfGiftRecent"></div>
-          <div class="mf-prof-dim" id="mfProfGiftMsg"></div>
-        </div>
+      <div class="mf-prof-body">
+        <aside class="mf-prof-side">
+          <section class="mf-prof-panel mf-prof-relpanel">
+            <h3>💕 Relationship</h3>
+            ${rel ? `<div class="mf-prof-rel">♡ In a relationship with <b>${esc(rel.partnerName || "someone")}</b><span>Since ${esc(niceDate(rel.startedAt))}</span></div>` : `<div class="mf-prof-empty">No relationship shown.</div>`}
+          </section>
 
-        <div class="mf-prof-section">
-          <h3>📝 Guestbook</h3>
-          <div class="mf-prof-gbform">
-            <textarea id="mfProfGuestText" maxlength="500" rows="2" placeholder="Leave a sweet note…"></textarea>
-            <button class="mf-prof-btn" id="mfProfGuestSend" type="button">Post</button>
-          </div>
-          <div class="mf-prof-dim" id="mfProfGuestMsg"></div>
-          <div id="mfProfGuestPosts"></div>
-        </div>
+          <section class="mf-prof-panel">
+            <h3>🌸 Profile</h3>
+            <div class="mf-prof-stats">
+              <div><b id="mfProfGiftCount">0</b><span>Gifts</span></div>
+              <div><b id="mfProfGuestCount">0</b><span>Notes</span></div>
+              <div><b>${esc(niceDate(prof.createdAt) || "—")}</b><span>Joined</span></div>
+            </div>
+          </section>
+
+          <section class="mf-prof-panel">
+            <h3>🎁 Gifts</h3>
+            ${!isMe ? giftPicker(uid) : ""}
+            <div class="mf-prof-collection" id="mfProfGiftCollection"><span class="mf-prof-dim">Loading…</span></div>
+            <div class="mf-prof-dim" id="mfProfGiftMsg"></div>
+          </section>
+        </aside>
+
+        <main class="mf-prof-main">
+          <section class="mf-prof-panel">
+            <div class="mf-prof-section-head"><h3>Recent Gifts</h3></div>
+            <div id="mfProfGiftRecent" class="mf-prof-giftgrid"></div>
+          </section>
+
+          <section class="mf-prof-panel mf-prof-guestpanel">
+            <div class="mf-prof-section-head"><h3>📝 Guestbook</h3></div>
+            <div class="mf-prof-gbform">
+              <textarea id="mfProfGuestText" maxlength="500" rows="2" placeholder="Leave ${esc(name)} a sweet note…"></textarea>
+              <button class="mf-prof-btn" id="mfProfGuestSend" type="button">Post</button>
+            </div>
+            <div class="mf-prof-dim" id="mfProfGuestMsg"></div>
+            <div id="mfProfGuestPosts" class="mf-prof-gblist"></div>
+          </section>
+        </main>
       </div>`;
 
     card.querySelector("#mfProfX").addEventListener("click", hide);
