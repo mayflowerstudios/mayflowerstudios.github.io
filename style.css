@@ -1125,3 +1125,39 @@ html[data-mf-translating] .wrap { transition: opacity 200ms var(--ease); }
 .mf-prof-birthday small { color: var(--text-3); font-size: 12px; }
 @media (max-width: 620px) { .acctBirthdayCard { margin-left: 18px; margin-right: 18px; } }
 .acctBirthdayCard[hidden] { display: none !important; }
+
+
+/* ── profile glow-up v2: public profile overlay ── */
+.mf-prof-overlay { padding: 28px; backdrop-filter: blur(8px); }
+.mf-prof-card {
+  width: min(96vw, 1120px) !important; border-radius: 32px;
+  background: radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--prof-accent), transparent 76%), transparent 34%), radial-gradient(circle at 90% 12%, rgba(196,181,253,.16), transparent 32%), rgba(10,16,29,.972);
+  border-color: rgba(255,255,255,.16); box-shadow: 0 28px 90px rgba(0,0,0,.46);
+}
+.mf-prof-banner { height: clamp(190px, 20vw, 245px); background-position: center 42%; }
+.mf-prof-banner::after { background: linear-gradient(to top, rgba(10,16,29,.99), rgba(10,16,29,.62) 36%, rgba(10,16,29,.15) 70%, transparent), radial-gradient(circle at 22% 30%, rgba(255,255,255,.13), transparent 28%); }
+.mf-prof-head { grid-template-columns: 128px minmax(0, 1fr) auto; gap: 22px; padding: 0 42px 28px; margin-top: -76px; }
+.mf-prof-avatar { width: 128px; height: 128px; border-radius: 34px; font-size: 52px; border-width: 5px; }
+.mf-prof-intro { padding: 14px 16px; border-radius: 24px; background: linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.025)); border: 1px solid rgba(255,255,255,.10); backdrop-filter: blur(10px); }
+.mf-prof-status { display: inline-block; max-width: 760px; padding: 11px 14px; border-radius: 18px; background: rgba(255,255,255,.055); border: 1px solid rgba(255,255,255,.10); line-height: 1.45; }
+.mf-prof-bio { line-height: 1.7; max-width: 760px; }
+.mf-prof-actions { align-self: end; margin-bottom: 10px; }
+.mf-prof-btn { border-radius: 999px; }
+.mf-prof-body { grid-template-columns: minmax(290px, 370px) minmax(0, 1fr); gap: 20px; padding: 0 42px 42px; }
+.mf-prof-panel { border-radius: 26px; padding: 20px; background: radial-gradient(circle at top left, rgba(255,255,255,.08), transparent 38%), linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.024)); }
+.mf-prof-panel h3, .mf-prof-section-head h3 { font-size: 16px; }
+.mf-prof-rel { border-radius: 20px; }
+.mf-prof-stats div { padding: 12px 0; }
+.mf-prof-giftcard, .mf-prof-gbpost { border-radius: 20px; }
+.mf-prof-giftgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 760px) {
+  .mf-prof-overlay { padding: 12px; }
+  .mf-prof-card { border-radius: 24px; }
+  .mf-prof-banner { height: 150px; }
+  .mf-prof-head { grid-template-columns: 88px 1fr; gap: 13px; padding: 0 18px 22px; margin-top: -52px; }
+  .mf-prof-avatar { width: 88px; height: 88px; border-radius: 26px; font-size: 36px; }
+  .mf-prof-intro { padding: 10px 12px; border-radius: 20px; }
+  .mf-prof-actions { grid-column: 1 / -1; margin: 4px 0 0; }
+  .mf-prof-body { grid-template-columns: 1fr; padding: 0 18px 24px; }
+  .mf-prof-giftgrid { grid-template-columns: 1fr; }
+}
