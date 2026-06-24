@@ -1073,3 +1073,55 @@ html[data-mf-translating] .wrap { transition: opacity 200ms var(--ease); }
   .mf-prof-giftpick { grid-template-columns: repeat(4, 1fr); }
   .mf-prof-gbform { grid-template-columns: 1fr; }
 }
+
+
+/* ── birthday sparkle ── */
+.fieldHint { margin-top: 6px; color: var(--text-3); font-size: 12px; line-height: 1.35; }
+.previewCard.isBirthday { box-shadow: 0 24px 80px rgba(249,168,212,.28), 0 0 0 1px rgba(255,255,255,.12) inset; }
+.previewCard.isBirthday .pvBanner::before,
+.mf-prof-card.isBirthday .mf-prof-banner::before {
+  content: "🎂  ✦  🎈  ✦  🎁  ✦  🎉";
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  top: 18px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  text-align: center;
+  letter-spacing: .18em;
+  background: rgba(255,255,255,.16);
+  border: 1px solid rgba(255,255,255,.24);
+  backdrop-filter: blur(10px);
+  z-index: 1;
+}
+.acctBirthdayCard {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin: 16px 34px 0;
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(249,168,212,.22), rgba(125,211,252,.14));
+  border: 1px solid rgba(255,255,255,.16);
+  box-shadow: 0 16px 44px rgba(0,0,0,.18);
+}
+.acctBirthdayBurst { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 16px; background: rgba(255,255,255,.14); font-size: 26px; }
+.acctBirthdayCard b { display: block; font-size: 16px; }
+.acctBirthdayCard span { display: block; color: var(--text-3); font-size: 13px; margin-top: 3px; }
+.mf-prof-birthday {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 10px;
+  align-items: center;
+  max-width: 560px;
+  padding: 13px 15px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(249,168,212,.24), rgba(255,255,255,.08));
+  border: 1px solid rgba(255,255,255,.15);
+}
+.mf-prof-birthday span { grid-row: 1 / span 2; font-size: 28px; }
+.mf-prof-birthday b { font-size: 15px; }
+.mf-prof-birthday small { color: var(--text-3); font-size: 12px; }
+@media (max-width: 620px) { .acctBirthdayCard { margin-left: 18px; margin-right: 18px; } }
+.acctBirthdayCard[hidden] { display: none !important; }

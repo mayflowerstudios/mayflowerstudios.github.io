@@ -508,6 +508,11 @@
           </div>
         </div>
 
+        <div class="acctBirthdayCard" id="acctBirthdayCard" hidden>
+          <div class="acctBirthdayBurst">🎂</div>
+          <div><b>Birthday profile day!</b><span id="acctBirthdayLine">Your profile gets extra sparkle today.</span></div>
+        </div>
+
         <p class="profEmail" id="profEmail"></p>
 
         <!-- ── your public profile activity ── -->
@@ -609,6 +614,12 @@
         <div class="field">
           <label for="editBio">Bio</label>
           <textarea id="editBio" maxlength="300" rows="3" placeholder="a little about you…"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="editBirthday">Birthday</label>
+          <input id="editBirthday" type="date" />
+          <div class="fieldHint">Only the month and day are saved. On your birthday, your profile shows a special birthday badge for that day only.</div>
         </div>
 
         <button class="acctBtn" id="saveProfileBtn">Save profile</button>
@@ -737,6 +748,27 @@
       });
     }
 
+    function birthdayToInput(v) {
+      if (!/^\d{2}-\d{2}$/.test(String(v || ""))) return "";
+      return "2000-" + v;
+    }
+    function inputToBirthday(v) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(v || ""))) return "";
+      return String(v).slice(5);
+    }
+    function isBirthdayToday(v) {
+      if (!/^\d{2}-\d{2}$/.test(String(v || ""))) return false;
+      const d = new Date();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return v === `${mm}-${dd}`;
+    }
+    function birthdayLabel(v) {
+      if (!/^\d{2}-\d{2}$/.test(String(v || ""))) return "";
+      const d = new Date(`2000-${v}T12:00:00`);
+      return d.toLocaleDateString(undefined, { month: "long", day: "numeric" });
+    }
+
     function renderProfile(user, profile) {
       const wrap = document.querySelector(".acctWrap");
       if (!user) { show($("authView"), true); show($("profileView"), false); if (wrap) wrap.classList.remove("wide"); return; }
@@ -752,6 +784,7 @@
       $("editStatus").value = p.status || "";
       $("editBio").value = p.bio || "";
       $("editAccent").value = p.accent || "#f9a8d4";
+      $("editBirthday").value = birthdayToInput(p.birthday);
 
       // reflect emoji selection in the grid
       pendingBanner = undefined;   // use the saved bannerURL on (re)load
@@ -824,6 +857,16 @@
         av.innerHTML = `<img src="${p.photoURL}" alt="">`;
       } else {
         av.innerHTML = ""; av.textContent = (name[0] || "?").toUpperCase();
+      }
+
+      const bday = (MFAuth.profile && MFAuth.profile.birthday) || inputToBirthday($("editBirthday").value);
+      const birthdayOn = isBirthdayToday(bday);
+      const bcard = $("acctBirthdayCard");
+      $("previewCard").classList.toggle("isBirthday", birthdayOn);
+      if (bcard) {
+        bcard.hidden = !birthdayOn;
+        const line = $("acctBirthdayLine");
+        if (line) line.textContent = birthdayOn ? "Your profile is wearing its birthday crown today only." : "";
       }
 
       // share handle
@@ -911,7 +954,7 @@
       });
 
       // live-update the preview card as the editor changes
-      ["editName","editUsername","editPronouns","editStatus","editBio","editAccent"]
+      ["editName","editUsername","editPronouns","editStatus","editBio","editAccent","editBirthday"]
         .forEach(id => { const el = $(id); if (el) el.addEventListener("input", renderPreview); });
 
       // banner upload / remove (saved immediately, like the avatar)
@@ -1117,6 +1160,7 @@
           { id: "social",   icon: "💞", name: "Social",       desc: "5 friends",                 earned: stats.friends >= 5 },
           { id: "gifted",   icon: "🎁", name: "Gifted",       desc: "Received a gift",          earned: stats.gifts >= 1 },
           { id: "guestbook",icon: "💌", name: "Signed",       desc: "Got a guestbook note",      earned: stats.guestbook >= 1 },
+          { id: "birthday", icon: "🎂", name: "Birthday",     desc: "Set your birthday",         earned: !!(MFAuth.profile && MFAuth.profile.birthday) },
           { id: "host",     icon: "🚪", name: "Host",         desc: "Opened a room",             earned: stats.rooms >= 1 },
           { id: "regular",  icon: "🏡", name: "Regular",      desc: "Opened 5 rooms",            earned: stats.rooms >= 5 },
           { id: "caretaker",icon: "🌱", name: "Caretaker",    desc: "Raised a companion",        earned: stats.pets >= 1 },
@@ -1246,6 +1290,7 @@
           status: $("editStatus").value,
           bio: $("editBio").value,
           accent: $("editAccent").value,
+          birthday: inputToBirthday($("editBirthday").value),
         };
         if (chosenEmoji) fields.avatarEmoji = chosenEmoji;
         $("saveProfileBtn").disabled = true;

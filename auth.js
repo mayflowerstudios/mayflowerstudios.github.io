@@ -180,6 +180,11 @@
           if (a && !HEX.test(a)) throw new Error("Accent must be a hex color like #f9a8d4");
           if (a) patch.accent = a;
         }
+        if (typeof fields.birthday === "string") {
+          const b = fields.birthday.trim();
+          if (b && !/^\d{2}-\d{2}$/.test(b)) throw new Error("Birthday must be saved as MM-DD");
+          patch.birthday = b;
+        }
         if (typeof fields.avatarEmoji === "string" && fields.avatarEmoji) {
           patch.avatarEmoji = fields.avatarEmoji.slice(0, 8);
           patch.avatarType = "emoji";

@@ -103,6 +103,14 @@
     }));
   }
 
+  function isBirthdayToday(v) {
+    if (!/^\d{2}-\d{2}$/.test(String(v || ""))) return false;
+    const d = new Date();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return v === `${mm}-${dd}`;
+  }
+
   function giftPicker(uid) {
     const catalog = (MFAuth && MFAuth.giftCatalog) || {};
     return `<div class="mf-prof-giftpick" id="mfProfGiftPick">
@@ -143,6 +151,8 @@
 
     card.style.setProperty("--prof-accent", accent);
     const handle = prof.username ? "@" + prof.username : "";
+    const birthdayOn = isBirthdayToday(prof.birthday);
+    card.classList.toggle("isBirthday", birthdayOn);
     card.innerHTML = `
       <button class="mf-prof-x" id="mfProfX" aria-label="Close">✕</button>
       <div class="mf-prof-banner"${bannerStyle}></div>
@@ -154,6 +164,7 @@
           <div class="mf-prof-presence" id="mfProfPresence"><span class="mf-prof-dot"></span><span id="mfProfPresText">—</span></div>
           ${prof.status ? `<div class="mf-prof-status">“${esc(prof.status)}”</div>` : ""}
           ${prof.bio ? `<p class="mf-prof-bio">${esc(prof.bio)}</p>` : `<p class="mf-prof-bio dim">No bio yet.</p>`}
+          ${birthdayOn ? `<div class="mf-prof-birthday"><span>🎂</span><b>It’s ${esc(name)}’s birthday today!</b><small>Leave a note or send a gift to celebrate.</small></div>` : ""}
         </div>
         <div class="mf-prof-actions" id="mfProfActions">
           ${isMe ? `<a class="mf-prof-btn" href="/account.html">Edit your profile</a>` : `<span class="mf-prof-dim">…</span>`}
