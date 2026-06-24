@@ -8,7 +8,7 @@
   <meta name="description" content="Sign in to your Mayflower Studios account." />
   <meta name="robots" content="noindex, follow" />
   <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=2" />
-  <link rel="stylesheet" href="/style.css?v=32" />
+  <link rel="stylesheet" href="/style.css?v=33" />
   <style>
     .acctWrap { max-width: 460px; margin: 0 auto; }
     /* when the profile is showing, allow a wider two-column canvas */
@@ -402,6 +402,24 @@
 
         <button class="acctBtn" id="saveProfileBtn">Save profile</button>
 
+
+        <!-- ── relationship status ── -->
+        <div class="secLabel">Relationship status</div>
+        <div class="relPanel">
+          <div class="relCurrent" id="relCurrent">Loading…</div>
+          <div id="relSetup">
+            <div class="relForm">
+              <input id="relUsername" type="text" maxlength="20" placeholder="partner username" autocomplete="off" spellcheck="false" />
+              <input id="relStarted" type="date" />
+            </div>
+            <div class="relActions">
+              <button class="relMiniBtn primary" id="relSendBtn" type="button">Send request</button>
+            </div>
+          </div>
+          <div id="relRequests"></div>
+          <div class="acctMsg" id="relMsg"></div>
+        </div>
+
         <!-- ── privacy ── -->
         <div class="secLabel">Privacy</div>
 
@@ -429,7 +447,7 @@
     <div id="site-footer"></div>
   </div>
 
-  <script src="/shared.js?v=32"></script>
+  <script src="/shared.js?v=33"></script>
   <script>
   (function () {
     const $ = (id) => document.getElementById(id);
@@ -836,6 +854,82 @@
       // load extras whenever the profile (re)renders
       MFAuth.onChange((user) => { if (user) loadExtras(); });
       loadExtras();
+
+
+
+      // ── relationship status controls ──
+      function relNiceDate(t) {
+        if (!t) return "";
+        return new Date(t).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
+      }
+      function setRelMsg(text, kind) {
+        const el = $("relMsg");
+        if (!el) return;
+        if (!text) { clearMsg(el); return; }
+        msg(el, text, kind || "ok");
+      }
+      function renderRelCurrent(rel) {
+        const cur = $("relCurrent");
+        const setup = $("relSetup");
+        if (!cur || !setup) return;
+        if (rel) {
+          cur.innerHTML = `♡ In a relationship with <b>${escapeForHtml(rel.partnerName || "someone")}</b><br><span>Since ${escapeForHtml(relNiceDate(rel.startedAt))}</span>`;
+          setup.style.display = "none";
+          if (!$("relClearBtn")) {
+            const b = document.createElement("button");
+            b.className = "relMiniBtn"; b.id = "relClearBtn"; b.type = "button"; b.textContent = "Clear relationship status";
+            b.addEventListener("click", async () => {
+              setRelMsg("", "ok"); b.disabled = true;
+              try { await MFAuth.clearRelationship(); setRelMsg("Relationship status cleared", "ok"); }
+              catch (e) { setRelMsg(friendlyError(e), "err"); }
+              b.disabled = false;
+            });
+            cur.parentElement.appendChild(b);
+          }
+        } else {
+          cur.textContent = "No relationship shown on your profile.";
+          setup.style.display = "";
+          const b = $("relClearBtn"); if (b) b.remove();
+        }
+      }
+      function renderRelRequests(reqs) {
+        const box = $("relRequests");
+        if (!box) return;
+        const list = Object.entries(reqs || {}).sort((a,b) => ((b[1]||{}).t||0)-((a[1]||{}).t||0));
+        box.innerHTML = list.length ? list.map(([uid, r]) => `
+          <div class="relReq" data-reluid="${escapeForHtml(uid)}">
+            <span>♡ ${escapeForHtml((r && r.fromName) || "Someone")} wants to show you as their relationship${r && r.startedAt ? ` since ${escapeForHtml(relNiceDate(r.startedAt))}` : ""}</span>
+            <span>
+              <button class="relMiniBtn primary" data-accept="${escapeForHtml(uid)}" type="button">Accept</button>
+              <button class="relMiniBtn" data-decline="${escapeForHtml(uid)}" type="button">Decline</button>
+            </span>
+          </div>`).join("") : "";
+        box.querySelectorAll("[data-accept]").forEach(btn => btn.addEventListener("click", async () => {
+          setRelMsg("", "ok"); btn.disabled = true;
+          try { await MFAuth.acceptRelationshipRequest(btn.getAttribute("data-accept")); setRelMsg("Relationship status updated ♡", "ok"); }
+          catch (e) { setRelMsg(friendlyError(e), "err"); }
+          btn.disabled = false;
+        }));
+        box.querySelectorAll("[data-decline]").forEach(btn => btn.addEventListener("click", async () => {
+          setRelMsg("", "ok"); btn.disabled = true;
+          try { await MFAuth.declineRelationshipRequest(btn.getAttribute("data-decline")); setRelMsg("Request declined", "ok"); }
+          catch (e) { setRelMsg(friendlyError(e), "err"); }
+          btn.disabled = false;
+        }));
+      }
+      if ($("relStarted")) $("relStarted").valueAsDate = new Date();
+      if (MFAuth.watchMyRelationship) MFAuth.watchMyRelationship(renderRelCurrent);
+      if (MFAuth.watchRelationshipRequests) MFAuth.watchRelationshipRequests(renderRelRequests);
+      if ($("relSendBtn")) $("relSendBtn").addEventListener("click", async () => {
+        setRelMsg("", "ok");
+        const h = ($("relUsername").value || "").trim();
+        const d = $("relStarted").value ? new Date($("relStarted").value + "T00:00:00").getTime() : Date.now();
+        if (!h) { setRelMsg("Type their username first.", "err"); return; }
+        $("relSendBtn").disabled = true;
+        try { await MFAuth.sendRelationshipRequest(h, d); setRelMsg("Relationship request sent ♡", "ok"); $("relUsername").value = ""; }
+        catch (e) { setRelMsg(friendlyError(e), "err"); }
+        $("relSendBtn").disabled = false;
+      });
 
       $("saveProfileBtn").addEventListener("click", async () => {
         clearMsg($("profMsg"));

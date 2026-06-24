@@ -360,6 +360,146 @@
         await MFAuth.updateProfile({ bannerURL: "" });
       };
 
+
+
+      // ---- social extras: guestbook, gifts, relationship status ----
+      const GIFT_CATALOG = {
+        flower: { emoji: "🌸", name: "Flower" },
+        heart: { emoji: "❤️", name: "Heart" },
+        coffee: { emoji: "☕", name: "Coffee" },
+        cookie: { emoji: "🍪", name: "Cookie" },
+        ticket: { emoji: "🎬", name: "Movie Ticket" },
+        controller: { emoji: "🎮", name: "Controller" },
+        plushie: { emoji: "🐱", name: "Cat Plushie" },
+        star: { emoji: "⭐", name: "Star" },
+      };
+      MFAuth.giftCatalog = GIFT_CATALOG;
+
+      function safeText(v, max) { return String(v || "").trim().slice(0, max); }
+      async function publicName(uid) {
+        try {
+          const snap = await dbMod.get(dbMod.ref(db, `users/${uid}`));
+          const p = snap.exists() ? snap.val() : {};
+          return { name: p.displayName || "someone", username: p.username || "" };
+        } catch (_) { return { name: "someone", username: "" }; }
+      }
+
+      MFAuth.sendGift = async (toUid, giftId, note) => {
+        if (!MFAuth.user) throw new Error("Not signed in");
+        if (!toUid || toUid === MFAuth.user.uid) throw new Error("Pick someone else to send a gift to");
+        const gift = GIFT_CATALOG[giftId];
+        if (!gift) throw new Error("That gift doesn't exist");
+        const id = dbMod.push(dbMod.ref(db, `gifts/${toUid}`)).key;
+        await dbMod.set(dbMod.ref(db, `gifts/${toUid}/${id}`), {
+          fromUid: MFAuth.user.uid,
+          fromName: MFAuth.name() || "someone",
+          fromUsername: (MFAuth.profile && MFAuth.profile.username) || "",
+          giftId,
+          emoji: gift.emoji,
+          name: gift.name,
+          note: safeText(note, 160),
+          t: Date.now(),
+        });
+        return id;
+      };
+
+      MFAuth.watchGifts = (uid, cb, limit = 50) => {
+        if (!uid) return () => {};
+        const q = dbMod.query(dbMod.ref(db, `gifts/${uid}`), dbMod.orderByChild("t"), dbMod.limitToLast(limit));
+        const h = dbMod.onValue(q, (snap) => cb(snap.exists() ? snap.val() : {}));
+        return () => dbMod.off(q, "value", h);
+      };
+
+      MFAuth.postGuestbook = async (toUid, text) => {
+        if (!MFAuth.user) throw new Error("Not signed in");
+        text = safeText(text, 500);
+        if (!text) throw new Error("Write a little message first");
+        const id = dbMod.push(dbMod.ref(db, `guestbooks/${toUid}`)).key;
+        await dbMod.set(dbMod.ref(db, `guestbooks/${toUid}/${id}`), {
+          fromUid: MFAuth.user.uid,
+          fromName: MFAuth.name() || "someone",
+          fromUsername: (MFAuth.profile && MFAuth.profile.username) || "",
+          text,
+          t: Date.now(),
+        });
+        return id;
+      };
+      MFAuth.deleteGuestbookPost = async (profileUid, postId) => {
+        if (!MFAuth.user) throw new Error("Not signed in");
+        await dbMod.remove(dbMod.ref(db, `guestbooks/${profileUid}/${postId}`));
+      };
+      MFAuth.watchGuestbook = (uid, cb, limit = 25) => {
+        if (!uid) return () => {};
+        const q = dbMod.query(dbMod.ref(db, `guestbooks/${uid}`), dbMod.orderByChild("t"), dbMod.limitToLast(limit));
+        const h = dbMod.onValue(q, (snap) => cb(snap.exists() ? snap.val() : {}));
+        return () => dbMod.off(q, "value", h);
+      };
+
+      MFAuth.sendRelationshipRequest = async (handle, startedAt) => {
+        if (!MFAuth.user) throw new Error("Not signed in");
+        const targetUid = await MFAuth.lookupUsername(handle);
+        if (!targetUid) throw new Error("No one found with that username");
+        if (targetUid === MFAuth.user.uid) throw new Error("That's you 🌸");
+        const mine = await dbMod.get(dbMod.ref(db, `relationships/${MFAuth.user.uid}`));
+        if (mine.exists()) throw new Error("Clear your current relationship status first");
+        const theirs = await dbMod.get(dbMod.ref(db, `relationships/${targetUid}`));
+        if (theirs.exists()) throw new Error("They already have a relationship status shown");
+        await dbMod.set(dbMod.ref(db, `relationshipRequests/${targetUid}/${MFAuth.user.uid}`), {
+          fromName: MFAuth.name() || "someone",
+          fromUsername: (MFAuth.profile && MFAuth.profile.username) || "",
+          startedAt: Number(startedAt) || Date.now(),
+          t: Date.now(),
+        });
+        return true;
+      };
+      MFAuth.acceptRelationshipRequest = async (fromUid) => {
+        if (!MFAuth.user) throw new Error("Not signed in");
+        const me = MFAuth.user.uid;
+        const reqSnap = await dbMod.get(dbMod.ref(db, `relationshipRequests/${me}/${fromUid}`));
+        if (!reqSnap.exists()) throw new Error("That request is gone");
+        const req = reqSnap.val() || {};
+        const them = await publicName(fromUid);
+        const my = { name: MFAuth.name() || "someone", username: (MFAuth.profile && MFAuth.profile.username) || "" };
+        const startedAt = Number(req.startedAt) || Date.now();
+        await dbMod.update(dbMod.ref(db), {
+          [`relationships/${me}`]: { partnerUid: fromUid, partnerName: them.name, partnerUsername: them.username, startedAt, t: Date.now() },
+          [`relationships/${fromUid}`]: { partnerUid: me, partnerName: my.name, partnerUsername: my.username, startedAt, t: Date.now() },
+          [`relationshipRequests/${me}/${fromUid}`]: null,
+        });
+        return true;
+      };
+      MFAuth.declineRelationshipRequest = async (fromUid) => {
+        if (!MFAuth.user) throw new Error("Not signed in");
+        await dbMod.remove(dbMod.ref(db, `relationshipRequests/${MFAuth.user.uid}/${fromUid}`));
+      };
+      MFAuth.clearRelationship = async () => {
+        if (!MFAuth.user) throw new Error("Not signed in");
+        const me = MFAuth.user.uid;
+        const snap = await dbMod.get(dbMod.ref(db, `relationships/${me}`));
+        const rel = snap.exists() ? snap.val() : null;
+        const patch = { [`relationships/${me}`]: null };
+        if (rel && rel.partnerUid) patch[`relationships/${rel.partnerUid}`] = null;
+        await dbMod.update(dbMod.ref(db), patch);
+      };
+      MFAuth.watchMyRelationship = (cb) => {
+        if (!MFAuth.user) return () => {};
+        const r = dbMod.ref(db, `relationships/${MFAuth.user.uid}`);
+        const h = dbMod.onValue(r, (snap) => cb(snap.exists() ? snap.val() : null));
+        return () => dbMod.off(r, "value", h);
+      };
+      MFAuth.watchRelationshipRequests = (cb) => {
+        if (!MFAuth.user) return () => {};
+        const r = dbMod.ref(db, `relationshipRequests/${MFAuth.user.uid}`);
+        const h = dbMod.onValue(r, (snap) => cb(snap.exists() ? snap.val() : {}));
+        return () => dbMod.off(r, "value", h);
+      };
+      MFAuth.getRelationship = async (uid) => {
+        try {
+          const snap = await dbMod.get(dbMod.ref(db, `relationships/${uid}`));
+          return snap.exists() ? snap.val() : null;
+        } catch (_) { return null; }
+      };
+
       // ---- pet summaries (for the profile page) ----
       // Reads the user's bond index (userPets/$uid), then each pet record.
       // Returns [{ bondId, name, level, emoji, shared, withName }]. Safe to call
