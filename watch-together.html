@@ -1842,7 +1842,7 @@
     // person is still very much "on the page". So the TTL is only a fallback for
     // genuine crashes (where onDisconnect somehow didn't fire), set high enough
     // that a phone sitting in someone's pocket keeps its name visible.
-    const PRESENCE_TTL = 15 * 60 * 1000;   // 15 min — crash fallback only
+    const PRESENCE_TTL = 24 * 60 * 60 * 1000;   // 24 hours — crash fallback only
     function renderPresence(val) {
       val = val || {};
       const now = Date.now();
@@ -2095,21 +2095,19 @@
           });
         onDisconnect(presRef).remove();
 
-        // Last-one-out safety: if we're closing the tab and no one else is here,
-        // delete the upload now (Storage deletes can't be armed via onDisconnect,
-        // so we do a synchronous best-effort here). pagehide covers mobile.
+        // Last-one-out safety: if we're truly closing/navigating away, clean up the
+        // upload. Do NOT remove presence on pagehide: phones can fire pagehide when
+        // the screen locks or the browser is backgrounded, which made sleeping
+        // partners disappear even though they were still on the page. Firebase
+        // onDisconnect is the source of truth for presence removal.
         const unloadCleanup = () => {
           try {
-            // Remove our presence immediately so a reload/close doesn't leave a
-            // ghost "user" lingering (onDisconnect is the network-level backup).
-            try { remove(presRef); } catch (_) {}
             if (isBroadcasting) stopBroadcast(true);
             if (!currentUpload) return;
             const others = presenceRef && lastPresenceCount > 1;
             if (!others) deleteUploadByPath(currentUpload.path);
           } catch (_) {}
         };
-        window.addEventListener("pagehide", unloadCleanup);
         window.addEventListener("beforeunload", unloadCleanup);
 
         onValue(ref(db, ".info/connected"), (snap) => {
@@ -2228,9 +2226,8 @@
     // phone isn't woken up every few seconds for nothing.
     setInterval(() => {
       // Refresh our presence timestamp FIRST, before any early-out. A phone with
-      // the screen locked or the tab backgrounded is still "in the room"; if we
-      // stop heartbeating, the other side prunes us after PRESENCE_TTL and our
-      // name vanishes from their list. Presence is cheap, so beat it regardless.
+      // the screen locked or the tab backgrounded is still "in the room"; the
+      // long PRESENCE_TTL plus Firebase onDisconnect keeps sleeping partners visible.
       try { if (myPresRef) set(myPresRef, { name: myName, idk: identityId(), t: Date.now() }); } catch (_) {}
       if (pageHidden) return;
       if (lastHostId === clientId && currentKind) {
