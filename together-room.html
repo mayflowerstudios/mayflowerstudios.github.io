@@ -478,7 +478,7 @@
 
                 <!-- answer phase -->
                 <div class="answerArea" id="answerArea" hidden>
-                  <textarea class="answerBox" id="answerBox" maxlength="800" placeholder="Type your answer… (only revealed once you both submit)"></textarea>
+                  <textarea class="answerBox" id="answerBox" maxlength="1400" placeholder="Type your answer… (only revealed once you both submit)"></textarea>
                   <div class="qActions">
                     <button class="btn primary" id="submitAnsBtn">✓ Submit answer</button>
                   </div>
@@ -493,6 +493,7 @@
                 </div>
                 <div class="qPacks" id="qPacks">
                   <div class="qPack active" data-pack="cute">🌸 Cute</div>
+                  <div class="qPack" data-pack="love36">💖 36 Questions</div>
                   <div class="qPack" data-pack="deep">🌌 Deep</div>
                   <div class="qPack" data-pack="silly">🎈 Silly</div>
                   <div class="qPack" data-pack="spicy">🔥 Spicy</div>
@@ -1143,6 +1144,44 @@
 		"What's a gift from the other person that meant more than they realized?",
 		"What's a moment recently that made you feel especially lucky to have me?"
       ],
+      love36: [
+        "If you could invite anyone in the world to dinner, who would you choose?",
+        "Would you want to be famous? What would you want to be known for?",
+        "Before calling or messaging someone, do you ever rehearse what you want to say? Why?",
+        "What would a perfect day look like for you?",
+        "When did you last sing to yourself or to someone else?",
+        "If you could live to 90 while keeping either the mind or body of a 30-year-old, which would you choose?",
+        "Do you have a quiet feeling about how your life might end?",
+        "Name three things we seem to have in common.",
+        "What are you most grateful for in your life right now?",
+        "If you could change one thing about how you were raised, what would it be?",
+        "Tell your life story in a few minutes, as much as you want to share.",
+        "If you could wake up tomorrow with one new ability or quality, what would it be?",
+        "If something could tell you the truth about your future, yourself, or your life, what would you want to know?",
+        "Is there something you've dreamed of doing for a long time? Why haven't you done it yet?",
+        "What is the biggest accomplishment of your life so far?",
+        "What do you value most in a friendship?",
+        "What is one memory you treasure?",
+        "What is one memory that still hurts or feels difficult?",
+        "If you knew you had one year left to live, what would you change about how you live now?",
+        "What does friendship mean to you?",
+        "What roles do love and affection play in your life?",
+        "Take turns naming positive qualities you see in each other. Try to name five each.",
+        "How close and warm was your family growing up?",
+        "How do you feel about your relationship with your mother?",
+        "Make three true 'we' statements, like 'we both feel...'",
+        "Finish this sentence: 'I wish I had someone with whom I could share...'",
+        "What would be important for me to know if we were becoming very close?",
+        "Tell me what you like about me; say things you might not say to someone you just met.",
+        "Share an embarrassing moment from your life.",
+        "When did you last cry in front of another person? When did you last cry alone?",
+        "What is something you already like about me?",
+        "What topic feels too serious to joke about?",
+        "If you died tonight without speaking to anyone again, what would you most regret not saying? Why haven't you said it?",
+        "Your home catches fire. After saving loved ones and pets, you can save one item. What would it be and why?",
+        "Of all the people in your family, whose death would hurt the most? Why?",
+        "Share a personal problem and ask how the other person might handle it. Also ask how they think you feel about it."
+      ],
       deep: [
         "What's something you've been carrying lately that you haven't fully said?",
         "When do you feel the safest with the other person?",
@@ -1277,6 +1316,8 @@
       ]
     };
     let qPack = "cute";
+    const QUESTION_PACK_TITLES = { cute:"Cute", love36:"36 Questions", deep:"Deep", silly:"Silly", spicy:"Spicy" };
+    const SEQUENTIAL_PACKS = { love36:true };
     let currentQText = "";   // raw (untranslated) text of the shown question
     let currentQ = null;     // the full question object from Firebase
     let qReady = false;
@@ -1314,7 +1355,13 @@
           return;
         }
         const list = QUESTIONS[qPack];
-        const idx = Math.floor(Math.random() * list.length);
+        let idx;
+        if (SEQUENTIAL_PACKS[qPack]) {
+          // The 36 Questions are meant to build closeness gradually, so keep them in order.
+          idx = (currentQ && currentQ.pack === qPack) ? ((currentQ.idx + 1) % list.length) : 0;
+        } else {
+          idx = Math.floor(Math.random() * list.length);
+        }
         const round = (currentQ?.round || 0) + 1;
         set(ref(db, `together/${ROOM}/question`), {
           pack: qPack, idx, round,
@@ -1392,7 +1439,10 @@
         return;
       }
 
-      $("qMeta").textContent = "drawn by " + (q.drawnByName || "someone");
+      const packTitle = QUESTION_PACK_TITLES[q.pack] || q.pack || "Questions";
+      const listLen = (QUESTIONS[q.pack] || []).length;
+      const progress = SEQUENTIAL_PACKS[q.pack] ? `Question ${(q.idx || 0) + 1} of ${listLen} • ` : "";
+      $("qMeta").textContent = progress + packTitle + " • drawn by " + (q.drawnByName || "someone");
       renderQuestionTranslation();
 
       const round = q.round || 0;
