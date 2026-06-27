@@ -371,7 +371,29 @@
     const DEVICE = 'Web Browser';
     const VERSION = '1.0.0';
     const SESSION_KEY = 'mf_jellyfin_session_v1';
-    const MAX_BITRATE = 12000000;       // ~12 Mbps cap for transcodes
+
+    /* ─────────────────────────────────────────────────────────────────
+       PLAYBACK TUNING — adjust these if playback is rough.
+
+       PREFER_TRANSCODE: when true, the page asks the server to remux/
+       transcode to HLS instead of handing raw files to the browser.
+       On a LAN with NVENC this is usually the SMOOTHEST option, because
+       it sidesteps browser buffering quirks with raw mp4/mkv files
+       (e.g. non-faststart files, heavy remuxes). Set false to go back
+       to raw direct play for compatible files.
+
+       DIRECT_PLAY_MAX_BITRATE: if PREFER_TRANSCODE is false, files at or
+       below this bitrate still direct-play; anything heavier gets the
+       capped transcode. On a local network you can keep this high.
+
+       TRANSCODE_MAX_BITRATE: ceiling for transcoded streams. On a LAN
+       you can raise this (e.g. 40 Mbps) for higher quality; over the
+       internet keep it lower (~8–12 Mbps) so it stays smooth.
+       ───────────────────────────────────────────────────────────────── */
+    const PREFER_TRANSCODE         = true;
+    const DIRECT_PLAY_MAX_BITRATE  = 25000000;  // 25 Mbps
+    const TRANSCODE_MAX_BITRATE    = 30000000;  // 30 Mbps (LAN-friendly)
+
     const TICKS = 10000000;             // Jellyfin ticks per second
     const AUTOPLAY_COUNTDOWN = 10;      // seconds before auto-advancing
     const PROGRESS_INTERVAL = 10000;    // ms between progress pings
@@ -517,11 +539,17 @@
       return null;
     }
 
-    // ---- device profile + stream resolution (prefers direct play) ----
+    // ---- device profile + stream resolution ----
+    // When PREFER_TRANSCODE is on we advertise NO direct-play profiles, so the
+    // server always builds an HLS stream (remux if codecs already match — cheap,
+    // no quality loss — or transcode via NVENC otherwise). When off, browser-
+    // native files up to DIRECT_PLAY_MAX_BITRATE direct-play; heavier ones fall
+    // back to a capped transcode (MaxStaticBitrate gates the direct-play size).
     function deviceProfile() {
       return {
-        MaxStreamingBitrate: MAX_BITRATE, MaxStaticBitrate: MAX_BITRATE,
-        DirectPlayProfiles: [
+        MaxStreamingBitrate: TRANSCODE_MAX_BITRATE,
+        MaxStaticBitrate: DIRECT_PLAY_MAX_BITRATE,
+        DirectPlayProfiles: PREFER_TRANSCODE ? [] : [
           { Container: 'mp4,m4v', Type: 'Video', VideoCodec: 'h264', AudioCodec: 'aac,mp3' },
           { Container: 'webm', Type: 'Video', VideoCodec: 'vp8,vp9,av1', AudioCodec: 'vorbis,opus' },
         ],
@@ -531,7 +559,7 @@
         ],
         CodecProfiles: [
           { Type: 'Video', Codec: 'h264', Conditions: [
-            { Condition: 'LessThanEqual', Property: 'VideoBitrate', Value: String(MAX_BITRATE), IsRequired: false },
+            { Condition: 'LessThanEqual', Property: 'VideoBitrate', Value: String(TRANSCODE_MAX_BITRATE), IsRequired: false },
             { Condition: 'EqualsAny', Property: 'VideoProfile', Value: 'high|main|baseline|constrained baseline', IsRequired: false },
             { Condition: 'LessThanEqual', Property: 'VideoLevel', Value: '51', IsRequired: false },
           ] },
@@ -543,7 +571,7 @@
     async function resolveStream(item) {
       const info = await jf(
         `/Items/${item.Id}/PlaybackInfo?UserId=${encodeURIComponent(session.userId)}` +
-        `&MaxStreamingBitrate=${MAX_BITRATE}&StartTimeTicks=0&IsPlayback=true&AutoOpenLiveStream=true`,
+        `&MaxStreamingBitrate=${TRANSCODE_MAX_BITRATE}&StartTimeTicks=0&IsPlayback=true&AutoOpenLiveStream=true`,
         { method: 'POST', body: JSON.stringify({ DeviceProfile: deviceProfile() }) }
       );
       const src = (info && info.MediaSources && info.MediaSources[0]) || null;
@@ -859,7 +887,7 @@
         video.src = chosen.url;
         video.addEventListener('loadedmetadata', onReady, { once: true });
       } else {
-        playerMsg.textContent = 'Streaming (server is converting this file)';
+        playerMsg.textContent = 'Streaming';
         if (video.canPlayType('application/vnd.apple.mpegurl')) {
           video.src = chosen.url;
           video.addEventListener('loadedmetadata', onReady, { once: true });
