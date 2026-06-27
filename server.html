@@ -235,6 +235,9 @@
     const DEVICE = 'Web Browser';
     const VERSION = '1.0.0';
     const SESSION_KEY = 'mf_jellyfin_session_v1';
+    // Ceiling for transcoded streams (bits/sec). Keeps remote playback smooth
+    // over the public internet. ~12 Mbps is plenty for 1080p h264.
+    const MAX_BITRATE = 12000000;
 
     // Stable per-install device id (Jellyfin tracks sessions by it).
     function deviceId() {
@@ -308,20 +311,69 @@
       return null;
     }
 
-    function streamUrl(item) {
-      // Universal HLS endpoint — server transcodes as needed, plays everywhere via hls.js.
+    // Device profile we advertise to the server. It direct-plays browser-native
+    // mp4 (h264 + aac/mp3) WITHOUT a transcode, and only falls back to an HLS
+    // transcode (capped bitrate) when the file genuinely needs converting.
+    // We intentionally DON'T claim mkv direct-play — Chrome can't play raw mkv,
+    // so the server remuxes those to HLS instead of serving an unplayable file.
+    function deviceProfile() {
+      return {
+        MaxStreamingBitrate: MAX_BITRATE,
+        MaxStaticBitrate: MAX_BITRATE,
+        DirectPlayProfiles: [
+          { Container: 'mp4,m4v', Type: 'Video', VideoCodec: 'h264', AudioCodec: 'aac,mp3' },
+          { Container: 'webm', Type: 'Video', VideoCodec: 'vp8,vp9,av1', AudioCodec: 'vorbis,opus' },
+        ],
+        TranscodingProfiles: [
+          {
+            Container: 'ts', Type: 'Video', Protocol: 'hls',
+            VideoCodec: 'h264', AudioCodec: 'aac,mp3',
+            Context: 'Streaming', MaxAudioChannels: '2',
+            MinSegments: '1', BreakOnNonKeyFrames: true,
+          },
+        ],
+        CodecProfiles: [
+          {
+            Type: 'Video', Codec: 'h264',
+            Conditions: [
+              { Condition: 'LessThanEqual', Property: 'VideoBitrate', Value: String(MAX_BITRATE), IsRequired: false },
+              { Condition: 'EqualsAny', Property: 'VideoProfile', Value: 'high|main|baseline|constrained baseline', IsRequired: false },
+              { Condition: 'LessThanEqual', Property: 'VideoLevel', Value: '51', IsRequired: false },
+            ],
+          },
+        ],
+        SubtitleProfiles: [
+          { Format: 'vtt', Method: 'External' },
+        ],
+      };
+    }
+
+    // Ask the server how to play this item, then hand back the chosen URL +
+    // whether it's HLS. Prefers direct play; transcodes only when required.
+    async function resolveStream(item) {
+      const body = JSON.stringify({ DeviceProfile: deviceProfile() });
+      const info = await jf(
+        `/Items/${item.Id}/PlaybackInfo?UserId=${encodeURIComponent(session.userId)}` +
+        `&MaxStreamingBitrate=${MAX_BITRATE}&StartTimeTicks=0&IsPlayback=true&AutoOpenLiveStream=true`,
+        { method: 'POST', body }
+      );
+      const src = (info && info.MediaSources && info.MediaSources[0]) || null;
+      if (!src) throw new Error('No playable source.');
+
+      // Server told us to transcode → use the HLS URL it built.
+      if (src.TranscodingUrl) {
+        return { url: SERVER + src.TranscodingUrl, hls: /\.m3u8/i.test(src.TranscodingUrl) };
+      }
+      // Direct play / direct stream → serve the original file.
       const params = new URLSearchParams({
         api_key: session.token,
         DeviceId: DEVICE_ID,
-        MediaSourceId: item.Id,
-        VideoCodec: 'h264',
-        AudioCodec: 'aac,mp3',
-        TranscodingMaxAudioChannels: '2',
-        SegmentContainer: 'ts',
-        MinSegments: '1',
-        BreakOnNonKeyFrames: 'true',
+        MediaSourceId: src.Id,
+        Static: 'true',
       });
-      return `${SERVER}/Videos/${item.Id}/master.m3u8?${params.toString()}`;
+      if (info.PlaySessionId) params.set('PlaySessionId', info.PlaySessionId);
+      const container = (src.Container || 'mp4').split(',')[0];
+      return { url: `${SERVER}/Videos/${item.Id}/stream.${container}?${params.toString()}`, hls: false };
     }
 
     function directUrl(item) {
@@ -397,9 +449,9 @@
     let hls = null;
     function destroyHls() { if (hls) { try { hls.destroy(); } catch (_) {} hls = null; } }
 
-    function playItem(item) {
+    async function playItem(item) {
       playerTitle.textContent = item.Name + (item.ProductionYear ? ` (${item.ProductionYear})` : '');
-      playerMsg.textContent = ''; playerMsg.classList.remove('err');
+      playerMsg.textContent = 'Loading…'; playerMsg.classList.remove('err');
       modal.classList.add('open');
       document.body.style.overflow = 'hidden';
 
@@ -409,23 +461,43 @@
         return;
       }
 
-      const hlsSrc = streamUrl(item);
       destroyHls();
+      let chosen;
+      try {
+        chosen = await resolveStream(item);
+      } catch (err) {
+        if (err.code === 401) { handleExpired(); closePlayer(); return; }
+        playerMsg.textContent = 'Could not start playback.';
+        playerMsg.classList.add('err');
+        return;
+      }
+
+      // Direct play / direct stream — no transcode, smoothest path.
+      if (!chosen.hls) {
+        playerMsg.textContent = 'Direct play';
+        video.src = chosen.url;
+        video.play().catch(() => {});
+        return;
+      }
+
+      // Transcoded HLS.
+      playerMsg.textContent = 'Streaming (server is converting this file)';
       if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = hlsSrc; // Safari native HLS
+        video.src = chosen.url; // Safari native HLS
         video.play().catch(() => {});
       } else if (window.Hls && window.Hls.isSupported()) {
-        hls = new window.Hls({ maxBufferLength: 30 });
-        hls.loadSource(hlsSrc);
+        hls = new window.Hls({ maxBufferLength: 30, maxMaxBufferLength: 60 });
+        hls.loadSource(chosen.url);
         hls.attachMedia(video);
         hls.on(window.Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
         hls.on(window.Hls.Events.ERROR, (_e, data) => {
           if (data && data.fatal) {
-            // Fall back to direct stream (works when the file is already browser-friendly).
             destroyHls();
             video.src = directUrl(item);
-            video.play().catch(() => {});
-            playerMsg.textContent = 'Switched to direct play.';
+            video.play().catch(() => {
+              playerMsg.textContent = 'Your browser could not play this file.';
+              playerMsg.classList.add('err');
+            });
           }
         });
       } else {
