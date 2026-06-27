@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Library — Mayflower Studios</title>
+  <meta name="description" content="Watch movies and shows from the Mayflower Studios media server, right in your browser." />
+  <meta property="og:title"       content="Library • Mayflower Studios" />
+  <meta property="og:description" content="Stream the Mayflower Studios media library in your browser." />
+  <meta property="og:url"         content="https://mayflowerstudios.net/server.html" />
+  <link rel="canonical" href="https://mayflowerstudios.net/server.html" />
+  <meta property="og:type"        content="website" />
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css?v=33" />
+
+  <style>
+    /* ════════════════════════════════════════════════
+       LIBRARY  (site style.css handles nav/layout/tokens)
+       ════════════════════════════════════════════════ */
+    .lib-hero { display:flex; flex-direction:column; align-items:flex-start; gap:16px; padding:56px 0 8px; }
+    .lib-label {
+      font-size:11px; font-weight:600; letter-spacing:1.2px; text-transform:uppercase;
+      color:var(--rose); display:flex; align-items:center; gap:10px;
+    }
+    .lib-label::after { content:''; display:inline-block; width:32px; height:1px; background:var(--rose); opacity:.4; }
+    .lib-title {
+      font-family:'Cormorant Garamond', Georgia, serif; font-size:clamp(48px,9vw,88px);
+      font-weight:300; letter-spacing:-0.01em; line-height:.95;
+      background:linear-gradient(135deg,var(--text) 20%,var(--rose) 60%,var(--violet) 100%);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    }
+    .lib-title em { font-style:italic; }
+    .lib-sub { font-size:15px; line-height:1.8; color:var(--text-2); max-width:54ch; }
+
+    /* ---- sign-in card ---- */
+    .lib-auth {
+      max-width:420px; margin:24px 0; padding:30px 32px;
+      border:1px solid var(--border); border-radius:var(--r-lg);
+      background:var(--glass); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+      display:flex; flex-direction:column; gap:16px;
+    }
+    .lib-auth h2 { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:26px; font-weight:400; color:var(--text); }
+    .lib-field { display:flex; flex-direction:column; gap:6px; }
+    .lib-field label { font-size:11px; font-weight:600; letter-spacing:.6px; text-transform:uppercase; color:var(--text-3); }
+    .lib-field input {
+      font-family:var(--font-b); font-size:14px; color:var(--text);
+      padding:11px 14px; border-radius:var(--r-sm);
+      border:1px solid var(--border-2); background:rgba(255,255,255,.04);
+      transition:border-color 160ms var(--ease);
+    }
+    .lib-field input:focus { outline:none; border-color:var(--rose); }
+    .lib-btn {
+      align-self:flex-start; cursor:pointer; border:none;
+      font-family:var(--font-b); font-size:13px; font-weight:600; letter-spacing:.3px;
+      color:#0b1120; padding:11px 22px; border-radius:999px;
+      background:linear-gradient(135deg,var(--rose),var(--violet));
+      transition:transform 160ms var(--ease), box-shadow 160ms var(--ease);
+    }
+    .lib-btn:hover { transform:translateY(-1px); box-shadow:0 10px 28px rgba(236,72,153,.25); }
+    .lib-btn:disabled { opacity:.55; cursor:default; transform:none; box-shadow:none; }
+    .lib-note { font-size:12px; line-height:1.7; color:var(--text-3); }
+    .lib-msg { font-size:13px; line-height:1.6; color:var(--rose); min-height:18px; }
+    .lib-msg.ok { color:var(--emerald); }
+
+    /* ---- toolbar ---- */
+    .lib-bar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:20px 0 4px; }
+    .lib-bar h2 { font-size:13px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--text-3); margin-right:auto; }
+    .lib-search {
+      font-family:var(--font-b); font-size:13px; color:var(--text);
+      padding:9px 14px; border-radius:999px; min-width:200px;
+      border:1px solid var(--border-2); background:rgba(255,255,255,.04);
+    }
+    .lib-search:focus { outline:none; border-color:var(--rose); }
+    .lib-select {
+      font-family:var(--font-b); font-size:13px; color:var(--text);
+      padding:9px 12px; border-radius:999px;
+      border:1px solid var(--border-2); background:rgba(255,255,255,.04); cursor:pointer;
+    }
+    .lib-ghost {
+      cursor:pointer; font-family:var(--font-b); font-size:12px; font-weight:500;
+      color:var(--text-2); padding:8px 16px; border-radius:999px;
+      border:1px solid var(--border-2); background:transparent; transition:color 160ms, border-color 160ms;
+    }
+    .lib-ghost:hover { color:var(--text); border-color:var(--rose); }
+
+    /* ---- poster grid ---- */
+    .lib-grid {
+      display:grid; gap:20px; margin:20px 0 56px;
+      grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));
+    }
+    .poster {
+      cursor:pointer; text-align:left; border:none; background:none; padding:0;
+      display:flex; flex-direction:column; gap:8px;
+    }
+    .poster-art {
+      position:relative; aspect-ratio:2/3; border-radius:var(--r-md); overflow:hidden;
+      border:1px solid var(--border); background:rgba(255,255,255,.03);
+      transition:transform 200ms var(--ease), box-shadow 200ms var(--ease), border-color 200ms var(--ease);
+    }
+    .poster-art img { width:100%; height:100%; object-fit:cover; display:block; }
+    .poster-art .fallback {
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+      font-family:'Cormorant Garamond',serif; font-style:italic; font-size:15px;
+      color:var(--text-3); padding:14px; text-align:center;
+    }
+    .poster:hover .poster-art { transform:translateY(-4px); box-shadow:0 18px 44px rgba(0,0,0,.35); border-color:var(--rose); }
+    .poster-play {
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+      opacity:0; background:linear-gradient(0deg,rgba(11,17,32,.5),transparent 60%); transition:opacity 180ms;
+    }
+    .poster:hover .poster-play { opacity:1; }
+    .poster-play span {
+      width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+      background:rgba(11,17,32,.7); border:1px solid var(--rose); color:var(--rose); font-size:16px; padding-left:3px;
+    }
+    .poster-name { font-size:13px; color:var(--text); line-height:1.4; }
+    .poster-year { font-size:11px; color:var(--text-3); }
+
+    .lib-empty { color:var(--text-3); font-style:italic; font-size:14px; padding:30px 0; }
+    .lib-loading { color:var(--text-3); font-size:13px; padding:20px 0; display:flex; align-items:center; gap:10px; }
+    .lib-spin { width:14px; height:14px; border:2px solid var(--border-2); border-top-color:var(--rose); border-radius:50%; animation:libspin .8s linear infinite; }
+    @keyframes libspin { to { transform:rotate(360deg); } }
+
+    /* ---- player overlay ---- */
+    .lib-modal {
+      position:fixed; inset:0; z-index:200; display:none;
+      align-items:center; justify-content:center; padding:24px;
+      background:rgba(5,8,16,.86); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    }
+    .lib-modal.open { display:flex; }
+    .lib-player {
+      width:100%; max-width:1100px; display:flex; flex-direction:column; gap:14px;
+    }
+    .lib-player-top { display:flex; align-items:baseline; justify-content:space-between; gap:16px; }
+    .lib-player-title { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:26px; color:var(--text); }
+    .lib-close {
+      cursor:pointer; border:1px solid var(--border-2); background:transparent; color:var(--text-2);
+      width:38px; height:38px; border-radius:50%; font-size:18px; line-height:1; flex-shrink:0;
+      transition:color 160ms, border-color 160ms;
+    }
+    .lib-close:hover { color:var(--text); border-color:var(--rose); }
+    .lib-video-wrap { position:relative; aspect-ratio:16/9; background:#000; border-radius:var(--r-md); overflow:hidden; border:1px solid var(--border); }
+    .lib-video-wrap video { width:100%; height:100%; display:block; background:#000; }
+    .lib-player-msg { font-size:13px; color:var(--text-3); min-height:18px; }
+    .lib-player-msg.err { color:var(--rose); }
+  </style>
+</head>
+<body data-nav="server">
+
+  <div id="site-nav"></div>
+
+  <div class="site-page">
+    <div class="content">
+
+      <div class="lib-hero reveal">
+        <div class="lib-label">media library</div>
+        <h1 class="lib-title">Lib<em>rary</em></h1>
+        <p class="lib-sub">
+          Movies and shows from the Mayflower Studios media server, streamed straight to your browser.
+          Sign in with your media-server account to start watching.
+        </p>
+      </div>
+
+      <!-- ── sign-in ── -->
+      <div class="lib-auth reveal" id="authCard">
+        <h2>Sign in to the server</h2>
+        <div class="lib-field">
+          <label for="jfUser">Username</label>
+          <input id="jfUser" type="text" autocomplete="username" spellcheck="false" />
+        </div>
+        <div class="lib-field">
+          <label for="jfPass">Password</label>
+          <input id="jfPass" type="password" autocomplete="current-password" />
+        </div>
+        <button class="lib-btn" id="jfSignin">Sign in</button>
+        <div class="lib-msg" id="authMsg"></div>
+        <p class="lib-note">
+          Connecting to <strong>jellyfin.mayflowerstudios.net</strong>. Your login is sent
+          directly to the media server and never stored anywhere on this site.
+        </p>
+      </div>
+
+      <!-- ── library ── -->
+      <div id="libView" style="display:none;">
+        <div class="lib-bar reveal">
+          <h2 id="libHeading">Movies</h2>
+          <input class="lib-search" id="libSearch" type="search" placeholder="Search…" />
+          <select class="lib-select" id="libKind">
+            <option value="Movie">Movies</option>
+            <option value="Series">Shows</option>
+          </select>
+          <button class="lib-ghost" id="libSignout">Sign out</button>
+        </div>
+        <div class="lib-loading" id="libLoading"><span class="lib-spin"></span> Loading library…</div>
+        <div class="lib-grid" id="libGrid"></div>
+        <div class="lib-empty" id="libEmpty" style="display:none;">Nothing here yet.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── player ── -->
+  <div class="lib-modal" id="playerModal" role="dialog" aria-modal="true">
+    <div class="lib-player">
+      <div class="lib-player-top">
+        <div class="lib-player-title" id="playerTitle">—</div>
+        <button class="lib-close" id="playerClose" aria-label="Close">×</button>
+      </div>
+      <div class="lib-video-wrap">
+        <video id="playerVideo" controls playsinline></video>
+      </div>
+      <div class="lib-player-msg" id="playerMsg"></div>
+    </div>
+  </div>
+
+  <div id="site-footer"></div>
+
+  <script src="/hls.min.js"></script>
+  <script src="/shared.js?v=33"></script>
+  <script>
+  /* ════════════════════════════════════════════════════════════════════
+     Jellyfin browse + watch — talks directly to the media server's
+     native API from the browser. Requires the server to allow CORS from
+     this origin (Access-Control-Allow-Origin).
+     ════════════════════════════════════════════════════════════════════ */
+  (function () {
+    'use strict';
+
+    const SERVER = 'https://jellyfin.mayflowerstudios.net:8443';
+    const CLIENT = 'Mayflower Library';
+    const DEVICE = 'Web Browser';
+    const VERSION = '1.0.0';
+    const SESSION_KEY = 'mf_jellyfin_session_v1';
+
+    // Stable per-install device id (Jellyfin tracks sessions by it).
+    function deviceId() {
+      let id;
+      try { id = localStorage.getItem('mf_jellyfin_device'); } catch (_) {}
+      if (!id) {
+        id = 'mfweb-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+        try { localStorage.setItem('mf_jellyfin_device', id); } catch (_) {}
+      }
+      return id;
+    }
+    const DEVICE_ID = deviceId();
+
+    function authHeader(token) {
+      let h = `MediaBrowser Client="${CLIENT}", Device="${DEVICE}", DeviceId="${DEVICE_ID}", Version="${VERSION}"`;
+      if (token) h += `, Token="${token}"`;
+      return h;
+    }
+
+    let session = null; // { token, userId }
+    function loadSession() {
+      try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch (_) { return null; }
+    }
+    function saveSession(s) {
+      try { s ? localStorage.setItem(SESSION_KEY, JSON.stringify(s)) : localStorage.removeItem(SESSION_KEY); } catch (_) {}
+    }
+
+    // ---- elements ----
+    const $ = (id) => document.getElementById(id);
+    const authCard = $('authCard'), libView = $('libView');
+    const userEl = $('jfUser'), passEl = $('jfPass'), signinBtn = $('jfSignin'), authMsg = $('authMsg');
+    const grid = $('libGrid'), loadingEl = $('libLoading'), emptyEl = $('libEmpty');
+    const searchEl = $('libSearch'), kindEl = $('libKind'), headingEl = $('libHeading'), signoutBtn = $('libSignout');
+    const modal = $('playerModal'), video = $('playerVideo'), playerTitle = $('playerTitle'),
+          playerMsg = $('playerMsg'), playerClose = $('playerClose');
+
+    function setAuthMsg(text, ok) { authMsg.textContent = text || ''; authMsg.classList.toggle('ok', !!ok); }
+
+    // ---- API helpers ----
+    async function jf(path, opts) {
+      opts = opts || {};
+      const headers = Object.assign({
+        'Authorization': authHeader(session && session.token),
+        'Content-Type': 'application/json',
+      }, opts.headers || {});
+      const res = await fetch(SERVER + path, { method: opts.method || 'GET', headers, body: opts.body });
+      if (res.status === 401) { const e = new Error('unauthorized'); e.code = 401; throw e; }
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const ct = res.headers.get('content-type') || '';
+      return ct.includes('application/json') ? res.json() : res.text();
+    }
+
+    // ---- auth ----
+    async function signIn(username, password) {
+      const res = await fetch(SERVER + '/Users/AuthenticateByName', {
+        method: 'POST',
+        headers: { 'Authorization': authHeader(null), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Username: username, Pw: password }),
+      });
+      if (res.status === 401) { const e = new Error('Wrong username or password.'); e.code = 401; throw e; }
+      if (!res.ok) throw new Error('Server returned HTTP ' + res.status + '.');
+      const data = await res.json();
+      return { token: data.AccessToken, userId: data.User && data.User.Id };
+    }
+
+    // ---- rendering ----
+    function imgUrl(item) {
+      if (item.ImageTags && item.ImageTags.Primary) {
+        return `${SERVER}/Items/${item.Id}/Images/Primary?tag=${item.ImageTags.Primary}&fillHeight=450&quality=90`;
+      }
+      return null;
+    }
+
+    function streamUrl(item) {
+      // Universal HLS endpoint — server transcodes as needed, plays everywhere via hls.js.
+      const params = new URLSearchParams({
+        api_key: session.token,
+        DeviceId: DEVICE_ID,
+        MediaSourceId: item.Id,
+        VideoCodec: 'h264',
+        AudioCodec: 'aac,mp3',
+        TranscodingMaxAudioChannels: '2',
+        SegmentContainer: 'ts',
+        MinSegments: '1',
+        BreakOnNonKeyFrames: 'true',
+      });
+      return `${SERVER}/Videos/${item.Id}/master.m3u8?${params.toString()}`;
+    }
+
+    function directUrl(item) {
+      const params = new URLSearchParams({ api_key: session.token, DeviceId: DEVICE_ID, Static: 'true' });
+      return `${SERVER}/Videos/${item.Id}/stream?${params.toString()}`;
+    }
+
+    function render(items) {
+      grid.innerHTML = '';
+      if (!items.length) { emptyEl.style.display = 'block'; return; }
+      emptyEl.style.display = 'none';
+      const frag = document.createDocumentFragment();
+      items.forEach((item) => {
+        const btn = document.createElement('button');
+        btn.className = 'poster';
+        const art = imgUrl(item);
+        btn.innerHTML = `
+          <div class="poster-art">
+            ${art ? `<img loading="lazy" alt="" src="${art}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><div class="fallback" style="display:none">${escapeHtml(item.Name)}</div>`
+                  : `<div class="fallback">${escapeHtml(item.Name)}</div>`}
+            <div class="poster-play"><span>▶</span></div>
+          </div>
+          <div class="poster-name">${escapeHtml(item.Name)}</div>
+          ${item.ProductionYear ? `<div class="poster-year">${item.ProductionYear}</div>` : ''}`;
+        btn.addEventListener('click', () => playItem(item));
+        frag.appendChild(btn);
+      });
+      grid.appendChild(frag);
+    }
+
+    function escapeHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
+        ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+    }
+
+    // ---- library load ----
+    let allItems = [];
+    async function loadLibrary() {
+      loadingEl.style.display = 'flex';
+      grid.innerHTML = ''; emptyEl.style.display = 'none';
+      const kind = kindEl.value;
+      headingEl.textContent = kind === 'Series' ? 'Shows' : 'Movies';
+      try {
+        const params = new URLSearchParams({
+          IncludeItemTypes: kind,
+          Recursive: 'true',
+          SortBy: 'SortName',
+          SortOrder: 'Ascending',
+          Fields: 'ProductionYear',
+          Limit: '500',
+        });
+        const data = await jf(`/Users/${session.userId}/Items?${params.toString()}`);
+        allItems = (data && data.Items) || [];
+        applyFilter();
+      } catch (err) {
+        loadingEl.style.display = 'none';
+        if (err.code === 401) { handleExpired(); return; }
+        emptyEl.textContent = 'Could not reach the server. ' +
+          'If you just signed in, the server may need to allow this site (CORS).';
+        emptyEl.style.display = 'block';
+      } finally {
+        loadingEl.style.display = 'none';
+      }
+    }
+
+    function applyFilter() {
+      const q = searchEl.value.trim().toLowerCase();
+      const items = q ? allItems.filter((i) => i.Name && i.Name.toLowerCase().includes(q)) : allItems;
+      render(items);
+    }
+
+    // ---- playback ----
+    let hls = null;
+    function destroyHls() { if (hls) { try { hls.destroy(); } catch (_) {} hls = null; } }
+
+    function playItem(item) {
+      playerTitle.textContent = item.Name + (item.ProductionYear ? ` (${item.ProductionYear})` : '');
+      playerMsg.textContent = ''; playerMsg.classList.remove('err');
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+
+      if (item.Type === 'Series') {
+        playerMsg.textContent = 'This is a series — open it in the server to pick an episode.';
+        playerMsg.classList.add('err');
+        return;
+      }
+
+      const hlsSrc = streamUrl(item);
+      destroyHls();
+      if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = hlsSrc; // Safari native HLS
+        video.play().catch(() => {});
+      } else if (window.Hls && window.Hls.isSupported()) {
+        hls = new window.Hls({ maxBufferLength: 30 });
+        hls.loadSource(hlsSrc);
+        hls.attachMedia(video);
+        hls.on(window.Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
+        hls.on(window.Hls.Events.ERROR, (_e, data) => {
+          if (data && data.fatal) {
+            // Fall back to direct stream (works when the file is already browser-friendly).
+            destroyHls();
+            video.src = directUrl(item);
+            video.play().catch(() => {});
+            playerMsg.textContent = 'Switched to direct play.';
+          }
+        });
+      } else {
+        video.src = directUrl(item);
+        video.play().catch(() => {
+          playerMsg.textContent = 'Your browser could not play this file.';
+          playerMsg.classList.add('err');
+        });
+      }
+    }
+
+    function closePlayer() {
+      modal.classList.remove('open');
+      document.body.style.overflow = '';
+      try { video.pause(); } catch (_) {}
+      destroyHls();
+      video.removeAttribute('src'); video.load();
+    }
+
+    // ---- expired / sign-out ----
+    function handleExpired() {
+      session = null; saveSession(null);
+      libView.style.display = 'none';
+      authCard.style.display = 'flex';
+      setAuthMsg('Your session expired — please sign in again.');
+    }
+
+    function showLibrary() {
+      authCard.style.display = 'none';
+      libView.style.display = 'block';
+      loadLibrary();
+    }
+
+    // ---- events ----
+    signinBtn.addEventListener('click', async () => {
+      const u = userEl.value.trim(), p = passEl.value;
+      if (!u) { setAuthMsg('Enter a username.'); return; }
+      signinBtn.disabled = true; setAuthMsg('Signing in…');
+      try {
+        session = await signIn(u, p);
+        if (!session.token || !session.userId) throw new Error('Unexpected server response.');
+        saveSession(session);
+        passEl.value = '';
+        setAuthMsg('');
+        showLibrary();
+      } catch (err) {
+        if (err.code === 401) setAuthMsg('Wrong username or password.');
+        else setAuthMsg('Could not connect. The server may be offline or not allowing this site (CORS).');
+      } finally {
+        signinBtn.disabled = false;
+      }
+    });
+    passEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') signinBtn.click(); });
+
+    signoutBtn.addEventListener('click', () => {
+      session = null; saveSession(null);
+      libView.style.display = 'none';
+      authCard.style.display = 'flex';
+      setAuthMsg('');
+    });
+
+    let searchT;
+    searchEl.addEventListener('input', () => { clearTimeout(searchT); searchT = setTimeout(applyFilter, 150); });
+    kindEl.addEventListener('change', loadLibrary);
+
+    playerClose.addEventListener('click', closePlayer);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closePlayer(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('open')) closePlayer(); });
+
+    // ---- boot ----
+    session = loadSession();
+    if (session && session.token && session.userId) {
+      showLibrary();
+    }
+  })();
+  </script>
+</body>
+</html>
