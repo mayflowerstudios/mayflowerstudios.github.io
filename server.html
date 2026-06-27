@@ -66,9 +66,32 @@
     .lib-msg { font-size:13px; line-height:1.6; color:var(--rose); min-height:18px; }
     .lib-msg.ok { color:var(--emerald); }
 
+    /* ---- guest quick-pick ---- */
+    .lib-guests { display:flex; flex-direction:column; gap:10px; }
+    .lib-guests-label { font-size:11px; font-weight:600; letter-spacing:.6px; text-transform:uppercase; color:var(--text-3); }
+    .lib-guest-row { display:flex; gap:10px; flex-wrap:wrap; }
+    .lib-guest {
+      cursor:pointer; display:flex; align-items:center; gap:9px;
+      font-family:var(--font-b); font-size:13px; font-weight:500; color:var(--text);
+      padding:8px 16px 8px 9px; border-radius:999px;
+      border:1px solid var(--border-2); background:rgba(255,255,255,.04);
+      transition:border-color 160ms, transform 160ms, background 160ms;
+    }
+    .lib-guest:hover { border-color:var(--rose); transform:translateY(-1px); background:rgba(249,168,212,.08); }
+    .lib-guest:disabled { opacity:.5; cursor:default; transform:none; }
+    .lib-guest .ava {
+      width:26px; height:26px; border-radius:50%; object-fit:cover; flex:0 0 auto;
+      background:linear-gradient(135deg,var(--rose),var(--violet)); display:flex; align-items:center; justify-content:center;
+      font-size:12px; font-weight:600; color:#0b1120; overflow:hidden;
+    }
+    .lib-divider { display:flex; align-items:center; gap:12px; color:var(--text-3); font-size:11px; letter-spacing:.5px; text-transform:uppercase; }
+    .lib-divider::before, .lib-divider::after { content:''; flex:1; height:1px; background:var(--border-2); }
+
     /* ---- toolbar ---- */
     .lib-bar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:20px 0 4px; }
     .lib-bar h2 { font-size:13px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:var(--text-3); margin-right:auto; }
+    .lib-who { font-size:12px; color:var(--text-3); margin-right:8px; }
+    .lib-who strong { color:var(--text-2); font-weight:600; }
     .lib-search {
       font-family:var(--font-b); font-size:13px; color:var(--text);
       padding:9px 14px; border-radius:999px; min-width:200px;
@@ -87,9 +110,13 @@
     }
     .lib-ghost:hover { color:var(--text); border-color:var(--rose); }
 
+    /* ---- section headings ---- */
+    .lib-section { margin:8px 0 0; }
+    .lib-section-h { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:22px; font-weight:400; color:var(--text); margin:24px 0 14px; }
+
     /* ---- poster grid ---- */
     .lib-grid {
-      display:grid; gap:20px; margin:20px 0 56px;
+      display:grid; gap:20px; margin:8px 0 40px;
       grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));
     }
     .poster {
@@ -119,11 +146,55 @@
     }
     .poster-name { font-size:13px; color:var(--text); line-height:1.4; }
     .poster-year { font-size:11px; color:var(--text-3); }
+    /* progress bar on poster (resume) */
+    .poster-prog { position:absolute; left:0; right:0; bottom:0; height:4px; background:rgba(11,17,32,.55); }
+    .poster-prog > i { display:block; height:100%; background:linear-gradient(90deg,var(--rose),var(--violet)); }
+    .poster-sub { font-size:11px; color:var(--rose); opacity:.85; }
 
     .lib-empty { color:var(--text-3); font-style:italic; font-size:14px; padding:30px 0; }
     .lib-loading { color:var(--text-3); font-size:13px; padding:20px 0; display:flex; align-items:center; gap:10px; }
     .lib-spin { width:14px; height:14px; border:2px solid var(--border-2); border-top-color:var(--rose); border-radius:50%; animation:libspin .8s linear infinite; }
     @keyframes libspin { to { transform:rotate(360deg); } }
+
+    /* ---- series / episode browser ---- */
+    .lib-back {
+      cursor:pointer; font-family:var(--font-b); font-size:13px; font-weight:500;
+      color:var(--text-2); background:none; border:none; padding:0; margin:18px 0 6px;
+      display:inline-flex; align-items:center; gap:6px; transition:color 160ms;
+    }
+    .lib-back:hover { color:var(--rose); }
+    .lib-detail-title { font-family:'Cormorant Garamond',serif; font-size:clamp(30px,5vw,46px); font-weight:300; color:var(--text); margin:6px 0 2px; }
+    .lib-detail-meta { font-size:12px; color:var(--text-3); margin-bottom:6px; }
+    .lib-detail-overview { font-size:14px; line-height:1.8; color:var(--text-2); max-width:70ch; margin-bottom:10px; }
+    .lib-ep-list { display:flex; flex-direction:column; gap:10px; margin:6px 0 48px; }
+    .lib-ep {
+      cursor:pointer; text-align:left; width:100%;
+      display:flex; gap:16px; align-items:stretch;
+      border:1px solid var(--border); border-radius:var(--r-md);
+      background:var(--glass); padding:12px; transition:border-color 180ms, transform 180ms, background 180ms;
+    }
+    .lib-ep:hover { border-color:var(--rose); transform:translateY(-2px); background:rgba(249,168,212,.05); }
+    .lib-ep-thumb {
+      position:relative; flex:0 0 150px; aspect-ratio:16/9; border-radius:var(--r-sm); overflow:hidden;
+      background:rgba(255,255,255,.04);
+    }
+    .lib-ep-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+    .lib-ep-thumb .ph { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--text-3); font-size:20px; }
+    .lib-ep-prog { position:absolute; left:0; right:0; bottom:0; height:4px; background:rgba(11,17,32,.55); }
+    .lib-ep-prog > i { display:block; height:100%; background:linear-gradient(90deg,var(--rose),var(--violet)); }
+    .lib-ep-body { display:flex; flex-direction:column; gap:4px; min-width:0; flex:1; }
+    .lib-ep-num { font-size:11px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--rose); }
+    .lib-ep-name { font-size:15px; color:var(--text); font-weight:500; }
+    .lib-ep-watched { color:var(--emerald); font-size:11px; }
+    .lib-ep-desc { font-size:12.5px; line-height:1.6; color:var(--text-3); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .lib-season-bar { display:flex; gap:8px; flex-wrap:wrap; margin:14px 0 4px; }
+    .lib-season-chip {
+      cursor:pointer; font-family:var(--font-b); font-size:12px; font-weight:500; color:var(--text-2);
+      padding:6px 14px; border-radius:999px; border:1px solid var(--border-2); background:transparent;
+      transition:color 160ms, border-color 160ms, background 160ms;
+    }
+    .lib-season-chip:hover { color:var(--text); border-color:var(--rose); }
+    .lib-season-chip.active { color:#0b1120; background:linear-gradient(135deg,var(--rose),var(--violet)); border-color:transparent; }
 
     /* ---- player overlay ---- */
     .lib-modal {
@@ -132,9 +203,7 @@
       background:rgba(5,8,16,.86); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
     }
     .lib-modal.open { display:flex; }
-    .lib-player {
-      width:100%; max-width:1100px; display:flex; flex-direction:column; gap:14px;
-    }
+    .lib-player { width:100%; max-width:1100px; display:flex; flex-direction:column; gap:14px; }
     .lib-player-top { display:flex; align-items:baseline; justify-content:space-between; gap:16px; }
     .lib-player-title { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:26px; color:var(--text); }
     .lib-close {
@@ -147,6 +216,27 @@
     .lib-video-wrap video { width:100%; height:100%; display:block; background:#000; }
     .lib-player-msg { font-size:13px; color:var(--text-3); min-height:18px; }
     .lib-player-msg.err { color:var(--rose); }
+
+    /* up-next overlay */
+    .lib-upnext {
+      position:absolute; right:18px; bottom:18px; z-index:5;
+      display:none; align-items:center; gap:14px;
+      background:rgba(11,17,32,.82); border:1px solid var(--border-2); border-radius:var(--r-md);
+      padding:12px 14px; backdrop-filter:blur(10px); max-width:min(420px, 80%);
+    }
+    .lib-upnext.show { display:flex; }
+    .lib-upnext-thumb { width:84px; aspect-ratio:16/9; border-radius:var(--r-sm); overflow:hidden; flex:0 0 auto; background:rgba(255,255,255,.05); }
+    .lib-upnext-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+    .lib-upnext-body { min-width:0; }
+    .lib-upnext-label { font-size:10px; letter-spacing:.6px; text-transform:uppercase; color:var(--text-3); }
+    .lib-upnext-name { font-size:14px; color:var(--text); font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .lib-upnext-count { font-size:12px; color:var(--rose); }
+    .lib-upnext-actions { display:flex; gap:8px; margin-top:6px; }
+    .lib-upnext-actions button {
+      cursor:pointer; font-family:var(--font-b); font-size:12px; font-weight:600; border-radius:999px; padding:6px 14px; border:none;
+    }
+    .lib-upnext-play { color:#0b1120; background:linear-gradient(135deg,var(--rose),var(--violet)); }
+    .lib-upnext-cancel { color:var(--text-2); background:transparent; border:1px solid var(--border-2) !important; }
   </style>
 </head>
 <body data-nav="server">
@@ -168,6 +258,13 @@
       <!-- ── sign-in ── -->
       <div class="lib-auth reveal" id="authCard">
         <h2>Sign in to the server</h2>
+
+        <div class="lib-guests" id="guestWrap" style="display:none;">
+          <span class="lib-guests-label">Quick sign in</span>
+          <div class="lib-guest-row" id="guestRow"></div>
+          <div class="lib-divider">or</div>
+        </div>
+
         <div class="lib-field">
           <label for="jfUser">Username</label>
           <input id="jfUser" type="text" autocomplete="username" spellcheck="false" />
@@ -188,6 +285,7 @@
       <div id="libView" style="display:none;">
         <div class="lib-bar reveal">
           <h2 id="libHeading">Movies</h2>
+          <span class="lib-who" id="libWho"></span>
           <input class="lib-search" id="libSearch" type="search" placeholder="Search…" />
           <select class="lib-select" id="libKind">
             <option value="Movie">Movies</option>
@@ -195,9 +293,32 @@
           </select>
           <button class="lib-ghost" id="libSignout">Sign out</button>
         </div>
+
         <div class="lib-loading" id="libLoading"><span class="lib-spin"></span> Loading library…</div>
-        <div class="lib-grid" id="libGrid"></div>
-        <div class="lib-empty" id="libEmpty" style="display:none;">Nothing here yet.</div>
+
+        <!-- continue watching -->
+        <div class="lib-section" id="resumeSection" style="display:none;">
+          <div class="lib-section-h">Continue watching</div>
+          <div class="lib-grid" id="resumeGrid"></div>
+        </div>
+
+        <!-- main grid -->
+        <div class="lib-section" id="mainSection">
+          <div class="lib-section-h" id="mainHeading" style="display:none;">All</div>
+          <div class="lib-grid" id="libGrid"></div>
+          <div class="lib-empty" id="libEmpty" style="display:none;">Nothing here yet.</div>
+        </div>
+      </div>
+
+      <!-- ── series detail (episodes) ── -->
+      <div id="detailView" style="display:none;">
+        <button class="lib-back" id="detailBack">← Back to library</button>
+        <h2 class="lib-detail-title" id="detailTitle">—</h2>
+        <div class="lib-detail-meta" id="detailMeta"></div>
+        <div class="lib-detail-overview" id="detailOverview"></div>
+        <div class="lib-season-bar" id="seasonBar"></div>
+        <div class="lib-loading" id="detailLoading" style="display:none;"><span class="lib-spin"></span> Loading episodes…</div>
+        <div class="lib-ep-list" id="epList"></div>
       </div>
 
     </div>
@@ -212,6 +333,18 @@
       </div>
       <div class="lib-video-wrap">
         <video id="playerVideo" controls playsinline></video>
+        <div class="lib-upnext" id="upNext">
+          <div class="lib-upnext-thumb" id="upNextThumb"></div>
+          <div class="lib-upnext-body">
+            <div class="lib-upnext-label">Up next</div>
+            <div class="lib-upnext-name" id="upNextName">—</div>
+            <div class="lib-upnext-count" id="upNextCount"></div>
+            <div class="lib-upnext-actions">
+              <button class="lib-upnext-play" id="upNextPlay">Play now</button>
+              <button class="lib-upnext-cancel" id="upNextCancel">Cancel</button>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="lib-player-msg" id="playerMsg"></div>
     </div>
@@ -226,6 +359,9 @@
      Jellyfin browse + watch — talks directly to the media server's
      native API from the browser. Requires the server to allow CORS from
      this origin (Access-Control-Allow-Origin).
+     Features: resume / continue watching (server-side via Playstate
+     reporting), TV episode browsing, auto-play next episode, and
+     passwordless quick-pick for guest accounts.
      ════════════════════════════════════════════════════════════════════ */
   (function () {
     'use strict';
@@ -235,9 +371,10 @@
     const DEVICE = 'Web Browser';
     const VERSION = '1.0.0';
     const SESSION_KEY = 'mf_jellyfin_session_v1';
-    // Ceiling for transcoded streams (bits/sec). Keeps remote playback smooth
-    // over the public internet. ~12 Mbps is plenty for 1080p h264.
-    const MAX_BITRATE = 12000000;
+    const MAX_BITRATE = 12000000;       // ~12 Mbps cap for transcodes
+    const TICKS = 10000000;             // Jellyfin ticks per second
+    const AUTOPLAY_COUNTDOWN = 10;      // seconds before auto-advancing
+    const PROGRESS_INTERVAL = 10000;    // ms between progress pings
 
     // Stable per-install device id (Jellyfin tracks sessions by it).
     function deviceId() {
@@ -257,26 +394,32 @@
       return h;
     }
 
-    let session = null; // { token, userId }
-    function loadSession() {
-      try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch (_) { return null; }
-    }
-    function saveSession(s) {
-      try { s ? localStorage.setItem(SESSION_KEY, JSON.stringify(s)) : localStorage.removeItem(SESSION_KEY); } catch (_) {}
-    }
+    let session = null; // { token, userId, name }
+    function loadSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch (_) { return null; } }
+    function saveSession(s) { try { s ? localStorage.setItem(SESSION_KEY, JSON.stringify(s)) : localStorage.removeItem(SESSION_KEY); } catch (_) {} }
 
     // ---- elements ----
     const $ = (id) => document.getElementById(id);
-    const authCard = $('authCard'), libView = $('libView');
+    const authCard = $('authCard'), libView = $('libView'), detailView = $('detailView');
+    const guestWrap = $('guestWrap'), guestRow = $('guestRow');
     const userEl = $('jfUser'), passEl = $('jfPass'), signinBtn = $('jfSignin'), authMsg = $('authMsg');
-    const grid = $('libGrid'), loadingEl = $('libLoading'), emptyEl = $('libEmpty');
-    const searchEl = $('libSearch'), kindEl = $('libKind'), headingEl = $('libHeading'), signoutBtn = $('libSignout');
+    const grid = $('libGrid'), loadingEl = $('libLoading'), emptyEl = $('libEmpty'), mainHeading = $('mainHeading');
+    const resumeSection = $('resumeSection'), resumeGrid = $('resumeGrid');
+    const searchEl = $('libSearch'), kindEl = $('libKind'), headingEl = $('libHeading'), signoutBtn = $('libSignout'), whoEl = $('libWho');
+    const detailBack = $('detailBack'), detailTitle = $('detailTitle'), detailMeta = $('detailMeta'),
+          detailOverview = $('detailOverview'), seasonBar = $('seasonBar'), detailLoading = $('detailLoading'), epList = $('epList');
     const modal = $('playerModal'), video = $('playerVideo'), playerTitle = $('playerTitle'),
           playerMsg = $('playerMsg'), playerClose = $('playerClose');
+    const upNext = $('upNext'), upNextThumb = $('upNextThumb'), upNextName = $('upNextName'),
+          upNextCount = $('upNextCount'), upNextPlay = $('upNextPlay'), upNextCancel = $('upNextCancel');
 
     function setAuthMsg(text, ok) { authMsg.textContent = text || ''; authMsg.classList.toggle('ok', !!ok); }
+    function escapeHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
+        ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+    }
 
-    // ---- API helpers ----
+    // ---- API helper ----
     async function jf(path, opts) {
       opts = opts || {};
       const headers = Object.assign({
@@ -286,8 +429,19 @@
       const res = await fetch(SERVER + path, { method: opts.method || 'GET', headers, body: opts.body });
       if (res.status === 401) { const e = new Error('unauthorized'); e.code = 401; throw e; }
       if (!res.ok) throw new Error('HTTP ' + res.status);
+      if (res.status === 204) return null;
       const ct = res.headers.get('content-type') || '';
       return ct.includes('application/json') ? res.json() : res.text();
+    }
+    // fire-and-forget (progress reports) — never throws
+    function jfBeacon(path, bodyObj) {
+      try {
+        fetch(SERVER + path, {
+          method: 'POST', keepalive: true,
+          headers: { 'Authorization': authHeader(session && session.token), 'Content-Type': 'application/json' },
+          body: JSON.stringify(bodyObj || {}),
+        }).catch(() => {});
+      } catch (_) {}
     }
 
     // ---- auth ----
@@ -295,118 +449,150 @@
       const res = await fetch(SERVER + '/Users/AuthenticateByName', {
         method: 'POST',
         headers: { 'Authorization': authHeader(null), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ Username: username, Pw: password }),
+        body: JSON.stringify({ Username: username, Pw: password || '' }),
       });
       if (res.status === 401) { const e = new Error('Wrong username or password.'); e.code = 401; throw e; }
       if (!res.ok) throw new Error('Server returned HTTP ' + res.status + '.');
       const data = await res.json();
-      return { token: data.AccessToken, userId: data.User && data.User.Id };
+      return { token: data.AccessToken, userId: data.User && data.User.Id, name: data.User && data.User.Name };
     }
 
-    // ---- rendering ----
-    function imgUrl(item) {
-      if (item.ImageTags && item.ImageTags.Primary) {
-        return `${SERVER}/Items/${item.Id}/Images/Primary?tag=${item.ImageTags.Primary}&fillHeight=450&quality=90`;
+    // public users = candidates for quick-pick guest buttons
+    async function loadGuests() {
+      let users = [];
+      try {
+        const res = await fetch(SERVER + '/Users/Public', {
+          headers: { 'Authorization': authHeader(null) },
+        });
+        if (res.ok) users = await res.json();
+      } catch (_) { return; }
+      if (!users || !users.length) return;
+      guestRow.innerHTML = '';
+      users.forEach((u) => {
+        const btn = document.createElement('button');
+        btn.className = 'lib-guest';
+        btn.type = 'button';
+        const initial = (u.Name || '?').trim().charAt(0).toUpperCase();
+        const avatar = u.PrimaryImageTag
+          ? `<img class="ava" alt="" src="${SERVER}/Users/${u.Id}/Images/Primary?tag=${u.PrimaryImageTag}&width=52&quality=90" onerror="this.outerHTML='<span class=&quot;ava&quot;>${initial}</span>'" />`
+          : `<span class="ava">${initial}</span>`;
+        btn.innerHTML = avatar + `<span>${escapeHtml(u.Name)}</span>`;
+        btn.addEventListener('click', () => quickSignIn(u.Name, btn));
+        guestRow.appendChild(btn);
+      });
+      guestWrap.style.display = 'flex';
+    }
+
+    async function quickSignIn(name, btn) {
+      if (btn) btn.disabled = true;
+      setAuthMsg('Signing in as ' + name + '…');
+      try {
+        session = await signIn(name, '');  // try passwordless first
+        if (!session.token) throw new Error('no token');
+        saveSession(session);
+        setAuthMsg('');
+        showLibrary();
+      } catch (err) {
+        if (btn) btn.disabled = false;
+        // password required → prefill the username and let them type it
+        userEl.value = name;
+        passEl.value = '';
+        passEl.focus();
+        setAuthMsg(name + ' needs a password — enter it below.');
       }
+    }
+
+    // ---- images ----
+    function posterUrl(item) {
+      if (item.ImageTags && item.ImageTags.Primary)
+        return `${SERVER}/Items/${item.Id}/Images/Primary?tag=${item.ImageTags.Primary}&fillHeight=450&quality=90`;
+      return null;
+    }
+    function thumbUrl(item) {
+      // prefer landscape thumb/backdrop for episodes, fall back to primary
+      if (item.ImageTags && item.ImageTags.Primary)
+        return `${SERVER}/Items/${item.Id}/Images/Primary?tag=${item.ImageTags.Primary}&fillWidth=320&quality=85`;
+      if (item.ParentThumbImageTag)
+        return `${SERVER}/Items/${item.ParentThumbItemId}/Images/Thumb?tag=${item.ParentThumbImageTag}&fillWidth=320&quality=85`;
       return null;
     }
 
-    // Device profile we advertise to the server. It direct-plays browser-native
-    // mp4 (h264 + aac/mp3) WITHOUT a transcode, and only falls back to an HLS
-    // transcode (capped bitrate) when the file genuinely needs converting.
-    // We intentionally DON'T claim mkv direct-play — Chrome can't play raw mkv,
-    // so the server remuxes those to HLS instead of serving an unplayable file.
+    // ---- device profile + stream resolution (prefers direct play) ----
     function deviceProfile() {
       return {
-        MaxStreamingBitrate: MAX_BITRATE,
-        MaxStaticBitrate: MAX_BITRATE,
+        MaxStreamingBitrate: MAX_BITRATE, MaxStaticBitrate: MAX_BITRATE,
         DirectPlayProfiles: [
           { Container: 'mp4,m4v', Type: 'Video', VideoCodec: 'h264', AudioCodec: 'aac,mp3' },
           { Container: 'webm', Type: 'Video', VideoCodec: 'vp8,vp9,av1', AudioCodec: 'vorbis,opus' },
         ],
         TranscodingProfiles: [
-          {
-            Container: 'ts', Type: 'Video', Protocol: 'hls',
-            VideoCodec: 'h264', AudioCodec: 'aac,mp3',
-            Context: 'Streaming', MaxAudioChannels: '2',
-            MinSegments: '1', BreakOnNonKeyFrames: true,
-          },
+          { Container: 'ts', Type: 'Video', Protocol: 'hls', VideoCodec: 'h264', AudioCodec: 'aac,mp3',
+            Context: 'Streaming', MaxAudioChannels: '2', MinSegments: '1', BreakOnNonKeyFrames: true },
         ],
         CodecProfiles: [
-          {
-            Type: 'Video', Codec: 'h264',
-            Conditions: [
-              { Condition: 'LessThanEqual', Property: 'VideoBitrate', Value: String(MAX_BITRATE), IsRequired: false },
-              { Condition: 'EqualsAny', Property: 'VideoProfile', Value: 'high|main|baseline|constrained baseline', IsRequired: false },
-              { Condition: 'LessThanEqual', Property: 'VideoLevel', Value: '51', IsRequired: false },
-            ],
-          },
+          { Type: 'Video', Codec: 'h264', Conditions: [
+            { Condition: 'LessThanEqual', Property: 'VideoBitrate', Value: String(MAX_BITRATE), IsRequired: false },
+            { Condition: 'EqualsAny', Property: 'VideoProfile', Value: 'high|main|baseline|constrained baseline', IsRequired: false },
+            { Condition: 'LessThanEqual', Property: 'VideoLevel', Value: '51', IsRequired: false },
+          ] },
         ],
-        SubtitleProfiles: [
-          { Format: 'vtt', Method: 'External' },
-        ],
+        SubtitleProfiles: [ { Format: 'vtt', Method: 'External' } ],
       };
     }
 
-    // Ask the server how to play this item, then hand back the chosen URL +
-    // whether it's HLS. Prefers direct play; transcodes only when required.
     async function resolveStream(item) {
-      const body = JSON.stringify({ DeviceProfile: deviceProfile() });
       const info = await jf(
         `/Items/${item.Id}/PlaybackInfo?UserId=${encodeURIComponent(session.userId)}` +
         `&MaxStreamingBitrate=${MAX_BITRATE}&StartTimeTicks=0&IsPlayback=true&AutoOpenLiveStream=true`,
-        { method: 'POST', body }
+        { method: 'POST', body: JSON.stringify({ DeviceProfile: deviceProfile() }) }
       );
       const src = (info && info.MediaSources && info.MediaSources[0]) || null;
       if (!src) throw new Error('No playable source.');
-
-      // Server told us to transcode → use the HLS URL it built.
-      if (src.TranscodingUrl) {
-        return { url: SERVER + src.TranscodingUrl, hls: /\.m3u8/i.test(src.TranscodingUrl) };
-      }
-      // Direct play / direct stream → serve the original file.
-      const params = new URLSearchParams({
-        api_key: session.token,
-        DeviceId: DEVICE_ID,
-        MediaSourceId: src.Id,
-        Static: 'true',
-      });
-      if (info.PlaySessionId) params.set('PlaySessionId', info.PlaySessionId);
+      const playSessionId = info.PlaySessionId || null;
+      if (src.TranscodingUrl)
+        return { url: SERVER + src.TranscodingUrl, hls: /\.m3u8/i.test(src.TranscodingUrl), mediaSourceId: src.Id, playSessionId };
+      const params = new URLSearchParams({ api_key: session.token, DeviceId: DEVICE_ID, MediaSourceId: src.Id, Static: 'true' });
+      if (playSessionId) params.set('PlaySessionId', playSessionId);
       const container = (src.Container || 'mp4').split(',')[0];
-      return { url: `${SERVER}/Videos/${item.Id}/stream.${container}?${params.toString()}`, hls: false };
+      return { url: `${SERVER}/Videos/${item.Id}/stream.${container}?${params.toString()}`, hls: false, mediaSourceId: src.Id, playSessionId };
     }
-
     function directUrl(item) {
       const params = new URLSearchParams({ api_key: session.token, DeviceId: DEVICE_ID, Static: 'true' });
       return `${SERVER}/Videos/${item.Id}/stream?${params.toString()}`;
     }
 
-    function render(items) {
-      grid.innerHTML = '';
-      if (!items.length) { emptyEl.style.display = 'block'; return; }
-      emptyEl.style.display = 'none';
-      const frag = document.createDocumentFragment();
-      items.forEach((item) => {
-        const btn = document.createElement('button');
-        btn.className = 'poster';
-        const art = imgUrl(item);
-        btn.innerHTML = `
-          <div class="poster-art">
-            ${art ? `<img loading="lazy" alt="" src="${art}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><div class="fallback" style="display:none">${escapeHtml(item.Name)}</div>`
-                  : `<div class="fallback">${escapeHtml(item.Name)}</div>`}
-            <div class="poster-play"><span>▶</span></div>
-          </div>
-          <div class="poster-name">${escapeHtml(item.Name)}</div>
-          ${item.ProductionYear ? `<div class="poster-year">${item.ProductionYear}</div>` : ''}`;
-        btn.addEventListener('click', () => playItem(item));
-        frag.appendChild(btn);
-      });
-      grid.appendChild(frag);
+    // ---- poster card ----
+    function progressPct(item) {
+      const u = item.UserData;
+      if (u && u.PlaybackPositionTicks && item.RunTimeTicks)
+        return Math.min(100, Math.max(0, (u.PlaybackPositionTicks / item.RunTimeTicks) * 100));
+      return 0;
+    }
+    function makePoster(item, opts) {
+      opts = opts || {};
+      const btn = document.createElement('button');
+      btn.className = 'poster';
+      const art = posterUrl(item);
+      const pct = progressPct(item);
+      const subline = opts.subline ? `<div class="poster-sub">${escapeHtml(opts.subline)}</div>` : '';
+      btn.innerHTML = `
+        <div class="poster-art">
+          ${art ? `<img loading="lazy" alt="" src="${art}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><div class="fallback" style="display:none">${escapeHtml(item.Name)}</div>`
+                : `<div class="fallback">${escapeHtml(item.Name)}</div>`}
+          <div class="poster-play"><span>▶</span></div>
+          ${pct > 0 ? `<div class="poster-prog"><i style="width:${pct}%"></i></div>` : ''}
+        </div>
+        <div class="poster-name">${escapeHtml(opts.title || item.Name)}</div>
+        ${subline || (item.ProductionYear ? `<div class="poster-year">${item.ProductionYear}</div>` : '')}`;
+      btn.addEventListener('click', () => opts.onClick ? opts.onClick() : openItem(item));
+      return btn;
     }
 
-    function escapeHtml(s) {
-      return String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
-        ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+    // clicking a library item: series → episode browser, movie → play
+    function openItem(item) {
+      if (item.Type === 'Series') { openSeries(item); return; }
+      if (item.Type === 'Episode') { playMedia(item, episodeContext(item)); return; }
+      playMedia(item, null);
     }
 
     // ---- library load ----
@@ -417,13 +603,10 @@
       const kind = kindEl.value;
       headingEl.textContent = kind === 'Series' ? 'Shows' : 'Movies';
       try {
+        await loadResume(kind);
         const params = new URLSearchParams({
-          IncludeItemTypes: kind,
-          Recursive: 'true',
-          SortBy: 'SortName',
-          SortOrder: 'Ascending',
-          Fields: 'ProductionYear',
-          Limit: '500',
+          IncludeItemTypes: kind, Recursive: 'true', SortBy: 'SortName', SortOrder: 'Ascending',
+          Fields: 'ProductionYear,UserData,RunTimeTicks', Limit: '500',
         });
         const data = await jf(`/Users/${session.userId}/Items?${params.toString()}`);
         allItems = (data && data.Items) || [];
@@ -431,103 +614,337 @@
       } catch (err) {
         loadingEl.style.display = 'none';
         if (err.code === 401) { handleExpired(); return; }
-        emptyEl.textContent = 'Could not reach the server. ' +
-          'If you just signed in, the server may need to allow this site (CORS).';
+        emptyEl.textContent = 'Could not reach the server. If you just signed in, the server may need to allow this site (CORS).';
         emptyEl.style.display = 'block';
       } finally {
         loadingEl.style.display = 'none';
       }
     }
 
+    // Continue Watching — server-tracked resume items
+    async function loadResume(kind) {
+      try {
+        const types = kind === 'Series' ? 'Episode' : 'Movie';
+        const params = new URLSearchParams({
+          Limit: '24', Recursive: 'true', MediaTypes: 'Video',
+          IncludeItemTypes: types,
+          Fields: 'ProductionYear,UserData,RunTimeTicks,SeriesName,IndexNumber,ParentIndexNumber,ParentThumbImageTag,ParentThumbItemId',
+          EnableTotalRecordCount: 'false',
+        });
+        const data = await jf(`/Users/${session.userId}/Items/Resume?${params.toString()}`);
+        const items = (data && data.Items) || [];
+        resumeGrid.innerHTML = '';
+        if (!items.length) { resumeSection.style.display = 'none'; return; }
+        items.forEach((it) => {
+          let title = it.Name, subline = '';
+          if (it.Type === 'Episode') {
+            title = it.SeriesName || it.Name;
+            const s = it.ParentIndexNumber, e = it.IndexNumber;
+            subline = (s != null && e != null) ? `S${s} · E${e} — ${it.Name}` : it.Name;
+          }
+          resumeGrid.appendChild(makePoster(it, {
+            title, subline,
+            onClick: () => it.Type === 'Episode' ? playMedia(it, episodeContext(it)) : playMedia(it, null),
+          }));
+        });
+        resumeSection.style.display = 'block';
+      } catch (_) { resumeSection.style.display = 'none'; }
+    }
+
     function applyFilter() {
       const q = searchEl.value.trim().toLowerCase();
       const items = q ? allItems.filter((i) => i.Name && i.Name.toLowerCase().includes(q)) : allItems;
-      render(items);
+      grid.innerHTML = '';
+      if (!items.length) { emptyEl.style.display = 'block'; return; }
+      emptyEl.style.display = 'none';
+      const frag = document.createDocumentFragment();
+      items.forEach((it) => frag.appendChild(makePoster(it, {})));
+      grid.appendChild(frag);
     }
 
-    // ---- playback ----
-    let hls = null;
-    function destroyHls() { if (hls) { try { hls.destroy(); } catch (_) {} hls = null; } }
+    // ════════ SERIES / EPISODE BROWSER ════════
+    let currentSeries = null;
+    let currentSeasons = [];
+    let currentEpisodes = [];  // episodes of the visible season, in order
 
-    async function playItem(item) {
-      playerTitle.textContent = item.Name + (item.ProductionYear ? ` (${item.ProductionYear})` : '');
+    async function openSeries(series) {
+      currentSeries = series;
+      libView.style.display = 'none';
+      detailView.style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      detailTitle.textContent = series.Name;
+      detailMeta.textContent = series.ProductionYear ? String(series.ProductionYear) : '';
+      detailOverview.textContent = series.Overview || '';
+      seasonBar.innerHTML = ''; epList.innerHTML = '';
+      detailLoading.style.display = 'flex';
+      try {
+        // fetch full overview if missing
+        if (!series.Overview) {
+          try { const full = await jf(`/Users/${session.userId}/Items/${series.Id}`); if (full && full.Overview) detailOverview.textContent = full.Overview; } catch (_) {}
+        }
+        const sd = await jf(`/Shows/${series.Id}/Seasons?UserId=${encodeURIComponent(session.userId)}&Fields=UserData`);
+        currentSeasons = (sd && sd.Items) || [];
+        detailLoading.style.display = 'none';
+        if (!currentSeasons.length) { epList.innerHTML = '<div class="lib-empty">No seasons found.</div>'; return; }
+        renderSeasonBar(0);
+        loadSeason(currentSeasons[0]);
+      } catch (err) {
+        detailLoading.style.display = 'none';
+        if (err.code === 401) { handleExpired(); return; }
+        epList.innerHTML = '<div class="lib-empty">Could not load this series.</div>';
+      }
+    }
+
+    function renderSeasonBar(activeIdx) {
+      seasonBar.innerHTML = '';
+      currentSeasons.forEach((s, i) => {
+        const chip = document.createElement('button');
+        chip.className = 'lib-season-chip' + (i === activeIdx ? ' active' : '');
+        chip.textContent = s.Name || ('Season ' + (s.IndexNumber != null ? s.IndexNumber : i + 1));
+        chip.addEventListener('click', () => { renderSeasonBar(i); loadSeason(s); });
+        seasonBar.appendChild(chip);
+      });
+    }
+
+    async function loadSeason(season) {
+      detailLoading.style.display = 'flex';
+      epList.innerHTML = '';
+      try {
+        const params = new URLSearchParams({
+          UserId: session.userId, SeasonId: season.Id,
+          Fields: 'Overview,UserData,RunTimeTicks,IndexNumber,ParentIndexNumber,SeriesName',
+        });
+        const data = await jf(`/Shows/${currentSeries.Id}/Episodes?${params.toString()}`);
+        currentEpisodes = (data && data.Items) || [];
+        detailLoading.style.display = 'none';
+        renderEpisodes();
+      } catch (err) {
+        detailLoading.style.display = 'none';
+        if (err.code === 401) { handleExpired(); return; }
+        epList.innerHTML = '<div class="lib-empty">Could not load episodes.</div>';
+      }
+    }
+
+    function renderEpisodes() {
+      epList.innerHTML = '';
+      if (!currentEpisodes.length) { epList.innerHTML = '<div class="lib-empty">No episodes in this season.</div>'; return; }
+      const frag = document.createDocumentFragment();
+      currentEpisodes.forEach((ep) => {
+        const btn = document.createElement('button');
+        btn.className = 'lib-ep';
+        const t = thumbUrl(ep);
+        const pct = progressPct(ep);
+        const watched = ep.UserData && ep.UserData.Played;
+        const numLabel = (ep.ParentIndexNumber != null && ep.IndexNumber != null)
+          ? `S${ep.ParentIndexNumber} · E${ep.IndexNumber}` : (ep.IndexNumber != null ? 'E' + ep.IndexNumber : '');
+        btn.innerHTML = `
+          <div class="lib-ep-thumb">
+            ${t ? `<img loading="lazy" alt="" src="${t}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><div class="ph" style="display:none">▶</div>`
+                : `<div class="ph">▶</div>`}
+            ${pct > 0 ? `<div class="lib-ep-prog"><i style="width:${pct}%"></i></div>` : ''}
+          </div>
+          <div class="lib-ep-body">
+            <div class="lib-ep-num">${numLabel}${watched ? ' · <span class="lib-ep-watched">watched</span>' : ''}</div>
+            <div class="lib-ep-name">${escapeHtml(ep.Name || 'Episode')}</div>
+            <div class="lib-ep-desc">${escapeHtml(ep.Overview || '')}</div>
+          </div>`;
+        btn.addEventListener('click', () => playMedia(ep, episodeContextFromList(ep)));
+        frag.appendChild(btn);
+      });
+      epList.appendChild(frag);
+    }
+
+    // Build the "what plays after this" context from the loaded season list.
+    function episodeContextFromList(ep) {
+      const idx = currentEpisodes.findIndex((x) => x.Id === ep.Id);
+      const next = idx >= 0 && idx + 1 < currentEpisodes.length ? currentEpisodes[idx + 1] : null;
+      return { list: currentEpisodes.slice(), index: idx, next };
+    }
+    // Context for an episode opened outside the browser (e.g. from Continue Watching):
+    // we don't have the season list yet, so resolve "next" lazily on demand.
+    function episodeContext(ep) { return { list: null, index: -1, next: undefined, seriesId: ep.SeriesId, seasonId: ep.SeasonId }; }
+
+    async function resolveNextEpisode(ep, ctx) {
+      if (ctx && ctx.next !== undefined) return ctx.next; // already known (incl. null)
+      // lazily fetch siblings in the same season
+      try {
+        const seasonId = ctx && ctx.seasonId ? ctx.seasonId : ep.SeasonId;
+        const seriesId = ctx && ctx.seriesId ? ctx.seriesId : ep.SeriesId;
+        if (!seasonId || !seriesId) return null;
+        const params = new URLSearchParams({ UserId: session.userId, SeasonId: seasonId, Fields: 'IndexNumber,ParentIndexNumber,SeriesName,RunTimeTicks,UserData' });
+        const data = await jf(`/Shows/${seriesId}/Episodes?${params.toString()}`);
+        const list = (data && data.Items) || [];
+        const idx = list.findIndex((x) => x.Id === ep.Id);
+        return idx >= 0 && idx + 1 < list.length ? list[idx + 1] : null;
+      } catch (_) { return null; }
+    }
+
+    // ════════ PLAYBACK + PROGRESS REPORTING ════════
+    let hls = null;
+    let playState = null; // { item, mediaSourceId, playSessionId, ctx }
+    let progressTimer = null;
+    let countdownTimer = null;
+
+    function destroyHls() { if (hls) { try { hls.destroy(); } catch (_) {} hls = null; } }
+    function nowTicks() { return Math.floor((video.currentTime || 0) * TICKS); }
+
+    function reportStart() {
+      if (!playState) return;
+      jfBeacon('/Sessions/Playing', {
+        ItemId: playState.item.Id, MediaSourceId: playState.mediaSourceId,
+        PlaySessionId: playState.playSessionId, CanSeek: true, IsPaused: false,
+        PositionTicks: nowTicks(), PlayMethod: playState.hls ? 'Transcode' : 'DirectPlay',
+      });
+    }
+    function reportProgress(paused) {
+      if (!playState) return;
+      jfBeacon('/Sessions/Playing/Progress', {
+        ItemId: playState.item.Id, MediaSourceId: playState.mediaSourceId,
+        PlaySessionId: playState.playSessionId, CanSeek: true, IsPaused: !!paused,
+        PositionTicks: nowTicks(), PlayMethod: playState.hls ? 'Transcode' : 'DirectPlay',
+      });
+    }
+    function reportStop() {
+      if (!playState) return;
+      jfBeacon('/Sessions/Playing/Stopped', {
+        ItemId: playState.item.Id, MediaSourceId: playState.mediaSourceId,
+        PlaySessionId: playState.playSessionId, PositionTicks: nowTicks(),
+      });
+    }
+    function startProgressLoop() {
+      stopProgressLoop();
+      progressTimer = setInterval(() => { if (!video.paused) reportProgress(false); }, PROGRESS_INTERVAL);
+    }
+    function stopProgressLoop() { if (progressTimer) { clearInterval(progressTimer); progressTimer = null; } }
+
+    async function playMedia(item, ctx) {
+      // tear down any prior session cleanly
+      if (playState) { reportStop(); stopProgressLoop(); }
+      hideUpNext();
+      destroyHls();
+
+      playState = { item, ctx: ctx || null, mediaSourceId: null, playSessionId: null, hls: false };
+      const labelTitle = item.Type === 'Episode'
+        ? `${item.SeriesName || ''}${item.ParentIndexNumber != null ? ` — S${item.ParentIndexNumber}` : ''}${item.IndexNumber != null ? `E${item.IndexNumber}` : ''}: ${item.Name}`
+        : item.Name + (item.ProductionYear ? ` (${item.ProductionYear})` : '');
+      playerTitle.textContent = labelTitle;
       playerMsg.textContent = 'Loading…'; playerMsg.classList.remove('err');
       modal.classList.add('open');
       document.body.style.overflow = 'hidden';
 
-      if (item.Type === 'Series') {
-        playerMsg.textContent = 'This is a series — open it in the server to pick an episode.';
-        playerMsg.classList.add('err');
-        return;
-      }
-
-      destroyHls();
       let chosen;
-      try {
-        chosen = await resolveStream(item);
-      } catch (err) {
+      try { chosen = await resolveStream(item); }
+      catch (err) {
         if (err.code === 401) { handleExpired(); closePlayer(); return; }
-        playerMsg.textContent = 'Could not start playback.';
-        playerMsg.classList.add('err');
-        return;
+        playerMsg.textContent = 'Could not start playback.'; playerMsg.classList.add('err'); return;
       }
+      playState.mediaSourceId = chosen.mediaSourceId;
+      playState.playSessionId = chosen.playSessionId;
+      playState.hls = chosen.hls;
 
-      // Direct play / direct stream — no transcode, smoothest path.
+      const resumeTicks = (item.UserData && item.UserData.PlaybackPositionTicks) || 0;
+      const resumeSecs = resumeTicks / TICKS;
+
+      const onReady = () => {
+        if (resumeSecs > 5 && resumeSecs < (video.duration || Infinity) - 10) {
+          try { video.currentTime = resumeSecs; } catch (_) {}
+        }
+        video.play().catch(() => {});
+        reportStart();
+        startProgressLoop();
+      };
+
       if (!chosen.hls) {
         playerMsg.textContent = 'Direct play';
         video.src = chosen.url;
-        video.play().catch(() => {});
-        return;
-      }
-
-      // Transcoded HLS.
-      playerMsg.textContent = 'Streaming (server is converting this file)';
-      if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = chosen.url; // Safari native HLS
-        video.play().catch(() => {});
-      } else if (window.Hls && window.Hls.isSupported()) {
-        hls = new window.Hls({ maxBufferLength: 30, maxMaxBufferLength: 60 });
-        hls.loadSource(chosen.url);
-        hls.attachMedia(video);
-        hls.on(window.Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
-        hls.on(window.Hls.Events.ERROR, (_e, data) => {
-          if (data && data.fatal) {
-            destroyHls();
-            video.src = directUrl(item);
-            video.play().catch(() => {
-              playerMsg.textContent = 'Your browser could not play this file.';
-              playerMsg.classList.add('err');
-            });
-          }
-        });
+        video.addEventListener('loadedmetadata', onReady, { once: true });
       } else {
-        video.src = directUrl(item);
-        video.play().catch(() => {
-          playerMsg.textContent = 'Your browser could not play this file.';
-          playerMsg.classList.add('err');
-        });
+        playerMsg.textContent = 'Streaming (server is converting this file)';
+        if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = chosen.url;
+          video.addEventListener('loadedmetadata', onReady, { once: true });
+        } else if (window.Hls && window.Hls.isSupported()) {
+          hls = new window.Hls({ maxBufferLength: 30, maxMaxBufferLength: 60 });
+          hls.loadSource(chosen.url); hls.attachMedia(video);
+          hls.on(window.Hls.Events.MANIFEST_PARSED, onReady);
+          hls.on(window.Hls.Events.ERROR, (_e, data) => {
+            if (data && data.fatal) {
+              destroyHls(); video.src = directUrl(item);
+              video.addEventListener('loadedmetadata', onReady, { once: true });
+            }
+          });
+        } else {
+          video.src = directUrl(item);
+          video.addEventListener('loadedmetadata', onReady, { once: true });
+        }
       }
     }
 
     function closePlayer() {
+      if (playState) { reportProgress(true); reportStop(); }
+      stopProgressLoop(); clearCountdown(); hideUpNext();
+      playState = null;
       modal.classList.remove('open');
       document.body.style.overflow = '';
       try { video.pause(); } catch (_) {}
       destroyHls();
       video.removeAttribute('src'); video.load();
+      // refresh resume rows / episode progress so it shows immediately on return
+      if (libView.style.display !== 'none') loadResume(kindEl.value);
+      if (detailView.style.display !== 'none' && currentSeries) {
+        const idx = Array.prototype.indexOf.call(
+          seasonBar.children,
+          seasonBar.querySelector('.lib-season-chip.active'));
+        if (idx >= 0 && currentSeasons[idx]) loadSeason(currentSeasons[idx]);
+      }
     }
 
-    // ---- expired / sign-out ----
+    // ---- auto-play next episode ----
+    let pendingNext = null;
+    function hideUpNext() { upNext.classList.remove('show'); pendingNext = null; clearCountdown(); }
+    function clearCountdown() { if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; } }
+
+    async function onEnded() {
+      reportProgress(false); reportStop(); stopProgressLoop();
+      if (!playState || playState.item.Type !== 'Episode') return;
+      const next = await resolveNextEpisode(playState.item, playState.ctx);
+      if (!next) return;
+      pendingNext = next;
+      // show up-next card with countdown
+      const t = thumbUrl(next);
+      upNextThumb.innerHTML = t ? `<img alt="" src="${t}" />` : '';
+      upNextName.textContent = (next.IndexNumber != null ? `E${next.IndexNumber}: ` : '') + (next.Name || 'Next episode');
+      let remaining = AUTOPLAY_COUNTDOWN;
+      upNextCount.textContent = `Playing in ${remaining}s…`;
+      upNext.classList.add('show');
+      clearCountdown();
+      countdownTimer = setInterval(() => {
+        remaining -= 1;
+        upNextCount.textContent = `Playing in ${remaining}s…`;
+        if (remaining <= 0) { clearCountdown(); const n = pendingNext; hideUpNext(); if (n) playMedia(n, null); }
+      }, 1000);
+    }
+
+    upNextPlay.addEventListener('click', () => { const n = pendingNext; hideUpNext(); if (n) playMedia(n, null); });
+    upNextCancel.addEventListener('click', hideUpNext);
+
+    video.addEventListener('ended', onEnded);
+    video.addEventListener('pause', () => { if (playState && !video.ended) reportProgress(true); });
+    video.addEventListener('play', () => { if (playState) { hideUpNext(); reportProgress(false); } });
+
+    // ---- session lifecycle ----
     function handleExpired() {
       session = null; saveSession(null);
-      libView.style.display = 'none';
+      libView.style.display = 'none'; detailView.style.display = 'none';
       authCard.style.display = 'flex';
       setAuthMsg('Your session expired — please sign in again.');
+      loadGuests();
     }
-
     function showLibrary() {
       authCard.style.display = 'none';
+      detailView.style.display = 'none';
       libView.style.display = 'block';
+      if (session && session.name) whoEl.innerHTML = 'Signed in as <strong>' + escapeHtml(session.name) + '</strong>';
       loadLibrary();
     }
 
@@ -539,24 +956,27 @@
       try {
         session = await signIn(u, p);
         if (!session.token || !session.userId) throw new Error('Unexpected server response.');
-        saveSession(session);
-        passEl.value = '';
-        setAuthMsg('');
+        saveSession(session); passEl.value = ''; setAuthMsg('');
         showLibrary();
       } catch (err) {
         if (err.code === 401) setAuthMsg('Wrong username or password.');
         else setAuthMsg('Could not connect. The server may be offline or not allowing this site (CORS).');
-      } finally {
-        signinBtn.disabled = false;
-      }
+      } finally { signinBtn.disabled = false; }
     });
     passEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') signinBtn.click(); });
 
     signoutBtn.addEventListener('click', () => {
       session = null; saveSession(null);
-      libView.style.display = 'none';
-      authCard.style.display = 'flex';
-      setAuthMsg('');
+      libView.style.display = 'none'; detailView.style.display = 'none';
+      authCard.style.display = 'flex'; setAuthMsg('');
+      loadGuests();
+    });
+
+    detailBack.addEventListener('click', () => {
+      detailView.style.display = 'none';
+      libView.style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      loadResume(kindEl.value); // refresh progress
     });
 
     let searchT;
@@ -566,11 +986,14 @@
     playerClose.addEventListener('click', closePlayer);
     modal.addEventListener('click', (e) => { if (e.target === modal) closePlayer(); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('open')) closePlayer(); });
+    window.addEventListener('beforeunload', () => { if (playState) reportStop(); });
 
     // ---- boot ----
     session = loadSession();
     if (session && session.token && session.userId) {
       showLibrary();
+    } else {
+      loadGuests();
     }
   })();
   </script>
