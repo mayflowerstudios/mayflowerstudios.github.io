@@ -122,7 +122,141 @@
 
     /* ---- section headings ---- */
     .lib-section { margin:8px 0 0; }
-    .lib-section-h { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:22px; font-weight:400; color:var(--text); margin:24px 0 14px; }
+    .lib-section-h { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:22px; font-weight:400; color:var(--text); margin:24px 0 14px; display:flex; align-items:baseline; gap:12px; }
+    .lib-section-h .count { font-family:var(--font-b); font-style:normal; font-size:11px; letter-spacing:.5px; color:var(--text-3); text-transform:uppercase; }
+
+    /* ---- view tabs (Browse / Playlists) ---- */
+    .lib-tabs { display:flex; gap:6px; margin:18px 0 2px; }
+    .lib-tab {
+      cursor:pointer; font-family:var(--font-b); font-size:13px; font-weight:500; color:var(--text-3);
+      background:none; border:none; padding:8px 4px; position:relative; transition:color 160ms;
+    }
+    .lib-tab:hover { color:var(--text-2); }
+    .lib-tab.active { color:var(--text); }
+    .lib-tab.active::after {
+      content:''; position:absolute; left:4px; right:4px; bottom:-1px; height:2px;
+      background:linear-gradient(90deg,var(--rose),var(--violet)); border-radius:2px;
+    }
+
+    /* ---- filter bar ---- */
+    .lib-filters {
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:14px 0 6px;
+      padding:12px 14px; border:1px solid var(--border); border-radius:var(--r-md);
+      background:rgba(20,16,38,.4);
+    }
+    .lib-filters .grow { margin-left:auto; }
+    .lib-clear {
+      cursor:pointer; font-family:var(--font-b); font-size:12px; font-weight:500; color:var(--rose);
+      background:none; border:none; padding:6px 8px; display:none;
+    }
+    .lib-clear:hover { text-decoration:underline; }
+    .lib-clear.show { display:inline; }
+
+    /* ---- horizontal scroll rows ---- */
+    .lib-row { margin:6px 0 30px; }
+    .lib-row-scroll {
+      display:grid; grid-auto-flow:column; grid-auto-columns:150px; gap:18px;
+      overflow-x:auto; overflow-y:visible; padding:6px 2px 14px; scroll-behavior:smooth;
+      scrollbar-width:thin; scrollbar-color:var(--border-2) transparent;
+    }
+    .lib-row-scroll::-webkit-scrollbar { height:8px; }
+    .lib-row-scroll::-webkit-scrollbar-thumb { background:var(--border-2); border-radius:4px; }
+    .lib-row-scroll::-webkit-scrollbar-track { background:transparent; }
+    .lib-row .poster:hover .poster-art { transform:translateY(-4px) scale(1.02); }
+
+    /* ---- favorite heart on posters ---- */
+    .poster-fav {
+      position:absolute; top:8px; right:8px; z-index:3;
+      width:30px; height:30px; border-radius:50%; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(11,17,32,.6); border:1px solid rgba(255,255,255,.12);
+      color:rgba(255,255,255,.75); font-size:14px; line-height:1;
+      opacity:0; transform:scale(.85); transition:opacity 160ms, transform 160ms, color 160ms, border-color 160ms;
+    }
+    .poster-art:hover .poster-fav { opacity:1; transform:scale(1); }
+    .poster-fav:hover { border-color:var(--rose); color:var(--rose); }
+    .poster-fav.on { opacity:1; transform:scale(1); color:var(--rose); border-color:var(--rose); }
+    /* "add to playlist" button next to fav */
+    .poster-add {
+      position:absolute; top:8px; right:44px; z-index:3;
+      width:30px; height:30px; border-radius:50%; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(11,17,32,.6); border:1px solid rgba(255,255,255,.12);
+      color:rgba(255,255,255,.75); font-size:17px; line-height:1;
+      opacity:0; transform:scale(.85); transition:opacity 160ms, transform 160ms, color 160ms, border-color 160ms;
+    }
+    .poster-art:hover .poster-add { opacity:1; transform:scale(1); }
+    .poster-add:hover { border-color:var(--violet); color:var(--violet); }
+
+    /* ---- playlists ---- */
+    .lib-playlist-head { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:18px 0 6px; }
+    .lib-playlist-head h2 { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:26px; font-weight:400; color:var(--text); margin-right:auto; }
+    .lib-pl-grid { display:grid; gap:18px; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); margin:10px 0 40px; }
+    .lib-pl-card {
+      cursor:pointer; text-align:left; border:1px solid var(--border); border-radius:var(--r-md);
+      background:var(--glass); padding:0; overflow:hidden; transition:border-color 180ms, transform 180ms;
+      display:flex; flex-direction:column;
+    }
+    .lib-pl-card:hover { border-color:var(--rose); transform:translateY(-3px); }
+    .lib-pl-cover { aspect-ratio:16/9; background:rgba(255,255,255,.03); position:relative; overflow:hidden; }
+    .lib-pl-cover img { width:100%; height:100%; object-fit:cover; }
+    .lib-pl-cover .empty { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--text-3); font-size:24px; }
+    .lib-pl-body { padding:12px 14px; }
+    .lib-pl-name { font-size:14px; color:var(--text); font-weight:500; }
+    .lib-pl-count { font-size:12px; color:var(--text-3); margin-top:2px; }
+
+    /* dialog (create playlist / add to playlist) */
+    .lib-dialog-wrap {
+      position:fixed; inset:0; z-index:210; display:none; align-items:center; justify-content:center; padding:24px;
+      background:rgba(5,8,16,.7);
+    }
+    .lib-dialog-wrap.open { display:flex; }
+    .lib-dialog {
+      width:100%; max-width:380px; border:1px solid var(--border); border-radius:var(--r-lg);
+      background:#140e26; padding:24px; display:flex; flex-direction:column; gap:14px;
+    }
+    .lib-dialog h3 { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:22px; font-weight:400; color:var(--text); }
+    .lib-dialog input {
+      font-family:var(--font-b); font-size:14px; color:var(--text);
+      padding:11px 14px; border-radius:var(--r-sm); border:1px solid var(--border-2); background:rgba(255,255,255,.04);
+    }
+    .lib-dialog input:focus { outline:none; border-color:var(--rose); }
+    .lib-dialog-list { display:flex; flex-direction:column; gap:6px; max-height:240px; overflow-y:auto; }
+    .lib-dialog-item {
+      cursor:pointer; text-align:left; font-family:var(--font-b); font-size:13px; color:var(--text);
+      padding:10px 12px; border-radius:var(--r-sm); border:1px solid var(--border-2); background:transparent;
+      display:flex; justify-content:space-between; align-items:center; transition:border-color 140ms, background 140ms;
+    }
+    .lib-dialog-item:hover { border-color:var(--rose); background:rgba(249,168,212,.06); }
+    .lib-dialog-item .c { color:var(--text-3); font-size:11px; }
+    .lib-dialog-actions { display:flex; gap:10px; justify-content:flex-end; }
+    .lib-dialog-actions button {
+      cursor:pointer; font-family:var(--font-b); font-size:13px; font-weight:600; border-radius:999px; padding:9px 18px; border:none;
+    }
+    .lib-dialog-ok { color:#0b1120; background:linear-gradient(135deg,var(--rose),var(--violet)); }
+    .lib-dialog-cancel { color:var(--text-2); background:transparent; border:1px solid var(--border-2) !important; }
+    .lib-toast {
+      position:fixed; left:50%; bottom:28px; transform:translateX(-50%) translateY(20px);
+      z-index:240; background:#140e26; border:1px solid var(--border-2); border-radius:999px;
+      padding:11px 20px; font-size:13px; color:var(--text); opacity:0; pointer-events:none;
+      transition:opacity 220ms, transform 220ms;
+    }
+    .lib-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+    /* row scroll arrows */
+    .lib-row-wrap { position:relative; }
+    .lib-row-arrow {
+      position:absolute; top:calc(50% - 18px); transform:translateY(-50%); z-index:4;
+      width:36px; height:36px; border-radius:50%; cursor:pointer; display:none;
+      align-items:center; justify-content:center; font-size:16px;
+      background:rgba(11,17,32,.82); border:1px solid var(--border-2); color:var(--text);
+      transition:border-color 150ms, color 150ms;
+    }
+    .lib-row-wrap:hover .lib-row-arrow { display:flex; }
+    .lib-row-arrow:hover { border-color:var(--rose); color:var(--rose); }
+    .lib-row-arrow.left { left:-6px; }
+    .lib-row-arrow.right { right:-6px; }
+    @media (max-width:640px){ .lib-row-arrow { display:none !important; } }
 
     /* ---- poster grid ---- */
     .lib-grid {
@@ -318,20 +452,64 @@
           <button class="lib-ghost" id="libSignout">Sign out</button>
         </div>
 
-        <div class="lib-loading" id="libLoading"><span class="lib-spin"></span> Loading library…</div>
-
-        <!-- continue watching -->
-        <div class="lib-section" id="resumeSection" style="display:none;">
-          <div class="lib-section-h">Continue watching</div>
-          <div class="lib-grid" id="resumeGrid"></div>
+        <div class="lib-tabs reveal">
+          <button class="lib-tab active" id="tabBrowse">Browse</button>
+          <button class="lib-tab" id="tabPlaylists">Playlists</button>
         </div>
 
-        <!-- main grid -->
-        <div class="lib-section" id="mainSection">
-          <div class="lib-section-h" id="mainHeading" style="display:none;">All</div>
-          <div class="lib-grid" id="libGrid"></div>
-          <div class="lib-empty" id="libEmpty" style="display:none;">Nothing here yet.</div>
+        <!-- ===== BROWSE TAB ===== -->
+        <div id="browseTab">
+          <!-- filter bar -->
+          <div class="lib-filters reveal">
+            <select class="lib-select" id="fGenre"><option value="">All genres</option></select>
+            <select class="lib-select" id="fYear"><option value="">All years</option></select>
+            <select class="lib-select" id="fSort">
+              <option value="SortName">A–Z</option>
+              <option value="DateCreated">Recently added</option>
+              <option value="ProductionYear">Newest</option>
+              <option value="CommunityRating">Top rated</option>
+              <option value="Random">Surprise me</option>
+            </select>
+            <button class="lib-clear" id="fClear">Clear filters</button>
+          </div>
+
+          <div class="lib-loading" id="libLoading"><span class="lib-spin"></span> Loading library…</div>
+
+          <!-- DEFAULT: curated rows -->
+          <div id="rowsView">
+            <div id="rowsContainer"></div>
+          </div>
+
+          <!-- FILTERING: single grid -->
+          <div id="gridView" style="display:none;">
+            <div class="lib-section-h" id="gridHeading">Results <span class="count" id="gridCount"></span></div>
+            <div class="lib-grid" id="libGrid"></div>
+            <div class="lib-empty" id="libEmpty" style="display:none;">No titles match those filters.</div>
+          </div>
         </div>
+
+        <!-- ===== PLAYLISTS TAB ===== -->
+        <div id="playlistsTab" style="display:none;">
+          <div class="lib-playlist-head reveal">
+            <h2>Your playlists</h2>
+            <button class="lib-btn" id="newPlaylistBtn">New playlist</button>
+          </div>
+          <div class="lib-loading" id="plLoading" style="display:none;"><span class="lib-spin"></span> Loading playlists…</div>
+          <div class="lib-pl-grid" id="plGrid"></div>
+          <div class="lib-empty" id="plEmpty" style="display:none;">No playlists yet. Create one, then add titles with the + on any poster.</div>
+        </div>
+      </div>
+
+      <!-- ── playlist detail ── -->
+      <div id="playlistView" style="display:none;">
+        <button class="lib-back" id="plBack">← Back to playlists</button>
+        <div class="lib-playlist-head">
+          <h2 id="plDetailName">—</h2>
+          <button class="lib-ghost" id="plDeleteBtn">Delete playlist</button>
+        </div>
+        <div class="lib-loading" id="plDetailLoading" style="display:none;"><span class="lib-spin"></span> Loading…</div>
+        <div class="lib-grid" id="plDetailGrid"></div>
+        <div class="lib-empty" id="plDetailEmpty" style="display:none;">This playlist is empty.</div>
       </div>
 
       <!-- ── series detail (episodes) ── -->
@@ -347,6 +525,33 @@
 
     </div>
   </div>
+
+  <!-- ── create-playlist dialog ── -->
+  <div class="lib-dialog-wrap" id="createPlDialog">
+    <div class="lib-dialog">
+      <h3>New playlist</h3>
+      <input id="newPlName" type="text" placeholder="Playlist name" maxlength="80" />
+      <div class="lib-dialog-actions">
+        <button class="lib-dialog-cancel" id="createPlCancel">Cancel</button>
+        <button class="lib-dialog-ok" id="createPlOk">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── add-to-playlist dialog ── -->
+  <div class="lib-dialog-wrap" id="addPlDialog">
+    <div class="lib-dialog">
+      <h3>Add to playlist</h3>
+      <div class="lib-dialog-list" id="addPlList"></div>
+      <input id="addPlNew" type="text" placeholder="…or type a new playlist name" maxlength="80" />
+      <div class="lib-dialog-actions">
+        <button class="lib-dialog-cancel" id="addPlCancel">Cancel</button>
+        <button class="lib-dialog-ok" id="addPlCreate">Create &amp; add</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="lib-toast" id="libToast"></div>
 
   <!-- ── player ── -->
   <div class="lib-modal" id="playerModal" role="dialog" aria-modal="true">
@@ -458,9 +663,25 @@
     const authCard = $('authCard'), libView = $('libView'), detailView = $('detailView');
     const guestWrap = $('guestWrap'), guestRow = $('guestRow');
     const userEl = $('jfUser'), passEl = $('jfPass'), signinBtn = $('jfSignin'), authMsg = $('authMsg');
-    const grid = $('libGrid'), loadingEl = $('libLoading'), emptyEl = $('libEmpty'), mainHeading = $('mainHeading');
-    const resumeSection = $('resumeSection'), resumeGrid = $('resumeGrid');
+    const grid = $('libGrid'), loadingEl = $('libLoading'), emptyEl = $('libEmpty');
     const searchEl = $('libSearch'), kindEl = $('libKind'), headingEl = $('libHeading'), signoutBtn = $('libSignout'), whoEl = $('libWho');
+    // tabs + browse sub-views
+    const tabBrowse = $('tabBrowse'), tabPlaylists = $('tabPlaylists');
+    const browseTab = $('browseTab'), playlistsTab = $('playlistsTab');
+    const rowsView = $('rowsView'), rowsContainer = $('rowsContainer');
+    const gridView = $('gridView'), gridHeading = $('gridHeading'), gridCount = $('gridCount');
+    // filters
+    const fGenre = $('fGenre'), fYear = $('fYear'), fSort = $('fSort'), fClear = $('fClear');
+    // playlists
+    const plGrid = $('plGrid'), plLoading = $('plLoading'), plEmpty = $('plEmpty'), newPlaylistBtn = $('newPlaylistBtn');
+    const playlistView = $('playlistView'), plBack = $('plBack'), plDetailName = $('plDetailName'),
+          plDeleteBtn = $('plDeleteBtn'), plDetailGrid = $('plDetailGrid'),
+          plDetailLoading = $('plDetailLoading'), plDetailEmpty = $('plDetailEmpty');
+    // dialogs + toast
+    const createPlDialog = $('createPlDialog'), newPlName = $('newPlName'), createPlOk = $('createPlOk'), createPlCancel = $('createPlCancel');
+    const addPlDialog = $('addPlDialog'), addPlList = $('addPlList'), addPlNew = $('addPlNew'),
+          addPlCreate = $('addPlCreate'), addPlCancel = $('addPlCancel');
+    const libToast = $('libToast');
     const detailBack = $('detailBack'), detailTitle = $('detailTitle'), detailMeta = $('detailMeta'),
           detailOverview = $('detailOverview'), seasonBar = $('seasonBar'), detailLoading = $('detailLoading'), epList = $('epList');
     const modal = $('playerModal'), video = $('playerVideo'), playerTitle = $('playerTitle'),
@@ -720,6 +941,15 @@
       return `${SERVER}/Videos/${item.Id}/stream?${params.toString()}`;
     }
 
+    // ---- small helpers ----
+    function toast(msg) {
+      libToast.textContent = msg;
+      libToast.classList.add('show');
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => libToast.classList.remove('show'), 2400);
+    }
+    const FIELDS = 'ProductionYear,UserData,RunTimeTicks,Genres,CommunityRating,SeriesName,IndexNumber,ParentIndexNumber,ParentThumbImageTag,ParentThumbItemId';
+
     // ---- poster card ----
     function progressPct(item) {
       const u = item.UserData;
@@ -727,6 +957,9 @@
         return Math.min(100, Math.max(0, (u.PlaybackPositionTicks / item.RunTimeTicks) * 100));
       return 0;
     }
+    function isFav(item) { return !!(item.UserData && item.UserData.IsFavorite); }
+
+    // opts: { title, subline, onClick, onRemove(label) }
     function makePoster(item, opts) {
       opts = opts || {};
       const btn = document.createElement('button');
@@ -734,16 +967,29 @@
       const art = posterUrl(item);
       const pct = progressPct(item);
       const subline = opts.subline ? `<div class="poster-sub">${escapeHtml(opts.subline)}</div>` : '';
+      const fav = isFav(item);
+      const removeBtn = opts.onRemove
+        ? `<div class="poster-add" data-act="remove" title="Remove">−</div>`
+        : `<div class="poster-add" data-act="add" title="Add to playlist">+</div>`;
       btn.innerHTML = `
         <div class="poster-art">
           ${art ? `<img loading="lazy" alt="" src="${art}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><div class="fallback" style="display:none">${escapeHtml(item.Name)}</div>`
                 : `<div class="fallback">${escapeHtml(item.Name)}</div>`}
           <div class="poster-play"><span>▶</span></div>
+          <div class="poster-fav${fav ? ' on' : ''}" data-act="fav" title="${fav ? 'Remove from favorites' : 'Add to favorites'}">${fav ? '♥' : '♡'}</div>
+          ${removeBtn}
           ${pct > 0 ? `<div class="poster-prog"><i style="width:${pct}%"></i></div>` : ''}
         </div>
         <div class="poster-name">${escapeHtml(opts.title || item.Name)}</div>
         ${subline || (item.ProductionYear ? `<div class="poster-year">${item.ProductionYear}</div>` : '')}`;
-      btn.addEventListener('click', () => opts.onClick ? opts.onClick() : openItem(item));
+
+      btn.addEventListener('click', (e) => {
+        const act = e.target && e.target.getAttribute && e.target.getAttribute('data-act');
+        if (act === 'fav') { e.stopPropagation(); toggleFavorite(item, e.target); return; }
+        if (act === 'add') { e.stopPropagation(); openAddToPlaylist(item); return; }
+        if (act === 'remove') { e.stopPropagation(); opts.onRemove && opts.onRemove(); return; }
+        opts.onClick ? opts.onClick() : openItem(item);
+      });
       return btn;
     }
 
@@ -754,65 +1000,91 @@
       playMedia(item, null);
     }
 
-    // ---- library load ----
-    let allItems = [];
+    // ---- favorites ----
+    async function toggleFavorite(item, el) {
+      const turnOn = !isFav(item);
+      try {
+        if (turnOn) await jf(`/Users/${session.userId}/FavoriteItems/${item.Id}`, { method: 'POST' });
+        else await jf(`/Users/${session.userId}/FavoriteItems/${item.Id}`, { method: 'DELETE' });
+        item.UserData = item.UserData || {};
+        item.UserData.IsFavorite = turnOn;
+        if (el) { el.classList.toggle('on', turnOn); el.textContent = turnOn ? '♥' : '♡'; el.title = turnOn ? 'Remove from favorites' : 'Add to favorites'; }
+        toast(turnOn ? 'Added to favorites' : 'Removed from favorites');
+      } catch (e) {
+        if (e.code === 401) { handleExpired(); return; }
+        toast('Could not update favorite');
+      }
+    }
+
+    // ════════ BROWSE: ROWS (default) + GRID (filtering) ════════
+    let allItems = [];        // full set for the current kind (Movie/Series)
+    let genreList = [];       // genres present in the library
+
+    function filtersActive() {
+      return !!(searchEl.value.trim() || fGenre.value || fYear.value || (fSort.value && fSort.value !== 'SortName'));
+    }
+
     async function loadLibrary() {
       loadingEl.style.display = 'flex';
-      grid.innerHTML = ''; emptyEl.style.display = 'none';
+      rowsContainer.innerHTML = ''; grid.innerHTML = ''; emptyEl.style.display = 'none';
       const kind = kindEl.value;
       headingEl.textContent = kind === 'Series' ? 'Shows' : 'Movies';
       try {
-        await loadResume(kind);
         const params = new URLSearchParams({
           IncludeItemTypes: kind, Recursive: 'true', SortBy: 'SortName', SortOrder: 'Ascending',
-          Fields: 'ProductionYear,UserData,RunTimeTicks', Limit: '500',
+          Fields: FIELDS, Limit: '2000',
         });
         const data = await jf(`/Users/${session.userId}/Items?${params.toString()}`);
         allItems = (data && data.Items) || [];
-        applyFilter();
+        buildGenreOptions();
+        buildYearOptions();
+        loadingEl.style.display = 'none';
+        renderBrowse();
       } catch (err) {
         loadingEl.style.display = 'none';
         if (err.code === 401) { handleExpired(); return; }
         emptyEl.textContent = 'Could not reach the server. If you just signed in, the server may need to allow this site (CORS).';
+        gridView.style.display = 'block'; rowsView.style.display = 'none';
         emptyEl.style.display = 'block';
-      } finally {
-        loadingEl.style.display = 'none';
       }
     }
 
-    // Continue Watching — server-tracked resume items
-    async function loadResume(kind) {
-      try {
-        const types = kind === 'Series' ? 'Episode' : 'Movie';
-        const params = new URLSearchParams({
-          Limit: '24', Recursive: 'true', MediaTypes: 'Video',
-          IncludeItemTypes: types,
-          Fields: 'ProductionYear,UserData,RunTimeTicks,SeriesName,IndexNumber,ParentIndexNumber,ParentThumbImageTag,ParentThumbItemId',
-          EnableTotalRecordCount: 'false',
-        });
-        const data = await jf(`/Users/${session.userId}/Items/Resume?${params.toString()}`);
-        const items = (data && data.Items) || [];
-        resumeGrid.innerHTML = '';
-        if (!items.length) { resumeSection.style.display = 'none'; return; }
-        items.forEach((it) => {
-          let title = it.Name, subline = '';
-          if (it.Type === 'Episode') {
-            title = it.SeriesName || it.Name;
-            const s = it.ParentIndexNumber, e = it.IndexNumber;
-            subline = (s != null && e != null) ? `S${s} · E${e} — ${it.Name}` : it.Name;
-          }
-          resumeGrid.appendChild(makePoster(it, {
-            title, subline,
-            onClick: () => it.Type === 'Episode' ? playMedia(it, episodeContext(it)) : playMedia(it, null),
-          }));
-        });
-        resumeSection.style.display = 'block';
-      } catch (_) { resumeSection.style.display = 'none'; }
+    function buildGenreOptions() {
+      const set = new Set();
+      allItems.forEach((it) => (it.Genres || []).forEach((g) => set.add(g)));
+      genreList = Array.from(set).sort((a, b) => a.localeCompare(b));
+      const cur = fGenre.value;
+      fGenre.innerHTML = '<option value="">All genres</option>' +
+        genreList.map((g) => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
+      if (genreList.indexOf(cur) >= 0) fGenre.value = cur;
+    }
+    function buildYearOptions() {
+      const set = new Set();
+      allItems.forEach((it) => { if (it.ProductionYear) set.add(it.ProductionYear); });
+      const years = Array.from(set).sort((a, b) => b - a);
+      const cur = fYear.value;
+      fYear.innerHTML = '<option value="">All years</option>' +
+        years.map((y) => `<option value="${y}">${y}</option>`).join('');
+      if (cur) fYear.value = cur;
     }
 
-    function applyFilter() {
+    // decide rows vs grid based on whether any filter is active
+    function renderBrowse() {
+      fClear.classList.toggle('show', filtersActive());
+      if (filtersActive()) { rowsView.style.display = 'none'; gridView.style.display = 'block'; renderGrid(); }
+      else { gridView.style.display = 'none'; rowsView.style.display = 'block'; renderRows(); }
+    }
+
+    function renderGrid() {
       const q = searchEl.value.trim().toLowerCase();
-      const items = q ? allItems.filter((i) => i.Name && i.Name.toLowerCase().includes(q)) : allItems;
+      const g = fGenre.value, y = fYear.value ? parseInt(fYear.value, 10) : null, sort = fSort.value;
+      let items = allItems.slice();
+      if (q) items = items.filter((i) => i.Name && i.Name.toLowerCase().includes(q));
+      if (g) items = items.filter((i) => (i.Genres || []).indexOf(g) >= 0);
+      if (y) items = items.filter((i) => i.ProductionYear === y);
+      items = sortItems(items, sort);
+      gridHeading.firstChild.textContent = (kindEl.value === 'Series' ? 'Shows' : 'Movies') + ' ';
+      gridCount.textContent = items.length + (items.length === 1 ? ' title' : ' titles');
       grid.innerHTML = '';
       if (!items.length) { emptyEl.style.display = 'block'; return; }
       emptyEl.style.display = 'none';
@@ -821,7 +1093,246 @@
       grid.appendChild(frag);
     }
 
-    // ════════ SERIES / EPISODE BROWSER ════════
+    function sortItems(items, sort) {
+      const by = (sort || 'SortName');
+      if (by === 'Random') { for (let i = items.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [items[i], items[j]] = [items[j], items[i]]; } return items; }
+      const cmp = {
+        SortName: (a, b) => (a.SortName || a.Name || '').localeCompare(b.SortName || b.Name || ''),
+        DateCreated: (a, b) => new Date(b.DateCreated || 0) - new Date(a.DateCreated || 0),
+        ProductionYear: (a, b) => (b.ProductionYear || 0) - (a.ProductionYear || 0),
+        CommunityRating: (a, b) => (b.CommunityRating || 0) - (a.CommunityRating || 0),
+      }[by] || ((a, b) => 0);
+      return items.sort(cmp);
+    }
+
+    // ---- curated rows ----
+    function appendRow(title, items, opts) {
+      opts = opts || {};
+      if (!items || !items.length) return;
+      const wrap = document.createElement('div');
+      wrap.className = 'lib-row';
+      const head = document.createElement('div');
+      head.className = 'lib-section-h';
+      head.innerHTML = escapeHtml(title) + (opts.count ? ` <span class="count">${items.length}</span>` : '');
+      wrap.appendChild(head);
+
+      const rowWrap = document.createElement('div');
+      rowWrap.className = 'lib-row-wrap';
+      const scroll = document.createElement('div');
+      scroll.className = 'lib-row-scroll';
+      items.forEach((entry) => {
+        const it = entry.item || entry;
+        scroll.appendChild(makePoster(it, entry.opts || {}));
+      });
+      const left = document.createElement('button');
+      left.className = 'lib-row-arrow left'; left.innerHTML = '‹';
+      left.addEventListener('click', () => scroll.scrollBy({ left: -scroll.clientWidth * 0.8, behavior: 'smooth' }));
+      const right = document.createElement('button');
+      right.className = 'lib-row-arrow right'; right.innerHTML = '›';
+      right.addEventListener('click', () => scroll.scrollBy({ left: scroll.clientWidth * 0.8, behavior: 'smooth' }));
+      rowWrap.appendChild(left); rowWrap.appendChild(scroll); rowWrap.appendChild(right);
+      wrap.appendChild(rowWrap);
+      rowsContainer.appendChild(wrap);
+    }
+
+    async function renderRows() {
+      rowsContainer.innerHTML = '';
+      const kind = kindEl.value;
+
+      // Continue watching (server-tracked)
+      try {
+        const types = kind === 'Series' ? 'Episode' : 'Movie';
+        const rp = new URLSearchParams({
+          Limit: '24', Recursive: 'true', MediaTypes: 'Video', IncludeItemTypes: types,
+          Fields: FIELDS, EnableTotalRecordCount: 'false',
+        });
+        const rd = await jf(`/Users/${session.userId}/Items/Resume?${rp.toString()}`);
+        const resume = ((rd && rd.Items) || []).map((it) => {
+          let title = it.Name, subline = '';
+          if (it.Type === 'Episode') {
+            title = it.SeriesName || it.Name;
+            const s = it.ParentIndexNumber, e = it.IndexNumber;
+            subline = (s != null && e != null) ? `S${s} · E${e} — ${it.Name}` : it.Name;
+          }
+          return { item: it, opts: { title, subline, onClick: () => it.Type === 'Episode' ? playMedia(it, episodeContext(it)) : playMedia(it, null) } };
+        });
+        appendRow('Continue watching', resume);
+      } catch (_) {}
+
+      // Favorites
+      const favs = allItems.filter(isFav);
+      appendRow('Your favorites', favs, { count: true });
+
+      // Recently added
+      const recent = sortItems(allItems.slice(), 'DateCreated').slice(0, 24);
+      appendRow('Recently added', recent);
+
+      // A few genre rows (largest genres first)
+      const counts = genreList.map((g) => ({ g, n: allItems.filter((i) => (i.Genres || []).indexOf(g) >= 0).length }))
+        .sort((a, b) => b.n - a.n).slice(0, 6);
+      counts.forEach(({ g }) => {
+        const items = sortItems(allItems.filter((i) => (i.Genres || []).indexOf(g) >= 0), 'CommunityRating').slice(0, 24);
+        appendRow(g, items, { count: true });
+      });
+
+      if (!rowsContainer.children.length) {
+        rowsContainer.innerHTML = '<div class="lib-empty">This library is empty.</div>';
+      }
+    }
+
+    // ════════ PLAYLISTS ════════
+    let playlists = [];
+
+    async function loadPlaylists() {
+      plLoading.style.display = 'flex'; plGrid.innerHTML = ''; plEmpty.style.display = 'none';
+      try {
+        const params = new URLSearchParams({
+          IncludeItemTypes: 'Playlist', Recursive: 'true', SortBy: 'SortName', SortOrder: 'Ascending',
+          Fields: 'ChildCount,PrimaryImageAspectRatio', EnableTotalRecordCount: 'false',
+        });
+        const data = await jf(`/Users/${session.userId}/Items?${params.toString()}`);
+        playlists = (data && data.Items) || [];
+        plLoading.style.display = 'none';
+        renderPlaylists();
+      } catch (err) {
+        plLoading.style.display = 'none';
+        if (err.code === 401) { handleExpired(); return; }
+        plEmpty.textContent = 'Could not load playlists.';
+        plEmpty.style.display = 'block';
+      }
+    }
+
+    function renderPlaylists() {
+      plGrid.innerHTML = '';
+      if (!playlists.length) { plEmpty.style.display = 'block'; return; }
+      plEmpty.style.display = 'none';
+      playlists.forEach((pl) => {
+        const card = document.createElement('button');
+        card.className = 'lib-pl-card';
+        const hasCover = pl.ImageTags && pl.ImageTags.Primary;
+        const cover = hasCover
+          ? `<img alt="" src="${SERVER}/Items/${pl.Id}/Images/Primary?fillWidth=420&quality=85" />`
+          : `<div class="empty">▦</div>`;
+        const n = pl.ChildCount != null ? pl.ChildCount : 0;
+        card.innerHTML = `
+          <div class="lib-pl-cover">${cover}</div>
+          <div class="lib-pl-body">
+            <div class="lib-pl-name">${escapeHtml(pl.Name)}</div>
+            <div class="lib-pl-count">${n} ${n === 1 ? 'title' : 'titles'}</div>
+          </div>`;
+        card.addEventListener('click', () => openPlaylist(pl));
+        plGrid.appendChild(card);
+      });
+    }
+
+    async function createPlaylist(name, firstItemId) {
+      const body = { Name: name, UserId: session.userId, MediaType: 'Video' };
+      if (firstItemId) body.Ids = [firstItemId];
+      const res = await jf('/Playlists', { method: 'POST', body: JSON.stringify(body) });
+      return res && res.Id;
+    }
+    async function addToPlaylist(playlistId, itemId) {
+      await jf(`/Playlists/${playlistId}/Items?Ids=${encodeURIComponent(itemId)}&UserId=${encodeURIComponent(session.userId)}`, { method: 'POST' });
+    }
+
+    let currentPlaylist = null;
+    async function openPlaylist(pl) {
+      currentPlaylist = pl;
+      libView.style.display = 'none';
+      playlistView.style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      plDetailName.textContent = pl.Name;
+      plDetailGrid.innerHTML = ''; plDetailEmpty.style.display = 'none';
+      plDetailLoading.style.display = 'flex';
+      try {
+        const params = new URLSearchParams({ UserId: session.userId, Fields: FIELDS });
+        const data = await jf(`/Playlists/${pl.Id}/Items?${params.toString()}`);
+        const items = (data && data.Items) || [];
+        plDetailLoading.style.display = 'none';
+        if (!items.length) { plDetailEmpty.style.display = 'block'; return; }
+        const frag = document.createDocumentFragment();
+        items.forEach((it) => {
+          frag.appendChild(makePoster(it, {
+            onRemove: () => removeFromPlaylist(pl.Id, it.PlaylistItemId || it.Id, it.Name),
+          }));
+        });
+        plDetailGrid.appendChild(frag);
+      } catch (err) {
+        plDetailLoading.style.display = 'none';
+        if (err.code === 401) { handleExpired(); return; }
+        plDetailEmpty.textContent = 'Could not load this playlist.';
+        plDetailEmpty.style.display = 'block';
+      }
+    }
+
+    async function removeFromPlaylist(playlistId, entryId, name) {
+      try {
+        await jf(`/Playlists/${playlistId}/Items?EntryIds=${encodeURIComponent(entryId)}`, { method: 'DELETE' });
+        toast('Removed ' + (name ? '“' + name + '”' : 'item'));
+        if (currentPlaylist) openPlaylist(currentPlaylist);
+      } catch (e) {
+        if (e.code === 401) { handleExpired(); return; }
+        toast('Could not remove item');
+      }
+    }
+
+    async function deleteCurrentPlaylist() {
+      if (!currentPlaylist) return;
+      try {
+        await jf(`/Items/${currentPlaylist.Id}`, { method: 'DELETE' });
+        toast('Deleted “' + currentPlaylist.Name + '”');
+        currentPlaylist = null;
+        playlistView.style.display = 'none';
+        libView.style.display = 'block';
+        loadPlaylists();
+      } catch (e) {
+        if (e.code === 401) { handleExpired(); return; }
+        toast('Could not delete playlist');
+      }
+    }
+
+    // ---- add-to-playlist dialog ----
+    let pendingAddItem = null;
+    async function openAddToPlaylist(item) {
+      pendingAddItem = item;
+      addPlNew.value = '';
+      addPlList.innerHTML = '<div class="lib-empty" style="padding:10px 0">Loading…</div>';
+      addPlDialog.classList.add('open');
+      // ensure playlists are loaded
+      if (!playlists.length) { try { await loadPlaylistsQuiet(); } catch (_) {} }
+      renderAddList();
+    }
+    async function loadPlaylistsQuiet() {
+      const params = new URLSearchParams({
+        IncludeItemTypes: 'Playlist', Recursive: 'true', SortBy: 'SortName', SortOrder: 'Ascending',
+        Fields: 'ChildCount', EnableTotalRecordCount: 'false',
+      });
+      const data = await jf(`/Users/${session.userId}/Items?${params.toString()}`);
+      playlists = (data && data.Items) || [];
+    }
+    function renderAddList() {
+      if (!playlists.length) { addPlList.innerHTML = '<div class="lib-empty" style="padding:10px 0">No playlists yet — make one below.</div>'; return; }
+      addPlList.innerHTML = '';
+      playlists.forEach((pl) => {
+        const b = document.createElement('button');
+        b.className = 'lib-dialog-item';
+        const n = pl.ChildCount != null ? pl.ChildCount : 0;
+        b.innerHTML = `<span>${escapeHtml(pl.Name)}</span><span class="c">${n}</span>`;
+        b.addEventListener('click', async () => {
+          try {
+            await addToPlaylist(pl.Id, pendingAddItem.Id);
+            toast('Added to “' + pl.Name + '”');
+            addPlDialog.classList.remove('open');
+          } catch (e) {
+            if (e.code === 401) { handleExpired(); return; }
+            toast('Could not add to playlist');
+          }
+        });
+        addPlList.appendChild(b);
+      });
+    }
+
+
     let currentSeries = null;
     let currentSeasons = [];
     let currentEpisodes = [];  // episodes of the visible season, in order
@@ -1298,7 +1809,7 @@
       video.removeAttribute('src'); video.load();
       audioTrackWrap.style.display = 'none'; subTrackWrap.style.display = 'none';
       // refresh resume rows / episode progress so it shows immediately on return
-      if (libView.style.display !== 'none') loadResume(kindEl.value);
+      if (libView.style.display !== 'none' && browseTab.style.display !== 'none' && !filtersActive()) renderRows();
       if (detailView.style.display !== 'none' && currentSeries) {
         const idx = Array.prototype.indexOf.call(
           seasonBar.children,
@@ -1351,9 +1862,25 @@
     function showLibrary() {
       authCard.style.display = 'none';
       detailView.style.display = 'none';
+      playlistView.style.display = 'none';
       libView.style.display = 'block';
       if (session && session.name) whoEl.innerHTML = 'Signed in as <strong>' + escapeHtml(session.name) + '</strong>';
+      switchTab('browse');
       loadLibrary();
+    }
+
+    // ---- tab switching ----
+    function switchTab(which) {
+      const browse = which === 'browse';
+      tabBrowse.classList.toggle('active', browse);
+      tabPlaylists.classList.toggle('active', !browse);
+      browseTab.style.display = browse ? 'block' : 'none';
+      playlistsTab.style.display = browse ? 'none' : 'block';
+      // search + kind only apply to Browse
+      searchEl.style.display = browse ? '' : 'none';
+      kindEl.style.display = browse ? '' : 'none';
+      headingEl.textContent = browse ? (kindEl.value === 'Series' ? 'Shows' : 'Movies') : 'Library';
+      if (!browse) loadPlaylists();
     }
 
     // ---- events ----
@@ -1375,7 +1902,7 @@
 
     signoutBtn.addEventListener('click', () => {
       session = null; saveSession(null);
-      libView.style.display = 'none'; detailView.style.display = 'none';
+      libView.style.display = 'none'; detailView.style.display = 'none'; playlistView.style.display = 'none';
       authCard.style.display = 'flex'; setAuthMsg('');
       loadGuests();
     });
@@ -1384,12 +1911,73 @@
       detailView.style.display = 'none';
       libView.style.display = 'block';
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      loadResume(kindEl.value); // refresh progress
+      if (!filtersActive()) renderRows(); // refresh progress on rows
     });
 
+    tabBrowse.addEventListener('click', () => switchTab('browse'));
+    tabPlaylists.addEventListener('click', () => switchTab('playlists'));
+
     let searchT;
-    searchEl.addEventListener('input', () => { clearTimeout(searchT); searchT = setTimeout(applyFilter, 150); });
+    searchEl.addEventListener('input', () => { clearTimeout(searchT); searchT = setTimeout(renderBrowse, 180); });
     kindEl.addEventListener('change', loadLibrary);
+    fGenre.addEventListener('change', renderBrowse);
+    fYear.addEventListener('change', renderBrowse);
+    fSort.addEventListener('change', renderBrowse);
+    fClear.addEventListener('click', () => {
+      searchEl.value = ''; fGenre.value = ''; fYear.value = ''; fSort.value = 'SortName';
+      renderBrowse();
+    });
+
+    // playlists
+    plBack.addEventListener('click', () => {
+      playlistView.style.display = 'none';
+      libView.style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      loadPlaylists();
+    });
+    plDeleteBtn.addEventListener('click', deleteCurrentPlaylist);
+    newPlaylistBtn.addEventListener('click', () => { newPlName.value = ''; createPlDialog.classList.add('open'); setTimeout(() => newPlName.focus(), 50); });
+    createPlCancel.addEventListener('click', () => createPlDialog.classList.remove('open'));
+    createPlDialog.addEventListener('click', (e) => { if (e.target === createPlDialog) createPlDialog.classList.remove('open'); });
+    createPlOk.addEventListener('click', async () => {
+      const name = newPlName.value.trim();
+      if (!name) { newPlName.focus(); return; }
+      createPlOk.disabled = true;
+      try {
+        await createPlaylist(name);
+        createPlDialog.classList.remove('open');
+        toast('Created “' + name + '”');
+        loadPlaylists();
+      } catch (e) {
+        if (e.code === 401) { handleExpired(); }
+        else toast('Could not create playlist');
+      } finally { createPlOk.disabled = false; }
+    });
+    newPlName.addEventListener('keydown', (e) => { if (e.key === 'Enter') createPlOk.click(); });
+
+    addPlCancel.addEventListener('click', () => addPlDialog.classList.remove('open'));
+    addPlDialog.addEventListener('click', (e) => { if (e.target === addPlDialog) addPlDialog.classList.remove('open'); });
+    addPlCreate.addEventListener('click', async () => {
+      const name = addPlNew.value.trim();
+      if (!name || !pendingAddItem) { addPlNew.focus(); return; }
+      addPlCreate.disabled = true;
+      try {
+        await createPlaylist(name, pendingAddItem.Id);
+        addPlDialog.classList.remove('open');
+        toast('Added to new playlist “' + name + '”');
+        playlists = []; // force reload next open
+      } catch (e) {
+        if (e.code === 401) { handleExpired(); }
+        else toast('Could not create playlist');
+      } finally { addPlCreate.disabled = false; }
+    });
+    addPlNew.addEventListener('keydown', (e) => { if (e.key === 'Enter') addPlCreate.click(); });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        createPlDialog.classList.remove('open');
+        addPlDialog.classList.remove('open');
+      }
+    });
 
     playerClose.addEventListener('click', closePlayer);
     modal.addEventListener('click', (e) => { if (e.target === modal) closePlayer(); });
