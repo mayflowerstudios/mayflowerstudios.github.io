@@ -1135,37 +1135,54 @@
         subTrackSel.value = String(playState.subIdx == null ? -1 : playState.subIdx);
     }
 
+    let currentSubBlobUrl = null;
+    function revokeSubBlob() { if (currentSubBlobUrl) { try { URL.revokeObjectURL(currentSubBlobUrl); } catch (_) {} currentSubBlobUrl = null; } }
+
     function clearSubtitles() {
       Array.prototype.slice.call(video.querySelectorAll('track')).forEach((t) => t.remove());
       for (let i = 0; i < video.textTracks.length; i++) video.textTracks[i].mode = 'disabled';
+      revokeSubBlob();
     }
 
-    // Attach a text subtitle stream as a WebVTT <track> fetched from the server
-    // (Jellyfin converts srt/ass/subrip → vtt on the fly). Works for both
-    // direct-play and HLS video. Returns true on success.
-    function applySubtitle(stream) {
+    // Attach a text subtitle as a <track>. We FETCH the WebVTT from the server and
+    // attach it as a same-origin blob URL — a cross-origin <track src> is blocked
+    // by the browser unless the video has crossorigin set AND the server sends CORS
+    // headers for the subtitle response, which silently fails on most setups. The
+    // blob route always works because the URL becomes same-origin. Returns a
+    // promise that resolves true on success.
+    async function applySubtitle(stream) {
       const url = subtitleVttUrl(stream);
       if (!url) return false;
       clearSubtitles();
-      const track = document.createElement('track');
-      track.kind = 'subtitles';
-      track.label = stream.DisplayTitle || trackLabel(stream) || 'Subtitles';
-      if (stream.Language) track.srclang = stream.Language;
-      track.src = url;
-      track.default = true;
-      video.appendChild(track);
-      const enable = () => {
-        const tt = track.track;
-        for (let i = 0; i < video.textTracks.length; i++) {
-          video.textTracks[i].mode = (video.textTracks[i] === tt) ? 'showing' : 'disabled';
-        }
-      };
-      track.addEventListener('load', enable, { once: true });
-      track.addEventListener('error', () => { playerMsg.textContent = 'Subtitle failed to load.'; }, { once: true });
-      // some browsers populate track.track before firing load
-      setTimeout(enable, 60);
-      setTimeout(enable, 300);
-      return true;
+      try {
+        const res = await fetch(url, { headers: { 'Authorization': authHeader(session.token) } });
+        if (!res.ok) { playerMsg.textContent = 'Subtitle unavailable (' + res.status + ')'; return false; }
+        let vtt = await res.text();
+        // some servers return SRT-ish text if conversion lagged; ensure a WEBVTT header
+        if (!/^\uFEFF?WEBVTT/.test(vtt)) vtt = 'WEBVTT\n\n' + vtt;
+        const blob = new Blob([vtt], { type: 'text/vtt' });
+        revokeSubBlob();
+        currentSubBlobUrl = URL.createObjectURL(blob);
+
+        const track = document.createElement('track');
+        track.kind = 'subtitles';
+        track.label = stream.DisplayTitle || trackLabel(stream) || 'Subtitles';
+        if (stream.Language) track.srclang = stream.Language;
+        track.src = currentSubBlobUrl;
+        track.default = true;
+        video.appendChild(track);
+        const enable = () => {
+          const tt = track.track;
+          for (let i = 0; i < video.textTracks.length; i++)
+            video.textTracks[i].mode = (video.textTracks[i] === tt) ? 'showing' : 'disabled';
+        };
+        track.addEventListener('load', enable, { once: true });
+        setTimeout(enable, 60); setTimeout(enable, 300);
+        return true;
+      } catch (e) {
+        playerMsg.textContent = 'Subtitle failed to load.';
+        return false;
+      }
     }
 
     // Subtitle change: for text subs, swap the WebVTT <track> instantly — no
@@ -1179,9 +1196,14 @@
 
       // --- subtitle-only change ---
       if (newAudio === playState.audioIdx && newSub !== playState.subIdx) {
-        if (newSub < 0) { clearSubtitles(); playState.subIdx = -1; return; }
+        if (newSub < 0) { clearSubtitles(); playState.subIdx = -1; playerMsg.textContent = 'Subtitles off'; return; }
         const s = playState.streams.find((x) => x.Type === 'Subtitle' && x.Index === newSub);
-        if (s && !isImageSub(s) && applySubtitle(s)) { playState.subIdx = newSub; return; }
+        if (s && !isImageSub(s)) {
+          playerMsg.textContent = 'Loading subtitles…';
+          const ok = await applySubtitle(s);
+          if (ok) { playState.subIdx = newSub; playerMsg.textContent = playState.hls ? 'Streaming' : 'Direct play'; return; }
+          // failed → fall through to a server burn-in attempt
+        }
         // image-based sub → must burn in via a server rebuild (falls through)
       }
 
@@ -1204,6 +1226,11 @@
         const s = playState.streams.find((x) => x.Type === 'Subtitle' && x.Index === keepTextSub);
         if (s && !isImageSub(s)) { applySubtitle(s); playState.subIdx = keepTextSub; }
       }
+      // confirm what the server actually selected
+      if (playState) {
+        const a = playState.streams.find((x) => x.Type === 'Audio' && x.Index === playState.audioIdx);
+        if (a) playerMsg.textContent = 'Audio: ' + (trackLabel(a) || 'changed');
+      }
     }
 
     audioTrackSel.addEventListener('change', changeTrack);
@@ -1219,6 +1246,7 @@
       try { video.pause(); } catch (_) {}
       destroyHls();
       Array.prototype.slice.call(video.querySelectorAll('track')).forEach((t) => t.remove());
+      revokeSubBlob();
       video.removeAttribute('src'); video.load();
       audioTrackWrap.style.display = 'none'; subTrackWrap.style.display = 'none';
       // refresh resume rows / episode progress so it shows immediately on return
