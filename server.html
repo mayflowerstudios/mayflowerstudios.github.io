@@ -200,9 +200,17 @@
     .lib-modal {
       position:fixed; inset:0; z-index:200; display:none;
       align-items:center; justify-content:center; padding:24px;
-      background:rgba(5,8,16,.86); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+      /* NOTE: deliberately NO backdrop-filter here. A blur behind a playing
+         <video> forces the browser to recomposite the blurred backdrop against
+         every video frame on the main thread, which murders playback framerate
+         (dropped frames / "low fps"). A near-opaque solid background looks the
+         same without the cost. */
+      background:rgba(5,8,16,.94);
     }
     .lib-modal.open { display:flex; }
+    /* hide the site-wide fireflies canvas while watching — one less thing
+       repainting behind the video. */
+    body.lib-watching #fireflies { display:none !important; }
     .lib-player { width:100%; max-width:1100px; display:flex; flex-direction:column; gap:14px; }
     .lib-player-top { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
     .lib-player-title { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:26px; color:var(--text); flex:1 1 auto; min-width:0; }
@@ -218,8 +226,8 @@
       transition:color 160ms, border-color 160ms;
     }
     .lib-close:hover { color:var(--text); border-color:var(--rose); }
-    .lib-video-wrap { position:relative; aspect-ratio:16/9; background:#000; border-radius:var(--r-md); overflow:hidden; border:1px solid var(--border); }
-    .lib-video-wrap video { width:100%; height:100%; display:block; background:#000; }
+    .lib-video-wrap { position:relative; aspect-ratio:16/9; background:#000; border-radius:var(--r-md); overflow:hidden; border:1px solid var(--border); transform:translateZ(0); }
+    .lib-video-wrap video { width:100%; height:100%; display:block; background:#000; transform:translateZ(0); will-change:transform; }
     .lib-player-msg { font-size:13px; color:var(--text-3); min-height:18px; }
     .lib-player-msg.err { color:var(--rose); }
 
@@ -227,8 +235,8 @@
     .lib-upnext {
       position:absolute; right:18px; bottom:18px; z-index:5;
       display:none; align-items:center; gap:14px;
-      background:rgba(11,17,32,.82); border:1px solid var(--border-2); border-radius:var(--r-md);
-      padding:12px 14px; backdrop-filter:blur(10px); max-width:min(420px, 80%);
+      background:rgba(11,17,32,.92); border:1px solid var(--border-2); border-radius:var(--r-md);
+      padding:12px 14px; max-width:min(420px, 80%);
     }
     .lib-upnext.show { display:flex; }
     .lib-upnext-thumb { width:84px; aspect-ratio:16/9; border-radius:var(--r-sm); overflow:hidden; flex:0 0 auto; background:rgba(255,255,255,.05); }
@@ -613,13 +621,16 @@
     }
 
     // audioIdx / subIdx: optional stream indices to select. subIdx === -1 means
-    // "no subtitles". Returns the chosen stream URL plus the media-stream list
-    // and (when subtitles are an external text track) a ready-to-attach sub URL.
-    async function resolveStream(item, audioIdx, subIdx) {
+    // "no subtitles". forceTranscode: when true, disable direct play/stream so the
+    // server actually muxes the requested audio/subtitle into a fresh stream
+    // (a direct-play file ignores AudioStreamIndex — the browser just plays the
+    // container default — so changing audio requires a server-built stream).
+    async function resolveStream(item, audioIdx, subIdx, forceTranscode) {
       let path = `/Items/${item.Id}/PlaybackInfo?UserId=${encodeURIComponent(session.userId)}` +
         `&MaxStreamingBitrate=${TRANSCODE_MAX_BITRATE}&StartTimeTicks=0&IsPlayback=true&AutoOpenLiveStream=true`;
       if (audioIdx != null && audioIdx >= 0) path += `&AudioStreamIndex=${audioIdx}`;
       if (subIdx != null) path += `&SubtitleStreamIndex=${subIdx}`;
+      if (forceTranscode) path += `&EnableDirectPlay=false&EnableDirectStream=false`;
       const info = await jf(path, { method: 'POST', body: JSON.stringify({ DeviceProfile: deviceProfile() }) });
       const src = (info && info.MediaSources && info.MediaSources[0]) || null;
       if (!src) throw new Error('No playable source.');
@@ -927,6 +938,7 @@
       playerMsg.textContent = 'Loading…'; playerMsg.classList.remove('err');
       audioTrackWrap.style.display = 'none'; subTrackWrap.style.display = 'none';
       modal.classList.add('open');
+      document.body.classList.add('lib-watching');
       document.body.style.overflow = 'hidden';
 
       // first load uses server defaults (audioIdx/subIdx undefined → server picks)
@@ -936,13 +948,13 @@
 
     // Loads (or reloads, e.g. after a track change) the stream for `item` with the
     // given audio/subtitle indices, seeking to `atSecs`. Reuses the open modal.
-    async function loadStream(item, audioIdx, subIdx, atSecs, firstLoad) {
+    async function loadStream(item, audioIdx, subIdx, atSecs, firstLoad, forceTranscode) {
       destroyHls();
       // clear any previously-attached <track> elements
       Array.prototype.slice.call(video.querySelectorAll('track')).forEach((t) => t.remove());
 
       let chosen;
-      try { chosen = await resolveStream(item, audioIdx, subIdx); }
+      try { chosen = await resolveStream(item, audioIdx, subIdx, forceTranscode); }
       catch (err) {
         if (err.code === 401) { handleExpired(); closePlayer(); return; }
         playerMsg.textContent = 'Could not start playback.'; playerMsg.classList.add('err'); return;
@@ -1153,9 +1165,12 @@
       }
 
       // Otherwise reload the stream with the new selection at the same position.
+      // Force a server-built stream: a direct-play file ignores track selection
+      // (browser just plays the container default), so we must disable direct play
+      // to make the chosen audio / burned-in subtitle actually take effect.
       reportStop(); stopProgressLoop();
       playerMsg.textContent = 'Switching track…';
-      await loadStream(playState.item, newAudio, newSub, at, /*firstLoad*/ false);
+      await loadStream(playState.item, newAudio, newSub, at, /*firstLoad*/ false, /*forceTranscode*/ true);
     }
 
     audioTrackSel.addEventListener('change', changeTrack);
@@ -1166,6 +1181,7 @@
       stopProgressLoop(); clearCountdown(); hideUpNext();
       playState = null;
       modal.classList.remove('open');
+      document.body.classList.remove('lib-watching');
       document.body.style.overflow = '';
       try { video.pause(); } catch (_) {}
       destroyHls();
