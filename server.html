@@ -637,20 +637,7 @@
       const playSessionId = info.PlaySessionId || null;
       const streams = src.MediaStreams || [];
 
-      // Find an external (sidecar) subtitle track to attach as a <track>, if the
-      // selected sub is delivered that way (no re-transcode needed for text subs).
-      let externalSub = null;
-      if (subIdx != null && subIdx >= 0) {
-        const s = streams.find((x) => x.Type === 'Subtitle' && x.Index === subIdx);
-        if (s && s.DeliveryMethod === 'External' && s.DeliveryUrl && !s.IsExternalUrl) {
-          externalSub = {
-            url: s.DeliveryUrl.startsWith('http') ? s.DeliveryUrl : SERVER + s.DeliveryUrl,
-            lang: s.Language || '', label: s.DisplayTitle || 'Subtitles',
-          };
-        }
-      }
-
-      const common = { mediaSourceId: src.Id, playSessionId, streams, externalSub,
+      const common = { itemId: item.Id, mediaSourceId: src.Id, playSessionId, streams,
                        selectedAudio: src.DefaultAudioStreamIndex, selectedSub: subIdx,
                        transcodeReasons: src.TranscodeReasons || [] };
       if (src.TranscodingUrl)
@@ -659,6 +646,26 @@
       if (playSessionId) params.set('PlaySessionId', playSessionId);
       const container = (src.Container || 'mp4').split(',')[0];
       return Object.assign({ url: `${SERVER}/Videos/${item.Id}/stream.${container}?${params.toString()}`, hls: false }, common);
+    }
+
+    // Text subtitles (srt/ass/subrip/vtt, embedded or sidecar) can be fetched from
+    // the server already converted to WebVTT, which every browser's <track> can
+    // render — and it works regardless of whether the video is direct-play or HLS.
+    // Returns null for image subs (PGS/VobSub), which must be burned in instead.
+    function subtitleVttUrl(stream) {
+      if (!stream || stream.Type !== 'Subtitle') return null;
+      if (stream.IsTextSubtitleStream === false) return null; // image-based → can't be vtt
+      const mid = (playState && playState.mediaSourceId) || '';
+      if (!mid) return null;
+      return `${SERVER}/Videos/${playState.item.Id}/${mid}/Subtitles/${stream.Index}/0/Stream.vtt` +
+             `?api_key=${encodeURIComponent(session.token)}`;
+    }
+    function isImageSub(stream) {
+      if (!stream) return false;
+      if (stream.IsTextSubtitleStream === true) return false;
+      const c = (stream.Codec || '').toLowerCase();
+      return stream.IsTextSubtitleStream === false || c === 'pgssub' || c === 'pgs' ||
+             c === 'dvdsub' || c === 'dvd_subtitle' || c === 'vobsub';
     }
     function directUrl(item) {
       const params = new URLSearchParams({ api_key: session.token, DeviceId: DEVICE_ID, Static: 'true' });
@@ -970,6 +977,7 @@
       playState.subIdx = (subIdx != null) ? subIdx : -1;
 
       if (firstLoad) populateTrackPickers(chosen.streams);
+      else syncPickerSelection();
 
       // Start playback only once enough has actually buffered. Starting on bare
       // metadata (the old behaviour) lets the player run dry immediately, which
@@ -980,7 +988,11 @@
         if (atSecs > 5 && atSecs < (video.duration || Infinity) - 10) {
           try { video.currentTime = atSecs; } catch (_) {}
         }
-        if (chosen.externalSub) attachExternalSub(chosen.externalSub);
+        // attach selected text subtitle (if any) as a WebVTT <track>
+        if (playState.subIdx != null && playState.subIdx >= 0) {
+          const s = playState.streams.find((x) => x.Type === 'Subtitle' && x.Index === playState.subIdx);
+          if (s && !isImageSub(s)) applySubtitle(s);
+        }
         video.play().catch(() => {});
         reportStart();
         startProgressLoop();
@@ -1116,61 +1128,82 @@
       }
     }
 
-    function attachExternalSub(sub) {
+    function syncPickerSelection() {
+      if (audioTrackWrap.style.display !== 'none' && playState.audioIdx != null)
+        audioTrackSel.value = String(playState.audioIdx);
+      if (subTrackWrap.style.display !== 'none')
+        subTrackSel.value = String(playState.subIdx == null ? -1 : playState.subIdx);
+    }
+
+    function clearSubtitles() {
+      Array.prototype.slice.call(video.querySelectorAll('track')).forEach((t) => t.remove());
+      for (let i = 0; i < video.textTracks.length; i++) video.textTracks[i].mode = 'disabled';
+    }
+
+    // Attach a text subtitle stream as a WebVTT <track> fetched from the server
+    // (Jellyfin converts srt/ass/subrip → vtt on the fly). Works for both
+    // direct-play and HLS video. Returns true on success.
+    function applySubtitle(stream) {
+      const url = subtitleVttUrl(stream);
+      if (!url) return false;
+      clearSubtitles();
       const track = document.createElement('track');
       track.kind = 'subtitles';
-      track.label = sub.label || 'Subtitles';
-      if (sub.lang) track.srclang = sub.lang;
-      track.src = sub.url;
+      track.label = stream.DisplayTitle || trackLabel(stream) || 'Subtitles';
+      if (stream.Language) track.srclang = stream.Language;
+      track.src = url;
       track.default = true;
       video.appendChild(track);
-      // enable this track once the browser registers it; disable any others
       const enable = () => {
         const tt = track.track;
         for (let i = 0; i < video.textTracks.length; i++) {
           video.textTracks[i].mode = (video.textTracks[i] === tt) ? 'showing' : 'disabled';
         }
       };
-      if (track.track) setTimeout(enable, 50);
       track.addEventListener('load', enable, { once: true });
-      setTimeout(enable, 200); // belt-and-suspenders for browsers that don't fire load
+      track.addEventListener('error', () => { playerMsg.textContent = 'Subtitle failed to load.'; }, { once: true });
+      // some browsers populate track.track before firing load
+      setTimeout(enable, 60);
+      setTimeout(enable, 300);
+      return true;
     }
 
-    // Re-resolve the stream when the user picks a different audio/subtitle track,
-    // preserving the current position. External text subs swap without a reload;
-    // audio changes (and burned-in subs) require a fresh stream from the server.
+    // Subtitle change: for text subs, swap the WebVTT <track> instantly — no
+    // reload, works on direct-play AND HLS. Only image-based subs (PGS/VobSub)
+    // need a server stream rebuild (burn-in). Audio change always rebuilds.
     async function changeTrack() {
       if (!playState) return;
       const at = video.currentTime || 0;
       const newAudio = audioTrackWrap.style.display !== 'none' ? parseInt(audioTrackSel.value, 10) : playState.audioIdx;
       const newSub = subTrackWrap.style.display !== 'none' ? parseInt(subTrackSel.value, 10) : playState.subIdx;
 
-      // Fast path: only the subtitle changed AND the new sub is an external text
-      // track — just swap the <track>, no server round-trip / no replay.
+      // --- subtitle-only change ---
       if (newAudio === playState.audioIdx && newSub !== playState.subIdx) {
+        if (newSub < 0) { clearSubtitles(); playState.subIdx = -1; return; }
         const s = playState.streams.find((x) => x.Type === 'Subtitle' && x.Index === newSub);
-        if (newSub < 0) {
-          Array.prototype.slice.call(video.querySelectorAll('track')).forEach((t) => t.remove());
-          for (let i = 0; i < video.textTracks.length; i++) video.textTracks[i].mode = 'disabled';
-          playState.subIdx = -1; return;
-        }
-        if (s && s.DeliveryMethod === 'External' && s.DeliveryUrl && !s.IsExternalUrl) {
-          Array.prototype.slice.call(video.querySelectorAll('track')).forEach((t) => t.remove());
-          attachExternalSub({
-            url: s.DeliveryUrl.startsWith('http') ? s.DeliveryUrl : SERVER + s.DeliveryUrl,
-            lang: s.Language || '', label: s.DisplayTitle || 'Subtitles',
-          });
-          playState.subIdx = newSub; return;
-        }
+        if (s && !isImageSub(s) && applySubtitle(s)) { playState.subIdx = newSub; return; }
+        // image-based sub → must burn in via a server rebuild (falls through)
       }
 
-      // Otherwise reload the stream with the new selection at the same position.
-      // Force a server-built stream: a direct-play file ignores track selection
-      // (browser just plays the container default), so we must disable direct play
-      // to make the chosen audio / burned-in subtitle actually take effect.
+      // --- audio change, or image-sub burn-in: rebuild the stream ---
       reportStop(); stopProgressLoop();
       playerMsg.textContent = 'Switching track…';
-      await loadStream(playState.item, newAudio, newSub, at, /*firstLoad*/ false, /*forceTranscode*/ true);
+      // For an image sub we ask the server to include it; for a pure audio change
+      // we keep whatever text sub is showing by re-applying it after reload.
+      const subForServer = (function () {
+        const s = playState.streams.find((x) => x.Type === 'Subtitle' && x.Index === newSub);
+        return (s && isImageSub(s)) ? newSub : -1; // text subs handled client-side
+      })();
+      const keepTextSub = (function () {
+        const s = playState.streams.find((x) => x.Type === 'Subtitle' && x.Index === newSub);
+        return (s && !isImageSub(s)) ? newSub : null;
+      })();
+      await loadStream(playState.item, newAudio, subForServer, at, /*firstLoad*/ false, /*forceTranscode*/ true);
+      // re-apply a text subtitle the server didn't burn in
+      if (keepTextSub != null && playState) {
+        const s = playState.streams.find((x) => x.Type === 'Subtitle' && x.Index === keepTextSub);
+        if (s && !isImageSub(s)) { applySubtitle(s); playState.subIdx = keepTextSub; }
+      }
     }
 
     audioTrackSel.addEventListener('change', changeTrack);
