@@ -391,24 +391,23 @@
     /* ─────────────────────────────────────────────────────────────────
        PLAYBACK TUNING — adjust these if playback is rough.
 
-       PREFER_TRANSCODE: when true, the page asks the server to remux/
-       transcode to HLS instead of handing raw files to the browser.
-       On a LAN with NVENC this is usually the SMOOTHEST option, because
-       it sidesteps browser buffering quirks with raw mp4/mkv files
-       (e.g. non-faststart files, heavy remuxes). Set false to go back
-       to raw direct play for compatible files.
+       PREFER_TRANSCODE: when true, forces every file through the server's
+       HLS pipeline (remux or NVENC transcode). When false (recommended),
+       files whose codecs the browser can hardware-decode play DIRECTLY —
+       no transcode, no hls.js, native GPU decoding — which is the
+       smoothest path and avoids the "low fps" frame-dropping you get when
+       the server needlessly re-encodes a file. The page auto-detects
+       which codecs (H.264/HEVC/VP9/AV1) this browser can decode.
 
-       DIRECT_PLAY_MAX_BITRATE: if PREFER_TRANSCODE is false, files at or
-       below this bitrate still direct-play; anything heavier gets the
-       capped transcode. On a local network you can keep this high.
+       DIRECT_PLAY_MAX_BITRATE: files at or below this bitrate direct-play;
+       heavier ones fall back to the capped transcode. Keep high on a LAN.
 
-       TRANSCODE_MAX_BITRATE: ceiling for transcoded streams. On a LAN
-       you can raise this (e.g. 40 Mbps) for higher quality; over the
-       internet keep it lower (~8–12 Mbps) so it stays smooth.
+       TRANSCODE_MAX_BITRATE: ceiling for transcoded streams. On a LAN you
+       can raise this; over the internet keep it lower (~8–12 Mbps).
        ───────────────────────────────────────────────────────────────── */
-    const PREFER_TRANSCODE         = true;
-    const DIRECT_PLAY_MAX_BITRATE  = 25000000;  // 25 Mbps
-    const TRANSCODE_MAX_BITRATE    = 30000000;  // 30 Mbps (LAN-friendly)
+    const PREFER_TRANSCODE         = false;
+    const DIRECT_PLAY_MAX_BITRATE  = 120000000; // 120 Mbps — effectively "any" on a LAN
+    const TRANSCODE_MAX_BITRATE    = 30000000;   // 30 Mbps (used only when a transcode is needed)
 
     const TICKS = 10000000;             // Jellyfin ticks per second
     const AUTOPLAY_COUNTDOWN = 10;      // seconds before auto-advancing
@@ -558,18 +557,41 @@
     }
 
     // ---- device profile + stream resolution ----
-    // When PREFER_TRANSCODE is on we advertise NO direct-play profiles, so the
-    // server always builds an HLS stream (remux if codecs already match — cheap,
-    // no quality loss — or transcode via NVENC otherwise). When off, browser-
-    // native files up to DIRECT_PLAY_MAX_BITRATE direct-play; heavier ones fall
-    // back to a capped transcode (MaxStaticBitrate gates the direct-play size).
+    // Probe what THIS browser can actually decode (ideally in hardware). Anything
+    // the browser can play, we mark direct-playable so the server hands over the
+    // original file untouched — no transcode, native GPU decode, smoothest path.
+    function canDecode(mime) {
+      try {
+        if (window.MediaSource && window.MediaSource.isTypeSupported(mime)) return true;
+      } catch (_) {}
+      try {
+        return document.createElement('video').canPlayType(mime) !== '';
+      } catch (_) { return false; }
+    }
+    function browserCodecs() {
+      const v = [];
+      if (canDecode('video/mp4; codecs="avc1.640028"')) v.push('h264');
+      if (canDecode('video/mp4; codecs="hvc1.1.6.L120.90"') || canDecode('video/mp4; codecs="hev1.1.6.L120.90"')) v.push('hevc');
+      if (canDecode('video/mp4; codecs="vp09.00.10.08"')) v.push('vp9');
+      if (canDecode('video/mp4; codecs="av01.0.05M.08"')) v.push('av1');
+      if (!v.length) v.push('h264'); // safe fallback
+      return v;
+    }
+    const VIDEO_CODECS = browserCodecs();              // e.g. ['h264','hevc','vp9','av1']
+    const AUDIO_CODECS = 'aac,mp3,ac3,eac3,opus,flac,vorbis';
+
     function deviceProfile() {
+      // Containers the browser plays natively. We include mkv: Chrome/Edge/Firefox
+      // can direct-play many mkv files (it's a thin container), letting HEVC/AV1
+      // remuxed-as-needed content play without a full re-encode. Safari is pickier,
+      // but it falls through to a transcode automatically when it can't.
+      const vcodecs = VIDEO_CODECS.join(',');
       return {
         MaxStreamingBitrate: TRANSCODE_MAX_BITRATE,
         MaxStaticBitrate: DIRECT_PLAY_MAX_BITRATE,
         DirectPlayProfiles: PREFER_TRANSCODE ? [] : [
-          { Container: 'mp4,m4v', Type: 'Video', VideoCodec: 'h264', AudioCodec: 'aac,mp3' },
-          { Container: 'webm', Type: 'Video', VideoCodec: 'vp8,vp9,av1', AudioCodec: 'vorbis,opus' },
+          { Container: 'mp4,m4v,mov', Type: 'Video', VideoCodec: vcodecs, AudioCodec: AUDIO_CODECS },
+          { Container: 'mkv,webm', Type: 'Video', VideoCodec: vcodecs, AudioCodec: AUDIO_CODECS },
         ],
         TranscodingProfiles: [
           { Container: 'ts', Type: 'Video', Protocol: 'hls', VideoCodec: 'h264', AudioCodec: 'aac,mp3',
@@ -578,8 +600,6 @@
         CodecProfiles: [
           { Type: 'Video', Codec: 'h264', Conditions: [
             { Condition: 'LessThanEqual', Property: 'VideoBitrate', Value: String(TRANSCODE_MAX_BITRATE), IsRequired: false },
-            { Condition: 'EqualsAny', Property: 'VideoProfile', Value: 'high|main|baseline|constrained baseline', IsRequired: false },
-            { Condition: 'LessThanEqual', Property: 'VideoLevel', Value: '51', IsRequired: false },
           ] },
         ],
         SubtitleProfiles: [
@@ -620,7 +640,8 @@
       }
 
       const common = { mediaSourceId: src.Id, playSessionId, streams, externalSub,
-                       selectedAudio: src.DefaultAudioStreamIndex, selectedSub: subIdx };
+                       selectedAudio: src.DefaultAudioStreamIndex, selectedSub: subIdx,
+                       transcodeReasons: src.TranscodeReasons || [] };
       if (src.TranscodingUrl)
         return Object.assign({ url: SERVER + src.TranscodingUrl, hls: /\.m3u8/i.test(src.TranscodingUrl) }, common);
       const params = new URLSearchParams({ api_key: session.token, DeviceId: DEVICE_ID, MediaSourceId: src.Id, Static: 'true' });
@@ -938,15 +959,46 @@
 
       if (firstLoad) populateTrackPickers(chosen.streams);
 
-      const onReady = () => {
+      // Start playback only once enough has actually buffered. Starting on bare
+      // metadata (the old behaviour) lets the player run dry immediately, which
+      // shows up as dropped frames / "low fps" choppiness on transcoded streams.
+      let started = false;
+      const beginPlayback = () => {
+        if (started) return; started = true;
         if (atSecs > 5 && atSecs < (video.duration || Infinity) - 10) {
           try { video.currentTime = atSecs; } catch (_) {}
         }
-        // attach external text subtitle if one was selected
         if (chosen.externalSub) attachExternalSub(chosen.externalSub);
         video.play().catch(() => {});
         reportStart();
         startProgressLoop();
+        // accurate status: direct play vs remux vs transcode
+        if (!chosen.hls) {
+          playerMsg.textContent = 'Direct play';
+        } else {
+          const reasons = chosen.transcodeReasons || [];
+          const videoBeingEncoded = reasons.some((r) => /video/i.test(r));
+          playerMsg.textContent = videoBeingEncoded
+            ? 'Transcoding (server is re-encoding video)'
+            : 'Streaming (remux — no re-encode)';
+        }
+      };
+      // canplaythrough = browser estimates it can play to the end without stalling.
+      // Fall back to a timeout so we never hang if the estimate never fires.
+      const onReady = () => {
+        playerMsg.textContent = 'Buffering…';
+        video.addEventListener('canplaythrough', beginPlayback, { once: true });
+        // safety net: if canplaythrough is slow, start once we have a few seconds buffered
+        const poll = setInterval(() => {
+          if (started) { clearInterval(poll); return; }
+          try {
+            const b = video.buffered;
+            if (b.length && b.end(b.length - 1) - (video.currentTime || 0) > 4) {
+              clearInterval(poll); beginPlayback();
+            }
+          } catch (_) {}
+        }, 400);
+        setTimeout(() => { clearInterval(poll); beginPlayback(); }, 8000);
       };
 
       if (!chosen.hls) {
@@ -959,14 +1011,19 @@
           video.src = chosen.url;
           video.addEventListener('loadedmetadata', onReady, { once: true });
         } else if (window.Hls && window.Hls.isSupported()) {
-          // Buffering config matching Jellyfin's own web player. The key fix for
-          // periodic stutter is NOT capping maxMaxBufferLength — a tight cap
-          // (e.g. 60s) starves the buffer on any small delivery hiccup. We let
-          // hls.js buffer ahead freely (size-limited by maxBufferSize) so brief
-          // glitches don't surface as jumps.
+          // Buffering config for a transcode-fed (live-ish) stream. We don't cap
+          // maxMaxBufferLength (a tight cap starves the buffer on any hiccup and
+          // drops frames), and we let hls.js buffer well ahead of the play head so
+          // the NVENC transcode producing segments in real time can't catch us.
           hls = new window.Hls({
-            maxBufferLength: 30, maxMaxBufferLength: 600, backBufferLength: 90,
-            maxBufferSize: 60 * 1000 * 1000, maxBufferHole: 0.5, enableWorker: true,
+            maxBufferLength: 60,             // build a generous forward buffer (s)
+            maxMaxBufferLength: 600,
+            backBufferLength: 90,
+            maxBufferSize: 120 * 1000 * 1000, // 120 MB so high-bitrate gets real seconds
+            maxBufferHole: 0.5,
+            highBufferWatchdogPeriod: 1,     // notice stalls fast
+            nudgeMaxRetry: 10,               // and nudge past them aggressively
+            enableWorker: true,
           });
           hls.loadSource(chosen.url); hls.attachMedia(video);
           hls.on(window.Hls.Events.MANIFEST_PARSED, onReady);
