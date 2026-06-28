@@ -204,8 +204,14 @@
     }
     .lib-modal.open { display:flex; }
     .lib-player { width:100%; max-width:1100px; display:flex; flex-direction:column; gap:14px; }
-    .lib-player-top { display:flex; align-items:baseline; justify-content:space-between; gap:16px; }
-    .lib-player-title { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:26px; color:var(--text); }
+    .lib-player-top { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+    .lib-player-title { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:26px; color:var(--text); flex:1 1 auto; min-width:0; }
+    .lib-player-tracks { display:flex; gap:14px; align-items:center; flex:0 0 auto; }
+    .lib-track { display:flex; align-items:center; gap:7px; }
+    .lib-track label { font-size:10px; font-weight:600; letter-spacing:.6px; text-transform:uppercase; color:var(--text-3); }
+    .lib-track-sel { font-size:12px; padding:7px 10px; max-width:200px; }
+    /* native cue styling to match the aesthetic */
+    #playerVideo::cue { background:rgba(11,17,32,.78); color:#faf5ff; font-family:var(--font-b); line-height:1.4; }
     .lib-close {
       cursor:pointer; border:1px solid var(--border-2); background:transparent; color:var(--text-2);
       width:38px; height:38px; border-radius:50%; font-size:18px; line-height:1; flex-shrink:0;
@@ -329,6 +335,16 @@
     <div class="lib-player">
       <div class="lib-player-top">
         <div class="lib-player-title" id="playerTitle">—</div>
+        <div class="lib-player-tracks">
+          <div class="lib-track" id="audioTrackWrap" style="display:none;">
+            <label for="audioTrack">Audio</label>
+            <select class="lib-select lib-track-sel" id="audioTrack"></select>
+          </div>
+          <div class="lib-track" id="subTrackWrap" style="display:none;">
+            <label for="subTrack">Subtitles</label>
+            <select class="lib-select lib-track-sel" id="subTrack"></select>
+          </div>
+        </div>
         <button class="lib-close" id="playerClose" aria-label="Close">×</button>
       </div>
       <div class="lib-video-wrap">
@@ -432,6 +448,8 @@
           detailOverview = $('detailOverview'), seasonBar = $('seasonBar'), detailLoading = $('detailLoading'), epList = $('epList');
     const modal = $('playerModal'), video = $('playerVideo'), playerTitle = $('playerTitle'),
           playerMsg = $('playerMsg'), playerClose = $('playerClose');
+    const audioTrackWrap = $('audioTrackWrap'), audioTrackSel = $('audioTrack'),
+          subTrackWrap = $('subTrackWrap'), subTrackSel = $('subTrack');
     const upNext = $('upNext'), upNextThumb = $('upNextThumb'), upNextName = $('upNextName'),
           upNextCount = $('upNextCount'), upNextPlay = $('upNextPlay'), upNextCancel = $('upNextCancel');
 
@@ -564,25 +582,51 @@
             { Condition: 'LessThanEqual', Property: 'VideoLevel', Value: '51', IsRequired: false },
           ] },
         ],
-        SubtitleProfiles: [ { Format: 'vtt', Method: 'External' } ],
+        SubtitleProfiles: [
+          { Format: 'vtt', Method: 'External' },
+          { Format: 'srt', Method: 'External' },
+          { Format: 'subrip', Method: 'External' },
+          { Format: 'ass', Method: 'External' },
+          { Format: 'ssa', Method: 'External' },
+        ],
       };
     }
 
-    async function resolveStream(item) {
-      const info = await jf(
-        `/Items/${item.Id}/PlaybackInfo?UserId=${encodeURIComponent(session.userId)}` +
-        `&MaxStreamingBitrate=${TRANSCODE_MAX_BITRATE}&StartTimeTicks=0&IsPlayback=true&AutoOpenLiveStream=true`,
-        { method: 'POST', body: JSON.stringify({ DeviceProfile: deviceProfile() }) }
-      );
+    // audioIdx / subIdx: optional stream indices to select. subIdx === -1 means
+    // "no subtitles". Returns the chosen stream URL plus the media-stream list
+    // and (when subtitles are an external text track) a ready-to-attach sub URL.
+    async function resolveStream(item, audioIdx, subIdx) {
+      let path = `/Items/${item.Id}/PlaybackInfo?UserId=${encodeURIComponent(session.userId)}` +
+        `&MaxStreamingBitrate=${TRANSCODE_MAX_BITRATE}&StartTimeTicks=0&IsPlayback=true&AutoOpenLiveStream=true`;
+      if (audioIdx != null && audioIdx >= 0) path += `&AudioStreamIndex=${audioIdx}`;
+      if (subIdx != null) path += `&SubtitleStreamIndex=${subIdx}`;
+      const info = await jf(path, { method: 'POST', body: JSON.stringify({ DeviceProfile: deviceProfile() }) });
       const src = (info && info.MediaSources && info.MediaSources[0]) || null;
       if (!src) throw new Error('No playable source.');
       const playSessionId = info.PlaySessionId || null;
+      const streams = src.MediaStreams || [];
+
+      // Find an external (sidecar) subtitle track to attach as a <track>, if the
+      // selected sub is delivered that way (no re-transcode needed for text subs).
+      let externalSub = null;
+      if (subIdx != null && subIdx >= 0) {
+        const s = streams.find((x) => x.Type === 'Subtitle' && x.Index === subIdx);
+        if (s && s.DeliveryMethod === 'External' && s.DeliveryUrl && !s.IsExternalUrl) {
+          externalSub = {
+            url: s.DeliveryUrl.startsWith('http') ? s.DeliveryUrl : SERVER + s.DeliveryUrl,
+            lang: s.Language || '', label: s.DisplayTitle || 'Subtitles',
+          };
+        }
+      }
+
+      const common = { mediaSourceId: src.Id, playSessionId, streams, externalSub,
+                       selectedAudio: src.DefaultAudioStreamIndex, selectedSub: subIdx };
       if (src.TranscodingUrl)
-        return { url: SERVER + src.TranscodingUrl, hls: /\.m3u8/i.test(src.TranscodingUrl), mediaSourceId: src.Id, playSessionId };
+        return Object.assign({ url: SERVER + src.TranscodingUrl, hls: /\.m3u8/i.test(src.TranscodingUrl) }, common);
       const params = new URLSearchParams({ api_key: session.token, DeviceId: DEVICE_ID, MediaSourceId: src.Id, Static: 'true' });
       if (playSessionId) params.set('PlaySessionId', playSessionId);
       const container = (src.Container || 'mp4').split(',')[0];
-      return { url: `${SERVER}/Videos/${item.Id}/stream.${container}?${params.toString()}`, hls: false, mediaSourceId: src.Id, playSessionId };
+      return Object.assign({ url: `${SERVER}/Videos/${item.Id}/stream.${container}?${params.toString()}`, hls: false }, common);
     }
     function directUrl(item) {
       const params = new URLSearchParams({ api_key: session.token, DeviceId: DEVICE_ID, Static: 'true' });
@@ -851,32 +895,55 @@
       hideUpNext();
       destroyHls();
 
-      playState = { item, ctx: ctx || null, mediaSourceId: null, playSessionId: null, hls: false };
+      playState = {
+        item, ctx: ctx || null, mediaSourceId: null, playSessionId: null, hls: false,
+        audioIdx: null, subIdx: null, streams: [],
+      };
       const labelTitle = item.Type === 'Episode'
         ? `${item.SeriesName || ''}${item.ParentIndexNumber != null ? ` — S${item.ParentIndexNumber}` : ''}${item.IndexNumber != null ? `E${item.IndexNumber}` : ''}: ${item.Name}`
         : item.Name + (item.ProductionYear ? ` (${item.ProductionYear})` : '');
       playerTitle.textContent = labelTitle;
       playerMsg.textContent = 'Loading…'; playerMsg.classList.remove('err');
+      audioTrackWrap.style.display = 'none'; subTrackWrap.style.display = 'none';
       modal.classList.add('open');
       document.body.style.overflow = 'hidden';
 
+      // first load uses server defaults (audioIdx/subIdx undefined → server picks)
+      const resumeTicks = (item.UserData && item.UserData.PlaybackPositionTicks) || 0;
+      await loadStream(item, undefined, undefined, resumeTicks / TICKS, /*firstLoad*/ true);
+    }
+
+    // Loads (or reloads, e.g. after a track change) the stream for `item` with the
+    // given audio/subtitle indices, seeking to `atSecs`. Reuses the open modal.
+    async function loadStream(item, audioIdx, subIdx, atSecs, firstLoad) {
+      destroyHls();
+      // clear any previously-attached <track> elements
+      Array.prototype.slice.call(video.querySelectorAll('track')).forEach((t) => t.remove());
+
       let chosen;
-      try { chosen = await resolveStream(item); }
+      try { chosen = await resolveStream(item, audioIdx, subIdx); }
       catch (err) {
         if (err.code === 401) { handleExpired(); closePlayer(); return; }
         playerMsg.textContent = 'Could not start playback.'; playerMsg.classList.add('err'); return;
       }
+
       playState.mediaSourceId = chosen.mediaSourceId;
       playState.playSessionId = chosen.playSessionId;
       playState.hls = chosen.hls;
+      playState.streams = chosen.streams || [];
+      // record the effective selections (server may resolve a default)
+      playState.audioIdx = (audioIdx != null) ? audioIdx
+        : (chosen.selectedAudio != null ? chosen.selectedAudio : defaultAudioIndex(chosen.streams));
+      playState.subIdx = (subIdx != null) ? subIdx : -1;
 
-      const resumeTicks = (item.UserData && item.UserData.PlaybackPositionTicks) || 0;
-      const resumeSecs = resumeTicks / TICKS;
+      if (firstLoad) populateTrackPickers(chosen.streams);
 
       const onReady = () => {
-        if (resumeSecs > 5 && resumeSecs < (video.duration || Infinity) - 10) {
-          try { video.currentTime = resumeSecs; } catch (_) {}
+        if (atSecs > 5 && atSecs < (video.duration || Infinity) - 10) {
+          try { video.currentTime = atSecs; } catch (_) {}
         }
+        // attach external text subtitle if one was selected
+        if (chosen.externalSub) attachExternalSub(chosen.externalSub);
         video.play().catch(() => {});
         reportStart();
         startProgressLoop();
@@ -898,18 +965,13 @@
           // hls.js buffer ahead freely (size-limited by maxBufferSize) so brief
           // glitches don't surface as jumps.
           hls = new window.Hls({
-            maxBufferLength: 30,            // forward buffer target (s)
-            maxMaxBufferLength: 600,        // allow buffering well ahead (s)
-            backBufferLength: 90,           // keep some played video for smooth seeks (s)
-            maxBufferSize: 60 * 1000 * 1000, // 60 MB ceiling (hls.js default)
-            maxBufferHole: 0.5,            // tolerate small gaps without stalling
-            enableWorker: true,
+            maxBufferLength: 30, maxMaxBufferLength: 600, backBufferLength: 90,
+            maxBufferSize: 60 * 1000 * 1000, maxBufferHole: 0.5, enableWorker: true,
           });
           hls.loadSource(chosen.url); hls.attachMedia(video);
           hls.on(window.Hls.Events.MANIFEST_PARSED, onReady);
           hls.on(window.Hls.Events.ERROR, (_e, data) => {
             if (data && data.fatal) {
-              // try to recover in-place before giving up to a raw fallback
               if (data.type === window.Hls.ErrorTypes.NETWORK_ERROR) { try { hls.startLoad(); return; } catch (_) {} }
               if (data.type === window.Hls.ErrorTypes.MEDIA_ERROR) { try { hls.recoverMediaError(); return; } catch (_) {} }
               destroyHls(); video.src = directUrl(item);
@@ -923,6 +985,125 @@
       }
     }
 
+    function defaultAudioIndex(streams) {
+      const a = (streams || []).filter((s) => s.Type === 'Audio');
+      const def = a.find((s) => s.IsDefault) || a[0];
+      return def ? def.Index : null;
+    }
+
+    function langName(code) {
+      if (!code) return '';
+      const map = { eng:'English', spa:'Spanish', por:'Portuguese', fre:'French', fra:'French',
+        ger:'German', deu:'German', ita:'Italian', jpn:'Japanese', kor:'Korean', chi:'Chinese',
+        zho:'Chinese', rus:'Russian', ara:'Arabic', hin:'Hindi', dut:'Dutch', nld:'Dutch',
+        swe:'Swedish', nor:'Norwegian', dan:'Danish', fin:'Finnish', pol:'Polish', tur:'Turkish' };
+      return map[code.toLowerCase()] || code;
+    }
+
+    function trackLabel(s) {
+      // Prefer the server's DisplayTitle; otherwise build from language + codec.
+      if (s.DisplayTitle) return s.DisplayTitle;
+      const bits = [];
+      if (s.Language) bits.push(langName(s.Language));
+      if (s.Codec) bits.push(s.Codec.toUpperCase());
+      if (s.ChannelLayout) bits.push(s.ChannelLayout);
+      return bits.join(' · ') || ('Track ' + s.Index);
+    }
+
+    function populateTrackPickers(streams) {
+      const audio = (streams || []).filter((s) => s.Type === 'Audio');
+      const subs = (streams || []).filter((s) => s.Type === 'Subtitle');
+
+      // audio
+      if (audio.length > 1) {
+        audioTrackSel.innerHTML = '';
+        audio.forEach((s) => {
+          const o = document.createElement('option');
+          o.value = String(s.Index); o.textContent = trackLabel(s);
+          if (s.Index === playState.audioIdx) o.selected = true;
+          audioTrackSel.appendChild(o);
+        });
+        audioTrackWrap.style.display = 'flex';
+      } else {
+        audioTrackWrap.style.display = 'none';
+      }
+
+      // subtitles (always show if any exist, plus an "Off" option)
+      if (subs.length) {
+        subTrackSel.innerHTML = '';
+        const off = document.createElement('option');
+        off.value = '-1'; off.textContent = 'Off';
+        if (playState.subIdx == null || playState.subIdx < 0) off.selected = true;
+        subTrackSel.appendChild(off);
+        subs.forEach((s) => {
+          const o = document.createElement('option');
+          o.value = String(s.Index); o.textContent = trackLabel(s);
+          if (s.Index === playState.subIdx) o.selected = true;
+          subTrackSel.appendChild(o);
+        });
+        subTrackWrap.style.display = 'flex';
+      } else {
+        subTrackWrap.style.display = 'none';
+      }
+    }
+
+    function attachExternalSub(sub) {
+      const track = document.createElement('track');
+      track.kind = 'subtitles';
+      track.label = sub.label || 'Subtitles';
+      if (sub.lang) track.srclang = sub.lang;
+      track.src = sub.url;
+      track.default = true;
+      video.appendChild(track);
+      // enable this track once the browser registers it; disable any others
+      const enable = () => {
+        const tt = track.track;
+        for (let i = 0; i < video.textTracks.length; i++) {
+          video.textTracks[i].mode = (video.textTracks[i] === tt) ? 'showing' : 'disabled';
+        }
+      };
+      if (track.track) setTimeout(enable, 50);
+      track.addEventListener('load', enable, { once: true });
+      setTimeout(enable, 200); // belt-and-suspenders for browsers that don't fire load
+    }
+
+    // Re-resolve the stream when the user picks a different audio/subtitle track,
+    // preserving the current position. External text subs swap without a reload;
+    // audio changes (and burned-in subs) require a fresh stream from the server.
+    async function changeTrack() {
+      if (!playState) return;
+      const at = video.currentTime || 0;
+      const newAudio = audioTrackWrap.style.display !== 'none' ? parseInt(audioTrackSel.value, 10) : playState.audioIdx;
+      const newSub = subTrackWrap.style.display !== 'none' ? parseInt(subTrackSel.value, 10) : playState.subIdx;
+
+      // Fast path: only the subtitle changed AND the new sub is an external text
+      // track — just swap the <track>, no server round-trip / no replay.
+      if (newAudio === playState.audioIdx && newSub !== playState.subIdx) {
+        const s = playState.streams.find((x) => x.Type === 'Subtitle' && x.Index === newSub);
+        if (newSub < 0) {
+          Array.prototype.slice.call(video.querySelectorAll('track')).forEach((t) => t.remove());
+          for (let i = 0; i < video.textTracks.length; i++) video.textTracks[i].mode = 'disabled';
+          playState.subIdx = -1; return;
+        }
+        if (s && s.DeliveryMethod === 'External' && s.DeliveryUrl && !s.IsExternalUrl) {
+          Array.prototype.slice.call(video.querySelectorAll('track')).forEach((t) => t.remove());
+          attachExternalSub({
+            url: s.DeliveryUrl.startsWith('http') ? s.DeliveryUrl : SERVER + s.DeliveryUrl,
+            lang: s.Language || '', label: s.DisplayTitle || 'Subtitles',
+          });
+          playState.subIdx = newSub; return;
+        }
+      }
+
+      // Otherwise reload the stream with the new selection at the same position.
+      reportStop(); stopProgressLoop();
+      playerMsg.textContent = 'Switching track…';
+      await loadStream(playState.item, newAudio, newSub, at, /*firstLoad*/ false);
+    }
+
+    audioTrackSel.addEventListener('change', changeTrack);
+    subTrackSel.addEventListener('change', changeTrack);
+
     function closePlayer() {
       if (playState) { reportProgress(true); reportStop(); }
       stopProgressLoop(); clearCountdown(); hideUpNext();
@@ -931,7 +1112,9 @@
       document.body.style.overflow = '';
       try { video.pause(); } catch (_) {}
       destroyHls();
+      Array.prototype.slice.call(video.querySelectorAll('track')).forEach((t) => t.remove());
       video.removeAttribute('src'); video.load();
+      audioTrackWrap.style.display = 'none'; subTrackWrap.style.display = 'none';
       // refresh resume rows / episode progress so it shows immediately on return
       if (libView.style.display !== 'none') loadResume(kindEl.value);
       if (detailView.style.display !== 'none' && currentSeries) {
