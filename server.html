@@ -101,7 +101,17 @@
     .lib-select {
       font-family:var(--font-b); font-size:13px; color:var(--text);
       padding:9px 12px; border-radius:999px;
-      border:1px solid var(--border-2); background:rgba(255,255,255,.04); cursor:pointer;
+      border:1px solid var(--border-2); background:rgba(20,16,38,.85); cursor:pointer;
+      /* style the native arrow area on a dark control */
+      -webkit-appearance:none; -moz-appearance:none; appearance:none;
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23c4b5fd' stroke-width='1.5'/></svg>");
+      background-repeat:no-repeat; background-position:right 12px center; padding-right:30px;
+    }
+    .lib-select:focus { outline:none; border-color:var(--rose); }
+    /* the open dropdown popup is OS-rendered; give options an explicit dark bg +
+       light text so they're readable instead of white-on-white. */
+    .lib-select option {
+      background-color:#140e26; color:var(--text);
     }
     .lib-ghost {
       cursor:pointer; font-family:var(--font-b); font-size:12px; font-weight:500;
@@ -217,7 +227,7 @@
     .lib-player-tracks { display:flex; gap:14px; align-items:center; flex:0 0 auto; }
     .lib-track { display:flex; align-items:center; gap:7px; }
     .lib-track label { font-size:10px; font-weight:600; letter-spacing:.6px; text-transform:uppercase; color:var(--text-3); }
-    .lib-track-sel { font-size:12px; padding:7px 10px; max-width:200px; }
+    .lib-track-sel { font-size:12px; padding:7px 28px 7px 10px; max-width:200px; }
     /* native cue styling to match the aesthetic */
     #playerVideo::cue { background:rgba(11,17,32,.78); color:#faf5ff; font-family:var(--font-b); line-height:1.4; }
     .lib-close {
@@ -646,9 +656,40 @@
 
       const common = { itemId: item.Id, mediaSourceId: src.Id, playSessionId, streams,
                        selectedAudio: src.DefaultAudioStreamIndex, selectedSub: subIdx,
+                       requestedAudio: (audioIdx != null && audioIdx >= 0) ? audioIdx : null,
                        transcodeReasons: src.TranscodeReasons || [] };
-      if (src.TranscodingUrl)
-        return Object.assign({ url: SERVER + src.TranscodingUrl, hls: /\.m3u8/i.test(src.TranscodingUrl) }, common);
+      if (src.TranscodingUrl) {
+        // The server reuses a transcode job keyed by PlaySessionId/params; when we
+        // only change audio it can hand back the SAME job (old audio). Append a
+        // unique token so the server starts a fresh transcode with our audio index.
+        let turl = SERVER + src.TranscodingUrl;
+        // make sure our requested audio index is actually in the URL
+        if (common.requestedAudio != null && !/[?&]AudioStreamIndex=/.test(turl)) {
+          turl += (turl.indexOf('?') >= 0 ? '&' : '?') + 'AudioStreamIndex=' + common.requestedAudio;
+        } else if (common.requestedAudio != null) {
+          turl = turl.replace(/([?&]AudioStreamIndex=)\d+/, '$1' + common.requestedAudio);
+        }
+        turl += (turl.indexOf('?') >= 0 ? '&' : '?') + '_ts=' + Date.now();
+        return Object.assign({ url: turl, hls: /\.m3u8/i.test(src.TranscodingUrl) }, common);
+      }
+      // Server returned a static (direct/remux) URL. If the user explicitly asked
+      // for a specific audio track, a static stream can't honour it (browser plays
+      // track 0), so build an HLS transcode URL ourselves with the audio index +
+      // forced re-encode, guaranteeing the chosen track is the one delivered.
+      if (common.requestedAudio != null) {
+        const tp = new URLSearchParams({
+          api_key: session.token, DeviceId: DEVICE_ID, MediaSourceId: src.Id,
+          VideoCodec: 'h264', AudioCodec: 'aac',
+          AudioStreamIndex: String(common.requestedAudio),
+          TranscodingMaxAudioChannels: '2', SegmentContainer: 'ts',
+          MinSegments: '1', BreakOnNonKeyFrames: 'true',
+          VideoBitrate: String(TRANSCODE_MAX_BITRATE), AudioBitrate: '256000',
+          RequireAvc: 'false', _ts: String(Date.now()),
+        });
+        if (subIdx != null && subIdx >= 0) { tp.set('SubtitleStreamIndex', String(subIdx)); tp.set('SubtitleMethod', 'Encode'); }
+        if (playSessionId) tp.set('PlaySessionId', playSessionId);
+        return Object.assign({ url: `${SERVER}/Videos/${item.Id}/master.m3u8?${tp.toString()}`, hls: true }, common);
+      }
       const params = new URLSearchParams({ api_key: session.token, DeviceId: DEVICE_ID, MediaSourceId: src.Id, Static: 'true' });
       if (playSessionId) params.set('PlaySessionId', playSessionId);
       const container = (src.Container || 'mp4').split(',')[0];
