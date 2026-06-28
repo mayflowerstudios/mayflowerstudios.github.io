@@ -892,11 +892,26 @@
           video.src = chosen.url;
           video.addEventListener('loadedmetadata', onReady, { once: true });
         } else if (window.Hls && window.Hls.isSupported()) {
-          hls = new window.Hls({ maxBufferLength: 30, maxMaxBufferLength: 60 });
+          // Buffering config matching Jellyfin's own web player. The key fix for
+          // periodic stutter is NOT capping maxMaxBufferLength — a tight cap
+          // (e.g. 60s) starves the buffer on any small delivery hiccup. We let
+          // hls.js buffer ahead freely (size-limited by maxBufferSize) so brief
+          // glitches don't surface as jumps.
+          hls = new window.Hls({
+            maxBufferLength: 30,            // forward buffer target (s)
+            maxMaxBufferLength: 600,        // allow buffering well ahead (s)
+            backBufferLength: 90,           // keep some played video for smooth seeks (s)
+            maxBufferSize: 60 * 1000 * 1000, // 60 MB ceiling (hls.js default)
+            maxBufferHole: 0.5,            // tolerate small gaps without stalling
+            enableWorker: true,
+          });
           hls.loadSource(chosen.url); hls.attachMedia(video);
           hls.on(window.Hls.Events.MANIFEST_PARSED, onReady);
           hls.on(window.Hls.Events.ERROR, (_e, data) => {
             if (data && data.fatal) {
+              // try to recover in-place before giving up to a raw fallback
+              if (data.type === window.Hls.ErrorTypes.NETWORK_ERROR) { try { hls.startLoad(); return; } catch (_) {} }
+              if (data.type === window.Hls.ErrorTypes.MEDIA_ERROR) { try { hls.recoverMediaError(); return; } catch (_) {} }
               destroyHls(); video.src = directUrl(item);
               video.addEventListener('loadedmetadata', onReady, { once: true });
             }
