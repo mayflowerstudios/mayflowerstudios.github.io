@@ -36,6 +36,123 @@
     .lib-title em { font-style:italic; }
     .lib-sub { font-size:15px; line-height:1.8; color:var(--text-2); max-width:54ch; }
 
+    /* ════════ HERO BACKDROP BANNER ════════ */
+    .lib-spotlight {
+      position:relative; margin:8px 0 8px; border-radius:var(--r-lg); overflow:hidden;
+      min-height:420px; display:flex; align-items:flex-end;
+      border:1px solid var(--border); background:#0b0a14;
+      opacity:0; transition:opacity 600ms var(--ease);
+    }
+    .lib-spotlight.ready { opacity:1; }
+    .lib-spotlight-bg { position:absolute; inset:0; z-index:0; }
+    .lib-spotlight-bg img {
+      width:100%; height:100%; object-fit:cover; object-position:center 20%;
+      opacity:0; transition:opacity 800ms var(--ease);
+    }
+    .lib-spotlight-bg img.shown { opacity:1; }
+    .lib-spotlight::after {
+      content:''; position:absolute; inset:0; z-index:1;
+      background:
+        linear-gradient(90deg, rgba(8,7,15,.94) 0%, rgba(8,7,15,.72) 38%, rgba(8,7,15,.15) 70%, rgba(8,7,15,.4) 100%),
+        linear-gradient(0deg, rgba(8,7,15,.95) 2%, transparent 50%);
+    }
+    .lib-spotlight-inner { position:relative; z-index:2; padding:38px 40px 34px; max-width:680px; }
+    .lib-spot-kicker { font-size:11px; font-weight:600; letter-spacing:1.4px; text-transform:uppercase; color:var(--rose); margin-bottom:12px; }
+    .lib-spot-logo { max-width:340px; max-height:120px; margin-bottom:14px; display:block; }
+    .lib-spot-title { font-family:'Cormorant Garamond',serif; font-weight:300; font-size:clamp(36px,5.5vw,64px); line-height:1; color:var(--text); margin-bottom:14px; }
+    .lib-spot-meta { display:flex; align-items:center; gap:14px; flex-wrap:wrap; font-size:13px; color:var(--text-2); margin-bottom:14px; }
+    .lib-spot-meta .dot { width:3px; height:3px; border-radius:50%; background:var(--text-3); }
+    .lib-spot-rating { color:var(--rose); font-weight:600; }
+    .lib-spot-overview { font-size:14px; line-height:1.7; color:var(--text-2); margin-bottom:20px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+    .lib-spot-actions { display:flex; gap:12px; align-items:center; }
+    .lib-spot-dots { position:absolute; z-index:3; right:24px; bottom:20px; display:flex; gap:8px; }
+    .lib-spot-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.3); cursor:pointer; border:none; padding:0; transition:background 200ms, width 200ms; }
+    .lib-spot-dot.active { background:var(--rose); width:22px; border-radius:4px; }
+    .btn-play, .btn-secondary {
+      cursor:pointer; font-family:var(--font-b); font-weight:600; font-size:14px;
+      border-radius:999px; padding:12px 26px; display:inline-flex; align-items:center; gap:9px; border:none;
+      transition:transform 150ms var(--ease), box-shadow 150ms var(--ease), background 150ms, border-color 150ms;
+    }
+    .btn-play { color:#0b1120; background:linear-gradient(135deg,var(--rose),var(--violet)); }
+    .btn-play:hover { transform:translateY(-1px); box-shadow:0 10px 28px rgba(236,72,153,.3); }
+    .btn-secondary { color:var(--text); background:rgba(255,255,255,.08); border:1px solid var(--border-2); }
+    .btn-secondary:hover { background:rgba(255,255,255,.14); border-color:var(--rose); }
+    @media (max-width:640px){ .lib-spotlight { min-height:340px; } .lib-spotlight-inner { padding:24px 22px; } }
+
+    /* ════════ POSTER HOVER PREVIEW ════════ */
+    .poster-art { will-change:transform; }
+    .poster-hover {
+      position:absolute; inset:0; z-index:4; opacity:0; pointer-events:none;
+      display:flex; flex-direction:column; justify-content:flex-end; gap:6px; padding:12px;
+      background:linear-gradient(0deg, rgba(8,7,15,.96) 12%, rgba(8,7,15,.4) 55%, transparent 85%);
+      transition:opacity 200ms var(--ease);
+    }
+    .poster-art:hover .poster-hover { opacity:1; }
+    .poster-hover-meta { display:flex; align-items:center; gap:8px; font-size:11px; color:var(--text-2); flex-wrap:wrap; }
+    .poster-hover-meta .r { color:var(--rose); font-weight:600; }
+    .poster-hover-ov { font-size:11px; line-height:1.5; color:var(--text-3); display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+    /* played check badge */
+    .poster-check {
+      position:absolute; top:8px; left:8px; z-index:3; width:24px; height:24px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center; font-size:13px;
+      background:rgba(16,185,129,.92); color:#06281d; border:1px solid rgba(255,255,255,.25);
+    }
+
+    /* ════════ SKELETON SHIMMER ════════ */
+    .skel-row { margin:6px 0 30px; }
+    .skel-h { height:22px; width:180px; border-radius:6px; margin:24px 0 14px; }
+    .skel-scroll { display:grid; grid-auto-flow:column; grid-auto-columns:150px; gap:18px; overflow:hidden; padding:6px 2px 14px; }
+    .skel-card { aspect-ratio:2/3; border-radius:var(--r-md); }
+    .skel, .skel-h, .skel-card {
+      background:linear-gradient(100deg, rgba(255,255,255,.04) 30%, rgba(255,255,255,.09) 50%, rgba(255,255,255,.04) 70%);
+      background-size:200% 100%; animation:shimmer 1.4s infinite linear;
+    }
+    @keyframes shimmer { to { background-position:-200% 0; } }
+
+    /* ════════ RICH DETAIL PAGE ════════ */
+    .lib-detail-hero { position:relative; margin:8px 0 0; border-radius:var(--r-lg); overflow:hidden; border:1px solid var(--border); background:#0b0a14; }
+    .lib-detail-bg { position:absolute; inset:0; z-index:0; }
+    .lib-detail-bg img { width:100%; height:100%; object-fit:cover; object-position:center 18%; opacity:0; transition:opacity 700ms var(--ease); }
+    .lib-detail-bg img.shown { opacity:.5; }
+    .lib-detail-hero::after { content:''; position:absolute; inset:0; z-index:1; background:linear-gradient(0deg, rgba(8,7,15,.96) 4%, rgba(8,7,15,.5) 55%, rgba(8,7,15,.55) 100%); }
+    .lib-detail-content { position:relative; z-index:2; display:flex; gap:28px; padding:34px 34px 30px; flex-wrap:wrap; }
+    .lib-detail-poster { flex:0 0 200px; aspect-ratio:2/3; border-radius:var(--r-md); overflow:hidden; border:1px solid var(--border-2); background:rgba(255,255,255,.04); box-shadow:0 16px 40px rgba(0,0,0,.45); }
+    .lib-detail-poster img { width:100%; height:100%; object-fit:cover; }
+    .lib-detail-main { flex:1 1 380px; min-width:0; }
+    .lib-detail-main .lib-detail-title { margin:0 0 8px; }
+    .lib-detail-chips { display:flex; gap:8px; flex-wrap:wrap; margin:14px 0; }
+    .lib-chip { font-size:11px; font-weight:500; letter-spacing:.3px; color:var(--text-2); padding:5px 12px; border-radius:999px; border:1px solid var(--border-2); background:rgba(255,255,255,.03); }
+    .lib-detail-actions { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin:18px 0 8px; }
+    .lib-detail-cast { display:flex; gap:16px; flex-wrap:wrap; margin:6px 0 4px; }
+    .lib-cast { width:84px; text-align:center; }
+    .lib-cast-img { width:72px; height:72px; border-radius:50%; object-fit:cover; margin:0 auto 6px; background:rgba(255,255,255,.05); display:block; border:1px solid var(--border-2); }
+    .lib-cast-img.ph { display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-style:italic; color:var(--text-3); font-size:22px; }
+    .lib-cast-name { font-size:11px; color:var(--text-2); line-height:1.3; }
+    .lib-cast-role { font-size:10px; color:var(--text-3); line-height:1.3; }
+    .lib-detail-sub { margin:30px 0 0; }
+    @media (max-width:560px){ .lib-detail-poster { flex-basis:130px; } }
+
+    /* play-all / shuffle small action buttons */
+    .lib-mini-actions { display:flex; gap:10px; margin-left:auto; }
+    .lib-mini-btn {
+      cursor:pointer; font-family:var(--font-b); font-size:12px; font-weight:600; color:var(--text-2);
+      padding:8px 16px; border-radius:999px; border:1px solid var(--border-2); background:transparent;
+      display:inline-flex; align-items:center; gap:7px; transition:color 150ms, border-color 150ms;
+    }
+    .lib-mini-btn:hover { color:var(--text); border-color:var(--rose); }
+
+    /* player extra controls */
+    .lib-player-ctrls { display:flex; align-items:center; gap:8px; }
+    .lib-skip-intro {
+      position:absolute; right:18px; bottom:74px; z-index:6; display:none;
+      cursor:pointer; font-family:var(--font-b); font-size:13px; font-weight:600; color:var(--text);
+      padding:10px 18px; border-radius:8px; border:1px solid var(--border-2); background:rgba(11,17,32,.9);
+      transition:border-color 150ms, color 150ms;
+    }
+    .lib-skip-intro.show { display:block; }
+    .lib-skip-intro:hover { border-color:var(--rose); color:var(--rose); }
+    .lib-speed-sel { font-size:12px; padding:7px 26px 7px 10px; }
+
     /* ---- sign-in card ---- */
     .lib-auth {
       max-width:420px; margin:24px 0; padding:30px 32px;
@@ -459,6 +576,23 @@
 
         <!-- ===== BROWSE TAB ===== -->
         <div id="browseTab">
+          <!-- hero spotlight (rotating featured title) -->
+          <div class="lib-spotlight" id="spotlight" style="display:none;">
+            <div class="lib-spotlight-bg" id="spotBg"></div>
+            <div class="lib-spotlight-inner">
+              <div class="lib-spot-kicker" id="spotKicker">Featured</div>
+              <div id="spotLogoWrap"></div>
+              <h2 class="lib-spot-title" id="spotTitle">—</h2>
+              <div class="lib-spot-meta" id="spotMeta"></div>
+              <p class="lib-spot-overview" id="spotOverview"></p>
+              <div class="lib-spot-actions">
+                <button class="btn-play" id="spotPlay">▶ Play</button>
+                <button class="btn-secondary" id="spotInfo">More info</button>
+              </div>
+            </div>
+            <div class="lib-spot-dots" id="spotDots"></div>
+          </div>
+
           <!-- filter bar -->
           <div class="lib-filters reveal">
             <select class="lib-select" id="fGenre"><option value="">All genres</option></select>
@@ -512,15 +646,41 @@
         <div class="lib-empty" id="plDetailEmpty" style="display:none;">This playlist is empty.</div>
       </div>
 
-      <!-- ── series detail (episodes) ── -->
+      <!-- ── rich detail page (movie or series) ── -->
       <div id="detailView" style="display:none;">
         <button class="lib-back" id="detailBack">← Back to library</button>
-        <h2 class="lib-detail-title" id="detailTitle">—</h2>
-        <div class="lib-detail-meta" id="detailMeta"></div>
-        <div class="lib-detail-overview" id="detailOverview"></div>
-        <div class="lib-season-bar" id="seasonBar"></div>
-        <div class="lib-loading" id="detailLoading" style="display:none;"><span class="lib-spin"></span> Loading episodes…</div>
-        <div class="lib-ep-list" id="epList"></div>
+        <div class="lib-detail-hero">
+          <div class="lib-detail-bg" id="detailBg"></div>
+          <div class="lib-detail-content">
+            <div class="lib-detail-poster" id="detailPoster"></div>
+            <div class="lib-detail-main">
+              <h2 class="lib-detail-title" id="detailTitle">—</h2>
+              <div class="lib-detail-meta" id="detailMeta"></div>
+              <div class="lib-detail-chips" id="detailChips"></div>
+              <div class="lib-detail-actions" id="detailActions"></div>
+              <div class="lib-detail-overview" id="detailOverview"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- cast -->
+        <div class="lib-detail-sub" id="castSection" style="display:none;">
+          <div class="lib-section-h">Cast</div>
+          <div class="lib-detail-cast" id="detailCast"></div>
+        </div>
+
+        <!-- series: seasons + episodes -->
+        <div class="lib-detail-sub" id="episodesSection" style="display:none;">
+          <div class="lib-season-bar" id="seasonBar"></div>
+          <div class="lib-loading" id="detailLoading" style="display:none;"><span class="lib-spin"></span> Loading episodes…</div>
+          <div class="lib-ep-list" id="epList"></div>
+        </div>
+
+        <!-- more like this -->
+        <div class="lib-detail-sub" id="similarSection" style="display:none;">
+          <div class="lib-section-h">More like this</div>
+          <div class="lib-grid" id="similarGrid"></div>
+        </div>
       </div>
 
     </div>
@@ -567,11 +727,23 @@
             <label for="subTrack">Subtitles</label>
             <select class="lib-select lib-track-sel" id="subTrack"></select>
           </div>
+          <div class="lib-track">
+            <label for="speedSel">Speed</label>
+            <select class="lib-select lib-track-sel lib-speed-sel" id="speedSel">
+              <option value="0.5">0.5×</option>
+              <option value="0.75">0.75×</option>
+              <option value="1" selected>1×</option>
+              <option value="1.25">1.25×</option>
+              <option value="1.5">1.5×</option>
+              <option value="2">2×</option>
+            </select>
+          </div>
         </div>
         <button class="lib-close" id="playerClose" aria-label="Close">×</button>
       </div>
       <div class="lib-video-wrap">
         <video id="playerVideo" controls playsinline></video>
+        <button class="lib-skip-intro" id="skipIntro">Skip intro →</button>
         <div class="lib-upnext" id="upNext">
           <div class="lib-upnext-thumb" id="upNextThumb"></div>
           <div class="lib-upnext-body">
@@ -684,10 +856,18 @@
     const libToast = $('libToast');
     const detailBack = $('detailBack'), detailTitle = $('detailTitle'), detailMeta = $('detailMeta'),
           detailOverview = $('detailOverview'), seasonBar = $('seasonBar'), detailLoading = $('detailLoading'), epList = $('epList');
+    const detailBg = $('detailBg'), detailPoster = $('detailPoster'), detailChips = $('detailChips'),
+          detailActions = $('detailActions'), castSection = $('castSection'), detailCast = $('detailCast'),
+          episodesSection = $('episodesSection'), similarSection = $('similarSection'), similarGrid = $('similarGrid');
+    // spotlight
+    const spotlight = $('spotlight'), spotBg = $('spotBg'), spotKicker = $('spotKicker'), spotLogoWrap = $('spotLogoWrap'),
+          spotTitle = $('spotTitle'), spotMeta = $('spotMeta'), spotOverview = $('spotOverview'),
+          spotPlay = $('spotPlay'), spotInfo = $('spotInfo'), spotDots = $('spotDots');
     const modal = $('playerModal'), video = $('playerVideo'), playerTitle = $('playerTitle'),
           playerMsg = $('playerMsg'), playerClose = $('playerClose');
     const audioTrackWrap = $('audioTrackWrap'), audioTrackSel = $('audioTrack'),
-          subTrackWrap = $('subTrackWrap'), subTrackSel = $('subTrack');
+          subTrackWrap = $('subTrackWrap'), subTrackSel = $('subTrack'),
+          speedSel = $('speedSel'), skipIntro = $('skipIntro');
     const upNext = $('upNext'), upNextThumb = $('upNextThumb'), upNextName = $('upNextName'),
           upNextCount = $('upNextCount'), upNextPlay = $('upNextPlay'), upNextCancel = $('upNextCancel');
 
@@ -793,6 +973,28 @@
       if (item.ParentThumbImageTag)
         return `${SERVER}/Items/${item.ParentThumbItemId}/Images/Thumb?tag=${item.ParentThumbImageTag}&fillWidth=320&quality=85`;
       return null;
+    }
+    function backdropUrl(item, w) {
+      w = w || 1280;
+      if (item.BackdropImageTags && item.BackdropImageTags.length)
+        return `${SERVER}/Items/${item.Id}/Images/Backdrop/0?tag=${item.BackdropImageTags[0]}&fillWidth=${w}&quality=88`;
+      if (item.ParentBackdropImageTags && item.ParentBackdropImageTags.length && item.ParentBackdropItemId)
+        return `${SERVER}/Items/${item.ParentBackdropItemId}/Images/Backdrop/0?tag=${item.ParentBackdropImageTags[0]}&fillWidth=${w}&quality=88`;
+      // last resort: a wide crop of the primary
+      if (item.ImageTags && item.ImageTags.Primary)
+        return `${SERVER}/Items/${item.Id}/Images/Primary?tag=${item.ImageTags.Primary}&fillWidth=${w}&quality=85`;
+      return null;
+    }
+    function logoUrl(item) {
+      if (item.ImageTags && item.ImageTags.Logo)
+        return `${SERVER}/Items/${item.Id}/Images/Logo?tag=${item.ImageTags.Logo}&fillHeight=120&quality=90`;
+      return null;
+    }
+    function runtimeText(ticks) {
+      if (!ticks) return '';
+      const mins = Math.round(ticks / 600000000);
+      if (mins < 60) return mins + 'm';
+      return Math.floor(mins / 60) + 'h ' + (mins % 60) + 'm';
     }
 
     // ---- device profile + stream resolution ----
@@ -948,7 +1150,7 @@
       clearTimeout(toast._t);
       toast._t = setTimeout(() => libToast.classList.remove('show'), 2400);
     }
-    const FIELDS = 'ProductionYear,UserData,RunTimeTicks,Genres,CommunityRating,SeriesName,IndexNumber,ParentIndexNumber,ParentThumbImageTag,ParentThumbItemId';
+    const FIELDS = 'ProductionYear,UserData,RunTimeTicks,Genres,CommunityRating,OfficialRating,Overview,SeriesName,IndexNumber,ParentIndexNumber,ParentThumbImageTag,ParentThumbItemId,BackdropImageTags,ParentBackdropImageTags,ParentBackdropItemId,ImageTags';
 
     // ---- poster card ----
     function progressPct(item) {
@@ -958,6 +1160,7 @@
       return 0;
     }
     function isFav(item) { return !!(item.UserData && item.UserData.IsFavorite); }
+    function isPlayed(item) { return !!(item.UserData && item.UserData.Played); }
 
     // opts: { title, subline, onClick, onRemove(label) }
     function makePoster(item, opts) {
@@ -968,14 +1171,29 @@
       const pct = progressPct(item);
       const subline = opts.subline ? `<div class="poster-sub">${escapeHtml(opts.subline)}</div>` : '';
       const fav = isFav(item);
+      const played = isPlayed(item) && pct === 0;
       const removeBtn = opts.onRemove
         ? `<div class="poster-add" data-act="remove" title="Remove">−</div>`
         : `<div class="poster-add" data-act="add" title="Add to playlist">+</div>`;
+      // hover preview meta
+      const metaBits = [];
+      if (item.ProductionYear) metaBits.push(item.ProductionYear);
+      if (item.CommunityRating) metaBits.push(`<span class="r">★ ${item.CommunityRating.toFixed(1)}</span>`);
+      if (item.RunTimeTicks && item.Type !== 'Series') metaBits.push(runtimeText(item.RunTimeTicks));
+      if (item.Type === 'Series') metaBits.push('Series');
+      const hoverOv = item.Overview ? `<div class="poster-hover-ov">${escapeHtml(item.Overview)}</div>` : '';
+      const hover = `
+        <div class="poster-hover">
+          <div class="poster-hover-meta">${metaBits.join('<span class="dot" style="width:3px;height:3px;border-radius:50%;background:var(--text-3);display:inline-block"></span> ')}</div>
+          ${hoverOv}
+        </div>`;
       btn.innerHTML = `
         <div class="poster-art">
           ${art ? `<img loading="lazy" alt="" src="${art}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><div class="fallback" style="display:none">${escapeHtml(item.Name)}</div>`
                 : `<div class="fallback">${escapeHtml(item.Name)}</div>`}
+          ${hover}
           <div class="poster-play"><span>▶</span></div>
+          ${played ? '<div class="poster-check" title="Watched">✓</div>' : ''}
           <div class="poster-fav${fav ? ' on' : ''}" data-act="fav" title="${fav ? 'Remove from favorites' : 'Add to favorites'}">${fav ? '♥' : '♡'}</div>
           ${removeBtn}
           ${pct > 0 ? `<div class="poster-prog"><i style="width:${pct}%"></i></div>` : ''}
@@ -993,11 +1211,10 @@
       return btn;
     }
 
-    // clicking a library item: series → episode browser, movie → play
+    // clicking a library item opens the detail page (movie or series).
     function openItem(item) {
-      if (item.Type === 'Series') { openSeries(item); return; }
       if (item.Type === 'Episode') { playMedia(item, episodeContext(item)); return; }
-      playMedia(item, null);
+      openDetail(item);
     }
 
     // ---- favorites ----
@@ -1025,8 +1242,10 @@
     }
 
     async function loadLibrary() {
-      loadingEl.style.display = 'flex';
-      rowsContainer.innerHTML = ''; grid.innerHTML = ''; emptyEl.style.display = 'none';
+      loadingEl.style.display = 'none';
+      grid.innerHTML = ''; emptyEl.style.display = 'none';
+      rowsView.style.display = 'block'; gridView.style.display = 'none';
+      showSkeletonRows(4);
       const kind = kindEl.value;
       headingEl.textContent = kind === 'Series' ? 'Shows' : 'Movies';
       try {
@@ -1038,11 +1257,10 @@
         allItems = (data && data.Items) || [];
         buildGenreOptions();
         buildYearOptions();
-        loadingEl.style.display = 'none';
         renderBrowse();
       } catch (err) {
-        loadingEl.style.display = 'none';
         if (err.code === 401) { handleExpired(); return; }
+        rowsContainer.innerHTML = '';
         emptyEl.textContent = 'Could not reach the server. If you just signed in, the server may need to allow this site (CORS).';
         gridView.style.display = 'block'; rowsView.style.display = 'none';
         emptyEl.style.display = 'block';
@@ -1075,18 +1293,55 @@
       else { gridView.style.display = 'none'; rowsView.style.display = 'block'; renderRows(); }
     }
 
-    function renderGrid() {
-      const q = searchEl.value.trim().toLowerCase();
+    let searchToken = 0;
+    async function renderGrid() {
+      const q = searchEl.value.trim();
       const g = fGenre.value, y = fYear.value ? parseInt(fYear.value, 10) : null, sort = fSort.value;
+
+      // A search term queries the whole server (both Movies and Shows, matching
+      // title + overview + people) rather than just the loaded kind. Genre/year/
+      // sort-only filtering stays local to the already-loaded set for speed.
+      if (q) {
+        const token = ++searchToken;
+        grid.innerHTML = ''; emptyEl.style.display = 'none';
+        gridHeading.firstChild.textContent = 'Search ';
+        gridCount.textContent = 'searching…';
+        try {
+          const params = new URLSearchParams({
+            searchTerm: q, IncludeItemTypes: 'Movie,Series', Recursive: 'true',
+            Fields: FIELDS, Limit: '80', EnableTotalRecordCount: 'false',
+          });
+          const data = await jf(`/Users/${session.userId}/Items?${params.toString()}`);
+          if (token !== searchToken) return; // a newer search superseded this one
+          let items = (data && data.Items) || [];
+          if (g) items = items.filter((i) => (i.Genres || []).indexOf(g) >= 0);
+          if (y) items = items.filter((i) => i.ProductionYear === y);
+          if (sort && sort !== 'SortName') items = sortItems(items, sort);
+          gridCount.textContent = items.length + (items.length === 1 ? ' result' : ' results');
+          grid.innerHTML = '';
+          if (!items.length) { emptyEl.textContent = 'No titles match “' + q + '”.'; emptyEl.style.display = 'block'; return; }
+          emptyEl.style.display = 'none';
+          const frag = document.createDocumentFragment();
+          items.forEach((it) => frag.appendChild(makePoster(it, {})));
+          grid.appendChild(frag);
+        } catch (err) {
+          if (token !== searchToken) return;
+          if (err.code === 401) { handleExpired(); return; }
+          gridCount.textContent = '';
+          emptyEl.textContent = 'Search failed — try again.'; emptyEl.style.display = 'block';
+        }
+        return;
+      }
+
+      // No search term → filter the loaded set locally.
       let items = allItems.slice();
-      if (q) items = items.filter((i) => i.Name && i.Name.toLowerCase().includes(q));
       if (g) items = items.filter((i) => (i.Genres || []).indexOf(g) >= 0);
       if (y) items = items.filter((i) => i.ProductionYear === y);
       items = sortItems(items, sort);
       gridHeading.firstChild.textContent = (kindEl.value === 'Series' ? 'Shows' : 'Movies') + ' ';
       gridCount.textContent = items.length + (items.length === 1 ? ' title' : ' titles');
       grid.innerHTML = '';
-      if (!items.length) { emptyEl.style.display = 'block'; return; }
+      if (!items.length) { emptyEl.textContent = 'No titles match those filters.'; emptyEl.style.display = 'block'; return; }
       emptyEl.style.display = 'none';
       const frag = document.createDocumentFragment();
       items.forEach((it) => frag.appendChild(makePoster(it, {})));
@@ -1105,6 +1360,18 @@
       return items.sort(cmp);
     }
 
+    // ---- skeleton shimmer (shown while rows load) ----
+    function showSkeletonRows(n) {
+      rowsContainer.innerHTML = '';
+      for (let r = 0; r < (n || 3); r++) {
+        const row = document.createElement('div'); row.className = 'skel-row';
+        const h = document.createElement('div'); h.className = 'skel-h'; row.appendChild(h);
+        const sc = document.createElement('div'); sc.className = 'skel-scroll';
+        for (let c = 0; c < 8; c++) { const card = document.createElement('div'); card.className = 'skel-card'; sc.appendChild(card); }
+        row.appendChild(sc); rowsContainer.appendChild(row);
+      }
+    }
+
     // ---- curated rows ----
     function appendRow(title, items, opts) {
       opts = opts || {};
@@ -1114,6 +1381,19 @@
       const head = document.createElement('div');
       head.className = 'lib-section-h';
       head.innerHTML = escapeHtml(title) + (opts.count ? ` <span class="count">${items.length}</span>` : '');
+      // optional play-all / shuffle actions for a row (used by genre rows)
+      if (opts.queue && opts.queue.length) {
+        const actions = document.createElement('div');
+        actions.className = 'lib-mini-actions';
+        const playAll = document.createElement('button');
+        playAll.className = 'lib-mini-btn'; playAll.innerHTML = '▶ Play all';
+        playAll.addEventListener('click', (e) => { e.stopPropagation(); playQueue(opts.queue.slice(), false); });
+        const shuffle = document.createElement('button');
+        shuffle.className = 'lib-mini-btn'; shuffle.innerHTML = '⤮ Shuffle';
+        shuffle.addEventListener('click', (e) => { e.stopPropagation(); playQueue(opts.queue.slice(), true); });
+        actions.appendChild(playAll); actions.appendChild(shuffle);
+        head.appendChild(actions);
+      }
       wrap.appendChild(head);
 
       const rowWrap = document.createElement('div');
@@ -1135,9 +1415,92 @@
       rowsContainer.appendChild(wrap);
     }
 
+    // ---- queue playback (Play all / Shuffle) ----
+    let playQueueList = null, playQueueIdx = -1;
+    function playQueue(items, shuffle) {
+      if (!items || !items.length) return;
+      if (shuffle) { for (let i = items.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [items[i], items[j]] = [items[j], items[i]]; } }
+      playQueueList = items; playQueueIdx = 0;
+      const first = items[0];
+      if (first.Type === 'Series') playFirstUnwatched(first);
+      else playMedia(first, null);
+      toast((shuffle ? 'Shuffling ' : 'Playing ') + items.length + ' titles');
+    }
+
+    // ---- spotlight banner ----
+    let spotItems = [], spotIdx = 0, spotTimer = null;
+    function buildSpotlight() {
+      // featured = highest-rated titles that have a backdrop, max 5
+      const candidates = allItems
+        .filter((i) => (i.BackdropImageTags && i.BackdropImageTags.length) || (i.ImageTags && i.ImageTags.Backdrop))
+        .sort((a, b) => (b.CommunityRating || 0) - (a.CommunityRating || 0))
+        .slice(0, 14);
+      // shuffle then take 5 so it varies between visits
+      for (let i = candidates.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [candidates[i], candidates[j]] = [candidates[j], candidates[i]]; }
+      spotItems = candidates.slice(0, 5);
+      clearInterval(spotTimer);
+      if (!spotItems.length) { spotlight.style.display = 'none'; return; }
+      spotlight.style.display = 'flex';
+      spotDots.innerHTML = '';
+      spotItems.forEach((_, i) => {
+        const d = document.createElement('button');
+        d.className = 'lib-spot-dot' + (i === 0 ? ' active' : '');
+        d.addEventListener('click', () => { showSpot(i); restartSpotTimer(); });
+        spotDots.appendChild(d);
+      });
+      spotIdx = 0;
+      showSpot(0);
+      requestAnimationFrame(() => spotlight.classList.add('ready'));
+      restartSpotTimer();
+    }
+    function restartSpotTimer() {
+      clearInterval(spotTimer);
+      spotTimer = setInterval(() => { showSpot((spotIdx + 1) % spotItems.length); }, 7000);
+    }
+    function showSpot(i) {
+      spotIdx = i;
+      const item = spotItems[i];
+      if (!item) return;
+      // background crossfade
+      spotBg.innerHTML = '';
+      const bd = backdropUrl(item, 1600);
+      if (bd) { const im = new Image(); im.onload = () => im.classList.add('shown'); im.src = bd; spotBg.appendChild(im); }
+      // logo or title
+      const lg = logoUrl(item);
+      spotLogoWrap.innerHTML = lg ? `<img class="lib-spot-logo" alt="${escapeHtml(item.Name)}" src="${lg}" onerror="this.remove()" />` : '';
+      spotTitle.style.display = lg ? 'none' : 'block';
+      spotTitle.textContent = item.Name;
+      spotKicker.textContent = item.Type === 'Series' ? 'Featured series' : 'Featured film';
+      const meta = [];
+      if (item.ProductionYear) meta.push(String(item.ProductionYear));
+      if (item.OfficialRating) meta.push(escapeHtml(item.OfficialRating));
+      if (item.RunTimeTicks && item.Type !== 'Series') meta.push(runtimeText(item.RunTimeTicks));
+      if (item.CommunityRating) meta.push(`<span class="lib-spot-rating">★ ${item.CommunityRating.toFixed(1)}</span>`);
+      spotMeta.innerHTML = meta.join(' <span class="dot"></span> ');
+      spotOverview.textContent = item.Overview || '';
+      [...spotDots.children].forEach((d, idx) => d.classList.toggle('active', idx === i));
+    }
+
+
     async function renderRows() {
       rowsContainer.innerHTML = '';
       const kind = kindEl.value;
+
+      // ----- spotlight (rotating featured titles) -----
+      buildSpotlight();
+
+      // ----- Next Up (shows only): the next unwatched episode per series -----
+      if (kind === 'Series') {
+        try {
+          const nu = await jf(`/Shows/NextUp?UserId=${encodeURIComponent(session.userId)}&Limit=24&Fields=${encodeURIComponent(FIELDS)}`);
+          const items = ((nu && nu.Items) || []).map((it) => {
+            const s = it.ParentIndexNumber, e = it.IndexNumber;
+            const subline = (s != null && e != null) ? `S${s} · E${e} — ${it.Name}` : it.Name;
+            return { item: it, opts: { title: it.SeriesName || it.Name, subline, onClick: () => playMedia(it, episodeContext(it)) } };
+          });
+          appendRow('Next up', items);
+        } catch (_) {}
+      }
 
       // Continue watching (server-tracked)
       try {
@@ -1172,7 +1535,7 @@
         .sort((a, b) => b.n - a.n).slice(0, 6);
       counts.forEach(({ g }) => {
         const items = sortItems(allItems.filter((i) => (i.Genres || []).indexOf(g) >= 0), 'CommunityRating').slice(0, 24);
-        appendRow(g, items, { count: true });
+        appendRow(g, items, { count: true, queue: items.slice() });
       });
 
       if (!rowsContainer.children.length) {
@@ -1250,6 +1613,21 @@
         const items = (data && data.Items) || [];
         plDetailLoading.style.display = 'none';
         if (!items.length) { plDetailEmpty.style.display = 'block'; return; }
+        // play-all / shuffle controls
+        let bar = document.getElementById('plPlayBar');
+        if (!bar) {
+          bar = document.createElement('div'); bar.id = 'plPlayBar'; bar.className = 'lib-detail-actions';
+          plDetailGrid.parentNode.insertBefore(bar, plDetailGrid);
+        }
+        bar.innerHTML = '';
+        const playAll = document.createElement('button');
+        playAll.className = 'btn-play'; playAll.innerHTML = '▶ Play all';
+        playAll.addEventListener('click', () => playQueue(items.slice(), false));
+        const shuffle = document.createElement('button');
+        shuffle.className = 'btn-secondary'; shuffle.innerHTML = '⤮ Shuffle';
+        shuffle.addEventListener('click', () => playQueue(items.slice(), true));
+        bar.appendChild(playAll); bar.appendChild(shuffle);
+
         const frag = document.createDocumentFragment();
         items.forEach((it) => {
           frag.appendChild(makePoster(it, {
@@ -1337,31 +1715,179 @@
     let currentSeasons = [];
     let currentEpisodes = [];  // episodes of the visible season, in order
 
-    async function openSeries(series) {
-      currentSeries = series;
+    let currentDetailItem = null;
+
+    async function openDetail(item) {
+      currentDetailItem = item;
+      currentSeries = item.Type === 'Series' ? item : null;
       libView.style.display = 'none';
+      playlistView.style.display = 'none';
       detailView.style.display = 'block';
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      detailTitle.textContent = series.Name;
-      detailMeta.textContent = series.ProductionYear ? String(series.ProductionYear) : '';
-      detailOverview.textContent = series.Overview || '';
-      seasonBar.innerHTML = ''; epList.innerHTML = '';
-      detailLoading.style.display = 'flex';
+
+      // header skeleton-ish reset
+      detailTitle.textContent = item.Name;
+      detailMeta.textContent = '';
+      detailChips.innerHTML = '';
+      detailOverview.textContent = item.Overview || '';
+      detailActions.innerHTML = '';
+      castSection.style.display = 'none'; detailCast.innerHTML = '';
+      episodesSection.style.display = 'none'; seasonBar.innerHTML = ''; epList.innerHTML = '';
+      similarSection.style.display = 'none'; similarGrid.innerHTML = '';
+
+      // poster
+      const pa = posterUrl(item);
+      detailPoster.innerHTML = pa ? `<img alt="" src="${pa}" />` : `<div class="fallback" style="display:flex;align-items:center;justify-content:center;height:100%">${escapeHtml(item.Name)}</div>`;
+      // backdrop
+      detailBg.innerHTML = '';
+      const bd = backdropUrl(item, 1280);
+      if (bd) { const im = new Image(); im.onload = () => im.classList.add('shown'); im.src = bd; detailBg.appendChild(im); }
+
+      // fetch full metadata (overview, genres, people, rating) for richer page
+      let full = item;
       try {
-        // fetch full overview if missing
-        if (!series.Overview) {
-          try { const full = await jf(`/Users/${session.userId}/Items/${series.Id}`); if (full && full.Overview) detailOverview.textContent = full.Overview; } catch (_) {}
+        const f = await jf(`/Users/${session.userId}/Items/${item.Id}?Fields=${encodeURIComponent('Overview,Genres,People,CommunityRating,OfficialRating,ProductionYear,RunTimeTicks,Studios')}`);
+        if (f && f.Id) { full = f; currentDetailItem = f; }
+      } catch (e) { if (e.code === 401) { handleExpired(); return; } }
+
+      // meta line
+      const meta = [];
+      if (full.ProductionYear) meta.push(String(full.ProductionYear));
+      if (full.OfficialRating) meta.push(escapeHtml(full.OfficialRating));
+      if (full.RunTimeTicks && full.Type !== 'Series') meta.push(runtimeText(full.RunTimeTicks));
+      if (full.CommunityRating) meta.push(`<span class="lib-spot-rating">★ ${full.CommunityRating.toFixed(1)}</span>`);
+      detailMeta.innerHTML = meta.join(' <span class="dot" style="display:inline-block;width:3px;height:3px;border-radius:50%;background:var(--text-3);vertical-align:middle"></span> ');
+      detailOverview.textContent = full.Overview || item.Overview || 'No description available.';
+      detailOverview.style.webkitLineClamp = 'unset';
+
+      // genre chips
+      (full.Genres || []).slice(0, 6).forEach((g) => {
+        const c = document.createElement('span'); c.className = 'lib-chip'; c.textContent = g; detailChips.appendChild(c);
+      });
+
+      // actions
+      buildDetailActions(full);
+
+      // cast
+      const people = (full.People || []).filter((p) => p.Type === 'Actor').slice(0, 12);
+      if (people.length) {
+        detailCast.innerHTML = '';
+        people.forEach((p) => {
+          const card = document.createElement('div'); card.className = 'lib-cast';
+          const img = (p.PrimaryImageTag)
+            ? `<img class="lib-cast-img" alt="" src="${SERVER}/Items/${p.Id}/Images/Primary?tag=${p.PrimaryImageTag}&fillHeight=144&quality=85" onerror="this.outerHTML='<div class=&quot;lib-cast-img ph&quot;>${escapeHtml((p.Name||'?').charAt(0))}</div>'" />`
+            : `<div class="lib-cast-img ph">${escapeHtml((p.Name || '?').charAt(0))}</div>`;
+          card.innerHTML = img + `<div class="lib-cast-name">${escapeHtml(p.Name || '')}</div>${p.Role ? `<div class="lib-cast-role">${escapeHtml(p.Role)}</div>` : ''}`;
+          detailCast.appendChild(card);
+        });
+        castSection.style.display = 'block';
+      }
+
+      // series → seasons/episodes; movie → "more like this"
+      if (item.Type === 'Series') {
+        episodesSection.style.display = 'block';
+        detailLoading.style.display = 'flex';
+        try {
+          const sd = await jf(`/Shows/${item.Id}/Seasons?UserId=${encodeURIComponent(session.userId)}&Fields=UserData`);
+          currentSeasons = (sd && sd.Items) || [];
+          detailLoading.style.display = 'none';
+          if (!currentSeasons.length) { epList.innerHTML = '<div class="lib-empty">No seasons found.</div>'; }
+          else { renderSeasonBar(0); loadSeason(currentSeasons[0]); }
+        } catch (err) {
+          detailLoading.style.display = 'none';
+          if (err.code === 401) { handleExpired(); return; }
+          epList.innerHTML = '<div class="lib-empty">Could not load this series.</div>';
         }
-        const sd = await jf(`/Shows/${series.Id}/Seasons?UserId=${encodeURIComponent(session.userId)}&Fields=UserData`);
-        currentSeasons = (sd && sd.Items) || [];
-        detailLoading.style.display = 'none';
-        if (!currentSeasons.length) { epList.innerHTML = '<div class="lib-empty">No seasons found.</div>'; return; }
-        renderSeasonBar(0);
-        loadSeason(currentSeasons[0]);
-      } catch (err) {
-        detailLoading.style.display = 'none';
-        if (err.code === 401) { handleExpired(); return; }
-        epList.innerHTML = '<div class="lib-empty">Could not load this series.</div>';
+      }
+      loadSimilar(item);
+    }
+
+    function buildDetailActions(item) {
+      detailActions.innerHTML = '';
+      const pct = progressPct(item);
+      // Play / Resume
+      const play = document.createElement('button');
+      play.className = 'btn-play';
+      if (item.Type === 'Series') {
+        play.innerHTML = '▶ Play';
+        play.addEventListener('click', () => playFirstUnwatched(item));
+      } else {
+        play.innerHTML = pct > 0 ? '▶ Resume' : '▶ Play';
+        play.addEventListener('click', () => playMedia(item, null));
+        if (pct > 0) {
+          const restart = document.createElement('button');
+          restart.className = 'btn-secondary'; restart.innerHTML = '↺ Start over';
+          restart.addEventListener('click', () => { item.UserData = item.UserData || {}; item.UserData.PlaybackPositionTicks = 0; playMedia(item, null); });
+          detailActions.appendChild(play); detailActions.appendChild(restart);
+        }
+      }
+      if (!detailActions.children.length) detailActions.appendChild(play);
+
+      // favorite
+      const fav = document.createElement('button');
+      fav.className = 'btn-secondary';
+      const setFavLabel = () => { fav.innerHTML = isFav(item) ? '♥ In favorites' : '♡ Favorite'; };
+      setFavLabel();
+      fav.addEventListener('click', async () => { await toggleFavorite(item, null); setFavLabel(); });
+      detailActions.appendChild(fav);
+
+      // mark watched/unwatched
+      const watched = document.createElement('button');
+      watched.className = 'btn-secondary';
+      const setWatchLabel = () => { watched.innerHTML = isPlayed(item) ? '✓ Watched' : '＋ Mark watched'; };
+      setWatchLabel();
+      watched.addEventListener('click', async () => { await togglePlayed(item); setWatchLabel(); buildDetailActions(item); });
+      detailActions.appendChild(watched);
+
+      // add to playlist
+      const add = document.createElement('button');
+      add.className = 'btn-secondary'; add.innerHTML = '＋ Playlist';
+      add.addEventListener('click', () => openAddToPlaylist(item));
+      detailActions.appendChild(add);
+    }
+
+    async function loadSimilar(item) {
+      try {
+        const params = new URLSearchParams({ UserId: session.userId, Limit: '12', Fields: FIELDS });
+        const data = await jf(`/Items/${item.Id}/Similar?${params.toString()}`);
+        const items = (data && data.Items) || [];
+        if (!items.length) { similarSection.style.display = 'none'; return; }
+        similarGrid.innerHTML = '';
+        items.forEach((it) => similarGrid.appendChild(makePoster(it, {})));
+        similarSection.style.display = 'block';
+      } catch (_) { similarSection.style.display = 'none'; }
+    }
+
+    // Series Play button → first unwatched episode (Next Up), else S1E1.
+    async function playFirstUnwatched(series) {
+      try {
+        const nu = await jf(`/Shows/NextUp?UserId=${encodeURIComponent(session.userId)}&SeriesId=${series.Id}&Limit=1&Fields=${encodeURIComponent(FIELDS)}`);
+        let ep = nu && nu.Items && nu.Items[0];
+        if (!ep) {
+          const ed = await jf(`/Shows/${series.Id}/Episodes?UserId=${encodeURIComponent(session.userId)}&Limit=1&Fields=${encodeURIComponent(FIELDS)}`);
+          ep = ed && ed.Items && ed.Items[0];
+        }
+        if (ep) playMedia(ep, episodeContext(ep));
+        else toast('No episodes found');
+      } catch (e) {
+        if (e.code === 401) { handleExpired(); return; }
+        toast('Could not start playback');
+      }
+    }
+
+    // mark played / unplayed
+    async function togglePlayed(item) {
+      const turnOn = !isPlayed(item);
+      try {
+        if (turnOn) await jf(`/Users/${session.userId}/PlayedItems/${item.Id}`, { method: 'POST' });
+        else await jf(`/Users/${session.userId}/PlayedItems/${item.Id}`, { method: 'DELETE' });
+        item.UserData = item.UserData || {};
+        item.UserData.Played = turnOn;
+        if (turnOn) item.UserData.PlaybackPositionTicks = 0;
+        toast(turnOn ? 'Marked as watched' : 'Marked as unwatched');
+      } catch (e) {
+        if (e.code === 401) { handleExpired(); return; }
+        toast('Could not update');
       }
     }
 
@@ -1492,6 +2018,10 @@
       if (playState) { reportStop(); stopProgressLoop(); }
       hideUpNext();
       destroyHls();
+      // if this play wasn't initiated by the queue, drop any active queue
+      if (!(playQueueList && playQueueList[playQueueIdx] && playQueueList[playQueueIdx].Id === item.Id)) {
+        playQueueList = null; playQueueIdx = -1;
+      }
 
       playState = {
         item, ctx: ctx || null, mediaSourceId: null, playSessionId: null, hls: false,
@@ -1553,6 +2083,8 @@
           if (s && !isImageSub(s)) applySubtitle(s);
         }
         video.play().catch(() => {});
+        try { video.playbackRate = parseFloat(speedSel.value) || 1; } catch (_) {}
+        setupSkipIntro();
         reportStart();
         startProgressLoop();
         // accurate status: direct play vs remux vs transcode
@@ -1825,14 +2357,30 @@
 
     async function onEnded() {
       reportProgress(false); reportStop(); stopProgressLoop();
-      if (!playState || playState.item.Type !== 'Episode') return;
-      const next = await resolveNextEpisode(playState.item, playState.ctx);
-      if (!next) return;
+      // mark the finished item watched locally
+      if (playState && playState.item) { playState.item.UserData = playState.item.UserData || {}; playState.item.UserData.Played = true; }
+
+      // 1) next episode in a series
+      if (playState && playState.item.Type === 'Episode') {
+        const next = await resolveNextEpisode(playState.item, playState.ctx);
+        if (next) { showUpNextCard(next); return; }
+      }
+      // 2) next item in a Play all / Shuffle queue
+      if (playQueueList && playQueueIdx >= 0 && playQueueIdx + 1 < playQueueList.length) {
+        playQueueIdx += 1;
+        const n = playQueueList[playQueueIdx];
+        showUpNextCard(n, true);
+        return;
+      }
+    }
+
+    function showUpNextCard(next, isQueue) {
       pendingNext = next;
-      // show up-next card with countdown
-      const t = thumbUrl(next);
+      const t = thumbUrl(next) || posterUrl(next);
       upNextThumb.innerHTML = t ? `<img alt="" src="${t}" />` : '';
-      upNextName.textContent = (next.IndexNumber != null ? `E${next.IndexNumber}: ` : '') + (next.Name || 'Next episode');
+      upNextName.textContent = isQueue
+        ? (next.Name || 'Next')
+        : (next.IndexNumber != null ? `E${next.IndexNumber}: ` : '') + (next.Name || 'Next episode');
       let remaining = AUTOPLAY_COUNTDOWN;
       upNextCount.textContent = `Playing in ${remaining}s…`;
       upNext.classList.add('show');
@@ -1840,16 +2388,67 @@
       countdownTimer = setInterval(() => {
         remaining -= 1;
         upNextCount.textContent = `Playing in ${remaining}s…`;
-        if (remaining <= 0) { clearCountdown(); const n = pendingNext; hideUpNext(); if (n) playMedia(n, null); }
+        if (remaining <= 0) {
+          clearCountdown(); const n = pendingNext; hideUpNext();
+          if (n) { n.Type === 'Series' ? playFirstUnwatched(n) : playMedia(n, n.Type === 'Episode' ? episodeContext(n) : null); }
+        }
       }, 1000);
     }
 
-    upNextPlay.addEventListener('click', () => { const n = pendingNext; hideUpNext(); if (n) playMedia(n, null); });
+    upNextPlay.addEventListener('click', () => { const n = pendingNext; hideUpNext(); if (n) { n.Type === 'Series' ? playFirstUnwatched(n) : playMedia(n, n.Type === 'Episode' ? episodeContext(n) : null); } });
     upNextCancel.addEventListener('click', hideUpNext);
 
     video.addEventListener('ended', onEnded);
     video.addEventListener('pause', () => { if (playState && !video.ended) reportProgress(true); });
     video.addEventListener('play', () => { if (playState) { hideUpNext(); reportProgress(false); } });
+
+    // ---- player speed, skip-intro, keyboard shortcuts ----
+    speedSel.addEventListener('change', () => { try { video.playbackRate = parseFloat(speedSel.value) || 1; } catch (_) {} });
+
+    // skip-intro: Jellyfin's intro-skipper plugin exposes segments; if unavailable,
+    // offer a generic "skip 85s" early in playback so the button is still useful.
+    let introEnd = 0;
+    function setupSkipIntro() {
+      introEnd = 0; skipIntro.classList.remove('show');
+      if (!playState || !playState.item) return;
+      // try the intro-skipper plugin endpoint (Intro segment)
+      jf(`/Episode/${playState.item.Id}/IntroTimestamps`).then((seg) => {
+        if (seg && seg.Valid && seg.IntroEnd) introEnd = seg.IntroEnd;
+      }).catch(() => {
+        // fallback: assume a typical intro window for episodes
+        if (playState.item.Type === 'Episode') introEnd = 90;
+      });
+    }
+    video.addEventListener('timeupdate', () => {
+      if (!introEnd) return;
+      const t = video.currentTime || 0;
+      const inWindow = t > 2 && t < introEnd;
+      skipIntro.classList.toggle('show', inWindow);
+    });
+    skipIntro.addEventListener('click', () => { if (introEnd) { try { video.currentTime = introEnd + 0.3; } catch (_) {} skipIntro.classList.remove('show'); } });
+
+    // keyboard shortcuts while the player is open
+    document.addEventListener('keydown', (e) => {
+      if (!modal.classList.contains('open')) return;
+      const tag = (e.target && e.target.tagName) || '';
+      if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+      switch (e.key) {
+        case ' ': case 'k': e.preventDefault(); video.paused ? video.play() : video.pause(); break;
+        case 'ArrowLeft': e.preventDefault(); video.currentTime = Math.max(0, video.currentTime - 10); break;
+        case 'ArrowRight': e.preventDefault(); video.currentTime = video.currentTime + 10; break;
+        case 'ArrowUp': e.preventDefault(); video.volume = Math.min(1, video.volume + 0.1); break;
+        case 'ArrowDown': e.preventDefault(); video.volume = Math.max(0, video.volume - 0.1); break;
+        case 'm': video.muted = !video.muted; break;
+        case 'f': toggleFullscreen(); break;
+        case 'j': video.currentTime = Math.max(0, video.currentTime - 10); break;
+        case 'l': video.currentTime = video.currentTime + 10; break;
+      }
+    });
+    function toggleFullscreen() {
+      const wrap = video.parentElement;
+      if (!document.fullscreenElement) { (wrap.requestFullscreen || wrap.webkitRequestFullscreen || function(){}).call(wrap); }
+      else { (document.exitFullscreen || document.webkitExitFullscreen || function(){}).call(document); }
+    }
 
     // ---- session lifecycle ----
     function handleExpired() {
@@ -1913,6 +2512,14 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
       if (!filtersActive()) renderRows(); // refresh progress on rows
     });
+
+    // spotlight actions
+    spotPlay.addEventListener('click', () => {
+      const it = spotItems[spotIdx];
+      if (!it) return;
+      it.Type === 'Series' ? playFirstUnwatched(it) : playMedia(it, null);
+    });
+    spotInfo.addEventListener('click', () => { const it = spotItems[spotIdx]; if (it) openDetail(it); });
 
     tabBrowse.addEventListener('click', () => switchTab('browse'));
     tabPlaylists.addEventListener('click', () => switchTab('playlists'));
