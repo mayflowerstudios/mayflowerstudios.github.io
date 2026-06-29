@@ -164,6 +164,22 @@
     .lib-skip-intro:hover { border-color:var(--rose); color:var(--rose); }
     .lib-speed-sel { font-size:12px; padding:7px 26px 7px 10px; }
 
+    /* skip-credits button (shares the skip-intro look, sits just above it when both show) */
+    .lib-skip-credits {
+      position:absolute; right:18px; bottom:74px; z-index:6; display:none;
+      cursor:pointer; font-family:var(--font-b); font-size:13px; font-weight:600; color:var(--text);
+      padding:10px 18px; border-radius:8px; border:1px solid var(--border-2); background:rgba(11,17,32,.9);
+      transition:border-color 150ms, color 150ms;
+    }
+    .lib-skip-credits.show { display:block; }
+    .lib-skip-credits:hover { border-color:var(--rose); color:var(--rose); }
+
+    /* audio-boost control: a small slider that can push gain past 100% for quiet dialogue */
+    .lib-boost { display:flex; align-items:center; gap:7px; }
+    .lib-boost label { font-size:10px; font-weight:600; letter-spacing:.6px; text-transform:uppercase; color:var(--text-3); }
+    .lib-boost input[type=range] { width:78px; accent-color:var(--rose); cursor:pointer; }
+    .lib-boost-val { font-size:11px; color:var(--text-2); min-width:34px; text-align:right; font-variant-numeric:tabular-nums; }
+
     /* ---- sign-in card ---- */
     .lib-auth {
       max-width:420px; margin:24px 0; padding:30px 32px;
@@ -784,6 +800,11 @@
               <option value="2">2×</option>
             </select>
           </div>
+          <div class="lib-boost" id="boostWrap">
+            <label for="boostSel">Boost</label>
+            <input type="range" id="boostSel" min="1" max="3" step="0.25" value="1" />
+            <span class="lib-boost-val" id="boostVal">100%</span>
+          </div>
         </div>
         <button class="lib-close" id="pipBtn" aria-label="Picture in picture" title="Picture-in-picture" style="font-size:14px;">⧉</button>
         <button class="lib-close" id="playerClose" aria-label="Close">×</button>
@@ -791,6 +812,7 @@
       <div class="lib-video-wrap">
         <video id="playerVideo" controls playsinline></video>
         <button class="lib-skip-intro" id="skipIntro">Skip intro →</button>
+        <button class="lib-skip-credits" id="skipCredits">Next →</button>
         <div class="lib-upnext" id="upNext">
           <div class="lib-upnext-thumb" id="upNextThumb"></div>
           <div class="lib-upnext-body">
@@ -844,6 +866,32 @@
     // Persisted user preferences: preferred audio/subtitle language, grid density.
     let prefs = (function () { try { return JSON.parse(localStorage.getItem(PREFS_KEY) || '{}'); } catch (_) { return {}; } })();
     function savePrefs() { try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch (_) {} }
+
+    // Per-show track memory. Keyed by SeriesId for episodes (so a whole show
+    // shares one choice) or the item's own Id for movies. Falls back to the
+    // global prefs.audioLang / prefs.subLang when a title has no saved choice.
+    function showKey(item) {
+      if (!item) return null;
+      return (item.Type === 'Episode' && item.SeriesId) ? ('s:' + item.SeriesId) : ('i:' + item.Id);
+    }
+    function getShowPrefs(item) {
+      const k = showKey(item);
+      const byShow = (prefs.byShow && k && prefs.byShow[k]) || {};
+      return {
+        audioLang: byShow.audioLang != null ? byShow.audioLang : prefs.audioLang,
+        subLang:   byShow.subLang   != null ? byShow.subLang   : prefs.subLang,
+      };
+    }
+    function setShowPref(item, field, value) {
+      const k = showKey(item);
+      if (!k) return;
+      if (!prefs.byShow) prefs.byShow = {};
+      if (!prefs.byShow[k]) prefs.byShow[k] = {};
+      prefs.byShow[k][field] = value;
+      // keep the global default in sync too, as a sensible fallback for new titles
+      prefs[field] = value;
+      savePrefs();
+    }
 
     /* ─────────────────────────────────────────────────────────────────
        PLAYBACK TUNING — adjust these if playback is rough.
@@ -934,7 +982,8 @@
           playerMsg = $('playerMsg'), playerClose = $('playerClose');
     const audioTrackWrap = $('audioTrackWrap'), audioTrackSel = $('audioTrack'),
           subTrackWrap = $('subTrackWrap'), subTrackSel = $('subTrack'),
-          speedSel = $('speedSel'), skipIntro = $('skipIntro'), pipBtn = $('pipBtn');
+          speedSel = $('speedSel'), skipIntro = $('skipIntro'), pipBtn = $('pipBtn'),
+          boostSel = $('boostSel'), boostVal = $('boostVal'), skipCredits = $('skipCredits');
     const upNext = $('upNext'), upNextThumb = $('upNextThumb'), upNextName = $('upNextName'),
           upNextCount = $('upNextCount'), upNextPlay = $('upNextPlay'), upNextCancel = $('upNextCancel');
 
@@ -1686,6 +1735,65 @@
         });
       });
 
+      // ----- Mood / discovery rows (computed from the loaded library) -----
+      const unplayed = allItems.filter((i) => !isPlayed(i));
+
+      // Critically acclaimed — highly rated, regardless of watch state
+      const acclaimed = allItems
+        .filter((i) => (i.CommunityRating || 0) >= 7.5)
+        .sort((a, b) => (b.CommunityRating || 0) - (a.CommunityRating || 0));
+      if (acclaimed.length >= 4) {
+        appendRow('Critically acclaimed', acclaimed.slice(0, 24), {
+          count: true, queue: acclaimed.slice(),
+          viewAll: acclaimed.length > 24 ? () => showGridList('Critically acclaimed', acclaimed, acclaimed.slice()) : null,
+        });
+      }
+
+      // Hidden gems — well-rated but you haven't seen them yet
+      const gems = unplayed
+        .filter((i) => (i.CommunityRating || 0) >= 7)
+        .sort((a, b) => (b.CommunityRating || 0) - (a.CommunityRating || 0));
+      if (gems.length >= 4) {
+        appendRow('Hidden gems', gems.slice(0, 24), {
+          count: true, queue: gems.slice(),
+          viewAll: gems.length > 24 ? () => showGridList('Hidden gems', gems, gems.slice()) : null,
+        });
+      }
+
+      // Quick watch — shorter runtimes for when there isn't much time (movies only)
+      if (kind !== 'Series') {
+        const quick = allItems
+          .filter((i) => { const m = (i.RunTimeTicks || 0) / TICKS / 60; return m > 0 && m <= 100; })
+          .sort((a, b) => (a.RunTimeTicks || 0) - (b.RunTimeTicks || 0));
+        if (quick.length >= 4) {
+          appendRow('Quick watch · under 100 min', quick.slice(0, 24), {
+            count: true, queue: quick.slice(),
+            viewAll: quick.length > 24 ? () => showGridList('Quick watch · under 100 min', quick, quick.slice()) : null,
+          });
+        }
+      }
+
+      // A decade shelf — pick the decade with the most titles (excluding the newest)
+      const decadeBuckets = {};
+      allItems.forEach((i) => {
+        const y = i.ProductionYear;
+        if (!y) return;
+        const d = Math.floor(y / 10) * 10;
+        (decadeBuckets[d] = decadeBuckets[d] || []).push(i);
+      });
+      const decadeKeys = Object.keys(decadeBuckets)
+        .map(Number)
+        .filter((d) => decadeBuckets[d].length >= 5)
+        .sort((a, b) => decadeBuckets[b].length - decadeBuckets[a].length);
+      if (decadeKeys.length) {
+        const d = decadeKeys[Math.floor(Math.random() * Math.min(3, decadeKeys.length))];
+        const inDecade = sortItems(decadeBuckets[d].slice(), 'CommunityRating');
+        appendRow(`Best of the ${d}s`, inDecade.slice(0, 24), {
+          count: true, queue: inDecade.slice(),
+          viewAll: inDecade.length > 24 ? () => showGridList(`Best of the ${d}s`, inDecade, inDecade.slice()) : null,
+        });
+      }
+
       // All titles (A–Z) — full library, with View all
       const allSorted = sortItems(allItems.slice(), 'SortName');
       appendRow('All ' + (kind === 'Series' ? 'shows' : 'movies'), allSorted.slice(0, 24), {
@@ -2421,14 +2529,15 @@
       // track exists) so the user doesn't have to re-pick every time.
       if (firstLoad) {
         const streams = chosen.streams || [];
-        if (audioIdx == null && prefs.audioLang) {
-          const a = streams.find((s) => s.Type === 'Audio' && (s.Language || '').toLowerCase() === prefs.audioLang);
+        const sp = getShowPrefs(item);
+        if (audioIdx == null && sp.audioLang) {
+          const a = streams.find((s) => s.Type === 'Audio' && (s.Language || '').toLowerCase() === sp.audioLang);
           if (a && a.Index !== playState.audioIdx) { playState.audioIdx = a.Index; playState._needTrackReload = true; }
         }
-        if (subIdx == null && prefs.subLang) {
-          if (prefs.subLang === 'off') { playState.subIdx = -1; }
+        if (subIdx == null && sp.subLang) {
+          if (sp.subLang === 'off') { playState.subIdx = -1; }
           else {
-            const sub = streams.find((s) => s.Type === 'Subtitle' && (s.Language || '').toLowerCase() === prefs.subLang);
+            const sub = streams.find((s) => s.Type === 'Subtitle' && (s.Language || '').toLowerCase() === sp.subLang);
             if (sub) { playState.subIdx = sub.Index; }
           }
         }
@@ -2453,6 +2562,7 @@
         }
         video.play().catch(() => {});
         try { video.playbackRate = parseFloat(speedSel.value) || 1; } catch (_) {}
+        applyBoost();
         setupSkipIntro();
         reportStart();
         startProgressLoop();
@@ -2661,16 +2771,16 @@
       const audioChanged = newAudio !== playState.audioIdx;
       const subChanged = newSub !== playState.subIdx;
 
-      // remember language preferences for next time
+      // remember language preferences for next time (per-show, with global fallback)
       if (audioChanged) {
         const a = playState.streams.find((x) => x.Type === 'Audio' && x.Index === newAudio);
-        if (a && a.Language) { prefs.audioLang = a.Language.toLowerCase(); savePrefs(); }
+        if (a && a.Language) { setShowPref(playState.item, 'audioLang', a.Language.toLowerCase()); }
       }
       if (subChanged) {
-        if (newSub < 0) { prefs.subLang = 'off'; savePrefs(); }
+        if (newSub < 0) { setShowPref(playState.item, 'subLang', 'off'); }
         else {
           const s = playState.streams.find((x) => x.Type === 'Subtitle' && x.Index === newSub);
-          if (s && s.Language) { prefs.subLang = s.Language.toLowerCase(); savePrefs(); }
+          if (s && s.Language) { setShowPref(playState.item, 'subLang', s.Language.toLowerCase()); }
         }
       }
 
@@ -2722,6 +2832,8 @@
       revokeSubBlob();
       video.removeAttribute('src'); video.load();
       audioTrackWrap.style.display = 'none'; subTrackWrap.style.display = 'none';
+      skipIntro.classList.remove('show'); skipCredits.classList.remove('show');
+      introEnd = 0; creditsStart = 0; creditsTriggered = false;
       // refresh resume rows / episode progress so it shows immediately on return
       if (libView.style.display !== 'none' && browseTab.style.display !== 'none' && !filtersActive() && !viewAllMode) renderRows();
       if (detailView.style.display !== 'none' && currentSeries) {
@@ -2742,6 +2854,16 @@
       // mark the finished item watched locally
       if (playState && playState.item) { playState.item.UserData = playState.item.UserData || {}; playState.item.UserData.Played = true; }
 
+      // if the credits handler already surfaced an up-next card, start the
+      // countdown now (it was shown without one during the credits roll)
+      if (pendingNext) {
+        skipCredits.classList.remove('show');
+        const n = pendingNext;
+        const isQueue = !(playState && playState.item && playState.item.Type === 'Episode');
+        showUpNextCard(n, isQueue, false);
+        return;
+      }
+
       // 1) next episode in a series
       if (playState && playState.item.Type === 'Episode') {
         const next = await resolveNextEpisode(playState.item, playState.ctx);
@@ -2756,17 +2878,20 @@
       }
     }
 
-    function showUpNextCard(next, isQueue) {
+    function showUpNextCard(next, isQueue, noCountdown) {
       pendingNext = next;
       const t = thumbUrl(next) || posterUrl(next);
       upNextThumb.innerHTML = t ? `<img alt="" src="${t}" />` : '';
       upNextName.textContent = isQueue
         ? (next.Name || 'Next')
         : (next.IndexNumber != null ? `E${next.IndexNumber}: ` : '') + (next.Name || 'Next episode');
-      let remaining = AUTOPLAY_COUNTDOWN;
-      upNextCount.textContent = `Playing in ${remaining}s…`;
       upNext.classList.add('show');
       clearCountdown();
+      // During credits we surface the card but let it ride — no auto-advance until
+      // the file actually ends (or the viewer taps Next). Otherwise, count down.
+      if (noCountdown) { upNextCount.textContent = 'Up next when this ends'; return; }
+      let remaining = AUTOPLAY_COUNTDOWN;
+      upNextCount.textContent = `Playing in ${remaining}s…`;
       countdownTimer = setInterval(() => {
         remaining -= 1;
         upNextCount.textContent = `Playing in ${remaining}s…`;
@@ -2787,6 +2912,36 @@
     // ---- player speed, skip-intro, keyboard shortcuts ----
     speedSel.addEventListener('change', () => { try { video.playbackRate = parseFloat(speedSel.value) || 1; } catch (_) {} });
 
+    // ---- audio boost (WebAudio gain) ----
+    // A MediaElementSource can only be created ONCE per media element, so build
+    // the graph lazily and reuse it. gain > 1 amplifies quiet dialogue; values
+    // above ~2 may clip on already-loud sources, which is expected.
+    let audioCtx = null, gainNode = null, srcNode = null;
+    function ensureAudioGraph() {
+      if (gainNode) return true;
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return false;
+        audioCtx = new AC();
+        srcNode = audioCtx.createMediaElementSource(video);
+        gainNode = audioCtx.createGain();
+        gainNode.gain.value = parseFloat(boostSel.value) || 1;
+        srcNode.connect(gainNode).connect(audioCtx.destination);
+        return true;
+      } catch (_) { gainNode = null; return false; }
+    }
+    function applyBoost() {
+      const g = parseFloat(boostSel.value) || 1;
+      boostVal.textContent = Math.round(g * 100) + '%';
+      if (g === 1 && !gainNode) return;            // no need to build the graph just for 100%
+      if (!ensureAudioGraph()) { if (g !== 1) toast('Audio boost unavailable'); return; }
+      try { if (audioCtx.state === 'suspended') audioCtx.resume(); } catch (_) {}
+      try { gainNode.gain.value = g; } catch (_) {}
+    }
+    boostSel.addEventListener('input', applyBoost);
+    // resume the context on first play (browsers require a gesture)
+    video.addEventListener('play', () => { if (audioCtx && audioCtx.state === 'suspended') { try { audioCtx.resume(); } catch (_) {} } });
+
     // picture-in-picture (keep watching while you browse)
     if (!('pictureInPictureEnabled' in document)) { pipBtn.style.display = 'none'; }
     pipBtn.addEventListener('click', async () => {
@@ -2796,27 +2951,88 @@
       } catch (_) { toast('Picture-in-picture unavailable'); }
     });
 
-    // skip-intro: Jellyfin's intro-skipper plugin exposes segments; if unavailable,
-    // offer a generic "skip 85s" early in playback so the button is still useful.
+    // skip-intro / skip-credits: Jellyfin's media-segments API exposes Intro and
+    // Outro/Credits markers. If unavailable, fall back to a generic intro window.
     let introEnd = 0;
+    let creditsStart = 0;       // seconds; 0 = unknown / none
+    let creditsTriggered = false;
     function setupSkipIntro() {
-      introEnd = 0; skipIntro.classList.remove('show');
+      introEnd = 0; creditsStart = 0; creditsTriggered = false;
+      skipIntro.classList.remove('show'); skipCredits.classList.remove('show');
       if (!playState || !playState.item) return;
-      // try the intro-skipper plugin endpoint (Intro segment)
-      jf(`/Episode/${playState.item.Id}/IntroTimestamps`).then((seg) => {
-        if (seg && seg.Valid && seg.IntroEnd) introEnd = seg.IntroEnd;
+      const item = playState.item;
+
+      // Preferred: the modern MediaSegments endpoint (Intro + Outro markers).
+      jf(`/MediaSegments/${item.Id}`).then((res) => {
+        const segs = (res && res.Items) || [];
+        let gotIntro = false, gotOutro = false;
+        segs.forEach((seg) => {
+          const type = (seg.Type || '').toLowerCase();
+          const start = (seg.StartTicks || 0) / TICKS;
+          const end = (seg.EndTicks || 0) / TICKS;
+          if (type === 'intro' && end) { introEnd = end; gotIntro = true; }
+          if ((type === 'outro' || type === 'credits') && start) { creditsStart = start; gotOutro = true; }
+        });
+        if (!gotIntro) legacyIntro(item);
+        if (!gotOutro) deriveCreditsFromRuntime(item);
       }).catch(() => {
-        // fallback: assume a typical intro window for episodes
-        if (playState.item.Type === 'Episode') introEnd = 90;
+        legacyIntro(item);
+        deriveCreditsFromRuntime(item);
       });
     }
+    // legacy intro-skipper plugin endpoint
+    function legacyIntro(item) {
+      jf(`/Episode/${item.Id}/IntroTimestamps`).then((seg) => {
+        if (seg && seg.Valid && seg.IntroEnd) introEnd = seg.IntroEnd;
+      }).catch(() => { if (item.Type === 'Episode') introEnd = 90; });
+    }
+    // fallback: assume credits roll in the final stretch so "Next" still appears
+    function deriveCreditsFromRuntime(item) {
+      if (creditsStart) return;
+      const runSecs = (item.RunTimeTicks || 0) / TICKS;
+      // only auto-derive for episodes (movies have wildly variable credit lengths)
+      if (item.Type === 'Episode' && runSecs > 120) {
+        creditsStart = Math.max(runSecs - 30, runSecs * 0.97);
+      }
+    }
     video.addEventListener('timeupdate', () => {
-      if (!introEnd) return;
       const t = video.currentTime || 0;
-      const inWindow = t > 2 && t < introEnd;
-      skipIntro.classList.toggle('show', inWindow);
+      // intro
+      if (introEnd) skipIntro.classList.toggle('show', t > 2 && t < introEnd);
+      // credits → show "Next" and, once we're in the credits window, fire up-next early
+      if (creditsStart && t >= creditsStart && !video.ended) {
+        skipCredits.classList.toggle('show', !upNext.classList.contains('show'));
+        if (!creditsTriggered && !pendingNext) {
+          creditsTriggered = true;
+          maybeShowNextDuringCredits();
+        }
+      } else if (creditsStart) {
+        skipCredits.classList.remove('show');
+      }
     });
     skipIntro.addEventListener('click', () => { if (introEnd) { try { video.currentTime = introEnd + 0.3; } catch (_) {} skipIntro.classList.remove('show'); } });
+    // "Next →" during credits: jump straight to whatever onEnded would have queued
+    skipCredits.addEventListener('click', () => {
+      skipCredits.classList.remove('show');
+      const n = pendingNext;
+      if (n) { hideUpNext(); n.Type === 'Series' ? playFirstUnwatched(n) : playMedia(n, n.Type === 'Episode' ? episodeContext(n) : null); }
+      else { onEnded(); }   // resolve + show the up-next card now
+    });
+    // Resolve the next item while credits roll and surface the up-next card early,
+    // so the viewer can skip ahead without waiting for the file to fully end.
+    async function maybeShowNextDuringCredits() {
+      if (!playState) return;
+      try {
+        if (playState.item.Type === 'Episode') {
+          const next = await resolveNextEpisode(playState.item, playState.ctx);
+          if (next) { showUpNextCard(next, false, true); return; }
+        }
+        if (playQueueList && playQueueIdx >= 0 && playQueueIdx + 1 < playQueueList.length) {
+          playQueueIdx += 1;
+          showUpNextCard(playQueueList[playQueueIdx], true, true);
+        }
+      } catch (_) {}
+    }
 
     // keyboard shortcuts while the player is open
     document.addEventListener('keydown', (e) => {
