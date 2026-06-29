@@ -380,6 +380,8 @@
       display:grid; gap:20px; margin:8px 0 40px;
       grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));
     }
+    .lib-grid.compact { grid-template-columns:repeat(auto-fill, minmax(110px, 1fr)); gap:14px; }
+    .lib-ghost.on { color:#0b1120; background:linear-gradient(135deg,var(--rose),var(--violet)); border-color:transparent; }
     .poster {
       cursor:pointer; text-align:left; border:none; background:none; padding:0;
       display:flex; flex-direction:column; gap:8px;
@@ -566,6 +568,8 @@
             <option value="Movie">Movies</option>
             <option value="Series">Shows</option>
           </select>
+          <button class="lib-ghost" id="libTheme" title="Play theme music on detail pages">♪ Theme</button>
+          <button class="lib-ghost" id="libSwitch">Switch user</button>
           <button class="lib-ghost" id="libSignout">Sign out</button>
         </div>
 
@@ -640,7 +644,11 @@
               <option value="CommunityRating">Top rated</option>
               <option value="Random">Shuffle</option>
             </select>
+            <button class="lib-ghost" id="lDir" title="Reverse order">↓</button>
+            <button class="lib-ghost" id="lUnwatched" title="Show only unwatched">Unwatched</button>
             <input class="lib-search" id="lSearch" type="search" placeholder="Filter the library…" />
+            <button class="lib-mini-btn" id="lSurprise" title="Play something random">🎲 Surprise me</button>
+            <button class="lib-ghost" id="lDensity" title="Toggle poster size">⊞ Size</button>
             <span class="count" id="lCount" style="margin-left:auto; font-size:11px; letter-spacing:.5px; text-transform:uppercase; color:var(--text-3);"></span>
           </div>
           <div class="lib-loading" id="lLoading" style="display:none;"><span class="lib-spin"></span> Loading everything…</div>
@@ -766,6 +774,7 @@
             </select>
           </div>
         </div>
+        <button class="lib-close" id="pipBtn" aria-label="Picture in picture" title="Picture-in-picture" style="font-size:14px;">⧉</button>
         <button class="lib-close" id="playerClose" aria-label="Close">×</button>
       </div>
       <div class="lib-video-wrap">
@@ -809,6 +818,10 @@
     const DEVICE = 'Web Browser';
     const VERSION = '1.0.0';
     const SESSION_KEY = 'mf_jellyfin_session_v1';
+    const PREFS_KEY = 'mf_jellyfin_prefs_v1';
+    // Persisted user preferences: preferred audio/subtitle language, grid density.
+    let prefs = (function () { try { return JSON.parse(localStorage.getItem(PREFS_KEY) || '{}'); } catch (_) { return {}; } })();
+    function savePrefs() { try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch (_) {} }
 
     /* ─────────────────────────────────────────────────────────────────
        PLAYBACK TUNING — adjust these if playback is rough.
@@ -864,11 +877,13 @@
     const userEl = $('jfUser'), passEl = $('jfPass'), signinBtn = $('jfSignin'), authMsg = $('authMsg');
     const grid = $('libGrid'), loadingEl = $('libLoading'), emptyEl = $('libEmpty');
     const searchEl = $('libSearch'), kindEl = $('libKind'), headingEl = $('libHeading'), signoutBtn = $('libSignout'), whoEl = $('libWho');
+    const libTheme = $('libTheme'), libSwitch = $('libSwitch');
     // tabs + browse sub-views
     const tabBrowse = $('tabBrowse'), tabPlaylists = $('tabPlaylists');
     const tabLibrary = $('tabLibrary'), libraryTab = $('libraryTab');
     const lKind = $('lKind'), lGenre = $('lGenre'), lSort = $('lSort'), lSearch = $('lSearch'),
-          lCount = $('lCount'), lLoading = $('lLoading'), lGrid = $('lGrid'), lEmpty = $('lEmpty'), lSentinel = $('lSentinel');
+          lCount = $('lCount'), lLoading = $('lLoading'), lGrid = $('lGrid'), lEmpty = $('lEmpty'), lSentinel = $('lSentinel'),
+          lDir = $('lDir'), lUnwatched = $('lUnwatched'), lSurprise = $('lSurprise'), lDensity = $('lDensity');
     const browseTab = $('browseTab'), playlistsTab = $('playlistsTab');
     const rowsView = $('rowsView'), rowsContainer = $('rowsContainer');
     const gridView = $('gridView'), gridHeading = $('gridHeading'), gridCount = $('gridCount'), gridBack = $('gridBack');
@@ -897,7 +912,7 @@
           playerMsg = $('playerMsg'), playerClose = $('playerClose');
     const audioTrackWrap = $('audioTrackWrap'), audioTrackSel = $('audioTrack'),
           subTrackWrap = $('subTrackWrap'), subTrackSel = $('subTrack'),
-          speedSel = $('speedSel'), skipIntro = $('skipIntro');
+          speedSel = $('speedSel'), skipIntro = $('skipIntro'), pipBtn = $('pipBtn');
     const upNext = $('upNext'), upNextThumb = $('upNextThumb'), upNextName = $('upNextName'),
           upNextCount = $('upNextCount'), upNextPlay = $('upNextPlay'), upNextCancel = $('upNextCancel');
 
@@ -1595,12 +1610,40 @@
         appendRow('Continue watching', resume);
       } catch (_) {}
 
+      // Recently watched (finished items, most recently played first)
+      try {
+        const types = kind === 'Series' ? 'Episode' : 'Movie';
+        const wp = new URLSearchParams({
+          Limit: '24', Recursive: 'true', IncludeItemTypes: types,
+          Filters: 'IsPlayed', SortBy: 'DatePlayed', SortOrder: 'Descending',
+          Fields: FIELDS, EnableTotalRecordCount: 'false',
+        });
+        const wd = await jf(`/Users/${session.userId}/Items?${wp.toString()}`);
+        const watched = ((wd && wd.Items) || []).map((it) => {
+          let title = it.Name, subline = '';
+          if (it.Type === 'Episode') { title = it.SeriesName || it.Name; const s = it.ParentIndexNumber, e = it.IndexNumber; subline = (s != null && e != null) ? `S${s} · E${e} — ${it.Name}` : it.Name; }
+          return { item: it, opts: { title, subline, onClick: () => it.Type === 'Episode' ? playMedia(it, episodeContext(it)) : openItem(it) } };
+        });
+        appendRow('Recently watched', watched);
+      } catch (_) {}
+
       // Favorites
       const favs = allItems.filter(isFav);
       appendRow('Your favorites', favs.slice(0, 24), {
         count: true,
         viewAll: favs.length > 24 ? () => showGridList('Your favorites', favs) : null,
       });
+
+      // Collections (Jellyfin BoxSets)
+      try {
+        const cp = new URLSearchParams({
+          IncludeItemTypes: 'BoxSet', Recursive: 'true', SortBy: 'SortName', SortOrder: 'Ascending',
+          Fields: 'ChildCount,PrimaryImageAspectRatio', Limit: '40', EnableTotalRecordCount: 'false',
+        });
+        const cd = await jf(`/Users/${session.userId}/Items?${cp.toString()}`);
+        const collections = ((cd && cd.Items) || []).map((c) => ({ item: c, opts: { onClick: () => openCollection(c) } }));
+        appendRow('Collections', collections, { count: true });
+      } catch (_) {}
 
       // Recently added
       const recentAll = sortItems(allItems.slice(), 'DateCreated');
@@ -1650,6 +1693,7 @@
         const data = await jf(`/Users/${session.userId}/Items?${params.toString()}`);
         fullLibrary = (data && data.Items) || [];
         buildLibraryGenreOptions();
+        if (prefs.compact) { lGrid.classList.add('compact'); lDensity.classList.add('on'); }
         lLoading.style.display = 'none';
         applyLibraryFilters();
       } catch (err) {
@@ -1669,13 +1713,18 @@
       if (list.indexOf(cur) >= 0) lGenre.value = cur;
     }
 
+    let lDescending = false;        // sort direction toggle
+    let lUnwatchedOnly = false;     // show-only-unwatched toggle
+
     function applyLibraryFilters() {
       const kind = lKind.value, g = lGenre.value, sort = lSort.value, q = lSearch.value.trim().toLowerCase();
       let items = (fullLibrary || []).slice();
       if (kind !== 'all') items = items.filter((i) => i.Type === kind);
       if (g) items = items.filter((i) => (i.Genres || []).indexOf(g) >= 0);
       if (q) items = items.filter((i) => (i.Name && i.Name.toLowerCase().includes(q)) || (i.SeriesName && i.SeriesName.toLowerCase().includes(q)));
+      if (lUnwatchedOnly) items = items.filter((i) => !(i.UserData && i.UserData.Played));
       items = sortItems(items, sort);
+      if (lDescending && sort !== 'Random') items.reverse();
       lFiltered = items;
       lCount.textContent = items.length + (items.length === 1 ? ' title' : ' titles');
       lGrid.innerHTML = ''; lRendered = 0;
@@ -1905,7 +1954,7 @@
       // fetch full metadata (overview, genres, people, rating) for richer page
       let full = item;
       try {
-        const f = await jf(`/Users/${session.userId}/Items/${item.Id}?Fields=${encodeURIComponent('Overview,Genres,People,CommunityRating,OfficialRating,ProductionYear,RunTimeTicks,Studios')}`);
+        const f = await jf(`/Users/${session.userId}/Items/${item.Id}?Fields=${encodeURIComponent('Overview,Genres,People,CommunityRating,OfficialRating,ProductionYear,RunTimeTicks,Studios,LocalTrailerCount,RemoteTrailers')}`);
         if (f && f.Id) { full = f; currentDetailItem = f; }
       } catch (e) { if (e.code === 401) { handleExpired(); return; } }
 
@@ -1928,15 +1977,16 @@
       buildDetailActions(full);
 
       // cast
-      const people = (full.People || []).filter((p) => p.Type === 'Actor').slice(0, 12);
+      const people = (full.People || []).filter((p) => p.Type === 'Actor').slice(0, 18);
       if (people.length) {
         detailCast.innerHTML = '';
         people.forEach((p) => {
-          const card = document.createElement('div'); card.className = 'lib-cast';
+          const card = document.createElement('button'); card.className = 'lib-cast'; card.type = 'button';
           const img = (p.PrimaryImageTag)
             ? `<img class="lib-cast-img" alt="" src="${SERVER}/Items/${p.Id}/Images/Primary?tag=${p.PrimaryImageTag}&fillHeight=144&quality=85" onerror="this.outerHTML='<div class=&quot;lib-cast-img ph&quot;>${escapeHtml((p.Name||'?').charAt(0))}</div>'" />`
             : `<div class="lib-cast-img ph">${escapeHtml((p.Name || '?').charAt(0))}</div>`;
           card.innerHTML = img + `<div class="lib-cast-name">${escapeHtml(p.Name || '')}</div>${p.Role ? `<div class="lib-cast-role">${escapeHtml(p.Role)}</div>` : ''}`;
+          card.addEventListener('click', () => openPerson(p));
           detailCast.appendChild(card);
         });
         castSection.style.display = 'block';
@@ -1959,6 +2009,7 @@
         }
       }
       loadSimilar(item);
+      playTheme(item);
     }
 
     function buildDetailActions(item) {
@@ -2003,6 +2054,75 @@
       add.className = 'btn-secondary'; add.innerHTML = '＋ Playlist';
       add.addEventListener('click', () => openAddToPlaylist(item));
       detailActions.appendChild(add);
+
+      // trailer (if the item has local trailers)
+      if (item.LocalTrailerCount && item.LocalTrailerCount > 0) {
+        const tr = document.createElement('button');
+        tr.className = 'btn-secondary'; tr.innerHTML = '🎬 Trailer';
+        tr.addEventListener('click', () => playTrailer(item));
+        detailActions.appendChild(tr);
+      }
+    }
+
+    async function playTrailer(item) {
+      try {
+        const data = await jf(`/Users/${session.userId}/Items/${item.Id}/LocalTrailers`);
+        const tr = data && data[0];
+        if (tr) playMedia(tr, null);
+        else toast('No trailer available');
+      } catch (e) {
+        if (e.code === 401) { handleExpired(); return; }
+        toast('Could not load trailer');
+      }
+    }
+
+    // ---- theme song: play softly while viewing a detail page ----
+    let themeAudio = null;
+    function stopTheme() { if (themeAudio) { try { themeAudio.pause(); } catch (_) {} themeAudio = null; } }
+    async function playTheme(item) {
+      stopTheme();
+      if (!prefs.themeSongs) return; // opt-in (off by default)
+      try {
+        const data = await jf(`/Items/${item.Id}/ThemeMedia?UserId=${encodeURIComponent(session.userId)}&InheritFromParent=true`);
+        const song = data && data.ThemeSongsResult && data.ThemeSongsResult.Items && data.ThemeSongsResult.Items[0];
+        if (!song) return;
+        const url = `${SERVER}/Audio/${song.Id}/stream.mp3?api_key=${encodeURIComponent(session.token)}&DeviceId=${DEVICE_ID}`;
+        themeAudio = new Audio(url);
+        themeAudio.volume = 0.25; themeAudio.loop = true;
+        themeAudio.play().catch(() => {});
+      } catch (_) {}
+    }
+
+    // ---- collection (BoxSet) → show its members ----
+    async function openCollection(box) {
+      try {
+        const params = new URLSearchParams({ ParentId: box.Id, UserId: session.userId, Fields: FIELDS, SortBy: 'ProductionYear,SortName', SortOrder: 'Ascending' });
+        const data = await jf(`/Users/${session.userId}/Items?${params.toString()}`);
+        const items = (data && data.Items) || [];
+        switchTab('browse');
+        showGridList(box.Name || 'Collection', items, items.slice());
+      } catch (e) {
+        if (e.code === 401) { handleExpired(); return; }
+        toast('Could not load collection');
+      }
+    }
+
+    // ---- person / cast pages: show everything they appear in ----
+    async function openPerson(person) {
+      try {
+        const params = new URLSearchParams({
+          PersonIds: person.Id, Recursive: 'true', IncludeItemTypes: 'Movie,Series',
+          SortBy: 'ProductionYear,SortName', SortOrder: 'Descending', Fields: FIELDS, Limit: '200',
+        });
+        const data = await jf(`/Users/${session.userId}/Items?${params.toString()}`);
+        const items = (data && data.Items) || [];
+        // route into the View-all grid on the Browse tab
+        switchTab('browse');
+        showGridList(person.Name || 'Cast', items);
+      } catch (e) {
+        if (e.code === 401) { handleExpired(); return; }
+        toast('Could not load filmography');
+      }
     }
 
     async function loadSimilar(item) {
@@ -2174,6 +2294,7 @@
 
     async function playMedia(item, ctx) {
       // tear down any prior session cleanly
+      stopTheme();
       if (playState) { reportStop(); stopProgressLoop(); }
       hideUpNext();
       destroyHls();
@@ -2199,6 +2320,12 @@
       // first load uses server defaults (audioIdx/subIdx undefined → server picks)
       const resumeTicks = (item.UserData && item.UserData.PlaybackPositionTicks) || 0;
       await loadStream(item, undefined, undefined, resumeTicks / TICKS, /*firstLoad*/ true);
+      // if a saved audio-language preference required a different track, switch now
+      if (playState && playState._needTrackReload) {
+        playState._needTrackReload = false;
+        const at = (item.UserData && item.UserData.PlaybackPositionTicks || 0) / TICKS;
+        await loadStream(item, playState.audioIdx, playState.subIdx, at, /*firstLoad*/ false, /*forceTranscode*/ true);
+      }
     }
 
     // Loads (or reloads, e.g. after a track change) the stream for `item` with the
@@ -2223,6 +2350,23 @@
       playState.audioIdx = (audioIdx != null) ? audioIdx
         : (chosen.selectedAudio != null ? chosen.selectedAudio : defaultAudioIndex(chosen.streams));
       playState.subIdx = (subIdx != null) ? subIdx : -1;
+
+      // On the very first load, honor saved language preferences (if a matching
+      // track exists) so the user doesn't have to re-pick every time.
+      if (firstLoad) {
+        const streams = chosen.streams || [];
+        if (audioIdx == null && prefs.audioLang) {
+          const a = streams.find((s) => s.Type === 'Audio' && (s.Language || '').toLowerCase() === prefs.audioLang);
+          if (a && a.Index !== playState.audioIdx) { playState.audioIdx = a.Index; playState._needTrackReload = true; }
+        }
+        if (subIdx == null && prefs.subLang) {
+          if (prefs.subLang === 'off') { playState.subIdx = -1; }
+          else {
+            const sub = streams.find((s) => s.Type === 'Subtitle' && (s.Language || '').toLowerCase() === prefs.subLang);
+            if (sub) { playState.subIdx = sub.Index; }
+          }
+        }
+      }
 
       if (firstLoad) populateTrackPickers(chosen.streams);
       else syncPickerSelection();
@@ -2451,6 +2595,19 @@
       const audioChanged = newAudio !== playState.audioIdx;
       const subChanged = newSub !== playState.subIdx;
 
+      // remember language preferences for next time
+      if (audioChanged) {
+        const a = playState.streams.find((x) => x.Type === 'Audio' && x.Index === newAudio);
+        if (a && a.Language) { prefs.audioLang = a.Language.toLowerCase(); savePrefs(); }
+      }
+      if (subChanged) {
+        if (newSub < 0) { prefs.subLang = 'off'; savePrefs(); }
+        else {
+          const s = playState.streams.find((x) => x.Type === 'Subtitle' && x.Index === newSub);
+          if (s && s.Language) { prefs.subLang = s.Language.toLowerCase(); savePrefs(); }
+        }
+      }
+
       // --- subtitle-only change: try the instant client-side text track first ---
       if (!audioChanged && subChanged) {
         if (newSub < 0) { clearSubtitles(); playState.subIdx = -1; playerMsg.textContent = 'Subtitles off'; return; }
@@ -2564,6 +2721,15 @@
     // ---- player speed, skip-intro, keyboard shortcuts ----
     speedSel.addEventListener('change', () => { try { video.playbackRate = parseFloat(speedSel.value) || 1; } catch (_) {} });
 
+    // picture-in-picture (keep watching while you browse)
+    if (!('pictureInPictureEnabled' in document)) { pipBtn.style.display = 'none'; }
+    pipBtn.addEventListener('click', async () => {
+      try {
+        if (document.pictureInPictureElement) await document.exitPictureInPicture();
+        else if (video.requestPictureInPicture) await video.requestPictureInPicture();
+      } catch (_) { toast('Picture-in-picture unavailable'); }
+    });
+
     // skip-intro: Jellyfin's intro-skipper plugin exposes segments; if unavailable,
     // offer a generic "skip 85s" early in playback so the button is still useful.
     let introEnd = 0;
@@ -2668,7 +2834,29 @@
       loadGuests();
     });
 
+    // Switch user: return to the sign-in screen (guest quick-pick) without
+    // forgetting device prefs; same effect as sign-out but framed for handoff.
+    libSwitch.addEventListener('click', () => {
+      stopTheme();
+      session = null; saveSession(null); fullLibrary = null;
+      libView.style.display = 'none'; detailView.style.display = 'none'; playlistView.style.display = 'none';
+      authCard.style.display = 'flex'; setAuthMsg('Choose a profile to continue.');
+      loadGuests();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Theme songs toggle (persists)
+    function syncThemeBtn() { libTheme.classList.toggle('on', !!prefs.themeSongs); }
+    syncThemeBtn();
+    libTheme.addEventListener('click', () => {
+      prefs.themeSongs = !prefs.themeSongs; savePrefs(); syncThemeBtn();
+      if (!prefs.themeSongs) stopTheme();
+      else if (currentDetailItem && detailView.style.display !== 'none') playTheme(currentDetailItem);
+      toast(prefs.themeSongs ? 'Theme music on' : 'Theme music off');
+    });
+
     detailBack.addEventListener('click', () => {
+      stopTheme();
       detailView.style.display = 'none';
       libView.style.display = 'block';
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2693,6 +2881,22 @@
     lSort.addEventListener('change', applyLibraryFilters);
     let lSearchT;
     lSearch.addEventListener('input', () => { clearTimeout(lSearchT); lSearchT = setTimeout(applyLibraryFilters, 180); });
+    lDir.addEventListener('click', () => { lDescending = !lDescending; lDir.textContent = lDescending ? '↑' : '↓'; lDir.classList.toggle('on', lDescending); applyLibraryFilters(); });
+    lUnwatched.addEventListener('click', () => { lUnwatchedOnly = !lUnwatchedOnly; lUnwatched.classList.toggle('on', lUnwatchedOnly); applyLibraryFilters(); });
+    lDensity.addEventListener('click', () => {
+      const compact = !lGrid.classList.contains('compact');
+      lGrid.classList.toggle('compact', compact);
+      prefs.compact = compact; savePrefs();
+      lDensity.classList.toggle('on', compact);
+    });
+    lSurprise.addEventListener('click', () => {
+      const pool = (lFiltered && lFiltered.length ? lFiltered : (fullLibrary || [])).filter((i) => !(i.UserData && i.UserData.Played));
+      const list = pool.length ? pool : (fullLibrary || []);
+      if (!list.length) { toast('Nothing to play'); return; }
+      const pick = list[Math.floor(Math.random() * list.length)];
+      pick.Type === 'Series' ? playFirstUnwatched(pick) : playMedia(pick, null);
+      toast('Playing ' + (pick.Name || 'something'));
+    });
 
     gridBack.addEventListener('click', exitViewAll);
 
@@ -2762,6 +2966,35 @@
     modal.addEventListener('click', (e) => { if (e.target === modal) closePlayer(); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('open')) closePlayer(); });
     window.addEventListener('beforeunload', () => { if (playState) reportStop(); });
+
+    // ---- grid keyboard navigation (arrows move between posters, Enter opens) ----
+    function gridKeyNav(e) {
+      if (modal.classList.contains('open')) return; // player owns keys when open
+      const active = document.activeElement;
+      if (!active || !active.classList || !active.classList.contains('poster')) return;
+      const gridEl = active.closest('.lib-grid, .lib-row-scroll');
+      if (!gridEl) return;
+      const posters = Array.prototype.slice.call(gridEl.querySelectorAll('.poster'));
+      const idx = posters.indexOf(active);
+      if (idx < 0) return;
+      // compute columns from layout (cards per row)
+      let cols = 1;
+      if (gridEl.classList.contains('lib-grid')) {
+        const gridStyle = getComputedStyle(gridEl).gridTemplateColumns;
+        cols = gridStyle ? gridStyle.split(' ').length : 1;
+      } else { cols = 1; } // horizontal rows: left/right only
+      let next = -1;
+      switch (e.key) {
+        case 'ArrowRight': next = idx + 1; break;
+        case 'ArrowLeft': next = idx - 1; break;
+        case 'ArrowDown': next = idx + cols; break;
+        case 'ArrowUp': next = idx - cols; break;
+        case 'Enter': e.preventDefault(); active.click(); return;
+        default: return;
+      }
+      if (next >= 0 && next < posters.length) { e.preventDefault(); posters[next].focus(); posters[next].scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
+    }
+    document.addEventListener('keydown', gridKeyNav);
 
     // ---- boot ----
     session = loadSession();
