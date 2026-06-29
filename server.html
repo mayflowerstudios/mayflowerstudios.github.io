@@ -334,6 +334,38 @@
 
     /* ---- playlists ---- */
     .lib-playlist-head { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:18px 0 6px; }
+
+    /* ════════ STATS / YOUR VIEWING (Playback Reporting plugin) ════════ */
+    .lib-stats-head { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:18px 0 14px; }
+    .lib-stats-head h2 { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:28px; font-weight:400; color:var(--text); margin-right:auto; }
+    .lib-stat-cards { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:14px; margin-bottom:22px; }
+    .lib-stat-card {
+      border:1px solid var(--border); border-radius:var(--r-lg); padding:18px 20px;
+      background:linear-gradient(150deg, rgba(236,72,153,.06), rgba(139,92,246,.05));
+    }
+    .lib-stat-num { font-family:'Cormorant Garamond',serif; font-size:38px; font-weight:300; line-height:1;
+      background:linear-gradient(135deg,var(--text) 30%,var(--rose) 80%,var(--violet) 100%);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .lib-stat-label { font-size:11px; font-weight:600; letter-spacing:.8px; text-transform:uppercase; color:var(--text-3); margin-top:8px; }
+    .lib-stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:18px; }
+    @media (max-width:720px){ .lib-stat-grid { grid-template-columns:1fr; } }
+    .lib-stat-panel { border:1px solid var(--border); border-radius:var(--r-lg); padding:16px 20px 20px; }
+    .lib-stat-row { display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--border); }
+    .lib-stat-row:last-child { border-bottom:none; }
+    .lib-stat-rank { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:18px; color:var(--text-3); min-width:22px; }
+    .lib-stat-name { flex:1; font-size:13.5px; color:var(--text); line-height:1.35; }
+    .lib-stat-val { font-size:12.5px; color:var(--rose); font-variant-numeric:tabular-nums; white-space:nowrap; }
+    .lib-stat-bar { position:relative; height:8px; border-radius:5px; background:var(--border); overflow:hidden; }
+    .lib-stat-bar > span { position:absolute; inset:0 auto 0 0; border-radius:5px; background:linear-gradient(90deg,var(--rose),var(--violet)); }
+    .lib-type-line { display:flex; align-items:center; gap:10px; padding:7px 0; }
+    .lib-type-line .lib-stat-name { min-width:64px; flex:none; }
+    .lib-type-line .lib-stat-bar { flex:1; }
+    /* hourly histogram */
+    .lib-hours { display:flex; align-items:flex-end; gap:3px; height:88px; margin-top:6px; }
+    .lib-hours > span { flex:1; border-radius:3px 3px 0 0; min-height:2px;
+      background:linear-gradient(180deg,var(--rose),var(--violet)); opacity:.85; transition:opacity 150ms; }
+    .lib-hours > span:hover { opacity:1; }
+    .lib-hours-axis { display:flex; justify-content:space-between; margin-top:6px; font-size:10px; color:var(--text-3); }
     .lib-playlist-head h2 { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:26px; font-weight:400; color:var(--text); margin-right:auto; }
     .lib-pl-grid { display:grid; gap:18px; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); margin:10px 0 40px; }
     .lib-pl-card {
@@ -366,6 +398,24 @@
     }
     .lib-dialog input:focus { outline:none; border-color:var(--rose); }
     .lib-dialog-list { display:flex; flex-direction:column; gap:6px; max-height:240px; overflow-y:auto; }
+
+    /* find-subtitles dialog */
+    .lib-sub-dialog { max-width:480px; }
+    .lib-sub-controls { display:flex; gap:10px; margin-bottom:12px; }
+    .lib-sub-controls .lib-select { flex:1; }
+    .lib-sub-status { font-size:12.5px; color:var(--text-2); min-height:18px; margin-bottom:8px; }
+    .lib-sub-result {
+      display:flex; align-items:center; gap:10px; text-align:left; width:100%;
+      padding:10px 12px; border:1px solid var(--border); border-radius:8px;
+      background:transparent; color:var(--text); cursor:pointer; font-family:var(--font-b);
+      transition:border-color 150ms, background 150ms;
+    }
+    .lib-sub-result:hover { border-color:var(--rose); background:rgba(236,72,153,.06); }
+    .lib-sub-result:disabled { opacity:.6; cursor:default; }
+    .lib-sub-result-main { flex:1; min-width:0; }
+    .lib-sub-result-name { font-size:13px; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .lib-sub-result-meta { font-size:11px; color:var(--text-3); margin-top:2px; }
+    .lib-sub-dl { font-size:12px; color:var(--rose); white-space:nowrap; }
     .lib-dialog-item {
       cursor:pointer; text-align:left; font-family:var(--font-b); font-size:13px; color:var(--text);
       padding:10px 12px; border-radius:var(--r-sm); border:1px solid var(--border-2); background:transparent;
@@ -604,6 +654,7 @@
           <button class="lib-tab active" id="tabBrowse">Browse</button>
           <button class="lib-tab" id="tabLibrary">Library</button>
           <button class="lib-tab" id="tabPlaylists">Playlists</button>
+          <button class="lib-tab" id="tabStats" style="display:none;">Your viewing</button>
         </div>
 
         <!-- ===== BROWSE TAB ===== -->
@@ -694,6 +745,39 @@
           <div class="lib-pl-grid" id="plGrid"></div>
           <div class="lib-empty" id="plEmpty" style="display:none;">No playlists yet. Create one, then add titles with the + on any poster.</div>
         </div>
+
+        <!-- ===== STATS TAB (admin only — Playback Reporting plugin) ===== -->
+        <div id="statsTab" style="display:none;">
+          <div class="lib-stats-head reveal">
+            <h2>Your viewing</h2>
+            <select class="lib-select" id="statsRange">
+              <option value="7">Last 7 days</option>
+              <option value="30" selected>Last 30 days</option>
+              <option value="90">Last 90 days</option>
+              <option value="365">Last year</option>
+            </select>
+          </div>
+          <div class="lib-loading" id="statsLoading" style="display:none;"><span class="lib-spin"></span> Gathering your stats…</div>
+          <div class="lib-empty" id="statsEmpty" style="display:none;">No viewing recorded for this period yet.</div>
+          <div id="statsBody" style="display:none;">
+            <div class="lib-stat-cards" id="statCards"></div>
+            <div class="lib-stat-grid">
+              <div class="lib-stat-panel">
+                <div class="lib-section-h">Most watched</div>
+                <div id="statTop"></div>
+              </div>
+              <div class="lib-stat-panel">
+                <div class="lib-section-h">By type</div>
+                <div id="statTypes"></div>
+              </div>
+            </div>
+            <div class="lib-stat-panel">
+              <div class="lib-section-h">When you watch</div>
+              <div class="lib-hours" id="statHours"></div>
+              <div class="lib-hours-axis"><span>12a</span><span>6a</span><span>12p</span><span>6p</span><span>11p</span></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- ── playlist detail ── -->
@@ -769,6 +853,33 @@
       <div class="lib-dialog-actions">
         <button class="lib-dialog-cancel" id="addPlCancel">Cancel</button>
         <button class="lib-dialog-ok" id="addPlCreate">Create &amp; add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── find-subtitles dialog (Open Subtitles plugin) ── -->
+  <div class="lib-dialog-wrap" id="subDialog">
+    <div class="lib-dialog lib-sub-dialog">
+      <h3>Find subtitles</h3>
+      <div class="lib-sub-controls">
+        <select class="lib-select" id="subLangSel">
+          <option value="eng">English</option>
+          <option value="por">Portuguese</option>
+          <option value="spa">Spanish</option>
+          <option value="fre">French</option>
+          <option value="ger">German</option>
+          <option value="ita">Italian</option>
+          <option value="jpn">Japanese</option>
+          <option value="kor">Korean</option>
+          <option value="rus">Russian</option>
+          <option value="dut">Dutch</option>
+        </select>
+        <button class="lib-btn" id="subSearchBtn">Search</button>
+      </div>
+      <div class="lib-sub-status" id="subStatus"></div>
+      <div class="lib-dialog-list" id="subResults"></div>
+      <div class="lib-dialog-actions">
+        <button class="lib-dialog-cancel" id="subClose">Close</button>
       </div>
     </div>
   </div>
@@ -950,6 +1061,10 @@
     const libTheme = $('libTheme'), libSwitch = $('libSwitch');
     // tabs + browse sub-views
     const tabBrowse = $('tabBrowse'), tabPlaylists = $('tabPlaylists');
+    const tabStats = $('tabStats'), statsTab = $('statsTab'),
+          statsRange = $('statsRange'), statsLoading = $('statsLoading'), statsEmpty = $('statsEmpty'),
+          statsBody = $('statsBody'), statCards = $('statCards'), statTop = $('statTop'),
+          statTypes = $('statTypes'), statHours = $('statHours');
     const tabLibrary = $('tabLibrary'), libraryTab = $('libraryTab');
     const lKind = $('lKind'), lGenre = $('lGenre'), lSort = $('lSort'), lSearch = $('lSearch'),
           lCount = $('lCount'), lLoading = $('lLoading'), lGrid = $('lGrid'), lEmpty = $('lEmpty'), lSentinel = $('lSentinel'),
@@ -968,6 +1083,8 @@
     const createPlDialog = $('createPlDialog'), newPlName = $('newPlName'), createPlOk = $('createPlOk'), createPlCancel = $('createPlCancel');
     const addPlDialog = $('addPlDialog'), addPlList = $('addPlList'), addPlNew = $('addPlNew'),
           addPlCreate = $('addPlCreate'), addPlCancel = $('addPlCancel');
+    const subDialog = $('subDialog'), subLangSel = $('subLangSel'), subSearchBtn = $('subSearchBtn'),
+          subStatus = $('subStatus'), subResults = $('subResults'), subClose = $('subClose');
     const libToast = $('libToast');
     const detailBack = $('detailBack'), detailTitle = $('detailTitle'), detailMeta = $('detailMeta'),
           detailOverview = $('detailOverview'), seasonBar = $('seasonBar'), detailLoading = $('detailLoading'), epList = $('epList');
@@ -1018,6 +1135,33 @@
       } catch (_) {}
     }
 
+    // Some features (remote-subtitle download, playback-reporting stats) require
+    // an admin account on the Jellyfin server. We detect this once so we can
+    // hide the relevant UI for guest profiles rather than showing 403s.
+    let capabilities = { admin: false, playbackReporting: false };
+    async function detectCapabilities() {
+      capabilities = { admin: false, playbackReporting: false };
+      // admin: prefer the flag from sign-in; otherwise confirm via the user policy
+      if (session && session.isAdmin) capabilities.admin = true;
+      else {
+        try {
+          const me = await jf(`/Users/${session.userId}`);
+          capabilities.admin = !!(me && me.Policy && me.Policy.IsAdministrator);
+        } catch (_) { capabilities.admin = false; }
+      }
+      // playback reporting endpoint is admin-gated; probe the same endpoint the
+      // stats page uses so a successful probe guarantees the page will work
+      if (capabilities.admin) {
+        try {
+          await jf('/user_usage_stats/submit_custom_query', {
+            method: 'POST',
+            body: JSON.stringify({ CustomQueryString: 'SELECT 1 FROM PlaybackActivity LIMIT 1', ReplaceUserId: false }),
+          });
+          capabilities.playbackReporting = true;
+        } catch (_) { capabilities.playbackReporting = false; }
+      }
+    }
+
     // ---- auth ----
     async function signIn(username, password) {
       const res = await fetch(SERVER + '/Users/AuthenticateByName', {
@@ -1028,7 +1172,12 @@
       if (res.status === 401) { const e = new Error('Wrong username or password.'); e.code = 401; throw e; }
       if (!res.ok) throw new Error('Server returned HTTP ' + res.status + '.');
       const data = await res.json();
-      return { token: data.AccessToken, userId: data.User && data.User.Id, name: data.User && data.User.Name };
+      return {
+        token: data.AccessToken,
+        userId: data.User && data.User.Id,
+        name: data.User && data.User.Name,
+        isAdmin: !!(data.User && data.User.Policy && data.User.Policy.IsAdministrator),
+      };
     }
 
     // public users = candidates for quick-pick guest buttons
@@ -1884,6 +2033,119 @@
     // ════════ PLAYLISTS ════════
     let playlists = [];
 
+    // ════════ STATS / YOUR VIEWING (Playback Reporting plugin) ════════
+    // Uses the plugin's submit_custom_query endpoint (admin-only) to summarize
+    // THIS user's viewing. Queries are scoped by UserId and skip the plugin's
+    // known negative-duration bug rows.
+    let statsReqId = 0;
+    function pbQuery(sql) {
+      return jf('/user_usage_stats/submit_custom_query', {
+        method: 'POST',
+        body: JSON.stringify({ CustomQueryString: sql, ReplaceUserId: false }),
+      });
+    }
+    function pbRows(res) {
+      if (!res || !res.results) return [];
+      const cols = res.colums || res.columns || [];
+      return res.results.map((r) => { const o = {}; cols.forEach((c, i) => { o[c] = r[i]; }); return o; });
+    }
+    function humanHours(totalSecs) {
+      const h = totalSecs / 3600;
+      if (h >= 1) return h.toFixed(h >= 10 ? 0 : 1) + ' hr';
+      return Math.round(totalSecs / 60) + ' min';
+    }
+
+    async function loadStats() {
+      const my = ++statsReqId;
+      const uid = session.userId;
+      const days = parseInt(statsRange.value, 10) || 30;
+      statsLoading.style.display = 'flex';
+      statsEmpty.style.display = 'none';
+      statsBody.style.display = 'none';
+
+      const where = `WHERE UserId = '${uid.replace(/'/g, "''")}' `
+        + `AND PlayDuration > 0 `
+        + `AND DateCreated >= datetime('now', '-${days} days')`;
+
+      try {
+        const [totalsR, topR, typesR, hoursR] = await Promise.all([
+          pbQuery(`SELECT COUNT(*), SUM(PlayDuration), COUNT(DISTINCT ItemName) FROM PlaybackActivity ${where}`),
+          pbQuery(`SELECT ItemName, ItemType, SUM(PlayDuration) AS dur FROM PlaybackActivity ${where} GROUP BY ItemName ORDER BY dur DESC LIMIT 8`),
+          pbQuery(`SELECT ItemType, SUM(PlayDuration) AS dur FROM PlaybackActivity ${where} GROUP BY ItemType ORDER BY dur DESC`),
+          pbQuery(`SELECT CAST(strftime('%H', DateCreated) AS INTEGER) AS hr, SUM(PlayDuration) AS dur FROM PlaybackActivity ${where} GROUP BY hr`),
+        ]);
+        if (my !== statsReqId) return;
+
+        const totals = pbRows(totalsR)[0] || {};
+        const totalSecs = Number(totals['SUM(PlayDuration)'] || 0);
+        const sessions = Number(totals['COUNT(*)'] || 0);
+        const distinct = Number(totals['COUNT(DISTINCT ItemName)'] || 0);
+
+        statsLoading.style.display = 'none';
+        if (!sessions || !totalSecs) { statsEmpty.style.display = 'block'; return; }
+        statsBody.style.display = 'block';
+
+        statCards.innerHTML = '';
+        const cards = [
+          { num: humanHours(totalSecs), label: 'Watched' },
+          { num: String(sessions), label: 'Play sessions' },
+          { num: String(distinct), label: 'Distinct titles' },
+          { num: humanHours(totalSecs / Math.max(1, days)), label: 'Per day avg' },
+        ];
+        cards.forEach((c) => {
+          const el = document.createElement('div');
+          el.className = 'lib-stat-card';
+          el.innerHTML = `<div class="lib-stat-num">${escapeHtml(c.num)}</div><div class="lib-stat-label">${escapeHtml(c.label)}</div>`;
+          statCards.appendChild(el);
+        });
+
+        const top = pbRows(topR).map((r) => ({ name: r.ItemName, type: r.ItemType, dur: Number(r.dur || 0) }))
+          .filter((r) => r.dur > 0);
+        statTop.innerHTML = '';
+        top.forEach((r, i) => {
+          let label = r.name || 'Unknown';
+          if (r.type === 'Episode' && label.indexOf(' - ') > 0) label = label.split(' - ')[0];
+          const row = document.createElement('div');
+          row.className = 'lib-stat-row';
+          row.innerHTML = `<span class="lib-stat-rank">${i + 1}</span>`
+            + `<span class="lib-stat-name">${escapeHtml(label)}</span>`
+            + `<span class="lib-stat-val">${humanHours(r.dur)}</span>`;
+          statTop.appendChild(row);
+        });
+
+        const types = pbRows(typesR).map((r) => ({ type: r.ItemType || 'Other', dur: Number(r.dur || 0) }))
+          .filter((r) => r.dur > 0);
+        const typeMax = types.reduce((m, r) => Math.max(m, r.dur), 1);
+        statTypes.innerHTML = '';
+        const typeName = { Movie: 'Movies', Episode: 'TV', Audio: 'Music', MusicVideo: 'Music videos' };
+        types.forEach((r) => {
+          const line = document.createElement('div');
+          line.className = 'lib-type-line';
+          line.innerHTML = `<span class="lib-stat-name">${escapeHtml(typeName[r.type] || r.type)}</span>`
+            + `<span class="lib-stat-bar"><span style="width:${Math.max(4, (r.dur / typeMax) * 100)}%"></span></span>`
+            + `<span class="lib-stat-val">${humanHours(r.dur)}</span>`;
+          statTypes.appendChild(line);
+        });
+
+        const byHour = new Array(24).fill(0);
+        pbRows(hoursR).forEach((r) => { const h = Number(r.hr); if (h >= 0 && h < 24) byHour[h] = Number(r.dur || 0); });
+        const hourMax = byHour.reduce((m, v) => Math.max(m, v), 1);
+        statHours.innerHTML = '';
+        byHour.forEach((v, h) => {
+          const bar = document.createElement('span');
+          bar.style.height = Math.max(2, (v / hourMax) * 100) + '%';
+          bar.title = `${h}:00 — ${humanHours(v)}`;
+          statHours.appendChild(bar);
+        });
+      } catch (err) {
+        if (my !== statsReqId) return;
+        statsLoading.style.display = 'none';
+        if (err.code === 401) { handleExpired(); return; }
+        statsEmpty.textContent = 'Viewing stats are unavailable right now.';
+        statsEmpty.style.display = 'block';
+      }
+    }
+
     async function loadPlaylists() {
       plLoading.style.display = 'flex'; plGrid.innerHTML = ''; plEmpty.style.display = 'none';
       try {
@@ -2009,6 +2271,78 @@
 
     // ---- add-to-playlist dialog ----
     let pendingAddItem = null;
+    // ════════ FIND SUBTITLES (Open Subtitles plugin, admin only) ════════
+    // GET  /Items/{id}/RemoteSearch/Subtitles/{lang}  → RemoteSubtitleInfo[]
+    // POST /Items/{id}/RemoteSearch/Subtitles/{subtitleId}  → downloads server-side
+    let subSearchItem = null;
+    function openSubtitleSearch(item) {
+      subSearchItem = item;
+      subResults.innerHTML = '';
+      subStatus.textContent = '';
+      // default the language picker to the user's saved sub-language if known
+      const sp = getShowPrefs(item);
+      if (sp.subLang && sp.subLang !== 'off') {
+        const opt = Array.prototype.find.call(subLangSel.options, (o) => o.value === sp.subLang);
+        if (opt) subLangSel.value = sp.subLang;
+      }
+      subDialog.classList.add('open');
+    }
+    async function runSubtitleSearch() {
+      if (!subSearchItem) return;
+      const lang = subLangSel.value;
+      subResults.innerHTML = '';
+      subStatus.textContent = 'Searching…';
+      subSearchBtn.disabled = true;
+      try {
+        const list = await jf(`/Items/${subSearchItem.Id}/RemoteSearch/Subtitles/${encodeURIComponent(lang)}`);
+        const results = Array.isArray(list) ? list : [];
+        if (!results.length) { subStatus.textContent = 'No subtitles found for that language.'; return; }
+        subStatus.textContent = `${results.length} result${results.length === 1 ? '' : 's'} — pick one to download to the server.`;
+        results.slice(0, 20).forEach((r) => {
+          const btn = document.createElement('button');
+          btn.className = 'lib-sub-result'; btn.type = 'button';
+          const meta = [];
+          if (r.ProviderName) meta.push(r.ProviderName);
+          if (r.Format) meta.push(String(r.Format).toUpperCase());
+          if (r.DownloadCount != null) meta.push(r.DownloadCount + ' dl');
+          if (r.IsHashMatch) meta.push('✓ exact match');
+          btn.innerHTML = `<span class="lib-sub-result-main">`
+            + `<span class="lib-sub-result-name">${escapeHtml(r.Name || r.Comment || 'Subtitle')}</span>`
+            + `<span class="lib-sub-result-meta">${escapeHtml(meta.join(' · '))}</span></span>`
+            + `<span class="lib-sub-dl">Download</span>`;
+          btn.addEventListener('click', () => downloadSubtitle(r, btn));
+          subResults.appendChild(btn);
+        });
+      } catch (err) {
+        if (err.code === 401) { handleExpired(); return; }
+        // 403 = not admin (shouldn't reach here), 5xx = plugin/account issue
+        subStatus.textContent = 'Subtitle search failed. The Open Subtitles account may have hit its daily limit.';
+      } finally {
+        subSearchBtn.disabled = false;
+      }
+    }
+    async function downloadSubtitle(result, btn) {
+      if (!subSearchItem || !result || !result.Id) return;
+      Array.prototype.forEach.call(subResults.querySelectorAll('button'), (b) => { b.disabled = true; });
+      const dl = btn.querySelector('.lib-sub-dl'); if (dl) dl.textContent = 'Downloading…';
+      try {
+        await jf(`/Items/${subSearchItem.Id}/RemoteSearch/Subtitles/${encodeURIComponent(result.Id)}`, { method: 'POST' });
+        if (dl) dl.textContent = 'Refreshing…';
+        // refresh metadata so the new external subtitle becomes a selectable track
+        try {
+          await jf(`/Items/${subSearchItem.Id}/Refresh?metadataRefreshMode=Default&imageRefreshMode=None&replaceAllMetadata=false`, { method: 'POST' });
+        } catch (_) {}
+        if (dl) dl.textContent = '✓ Added';
+        toast('Subtitle downloaded — it’ll appear in the track picker shortly.');
+        setTimeout(() => subDialog.classList.remove('open'), 900);
+      } catch (err) {
+        if (err.code === 401) { handleExpired(); return; }
+        if (dl) dl.textContent = 'Failed';
+        subStatus.textContent = 'Download failed — likely the Open Subtitles daily limit. Try again later.';
+        Array.prototype.forEach.call(subResults.querySelectorAll('button'), (b) => { b.disabled = false; });
+      }
+    }
+
     async function openAddToPlaylist(item) {
       pendingAddItem = item;
       addPlNew.value = '';
@@ -2193,6 +2527,14 @@
         tr.className = 'btn-secondary'; tr.innerHTML = '🎬 Trailer';
         tr.addEventListener('click', () => playTrailer(item));
         detailActions.appendChild(tr);
+      }
+
+      // find subtitles (Open Subtitles plugin) — admin only, playable items only
+      if (capabilities.admin && item.Type === 'Movie') {
+        const subs = document.createElement('button');
+        subs.className = 'btn-secondary'; subs.innerHTML = '💬 Find subtitles';
+        subs.addEventListener('click', () => openSubtitleSearch(item));
+        detailActions.appendChild(subs);
       }
     }
 
@@ -3073,6 +3415,10 @@
       if (session && session.name) whoEl.innerHTML = 'Signed in as <strong>' + escapeHtml(session.name) + '</strong>';
       switchTab('browse');
       loadLibrary();
+      // detect admin-only capabilities, then reveal the Stats tab if available
+      detectCapabilities().then(() => {
+        tabStats.style.display = capabilities.playbackReporting ? '' : 'none';
+      });
     }
 
     // ---- tab switching ----
@@ -3080,16 +3426,19 @@
       tabBrowse.classList.toggle('active', which === 'browse');
       tabLibrary.classList.toggle('active', which === 'library');
       tabPlaylists.classList.toggle('active', which === 'playlists');
+      tabStats.classList.toggle('active', which === 'stats');
       browseTab.style.display = which === 'browse' ? 'block' : 'none';
       libraryTab.style.display = which === 'library' ? 'block' : 'none';
       playlistsTab.style.display = which === 'playlists' ? 'block' : 'none';
+      statsTab.style.display = which === 'stats' ? 'block' : 'none';
       // the top search + kind toggle only apply to Browse
       searchEl.style.display = which === 'browse' ? '' : 'none';
       kindEl.style.display = which === 'browse' ? '' : 'none';
       headingEl.textContent = which === 'browse' ? (kindEl.value === 'Series' ? 'Shows' : 'Movies')
-        : which === 'library' ? 'Library' : 'Playlists';
+        : which === 'library' ? 'Library' : which === 'stats' ? 'Your viewing' : 'Playlists';
       if (which === 'playlists') loadPlaylists();
       if (which === 'library') { setupLibraryObserver(); loadFullLibrary(); }
+      if (which === 'stats') loadStats();
     }
 
     // ---- events ----
@@ -3111,6 +3460,7 @@
 
     signoutBtn.addEventListener('click', () => {
       session = null; saveSession(null); fullLibrary = null;
+      capabilities = { admin: false, playbackReporting: false }; tabStats.style.display = 'none';
       libView.style.display = 'none'; detailView.style.display = 'none'; playlistView.style.display = 'none';
       authCard.style.display = 'flex'; setAuthMsg('');
       loadGuests();
@@ -3121,6 +3471,7 @@
     libSwitch.addEventListener('click', () => {
       stopTheme();
       session = null; saveSession(null); fullLibrary = null;
+      capabilities = { admin: false, playbackReporting: false }; tabStats.style.display = 'none';
       libView.style.display = 'none'; detailView.style.display = 'none'; playlistView.style.display = 'none';
       authCard.style.display = 'flex'; setAuthMsg('Choose a profile to continue.');
       loadGuests();
@@ -3156,6 +3507,8 @@
     tabBrowse.addEventListener('click', () => switchTab('browse'));
     tabLibrary.addEventListener('click', () => switchTab('library'));
     tabPlaylists.addEventListener('click', () => switchTab('playlists'));
+    tabStats.addEventListener('click', () => switchTab('stats'));
+    statsRange.addEventListener('change', () => loadStats());
 
     // library tab filters
     lKind.addEventListener('change', applyLibraryFilters);
@@ -3222,6 +3575,11 @@
 
     addPlCancel.addEventListener('click', () => addPlDialog.classList.remove('open'));
     addPlDialog.addEventListener('click', (e) => { if (e.target === addPlDialog) addPlDialog.classList.remove('open'); });
+
+    // find-subtitles dialog
+    subSearchBtn.addEventListener('click', runSubtitleSearch);
+    subClose.addEventListener('click', () => subDialog.classList.remove('open'));
+    subDialog.addEventListener('click', (e) => { if (e.target === subDialog) subDialog.classList.remove('open'); });
     addPlCreate.addEventListener('click', async () => {
       const name = addPlNew.value.trim();
       if (!name || !pendingAddItem) { addPlNew.focus(); return; }
