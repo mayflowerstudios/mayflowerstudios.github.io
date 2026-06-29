@@ -571,6 +571,7 @@
 
         <div class="lib-tabs reveal">
           <button class="lib-tab active" id="tabBrowse">Browse</button>
+          <button class="lib-tab" id="tabLibrary">Library</button>
           <button class="lib-tab" id="tabPlaylists">Playlists</button>
         </div>
 
@@ -621,6 +622,31 @@
             <div class="lib-grid" id="libGrid"></div>
             <div class="lib-empty" id="libEmpty" style="display:none;">No titles match those filters.</div>
           </div>
+        </div>
+
+        <!-- ===== LIBRARY TAB (everything, movies + shows) ===== -->
+        <div id="libraryTab" style="display:none;">
+          <div class="lib-filters reveal">
+            <select class="lib-select" id="lKind">
+              <option value="all">All types</option>
+              <option value="Movie">Movies</option>
+              <option value="Series">Shows</option>
+            </select>
+            <select class="lib-select" id="lGenre"><option value="">All genres</option></select>
+            <select class="lib-select" id="lSort">
+              <option value="SortName">A–Z</option>
+              <option value="DateCreated">Recently added</option>
+              <option value="ProductionYear">Newest</option>
+              <option value="CommunityRating">Top rated</option>
+              <option value="Random">Shuffle</option>
+            </select>
+            <input class="lib-search" id="lSearch" type="search" placeholder="Filter the library…" />
+            <span class="count" id="lCount" style="margin-left:auto; font-size:11px; letter-spacing:.5px; text-transform:uppercase; color:var(--text-3);"></span>
+          </div>
+          <div class="lib-loading" id="lLoading" style="display:none;"><span class="lib-spin"></span> Loading everything…</div>
+          <div class="lib-grid" id="lGrid"></div>
+          <div class="lib-empty" id="lEmpty" style="display:none;">Nothing matches.</div>
+          <div id="lSentinel" style="height:1px;"></div>
         </div>
 
         <!-- ===== PLAYLISTS TAB ===== -->
@@ -840,6 +866,9 @@
     const searchEl = $('libSearch'), kindEl = $('libKind'), headingEl = $('libHeading'), signoutBtn = $('libSignout'), whoEl = $('libWho');
     // tabs + browse sub-views
     const tabBrowse = $('tabBrowse'), tabPlaylists = $('tabPlaylists');
+    const tabLibrary = $('tabLibrary'), libraryTab = $('libraryTab');
+    const lKind = $('lKind'), lGenre = $('lGenre'), lSort = $('lSort'), lSearch = $('lSearch'),
+          lCount = $('lCount'), lLoading = $('lLoading'), lGrid = $('lGrid'), lEmpty = $('lEmpty'), lSentinel = $('lSentinel');
     const browseTab = $('browseTab'), playlistsTab = $('playlistsTab');
     const rowsView = $('rowsView'), rowsContainer = $('rowsContainer');
     const gridView = $('gridView'), gridHeading = $('gridHeading'), gridCount = $('gridCount'), gridBack = $('gridBack');
@@ -1602,6 +1631,75 @@
       if (!rowsContainer.children.length) {
         rowsContainer.innerHTML = '<div class="lib-empty">This library is empty.</div>';
       }
+    }
+
+    // ════════ FULL LIBRARY TAB ════════
+    let fullLibrary = null;     // cached movies + shows
+    let lFiltered = [];         // current filtered set
+    let lRendered = 0;          // how many cards rendered so far (lazy)
+    const L_PAGE = 60;          // cards per lazy chunk
+
+    async function loadFullLibrary(force) {
+      if (fullLibrary && !force) { applyLibraryFilters(); return; }
+      lLoading.style.display = 'flex'; lGrid.innerHTML = ''; lEmpty.style.display = 'none'; lCount.textContent = '';
+      try {
+        const params = new URLSearchParams({
+          IncludeItemTypes: 'Movie,Series', Recursive: 'true', SortBy: 'SortName', SortOrder: 'Ascending',
+          Fields: FIELDS, Limit: '5000', EnableTotalRecordCount: 'false',
+        });
+        const data = await jf(`/Users/${session.userId}/Items?${params.toString()}`);
+        fullLibrary = (data && data.Items) || [];
+        buildLibraryGenreOptions();
+        lLoading.style.display = 'none';
+        applyLibraryFilters();
+      } catch (err) {
+        lLoading.style.display = 'none';
+        if (err.code === 401) { handleExpired(); return; }
+        lEmpty.textContent = 'Could not load the library.'; lEmpty.style.display = 'block';
+      }
+    }
+
+    function buildLibraryGenreOptions() {
+      const set = new Set();
+      (fullLibrary || []).forEach((it) => (it.Genres || []).forEach((g) => set.add(g)));
+      const list = Array.from(set).sort((a, b) => a.localeCompare(b));
+      const cur = lGenre.value;
+      lGenre.innerHTML = '<option value="">All genres</option>' +
+        list.map((g) => `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
+      if (list.indexOf(cur) >= 0) lGenre.value = cur;
+    }
+
+    function applyLibraryFilters() {
+      const kind = lKind.value, g = lGenre.value, sort = lSort.value, q = lSearch.value.trim().toLowerCase();
+      let items = (fullLibrary || []).slice();
+      if (kind !== 'all') items = items.filter((i) => i.Type === kind);
+      if (g) items = items.filter((i) => (i.Genres || []).indexOf(g) >= 0);
+      if (q) items = items.filter((i) => (i.Name && i.Name.toLowerCase().includes(q)) || (i.SeriesName && i.SeriesName.toLowerCase().includes(q)));
+      items = sortItems(items, sort);
+      lFiltered = items;
+      lCount.textContent = items.length + (items.length === 1 ? ' title' : ' titles');
+      lGrid.innerHTML = ''; lRendered = 0;
+      lEmpty.style.display = items.length ? 'none' : 'block';
+      renderLibraryChunk();
+    }
+
+    function renderLibraryChunk() {
+      if (lRendered >= lFiltered.length) return;
+      const frag = document.createDocumentFragment();
+      const end = Math.min(lRendered + L_PAGE, lFiltered.length);
+      for (let i = lRendered; i < end; i++) frag.appendChild(makePoster(lFiltered[i], {}));
+      lGrid.appendChild(frag);
+      lRendered = end;
+    }
+
+    // lazy-load more as the sentinel scrolls into view
+    let lObserver = null;
+    function setupLibraryObserver() {
+      if (lObserver || !('IntersectionObserver' in window)) return;
+      lObserver = new IntersectionObserver((entries) => {
+        if (entries.some((e) => e.isIntersecting)) renderLibraryChunk();
+      }, { rootMargin: '600px' });
+      lObserver.observe(lSentinel);
     }
 
     // ════════ PLAYLISTS ════════
@@ -2531,16 +2629,19 @@
 
     // ---- tab switching ----
     function switchTab(which) {
-      const browse = which === 'browse';
-      tabBrowse.classList.toggle('active', browse);
-      tabPlaylists.classList.toggle('active', !browse);
-      browseTab.style.display = browse ? 'block' : 'none';
-      playlistsTab.style.display = browse ? 'none' : 'block';
-      // search + kind only apply to Browse
-      searchEl.style.display = browse ? '' : 'none';
-      kindEl.style.display = browse ? '' : 'none';
-      headingEl.textContent = browse ? (kindEl.value === 'Series' ? 'Shows' : 'Movies') : 'Library';
-      if (!browse) loadPlaylists();
+      tabBrowse.classList.toggle('active', which === 'browse');
+      tabLibrary.classList.toggle('active', which === 'library');
+      tabPlaylists.classList.toggle('active', which === 'playlists');
+      browseTab.style.display = which === 'browse' ? 'block' : 'none';
+      libraryTab.style.display = which === 'library' ? 'block' : 'none';
+      playlistsTab.style.display = which === 'playlists' ? 'block' : 'none';
+      // the top search + kind toggle only apply to Browse
+      searchEl.style.display = which === 'browse' ? '' : 'none';
+      kindEl.style.display = which === 'browse' ? '' : 'none';
+      headingEl.textContent = which === 'browse' ? (kindEl.value === 'Series' ? 'Shows' : 'Movies')
+        : which === 'library' ? 'Library' : 'Playlists';
+      if (which === 'playlists') loadPlaylists();
+      if (which === 'library') { setupLibraryObserver(); loadFullLibrary(); }
     }
 
     // ---- events ----
@@ -2561,7 +2662,7 @@
     passEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') signinBtn.click(); });
 
     signoutBtn.addEventListener('click', () => {
-      session = null; saveSession(null);
+      session = null; saveSession(null); fullLibrary = null;
       libView.style.display = 'none'; detailView.style.display = 'none'; playlistView.style.display = 'none';
       authCard.style.display = 'flex'; setAuthMsg('');
       loadGuests();
@@ -2583,7 +2684,15 @@
     spotInfo.addEventListener('click', () => { const it = spotItems[spotIdx]; if (it) openDetail(it); });
 
     tabBrowse.addEventListener('click', () => switchTab('browse'));
+    tabLibrary.addEventListener('click', () => switchTab('library'));
     tabPlaylists.addEventListener('click', () => switchTab('playlists'));
+
+    // library tab filters
+    lKind.addEventListener('change', applyLibraryFilters);
+    lGenre.addEventListener('change', applyLibraryFilters);
+    lSort.addEventListener('change', applyLibraryFilters);
+    let lSearchT;
+    lSearch.addEventListener('input', () => { clearTimeout(lSearchT); lSearchT = setTimeout(applyLibraryFilters, 180); });
 
     gridBack.addEventListener('click', exitViewAll);
 
