@@ -2154,8 +2154,8 @@
         const params = new URLSearchParams({ ParentId: box.Id, UserId: session.userId, Fields: FIELDS, SortBy: 'ProductionYear,SortName', SortOrder: 'Ascending' });
         const data = await jf(`/Users/${session.userId}/Items?${params.toString()}`);
         const items = (data && data.Items) || [];
-        switchTab('browse');
-        showGridList(box.Name || 'Collection', items, items.slice());
+        if (!items.length) { toast('This collection is empty'); return; }
+        goToGridList(box.Name || 'Collection', items, items.slice());
       } catch (e) {
         if (e.code === 401) { handleExpired(); return; }
         toast('Could not load collection');
@@ -2171,13 +2171,24 @@
         });
         const data = await jf(`/Users/${session.userId}/Items?${params.toString()}`);
         const items = (data && data.Items) || [];
-        // route into the View-all grid on the Browse tab
-        switchTab('browse');
-        showGridList(person.Name || 'Cast', items);
+        if (!items.length) { toast('Nothing found for ' + (person.Name || 'this person')); return; }
+        goToGridList(person.Name || 'Cast', items);
       } catch (e) {
         if (e.code === 401) { handleExpired(); return; }
         toast('Could not load filmography');
       }
+    }
+
+    // Leave whatever view we're on (detail page, playlist, etc.), return to the
+    // Browse tab, and show an arbitrary list in its grid. Used by cast + collections.
+    function goToGridList(title, items, queue) {
+      stopTheme();
+      detailView.style.display = 'none';
+      playlistView.style.display = 'none';
+      libView.style.display = 'block';
+      switchTab('browse');
+      // switchTab('browse') re-renders rows; override that with our grid list
+      showGridList(title, items, queue);
     }
 
     async function loadSimilar(item) {
