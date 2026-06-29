@@ -616,6 +616,7 @@
 
           <!-- FILTERING: single grid -->
           <div id="gridView" style="display:none;">
+            <button class="lib-back" id="gridBack" style="display:none;">← Back to browse</button>
             <div class="lib-section-h" id="gridHeading">Results <span class="count" id="gridCount"></span></div>
             <div class="lib-grid" id="libGrid"></div>
             <div class="lib-empty" id="libEmpty" style="display:none;">No titles match those filters.</div>
@@ -841,7 +842,7 @@
     const tabBrowse = $('tabBrowse'), tabPlaylists = $('tabPlaylists');
     const browseTab = $('browseTab'), playlistsTab = $('playlistsTab');
     const rowsView = $('rowsView'), rowsContainer = $('rowsContainer');
-    const gridView = $('gridView'), gridHeading = $('gridHeading'), gridCount = $('gridCount');
+    const gridView = $('gridView'), gridHeading = $('gridHeading'), gridCount = $('gridCount'), gridBack = $('gridBack');
     // filters
     const fGenre = $('fGenre'), fYear = $('fYear'), fSort = $('fSort'), fClear = $('fClear');
     // playlists
@@ -1242,6 +1243,7 @@
     }
 
     async function loadLibrary() {
+      viewAllMode = false; gridBack.style.display = 'none';
       loadingEl.style.display = 'none';
       grid.innerHTML = ''; emptyEl.style.display = 'none';
       rowsView.style.display = 'block'; gridView.style.display = 'none';
@@ -1289,8 +1291,14 @@
     // decide rows vs grid based on whether any filter is active
     function renderBrowse() {
       fClear.classList.toggle('show', filtersActive());
-      if (filtersActive()) { rowsView.style.display = 'none'; gridView.style.display = 'block'; renderGrid(); }
-      else { gridView.style.display = 'none'; rowsView.style.display = 'block'; renderRows(); }
+      if (filtersActive()) {
+        viewAllMode = false; gridBack.style.display = 'none';
+        rowsView.style.display = 'none'; gridView.style.display = 'block'; renderGrid();
+      } else if (viewAllMode) {
+        // stay in the View-all grid; do nothing (gridBack returns to rows)
+      } else {
+        gridView.style.display = 'none'; rowsView.style.display = 'block'; renderRows();
+      }
     }
 
     let searchToken = 0;
@@ -1360,6 +1368,33 @@
       return items.sort(cmp);
     }
 
+    // ---- "View all" : show an arbitrary row's full list in the grid view ----
+    let viewAllMode = false;
+    function showGridList(title, items, queue) {
+      viewAllMode = true;
+      rowsView.style.display = 'none';
+      gridView.style.display = 'block';
+      gridBack.style.display = 'inline-flex';
+      gridHeading.firstChild.textContent = title + ' ';
+      gridCount.textContent = items.length + (items.length === 1 ? ' title' : ' titles');
+      grid.innerHTML = '';
+      emptyEl.style.display = items.length ? 'none' : 'block';
+      const frag = document.createDocumentFragment();
+      items.forEach((entry) => {
+        const it = entry.item || entry;
+        frag.appendChild(makePoster(it, entry.opts || {}));
+      });
+      grid.appendChild(frag);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    function exitViewAll() {
+      viewAllMode = false;
+      gridBack.style.display = 'none';
+      gridView.style.display = 'none';
+      rowsView.style.display = 'block';
+      renderRows();
+    }
+
     // ---- skeleton shimmer (shown while rows load) ----
     function showSkeletonRows(n) {
       rowsContainer.innerHTML = '';
@@ -1381,17 +1416,26 @@
       const head = document.createElement('div');
       head.className = 'lib-section-h';
       head.innerHTML = escapeHtml(title) + (opts.count ? ` <span class="count">${items.length}</span>` : '');
-      // optional play-all / shuffle actions for a row (used by genre rows)
-      if (opts.queue && opts.queue.length) {
+      // optional play-all / shuffle actions + "View all" for a row
+      const hasActions = (opts.queue && opts.queue.length) || opts.viewAll;
+      if (hasActions) {
         const actions = document.createElement('div');
         actions.className = 'lib-mini-actions';
-        const playAll = document.createElement('button');
-        playAll.className = 'lib-mini-btn'; playAll.innerHTML = '▶ Play all';
-        playAll.addEventListener('click', (e) => { e.stopPropagation(); playQueue(opts.queue.slice(), false); });
-        const shuffle = document.createElement('button');
-        shuffle.className = 'lib-mini-btn'; shuffle.innerHTML = '⤮ Shuffle';
-        shuffle.addEventListener('click', (e) => { e.stopPropagation(); playQueue(opts.queue.slice(), true); });
-        actions.appendChild(playAll); actions.appendChild(shuffle);
+        if (opts.queue && opts.queue.length) {
+          const playAll = document.createElement('button');
+          playAll.className = 'lib-mini-btn'; playAll.innerHTML = '▶ Play all';
+          playAll.addEventListener('click', (e) => { e.stopPropagation(); playQueue(opts.queue.slice(), false); });
+          const shuffle = document.createElement('button');
+          shuffle.className = 'lib-mini-btn'; shuffle.innerHTML = '⤮ Shuffle';
+          shuffle.addEventListener('click', (e) => { e.stopPropagation(); playQueue(opts.queue.slice(), true); });
+          actions.appendChild(playAll); actions.appendChild(shuffle);
+        }
+        if (opts.viewAll) {
+          const va = document.createElement('button');
+          va.className = 'lib-mini-btn'; va.innerHTML = 'View all →';
+          va.addEventListener('click', (e) => { e.stopPropagation(); opts.viewAll(); });
+          actions.appendChild(va);
+        }
         head.appendChild(actions);
       }
       wrap.appendChild(head);
@@ -1524,18 +1568,35 @@
 
       // Favorites
       const favs = allItems.filter(isFav);
-      appendRow('Your favorites', favs, { count: true });
+      appendRow('Your favorites', favs.slice(0, 24), {
+        count: true,
+        viewAll: favs.length > 24 ? () => showGridList('Your favorites', favs) : null,
+      });
 
       // Recently added
-      const recent = sortItems(allItems.slice(), 'DateCreated').slice(0, 24);
-      appendRow('Recently added', recent);
+      const recentAll = sortItems(allItems.slice(), 'DateCreated');
+      appendRow('Recently added', recentAll.slice(0, 24), {
+        viewAll: recentAll.length > 24 ? () => showGridList('Recently added', recentAll) : null,
+      });
 
       // A few genre rows (largest genres first)
       const counts = genreList.map((g) => ({ g, n: allItems.filter((i) => (i.Genres || []).indexOf(g) >= 0).length }))
         .sort((a, b) => b.n - a.n).slice(0, 6);
       counts.forEach(({ g }) => {
-        const items = sortItems(allItems.filter((i) => (i.Genres || []).indexOf(g) >= 0), 'CommunityRating').slice(0, 24);
-        appendRow(g, items, { count: true, queue: items.slice() });
+        const allInGenre = sortItems(allItems.filter((i) => (i.Genres || []).indexOf(g) >= 0), 'CommunityRating');
+        const shown = allInGenre.slice(0, 24);
+        appendRow(g, shown, {
+          count: true,
+          queue: allInGenre.slice(),
+          viewAll: allInGenre.length > 24 ? () => showGridList(g, allInGenre, allInGenre.slice()) : null,
+        });
+      });
+
+      // All titles (A–Z) — full library, with View all
+      const allSorted = sortItems(allItems.slice(), 'SortName');
+      appendRow('All ' + (kind === 'Series' ? 'shows' : 'movies'), allSorted.slice(0, 24), {
+        count: true,
+        viewAll: allSorted.length > 24 ? () => showGridList('All ' + (kind === 'Series' ? 'shows' : 'movies'), allSorted) : null,
       });
 
       if (!rowsContainer.children.length) {
@@ -2341,7 +2402,7 @@
       video.removeAttribute('src'); video.load();
       audioTrackWrap.style.display = 'none'; subTrackWrap.style.display = 'none';
       // refresh resume rows / episode progress so it shows immediately on return
-      if (libView.style.display !== 'none' && browseTab.style.display !== 'none' && !filtersActive()) renderRows();
+      if (libView.style.display !== 'none' && browseTab.style.display !== 'none' && !filtersActive() && !viewAllMode) renderRows();
       if (detailView.style.display !== 'none' && currentSeries) {
         const idx = Array.prototype.indexOf.call(
           seasonBar.children,
@@ -2510,7 +2571,7 @@
       detailView.style.display = 'none';
       libView.style.display = 'block';
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      if (!filtersActive()) renderRows(); // refresh progress on rows
+      if (!filtersActive() && !viewAllMode) renderRows(); // refresh progress on rows
     });
 
     // spotlight actions
@@ -2524,9 +2585,11 @@
     tabBrowse.addEventListener('click', () => switchTab('browse'));
     tabPlaylists.addEventListener('click', () => switchTab('playlists'));
 
+    gridBack.addEventListener('click', exitViewAll);
+
     let searchT;
     searchEl.addEventListener('input', () => { clearTimeout(searchT); searchT = setTimeout(renderBrowse, 180); });
-    kindEl.addEventListener('change', loadLibrary);
+    kindEl.addEventListener('change', () => { viewAllMode = false; gridBack.style.display = 'none'; loadLibrary(); });
     fGenre.addEventListener('change', renderBrowse);
     fYear.addEventListener('change', renderBrowse);
     fSort.addEventListener('change', renderBrowse);
