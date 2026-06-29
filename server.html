@@ -1100,7 +1100,7 @@
     const audioTrackWrap = $('audioTrackWrap'), audioTrackSel = $('audioTrack'),
           subTrackWrap = $('subTrackWrap'), subTrackSel = $('subTrack'),
           speedSel = $('speedSel'), skipIntro = $('skipIntro'), pipBtn = $('pipBtn'),
-          boostSel = $('boostSel'), boostVal = $('boostVal'), skipCredits = $('skipCredits');
+          boostSel = $('boostSel'), boostVal = $('boostVal'), skipCredits = $('skipCredits'), boostWrap = $('boostWrap');
     const upNext = $('upNext'), upNextThumb = $('upNextThumb'), upNextName = $('upNextName'),
           upNextCount = $('upNextCount'), upNextPlay = $('upNextPlay'), upNextCancel = $('upNextCancel');
 
@@ -3256,10 +3256,18 @@
 
     // ---- audio boost (WebAudio gain) ----
     // A MediaElementSource can only be created ONCE per media element, so build
-    // the graph lazily and reuse it. gain > 1 amplifies quiet dialogue; values
-    // above ~2 may clip on already-loud sources, which is expected.
-    let audioCtx = null, gainNode = null, srcNode = null;
+    // the graph lazily and reuse it. gain > 1 amplifies quiet dialogue.
+    //
+    // IMPORTANT CAVEAT: routing a cross-origin <video> through WebAudio requires
+    // the media response to carry CORS headers AND the element to have crossOrigin
+    // set. When the server doesn't send those (common here), the browser treats the
+    // audio as "tainted" and the graph outputs SILENCE. We detect that case with an
+    // analyser: if the graph is live but no signal flows during playback, we tear it
+    // down and fall back to native volume (capped at 100%) so audio is never muted.
+    let audioCtx = null, gainNode = null, srcNode = null, analyser = null;
+    let boostBroken = false;     // true once we've confirmed the graph mutes this source
     function ensureAudioGraph() {
+      if (boostBroken) return false;
       if (gainNode) return true;
       try {
         const AC = window.AudioContext || window.webkitAudioContext;
@@ -3268,17 +3276,87 @@
         srcNode = audioCtx.createMediaElementSource(video);
         gainNode = audioCtx.createGain();
         gainNode.gain.value = parseFloat(boostSel.value) || 1;
-        srcNode.connect(gainNode).connect(audioCtx.destination);
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        // src → gain → analyser → speakers
+        srcNode.connect(gainNode);
+        gainNode.connect(analyser);
+        analyser.connect(audioCtx.destination);
         return true;
       } catch (_) { gainNode = null; return false; }
+    }
+    // Check whether real audio is flowing. If the graph is tainted (cross-origin
+    // without CORS) the analyser reads dead-flat silence even though the video is
+    // "playing" with sound — that's our signal to bail out.
+    function verifyBoostAudible() {
+      if (!analyser || boostBroken) return;
+      if (video.paused || video.muted || video.volume === 0) return; // can't judge
+      const buf = new Uint8Array(analyser.fftSize);
+      analyser.getByteTimeDomainData(buf);
+      let moved = false;
+      for (let i = 0; i < buf.length; i++) { if (Math.abs(buf[i] - 128) > 1) { moved = true; break; } }
+      if (!moved) {
+        // tainted → graph is muting audio. Tear it down and never use it again.
+        disableBoostGraph();
+      }
+    }
+    function disableBoostGraph() {
+      boostBroken = true;
+      try { if (srcNode) srcNode.disconnect(); } catch (_) {}
+      try { if (gainNode) gainNode.disconnect(); } catch (_) {}
+      try { if (analyser) analyser.disconnect(); } catch (_) {}
+      // NOTE: we cannot recreate the MediaElementSource, so once a source is
+      // captured the only way to restore direct output is to reload the element.
+      // closePlayer()/loadStream already swap video.src, which re-routes audio to
+      // the speakers on the next load. For the current stream we reload in place.
+      try { if (audioCtx) audioCtx.close(); } catch (_) {}
+      audioCtx = gainNode = srcNode = analyser = null;
+      // restore audible playback for the current stream by re-attaching its source
+      reattachCurrentAudio();
+      boostSel.value = '1'; boostVal.textContent = '100%';
+      boostSel.disabled = true;
+      boostWrap.title = 'Audio boost needs CORS headers on the media server, which this stream doesn’t provide.';
+      toast('Audio boost isn’t available for this stream');
+    }
+    // Re-point the element at its current source so audio bypasses the dead graph.
+    // Only safe for direct-play (file) sources; for HLS the source is managed by
+    // hls.js, so we reload the whole stream instead via the existing loader.
+    function reattachCurrentAudio() {
+      try {
+        const t = video.currentTime, wasPlaying = !video.paused;
+        if (playState && playState.hls) {
+          // managed source — re-run the loader at the current position
+          loadStream(playState.item, playState.audioIdx, playState.subIdx, t, false);
+          return;
+        }
+        const cur = video.currentSrc || video.src;
+        if (cur) {
+          video.src = cur;
+          video.load();
+          const resume = () => {
+            try { video.currentTime = t; } catch (_) {}
+            if (wasPlaying) video.play().catch(() => {});
+            video.removeEventListener('loadedmetadata', resume);
+          };
+          video.addEventListener('loadedmetadata', resume);
+        }
+      } catch (_) {}
     }
     function applyBoost() {
       const g = parseFloat(boostSel.value) || 1;
       boostVal.textContent = Math.round(g * 100) + '%';
-      if (g === 1 && !gainNode) return;            // no need to build the graph just for 100%
-      if (!ensureAudioGraph()) { if (g !== 1) toast('Audio boost unavailable'); return; }
+      if (g <= 1) {
+        // 100% or less can use native volume; no need to build (or risk) the graph
+        if (gainNode) { try { gainNode.gain.value = g; } catch (_) {} }
+        else { try { video.volume = g; } catch (_) {} }
+        return;
+      }
+      if (boostBroken) { boostSel.value = '1'; boostVal.textContent = '100%'; return; }
+      if (!ensureAudioGraph()) { toast('Audio boost unavailable in this browser'); boostSel.value = '1'; boostVal.textContent = '100%'; return; }
       try { if (audioCtx.state === 'suspended') audioCtx.resume(); } catch (_) {}
       try { gainNode.gain.value = g; } catch (_) {}
+      // give the graph a moment to produce samples, then confirm it isn't muting
+      setTimeout(verifyBoostAudible, 350);
     }
     boostSel.addEventListener('input', applyBoost);
     // resume the context on first play (browsers require a gesture)
