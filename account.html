@@ -278,7 +278,34 @@
     .acctGuestActions { display:flex; align-items:center; gap:6px; }
     .acctTinyBtn { border:1px solid var(--border-2); background:rgba(255,255,255,.05); color:var(--text-2); border-radius:999px; padding:5px 9px; cursor:pointer; font-size:11.5px; font-family:var(--font-b); }
     .acctTinyBtn:hover { color:var(--text); border-color:rgba(249,168,212,.32); background:rgba(249,168,212,.08); }
+    .acctTinyBtn:disabled { opacity:.55; cursor:default; }
     .acctEmpty { color:var(--text-3); font-size:12.5px; padding:10px 0; line-height:1.5; }
+
+    /* ── friends list ── */
+    .acctFriendsCard {
+      border: 1px solid var(--border-2); border-radius: var(--r-lg);
+      background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+      padding: 15px;
+    }
+    .acctFriendsList { display:grid; gap:8px; }
+    .acctFriendItem {
+      display:grid; grid-template-columns:auto 1fr auto; gap:10px; align-items:center;
+      padding:11px 12px; border-radius:var(--r-md); background:rgba(0,0,0,.16); border:1px solid var(--border);
+    }
+    .acctFriendAv {
+      position:relative; width:38px; height:38px; border-radius:50%; overflow:hidden; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.06);
+      font-size:18px; cursor:pointer;
+    }
+    .acctFriendAv img { width:100%; height:100%; object-fit:cover; }
+    .acctFriendDot {
+      position:absolute; right:-1px; bottom:-1px; width:10px; height:10px; border-radius:50%;
+      background:#6b7280; border:2px solid rgba(10,16,29,1);
+    }
+    .acctFriendDot.on { background:#34d399; }
+    .acctFriendMain { min-width:0; cursor:pointer; }
+    .acctFriendMain b { color:var(--text); font-size:13px; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .acctFriendMain span { color:var(--text-3); font-size:11.5px; }
   
 
     /* ── public-style personal profile page ── */
@@ -384,6 +411,7 @@
     }
     #profileView .acctSocialCard:nth-child(3) { grid-column: 2; grid-row: 1 / span 2; }
     #profileView .acctGuestList { max-height: none; }
+    #profileView .acctFriendsCard,
     #profileView .petsStrip,
     #profileView .achCount,
     #profileView .achGrid { margin-left: 34px; margin-right: 34px; }
@@ -419,6 +447,7 @@
       #profileView .secLabel { margin-left: 18px; margin-right: 18px; }
       #profileView .acctSocialStack { grid-template-columns: 1fr; padding: 0 18px 8px; }
       #profileView .acctSocialCard:nth-child(3) { grid-column: auto; grid-row: auto; }
+      #profileView .acctFriendsCard,
       #profileView .petsStrip,
       #profileView .achCount,
       #profileView .achGrid { margin-left: 18px; margin-right: 18px; }
@@ -471,11 +500,16 @@
       border-radius: 26px; padding: 20px;
       background: radial-gradient(circle at top left, rgba(255,255,255,.08), transparent 38%), linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.024));
     }
+    #profileView .acctFriendsCard {
+      border-radius: 26px; padding: 20px;
+      background: radial-gradient(circle at top left, rgba(255,255,255,.08), transparent 38%), linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.024));
+    }
     #profileView .acctSocialHead h3 { font-size: 15px; }
     #profileView .acctRelPreview { border-radius: 20px; padding: 16px; }
     #profileView .acctGiftStat { min-width: 86px; border-radius: 18px; padding: 12px 9px; }
     #profileView .acctRecentItem, #profileView .acctGuestItem { border-radius: 18px; padding: 13px 14px; }
-    #profileView .petsStrip, #profileView .achCount, #profileView .achGrid { margin-left: 42px; margin-right: 42px; }
+    #profileView .acctFriendItem { border-radius: 18px; padding: 13px 14px; }
+    #profileView .acctFriendsCard, #profileView .petsStrip, #profileView .achCount, #profileView .achGrid { margin-left: 42px; margin-right: 42px; }
     #profileView .profEditor {
       margin: 22px 42px 42px; padding: 26px; border-radius: 28px;
       background: radial-gradient(circle at top right, rgba(196,181,253,.11), transparent 34%), rgba(0,0,0,.20);
@@ -492,7 +526,7 @@
       #profileView .acctEditToggle { grid-column: 1 / -1; width: 100%; margin-top: 10px; }
       #profileView .secLabel { margin-left: 18px; margin-right: 18px; }
       #profileView .acctSocialStack { grid-template-columns: 1fr; padding-left: 18px; padding-right: 18px; }
-      #profileView .petsStrip, #profileView .achCount, #profileView .achGrid { margin-left: 18px; margin-right: 18px; }
+      #profileView .acctFriendsCard, #profileView .petsStrip, #profileView .achCount, #profileView .achGrid { margin-left: 18px; margin-right: 18px; }
       #profileView .profEditor { margin: 18px; padding: 18px; }
     }
 
@@ -604,6 +638,12 @@
             <div class="acctSocialHead"><h3>📝 Guestbook</h3><span id="acctGuestTotal">0 notes</span></div>
             <div class="acctGuestList" id="acctGuestList"><div class="acctEmpty">Loading guestbook…</div></div>
           </section>
+        </div>
+
+        <!-- ── your friends ── -->
+        <div class="secLabel">Your friends</div>
+        <div class="acctFriendsCard" id="acctFriendsCard">
+          <div class="acctFriendsList" id="acctFriendsList"><div class="acctEmpty">Loading friends…</div></div>
         </div>
 
 
@@ -1156,13 +1196,63 @@
       }
 
 
-      if (MFAuth.watchFriends) {
-        MFAuth.watchFriends(f => {
-          stats.friends = Object.keys(f || {}).length;
-          const el = $("pvFriends"); if (el) el.textContent = stats.friends;
-          renderAchievements();
+      let friendStatusUnsubs = [];
+      function renderAcctFriends(friends) {
+        const box = $("acctFriendsList");
+        const ids = Object.keys(friends || {});
+        stats.friends = ids.length;
+        const el = $("pvFriends"); if (el) el.textContent = stats.friends;
+        renderAchievements();
+        if (!box) return;
+
+        // stop watching status for the previous render's friends
+        friendStatusUnsubs.forEach(u => { try { u(); } catch (_) {} });
+        friendStatusUnsubs = [];
+
+        if (!ids.length) {
+          box.innerHTML = `<div class="acctEmpty">No friends yet — add someone by their @username to start a friendship.</div>`;
+          return;
+        }
+
+        box.innerHTML = ids.map(uid => `
+          <div class="acctFriendItem" data-friend="${escapeForHtml(uid)}">
+            <span class="acctFriendAv" id="acctFriendAv_${escapeForHtml(uid)}" data-open="${escapeForHtml(uid)}">🌸<i class="acctFriendDot" id="acctFriendDot_${escapeForHtml(uid)}"></i></span>
+            <div class="acctFriendMain" data-open="${escapeForHtml(uid)}"><b id="acctFriendName_${escapeForHtml(uid)}">…</b><span id="acctFriendHandle_${escapeForHtml(uid)}"></span></div>
+            <button class="acctTinyBtn" type="button" data-rmfriend="${escapeForHtml(uid)}">Remove</button>
+          </div>`).join("");
+
+        box.querySelectorAll("[data-open]").forEach(elOpen => elOpen.addEventListener("click", () => {
+          const uid = elOpen.getAttribute("data-open");
+          if (window.MFProfile) MFProfile.show(uid);
+        }));
+
+        box.querySelectorAll("[data-rmfriend]").forEach(btn => btn.addEventListener("click", async () => {
+          btn.disabled = true;
+          btn.textContent = "Removing…";
+          try { await MFAuth.removeFriend(btn.getAttribute("data-rmfriend")); }
+          catch (e) { msg($("profMsg"), friendlyError(e), "err"); btn.disabled = false; btn.textContent = "Remove"; }
+        }));
+
+        ids.forEach(uid => {
+          MFAuth.getProfile(uid).then(u => {
+            u = u || {};
+            const name = u.displayName || "someone";
+            const a = MFAuth.avatarFor(u, name);
+            const avEl = $("acctFriendAv_" + uid);
+            if (avEl) avEl.innerHTML = (a.kind === "photo" ? `<img src="${escapeForHtml(a.value)}">` : escapeForHtml(a.value)) + `<i class="acctFriendDot" id="acctFriendDot_${escapeForHtml(uid)}"></i>`;
+            const nameEl = $("acctFriendName_" + uid); if (nameEl) nameEl.textContent = name;
+            const handleEl = $("acctFriendHandle_" + uid); if (handleEl) handleEl.textContent = u.username ? "@" + u.username : "";
+          });
+          if (MFAuth.watchStatus) {
+            friendStatusUnsubs.push(MFAuth.watchStatus(uid, (st) => {
+              const dot = $("acctFriendDot_" + uid);
+              if (dot) dot.classList.toggle("on", !!(st && st.state === "online"));
+            }));
+          }
         });
       }
+
+      if (MFAuth.watchFriends) MFAuth.watchFriends(renderAcctFriends);
 
 
 
