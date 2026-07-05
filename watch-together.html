@@ -195,6 +195,14 @@
       background:rgba(196,181,253,.26); border-color:rgba(196,181,253,.5); color:#f0ebff;
     }
     .cfgRow input[type=range]{ width:100%; accent-color:#c4b5fd; cursor:pointer; }
+    .cfgSelect{
+      width:100%; padding:7px 8px; font-size:12px; font-weight:500;
+      color:#e7e2f0; cursor:pointer; border-radius:10px;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05);
+      outline:none;
+    }
+    .cfgSelect:focus{ border-color:rgba(196,181,253,.5); }
+    .cfgSelect option{ background:#111827; color:#e7e2f0; }
     .cfgHint{ font-size:11px; line-height:1.4; color:#8c83a8; margin-top:10px; }
     .cfgLive{ font-size:11px; color:#fca5a5; margin-top:8px; display:none; }
     .cfgLive.show{ display:block; }
@@ -479,6 +487,20 @@
               <div class="streamCfgMenu" id="streamCfgMenu">
                 <h3>Stream quality</h3>
                 <div class="cfgRow">
+                  <label>Source</label>
+                  <div class="segGroup" id="cfgSrc">
+                    <button data-src="screen">🖥 Screen</button>
+                    <button data-src="camera">🎥 OBS / Camera</button>
+                  </div>
+                </div>
+                <div class="cfgRow cfgCamOnly" id="cfgCamRow" hidden>
+                  <label>Video device</label>
+                  <select class="cfgSelect" id="cfgCamSel"></select>
+                  <label style="margin-top:8px;">Audio device</label>
+                  <select class="cfgSelect" id="cfgMicSel"></select>
+                  <div class="cfgHint" style="margin-top:6px;">Start OBS's Virtual Camera first (Controls → Start Virtual Camera). OBS video carries no audio — pick a cable/mic here, or None.</div>
+                </div>
+                <div class="cfgRow">
                   <label>Resolution</label>
                   <div class="segGroup" id="cfgRes">
                     <button data-res="720">720p</button>
@@ -680,7 +702,29 @@
       fps: 60,
       bitrate: 5_000_000,                  // bits/sec
       priority: "maintain-framerate",      // maintain-framerate | maintain-resolution | balanced
+      source: "screen",                    // "screen" (getDisplayMedia) | "camera" (getUserMedia — OBS Virtual Camera etc.)
+      videoDeviceId: "",                   // camera mode: chosen video input
+      audioDeviceId: "",                   // camera mode: chosen audio input ("" = no audio)
     };
+    // OBS users shouldn't have to re-pick their devices every visit.
+    const STREAM_SRC_KEY = "wt_stream_source";
+    try {
+      const saved = JSON.parse(localStorage.getItem(STREAM_SRC_KEY) || "null");
+      if (saved && typeof saved === "object") {
+        if (saved.source === "camera" || saved.source === "screen") streamCfg.source = saved.source;
+        if (typeof saved.videoDeviceId === "string") streamCfg.videoDeviceId = saved.videoDeviceId;
+        if (typeof saved.audioDeviceId === "string") streamCfg.audioDeviceId = saved.audioDeviceId;
+      }
+    } catch (_) {}
+    function persistStreamSource() {
+      try {
+        localStorage.setItem(STREAM_SRC_KEY, JSON.stringify({
+          source: streamCfg.source,
+          videoDeviceId: streamCfg.videoDeviceId,
+          audioDeviceId: streamCfg.audioDeviceId,
+        }));
+      } catch (_) {}
+    }
     const uploadInput = $("uploadInput");
     const uploadRow = $("uploadRow");
     const uploadFill = $("uploadFill");
@@ -1445,8 +1489,11 @@
         toast(`${activeShare.byName} is already streaming — only one at a time`);
         return;
       }
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
-        toast("Your browser can't capture the screen here (needs HTTPS + a desktop browser)");
+      const useCamera = streamCfg.source === "camera";
+      if (!navigator.mediaDevices ||
+          (!useCamera && !navigator.mediaDevices.getDisplayMedia) ||
+          (useCamera && !navigator.mediaDevices.getUserMedia)) {
+        toast("Your browser can't capture media here (needs HTTPS + a desktop browser)");
         return;
       }
       let stream;
@@ -1459,16 +1506,43 @@
           videoConstraints.height = { ideal: streamCfg.res };
           videoConstraints.width  = { ideal: Math.round(streamCfg.res * 16 / 9) };
         }
-        stream = await navigator.mediaDevices.getDisplayMedia({
-          video: videoConstraints,
-          audio: {
-            // best-effort: clean game audio without echo cancellation mangling it
-            echoCancellation: false, noiseSuppression: false, autoGainControl: false,
-          },
-        });
+        if (useCamera) {
+          // OBS Virtual Camera (or any capture device) via getUserMedia. The
+          // rest of the pipeline is source-agnostic — a MediaStream is a
+          // MediaStream — so codecs, adaptive quality, and peers all behave
+          // exactly as they do for screen capture.
+          if (streamCfg.videoDeviceId) videoConstraints.deviceId = { exact: streamCfg.videoDeviceId };
+          // OBS's virtual camera is video-only; audio has to come from a
+          // separate input (VB-Cable, VoiceMeeter, or a mic). "" = no audio.
+          const audioConstraints = streamCfg.audioDeviceId
+            ? {
+                deviceId: { exact: streamCfg.audioDeviceId },
+                // Raw passthrough — voice processing mangles game/music audio.
+                echoCancellation: false, noiseSuppression: false, autoGainControl: false,
+              }
+            : false;
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: videoConstraints,
+            audio: audioConstraints,
+          });
+        } else {
+          stream = await navigator.mediaDevices.getDisplayMedia({
+            video: videoConstraints,
+            audio: {
+              // best-effort: clean game audio without echo cancellation mangling it
+              echoCancellation: false, noiseSuppression: false, autoGainControl: false,
+            },
+          });
+        }
       } catch (err) {
-        if (err && err.name === "NotAllowedError") toast("Screen share cancelled");
-        else { console.error("[share] getDisplayMedia failed", err); toast("Couldn't start screen capture"); }
+        if (err && err.name === "NotAllowedError") {
+          toast(useCamera ? "Camera permission denied" : "Screen share cancelled");
+        } else if (useCamera && (err && (err.name === "NotFoundError" || err.name === "OverconstrainedError" || err.name === "NotReadableError"))) {
+          toast("Couldn't open that device — is OBS's Virtual Camera started?");
+        } else {
+          console.error("[share] capture failed", err);
+          toast("Couldn't start capture");
+        }
         return;
       }
 
@@ -1912,10 +1986,73 @@
       const brIn    = $("cfgBitrate");
       const brVal   = $("cfgBrVal");
       const liveNote= $("cfgLive");
+      const srcGrp  = $("cfgSrc");
+      const camRow  = $("cfgCamRow");
+      const camSel  = $("cfgCamSel");
+      const micSel  = $("cfgMicSel");
       if (!cfgBtn || !menu) return;
+
+      // ---- Device enumeration (OBS / Camera source) ----
+      // Device labels are blank until the page has had media permission at
+      // least once, so we may need a throwaway getUserMedia to unlock them.
+      let devicesLoaded = false;
+      async function populateDevices() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+          camSel.innerHTML = "<option value=''>Not supported here</option>";
+          micSel.innerHTML = "<option value=''>Not supported here</option>";
+          return;
+        }
+        let devs = [];
+        try { devs = await navigator.mediaDevices.enumerateDevices(); } catch (_) {}
+        const labelsHidden = devs.some(d => d.kind === "videoinput") &&
+                             devs.filter(d => d.kind === "videoinput").every(d => !d.label);
+        if (labelsHidden) {
+          try {
+            const tmp = await navigator.mediaDevices.getUserMedia({ video: true });
+            tmp.getTracks().forEach(t => t.stop());
+            devs = await navigator.mediaDevices.enumerateDevices();
+          } catch (_) { /* permission denied — show generic labels */ }
+        }
+        const cams = devs.filter(d => d.kind === "videoinput");
+        const mics = devs.filter(d => d.kind === "audioinput");
+
+        camSel.innerHTML = "";
+        if (!cams.length) {
+          camSel.innerHTML = "<option value=''>No video devices found</option>";
+        } else {
+          cams.forEach((d, i) => {
+            const o = document.createElement("option");
+            o.value = d.deviceId;
+            o.textContent = d.label || `Camera ${i + 1}`;
+            camSel.appendChild(o);
+          });
+          // Preference order: previously saved device -> anything that looks
+          // like OBS's virtual cam -> first available.
+          const saved = cams.find(d => d.deviceId === streamCfg.videoDeviceId);
+          const obs   = cams.find(d => /obs|virtual/i.test(d.label || ""));
+          streamCfg.videoDeviceId = (saved || obs || cams[0]).deviceId;
+          camSel.value = streamCfg.videoDeviceId;
+        }
+
+        micSel.innerHTML = "<option value=''>None (video only)</option>";
+        mics.forEach((d, i) => {
+          const o = document.createElement("option");
+          o.value = d.deviceId;
+          o.textContent = d.label || `Audio input ${i + 1}`;
+          micSel.appendChild(o);
+        });
+        micSel.value = mics.some(d => d.deviceId === streamCfg.audioDeviceId)
+          ? streamCfg.audioDeviceId : "";
+        streamCfg.audioDeviceId = micSel.value;
+        persistStreamSource();
+        devicesLoaded = true;
+      }
 
       // Reflect current streamCfg onto the controls.
       function syncUI() {
+        srcGrp.querySelectorAll("button").forEach(b =>
+          b.classList.toggle("sel", b.dataset.src === streamCfg.source));
+        camRow.hidden = streamCfg.source !== "camera";
         resGrp.querySelectorAll("button").forEach(b =>
           b.classList.toggle("sel", Number(b.dataset.res) === streamCfg.res));
         fpsGrp.querySelectorAll("button").forEach(b =>
@@ -1927,7 +2064,11 @@
         liveNote.classList.toggle("show", isBroadcasting);
       }
 
-      function openMenu() { syncUI(); menu.classList.add("open"); }
+      function openMenu() {
+        syncUI();
+        menu.classList.add("open");
+        if (streamCfg.source === "camera" && !devicesLoaded) populateDevices();
+      }
       function closeMenu() { menu.classList.remove("open"); }
 
       cfgBtn.addEventListener("click", (e) => {
@@ -1939,6 +2080,22 @@
         if (menu.classList.contains("open") && !menu.contains(e.target) && e.target !== cfgBtn) closeMenu();
       });
       document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMenu(); });
+
+      srcGrp.addEventListener("click", (e) => {
+        const b = e.target.closest("button[data-src]"); if (!b) return;
+        streamCfg.source = b.dataset.src;
+        persistStreamSource();
+        syncUI();
+        if (streamCfg.source === "camera") populateDevices();
+      });
+      camSel.addEventListener("change", () => {
+        streamCfg.videoDeviceId = camSel.value;
+        persistStreamSource();
+      });
+      micSel.addEventListener("change", () => {
+        streamCfg.audioDeviceId = micSel.value;
+        persistStreamSource();
+      });
 
       resGrp.addEventListener("click", (e) => {
         const b = e.target.closest("button[data-res]"); if (!b) return;
