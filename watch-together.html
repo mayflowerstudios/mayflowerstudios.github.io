@@ -1481,6 +1481,10 @@
       try {
         const vt = stream.getVideoTracks()[0];
         if (vt) vt.contentHint = "motion";
+        // Game audio is closer to music than speech — this keeps Opus in
+        // full-band mode instead of narrowing to a voice profile.
+        const at = stream.getAudioTracks()[0];
+        if (at) at.contentHint = "music";
       } catch (_) {}
       set(shareLockRef, { by: clientId, byName: myName, t: Date.now() });
       onDisconnect(shareLockRef).remove();
@@ -1510,7 +1514,36 @@
         if (id !== clientId) openBroadcastPeer(id);
       }
       updateShareUI();
+      startAdaptLoop();
       toast("You're live 🎮 — others in the room can see your screen");
+    }
+
+    // Reorder the video codec list so hardware-friendly codecs come first.
+    // Browsers frequently negotiate VP8, which is encoded in SOFTWARE — doing
+    // that at 60fps while a game is also hammering the CPU/GPU is one of the
+    // biggest sources of choppy streams. H.264 has hardware encoders on
+    // virtually every GPU (NVENC/AMF/QuickSync), so it goes first; VP9 next
+    // (hw on many recent GPUs); VP8 last as the universal fallback.
+    function preferHardwareCodecs(pc) {
+      try {
+        if (!("getCapabilities" in RTCRtpSender) || !RTCRtpSender.getCapabilities) return;
+        const caps = RTCRtpSender.getCapabilities("video");
+        if (!caps || !caps.codecs) return;
+        const rank = (c) => {
+          const mt = c.mimeType.toLowerCase();
+          if (mt === "video/h264") return 0;
+          if (mt === "video/vp9")  return 1;
+          if (mt === "video/av1")  return 2;
+          if (mt === "video/vp8")  return 3;
+          return 4; // rtx/red/ulpfec etc. keep relative order at the back
+        };
+        const sorted = [...caps.codecs].sort((a, b) => rank(a) - rank(b));
+        pc.getTransceivers().forEach(tr => {
+          if (tr.sender && tr.sender.track && tr.sender.track.kind === "video" && tr.setCodecPreferences) {
+            tr.setCodecPreferences(sorted);
+          }
+        });
+      } catch (_) { /* non-fatal: negotiation falls back to browser default */ }
     }
 
     function openBroadcastPeer(peerId) {
@@ -1527,28 +1560,169 @@
           applyEncoderCfg(sender);
         }
       });
+      // Must happen before createOffer to influence the negotiated codec.
+      preferHardwareCodecs(pc);
       pc.onicecandidate = (e) => { if (e.candidate) sendSignal(peerId, "ice", e.candidate.toJSON()); };
-      pc.onconnectionstatechange = () => {
-        if (["failed", "closed", "disconnected"].includes(pc.connectionState)) closePeer(peerId);
-      };
+      pc.onconnectionstatechange = () => handlePeerStateChange(peerId, pc, /*isBroadcaster=*/true);
       // Broadcaster initiates the offer.
       pc.createOffer()
         .then(offer => pc.setLocalDescription(offer).then(() => sendSignal(peerId, "offer", offer)))
         .catch(err => console.error("[share] offer failed", err));
     }
 
-    // Apply the current streamCfg bitrate/priority to one video sender. Caps
-    // the encoder so high-motion gameplay degrades quality gracefully instead
-    // of stalling when it outruns the uplink.
+    // ---- Connection resilience ----
+    // "disconnected" is often a transient blip (Wi-Fi roam, brief congestion)
+    // that ICE heals on its own within a few seconds. Tearing the peer down
+    // instantly — the old behaviour — turned every blip into a full stream
+    // drop + rejoin. Instead: give "disconnected" a grace window, and on a
+    // hard "failed" let the broadcaster attempt one ICE restart (new
+    // candidates over the existing session — far faster than reconnecting
+    // from scratch) before giving up.
+    const iceGraceTimers = new Map();   // peerId -> timeout id
+    const iceRestartTried = new Set();  // peerIds we've already restarted once
+
+    function clearIceGrace(peerId) {
+      const t = iceGraceTimers.get(peerId);
+      if (t) { clearTimeout(t); iceGraceTimers.delete(peerId); }
+    }
+
+    function handlePeerStateChange(peerId, pc, isBroadcaster) {
+      const st = pc.connectionState;
+      if (st === "connected") {
+        clearIceGrace(peerId);
+        iceRestartTried.delete(peerId);
+        return;
+      }
+      if (st === "closed") { clearIceGrace(peerId); closePeer(peerId); if (!isBroadcaster) maybeEndViewing(); return; }
+      if (st === "disconnected") {
+        // Grace window: only tear down if it doesn't recover.
+        if (iceGraceTimers.has(peerId)) return;
+        iceGraceTimers.set(peerId, setTimeout(() => {
+          iceGraceTimers.delete(peerId);
+          if (["disconnected", "failed"].includes(pc.connectionState)) {
+            tryIceRestartOrClose(peerId, pc, isBroadcaster);
+          }
+        }, 7000));
+        return;
+      }
+      if (st === "failed") {
+        clearIceGrace(peerId);
+        tryIceRestartOrClose(peerId, pc, isBroadcaster);
+      }
+    }
+
+    function tryIceRestartOrClose(peerId, pc, isBroadcaster) {
+      // Only the offerer (broadcaster) can drive an ICE restart; the viewer
+      // just answers the incoming restart offer via the normal signal path.
+      if (isBroadcaster && !iceRestartTried.has(peerId) && pc.connectionState !== "closed") {
+        iceRestartTried.add(peerId);
+        try {
+          if (pc.restartIce) pc.restartIce();
+          pc.createOffer({ iceRestart: true })
+            .then(offer => pc.setLocalDescription(offer).then(() => sendSignal(peerId, "offer", offer)))
+            .catch(() => { closePeer(peerId); });
+          // If the restart doesn't take within 10s, cut our losses.
+          setTimeout(() => {
+            if (peers.get(peerId) === pc && ["failed", "disconnected"].includes(pc.connectionState)) {
+              closePeer(peerId);
+            }
+          }, 10000);
+          return;
+        } catch (_) { /* fall through to close */ }
+      }
+      closePeer(peerId);
+      if (!isBroadcaster) maybeEndViewing();
+    }
+
+    // ---- Adaptive quality ----
+    // The user's bitrate slider is a CEILING, not a promise. Real uplinks
+    // fluctuate; when the encoder outruns what the network can actually carry,
+    // frames queue up and the viewer sees stutter/latency creep. This
+    // controller polls WebRTC stats every 2s per peer and:
+    //   * bandwidth-limited or packet loss  -> cut target bitrate 30% (fast down)
+    //   * CPU-limited encoder               -> encode at a lower resolution
+    //   * clean for 8s+                     -> creep back up 12% (slow up)
+    // Fast-down / slow-up is the classic congestion-control shape — it reacts
+    // before the viewer buffers, and doesn't oscillate.
+    const adaptState = new WeakMap();   // RTCRtpSender -> { factor, scaleDown, goodSince }
+    let adaptTimer = null;
+
+    function getAdapt(sender) {
+      let s = adaptState.get(sender);
+      if (!s) { s = { factor: 1, scaleDown: 1, goodSince: Date.now() }; adaptState.set(sender, s); }
+      return s;
+    }
+
+    // Apply the current streamCfg bitrate/priority to one video sender,
+    // scaled by that sender's adaptive state. Caps the encoder so high-motion
+    // gameplay degrades quality gracefully instead of stalling when it
+    // outruns the uplink.
     function applyEncoderCfg(sender) {
       try {
+        const a = getAdapt(sender);
         const params = sender.getParameters();
         if (!params.encodings || !params.encodings.length) params.encodings = [{}];
-        params.encodings[0].maxBitrate = streamCfg.bitrate;
-        params.encodings[0].maxFramerate = streamCfg.fps;
+        const enc = params.encodings[0];
+        enc.maxBitrate = Math.max(400_000, Math.round(streamCfg.bitrate * a.factor));
+        enc.maxFramerate = streamCfg.fps;
+        enc.scaleResolutionDownBy = a.scaleDown > 1 ? a.scaleDown : 1;
+        // Ask the network stack to prioritise this traffic where supported.
+        enc.priority = "high";
+        enc.networkPriority = "high";
         params.degradationPreference = streamCfg.priority;
         sender.setParameters(params).catch(() => {});
       } catch (_) {}
+    }
+
+    async function adaptTick() {
+      for (const pc of peers.values()) {
+        let sender;
+        try { sender = pc.getSenders().find(s => s.track && s.track.kind === "video"); } catch (_) { continue; }
+        if (!sender) continue;
+        const a = getAdapt(sender);
+        let limited = "none", lossRatio = 0;
+        try {
+          const stats = await sender.getStats();
+          stats.forEach(r => {
+            if (r.type === "outbound-rtp" && r.kind === "video" && r.qualityLimitationReason) {
+              limited = r.qualityLimitationReason;   // "none" | "bandwidth" | "cpu" | "other"
+            }
+            if (r.type === "remote-inbound-rtp" && r.kind === "video" && typeof r.fractionLost === "number") {
+              lossRatio = r.fractionLost;            // 0..1, recent loss reported by the viewer
+            }
+          });
+        } catch (_) { continue; }
+
+        const congested = limited === "bandwidth" || lossRatio > 0.05;
+        let changed = false;
+
+        if (congested) {
+          const next = Math.max(0.25, a.factor * 0.7);
+          if (next !== a.factor) { a.factor = next; changed = true; }
+          a.goodSince = Date.now();
+        } else if (limited === "cpu") {
+          // Encoder can't keep up — shrink the encode resolution instead of
+          // dropping frames. 1 -> 1.5 -> 2 (i.e. 720p source encodes at 480p).
+          const next = a.scaleDown >= 2 ? 2 : (a.scaleDown >= 1.5 ? 2 : 1.5);
+          if (next !== a.scaleDown) { a.scaleDown = next; changed = true; }
+          a.goodSince = Date.now();
+        } else if (Date.now() - a.goodSince > 8000) {
+          // Sustained clean period: recover bitrate first, then resolution.
+          if (a.factor < 1) { a.factor = Math.min(1, a.factor * 1.12); changed = true; }
+          else if (a.scaleDown > 1) { a.scaleDown = a.scaleDown > 1.5 ? 1.5 : 1; changed = true; }
+          if (changed) a.goodSince = Date.now() - 4000; // half-credit, so recovery stays gradual
+        }
+
+        if (changed) applyEncoderCfg(sender);
+      }
+    }
+
+    function startAdaptLoop() {
+      if (adaptTimer) return;
+      adaptTimer = setInterval(adaptTick, 2000);
+    }
+    function stopAdaptLoop() {
+      if (adaptTimer) { clearInterval(adaptTimer); adaptTimer = null; }
     }
 
     // Push live bitrate/priority changes to every connected viewer mid-stream.
@@ -1563,6 +1737,7 @@
     function stopBroadcast(yielded) {
       if (!isBroadcasting) return;
       isBroadcasting = false;
+      stopAdaptLoop();
       // tell viewers we're done, then tear down
       for (const id of peers.keys()) sendSignal(id, "bye", null);
       for (const id of Array.from(peers.keys())) closePeer(id);
@@ -1597,8 +1772,15 @@
               // floor, not a hard cap. Video gets a touch more headroom than
               // audio to avoid frame drops on motion-heavy gameplay.
               try {
+                const ms = e.track.kind === "video" ? 150 : 100;
+                // Modern API (Chrome 110+): milliseconds.
+                if ("jitterBufferTarget" in e.receiver) {
+                  e.receiver.jitterBufferTarget = ms;
+                }
+                // Legacy fallback: seconds. Deprecated but still honoured on
+                // older builds; harmless where jitterBufferTarget won.
                 if ("playoutDelayHint" in e.receiver) {
-                  e.receiver.playoutDelayHint = e.track.kind === "video" ? 0.15 : 0.1;
+                  e.receiver.playoutDelayHint = ms / 1000;
                 }
               } catch (_) {}
               // First media from the broadcaster — show it.
@@ -1611,9 +1793,7 @@
               setNowPlayingShare(activeShare ? activeShare.byName : "Someone", false);
               updateShareUI();
             };
-            pc.onconnectionstatechange = () => {
-              if (["failed", "closed", "disconnected"].includes(pc.connectionState)) { closePeer(fromId); maybeEndViewing(); }
-            };
+            pc.onconnectionstatechange = () => handlePeerStateChange(fromId, pc, /*isBroadcaster=*/false);
           }
           await pc.setRemoteDescription(new RTCSessionDescription(msg.data));
           const answer = await pc.createAnswer();
@@ -1654,6 +1834,8 @@
     }
 
     function closePeer(peerId) {
+      clearIceGrace(peerId);
+      iceRestartTried.delete(peerId);
       const pc = peers.get(peerId);
       if (pc) { try { pc.ontrack = null; pc.onicecandidate = null; pc.onconnectionstatechange = null; pc.close(); } catch (_) {} peers.delete(peerId); }
       pendingIce.delete(peerId);
