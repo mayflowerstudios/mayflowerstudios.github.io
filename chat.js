@@ -331,7 +331,7 @@
         <div class="mf-gifSearch"><input type="text" id="mfGifSearch" placeholder="Search GIFs…" autocomplete="off" /></div>
         <div class="mf-gifGrid" id="mfGifGrid"></div>
         <div class="mf-gifMsg" id="mfGifMsg" hidden></div>
-        <div class="mf-gifAttr">Powered by Klipy</div>
+        <div class="mf-gifAttr">Powered by GIPHY</div>
       </div>
       <div class="mf-chat-tools">
         <button class="mf-tool" id="mfEmojiBtn" title="Emoji" type="button">😊</button>
@@ -571,30 +571,70 @@
       clearTimeout(gifTimer);
       gifTimer = setTimeout(() => loadGifs(gifSearch.value.trim()), 350);
     });
+    // Render an array of { preview, full, w, h, title } into the grid.
+    function renderGifs(items, reqId, grid, msg) {
+      if (reqId !== gifReq) return false;
+      msg.hidden = true;
+      for (const it of items) {
+        if (!it.full) continue;
+        const im = document.createElement("img");
+        im.src = it.preview || it.full; im.loading = "lazy"; im.alt = it.title || "GIF";
+        im.addEventListener("click", () => { sendMedia({ kind: "gif", url: it.full, w: it.w, h: it.h }); closePops(); });
+        grid.appendChild(im);
+      }
+      return grid.children.length > 0;
+    }
+
+    // Giphy primary, Klipy fallback. Klipy is only queried if Giphy errors
+    // or returns nothing, so results are Discord-tier by default. Per Giphy's
+    // terms the two are never mixed in one grid, and Giphy's own media URLs
+    // are used verbatim (no stripping/rewriting of query params).
     function loadGifs(q) {
       const reqId = ++gifReq;
       const grid = document.getElementById("mfGifGrid");
       const msg = document.getElementById("mfGifMsg");
       grid.innerHTML = ""; msg.hidden = false; msg.textContent = "Loading…";
-      const path = q ? `gifs/search?q=${encodeURIComponent(q)}&per_page=24` : `gifs/trending?per_page=24`;
-      const url = `https://api.klipy.com/api/v1/${KLIPY_KEY}/${path}&content_filter=high`;
-      fetch(url).then(r => { if (!r.ok) throw new Error("klipy " + r.status); return r.json(); })
+
+      const base = "https://api.giphy.com/v1/gifs";
+      const gUrl = q
+        ? `${base}/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(q)}&limit=24&offset=0&rating=pg-13&bundle=messaging_non_clips`
+        : `${base}/trending?api_key=${GIPHY_KEY}&limit=24&offset=0&rating=pg-13&bundle=messaging_non_clips`;
+
+      const runKlipy = () => {
+        const path = q ? `gifs/search?q=${encodeURIComponent(q)}&per_page=24` : `gifs/trending?per_page=24`;
+        const kUrl = `https://api.klipy.com/api/v1/${KLIPY_KEY}/${path}&content_filter=high`;
+        fetch(kUrl).then(r => { if (!r.ok) throw new Error("klipy " + r.status); return r.json(); })
+          .then(json => {
+            if (reqId !== gifReq) return;
+            const results = (json && json.data && json.data.data) || [];
+            const items = results.map(g => {
+              const { preview, full } = klipyUrls(g); const d = klipyDims(g);
+              return { preview, full, w: d[0], h: d[1], title: g.title };
+            });
+            if (!renderGifs(items, reqId, grid, msg)) { msg.hidden = false; msg.textContent = "No GIFs found 🌫️"; }
+          })
+          .catch(() => { if (reqId === gifReq) { msg.hidden = false; msg.textContent = "Couldn't reach the GIF service 🌧️"; } });
+      };
+
+      fetch(gUrl).then(r => { if (!r.ok) throw new Error("giphy " + r.status); return r.json(); })
         .then(json => {
           if (reqId !== gifReq) return;
-          const results = (json && json.data && json.data.data) || [];
-          if (!results.length) { msg.textContent = "No GIFs found 🌫️"; return; }
-          msg.hidden = true;
-          for (const g of results) {
-            const { preview, full } = klipyUrls(g); if (!full) continue;
-            const d = klipyDims(g);
-            const im = document.createElement("img");
-            im.src = preview || full; im.loading = "lazy"; im.alt = g.title || "GIF";
-            im.addEventListener("click", () => { sendMedia({ kind: "gif", url: full, w: d[0], h: d[1] }); closePops(); });
-            grid.appendChild(im);
-          }
-          if (!grid.children.length) { msg.hidden = false; msg.textContent = "No GIFs found 🌫️"; }
+          const results = (json && json.data) || [];
+          const items = results.map(g => {
+            const im = g.images || {};
+            const prev = im.fixed_width || im.fixed_height || im.downsized || {};
+            const big = im.downsized_medium || im.downsized || im.original || {};
+            return {
+              preview: prev.url,          // used verbatim, query params intact
+              full: big.url || prev.url,  // used verbatim, query params intact
+              w: parseInt(big.width || prev.width, 10) || undefined,
+              h: parseInt(big.height || prev.height, 10) || undefined,
+              title: g.title
+            };
+          });
+          if (!renderGifs(items, reqId, grid, msg)) runKlipy(); // empty Giphy -> fall back
         })
-        .catch(() => { if (reqId === gifReq) { msg.hidden = false; msg.textContent = "Couldn't reach the GIF service 🌧️"; } });
+        .catch(runKlipy); // Giphy error -> fall back
     }
 
     // Image upload
@@ -639,7 +679,13 @@
     return storageMod.getDownloadURL(sref);
   }
 
-  // ---- Klipy GIF helpers (same API as the watch room) ----
+  // ---- GIF sources: Giphy primary, Klipy fallback ----
+  // Get a free Giphy key at developers.giphy.com: sign in, "Create an App",
+  // choose the API (not SDK) option, and copy the beta key. The beta key is
+  // rate-limited but fine for a personal site; apply for a production key only
+  // if you outgrow it. This key is public (client-side) by nature, same as the
+  // Klipy one. Until it's filled in, the picker silently falls back to Klipy.
+  const GIPHY_KEY = "XXL2Zso1ejR7BZJD4X5ndTDEw5ckB64g";
   const KLIPY_KEY = "CShaQsI9HgGHkocmgvSz0r8C9Nzzibp2qeAW0XvW4Gq7EF8Pp7nlq9RK6jJvEEG7";
   function klipyUrls(item) {
     const f = item.file || item.files || {};
