@@ -310,6 +310,7 @@
       background: rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.10);
     }
     .qThumb{ width:64px; height:36px; border-radius:8px; object-fit:cover; flex:0 0 auto; background:#000; }
+    .qThumb.ttThumb{ background:linear-gradient(135deg,#ff0050,#00f2ea); }
     .qTitle{ flex:1 1 auto; min-width:0; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .qBtns{ display:flex; gap:6px; flex:0 0 auto; }
     .qMini{
@@ -457,7 +458,7 @@
               <div class="kicker">🌙 Cozy together • 📺 Watch Together</div>
               <h1 class="title">Watch Together</h1>
               <p class="sub">
-                Paste a YouTube link or a direct video URL, hit play, and everyone stays perfectly in sync —
+                Paste a YouTube link, a TikTok, or a direct video URL, hit play, and everyone stays perfectly in sync —
                 play, pause, and skip carry across to the whole room automatically.
               </p>
             </div>
@@ -477,7 +478,7 @@
 
           <div class="controls">
             <input class="input" id="urlInput" type="text"
-                   placeholder="Paste a YouTube link or video URL…"
+                   placeholder="Paste a YouTube, TikTok, or video URL…"
                    autocomplete="off" spellcheck="false" />
             <button class="btn primary" id="loadBtn">▶ Load &amp; Sync</button>
             <button class="btn" id="uploadBtn" title="Upload a video file to watch together">📁 Upload</button>
@@ -550,10 +551,11 @@
             <div class="videoBox" id="videoBox">
               <div id="ytplayer"></div>
               <video id="filevid" playsinline controls preload="auto" style="display:none"></video>
+              <iframe id="ttplayer" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen scrolling="no" style="display:none"></iframe>
               <div class="placeholder" id="placeholder">
                 <div class="big">🌸</div>
                 <strong>Nothing playing yet</strong>
-                <p>Paste a YouTube link or a direct video URL above and hit <strong>Load &amp; Sync</strong>. Whatever anyone starts, the whole room sees too.</p>
+                <p>Paste a YouTube link, a TikTok, or a direct video URL above and hit <strong>Load &amp; Sync</strong>. Whatever anyone starts, the whole room sees too.</p>
               </div>
             </div>
 
@@ -583,7 +585,7 @@
             </h2>
             <div class="queueAdd">
               <input class="input" id="queueInput" type="text"
-                     placeholder="Paste a YouTube or video link to queue…" autocomplete="off" spellcheck="false" />
+                     placeholder="Paste a YouTube, TikTok, or video link to queue…" autocomplete="off" spellcheck="false" />
               <button class="btn" id="queueAddBtn">＋ Add</button>
             </div>
             <div class="queueList" id="queueList">
@@ -811,11 +813,68 @@
         if (id) return { kind: "yt", src: id };
       }
 
+      // TikTok — canonical links (/@user/video/{id}, /player/v1/{id}) or a bare id
+      const ttId = parseTikTokId(input);
+      if (ttId) return { kind: "tiktok", src: ttId };
+
       // direct/file URL
       let u;
       try { u = new URL(input); } catch (_) { return null; }
       if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+      // A TikTok short link (vm./vt./…/t/) carries no id in the URL — flag it so
+      // the async resolver can expand it rather than treating it as a file URL.
+      if (/(^|\.)tiktok\.com$/.test(u.hostname) || /tiktok\.com/i.test(input)) {
+        return { kind: "tiktok", src: null, shortUrl: input };
+      }
       return { kind: "file", src: input };
+    }
+
+    // Pull a numeric TikTok post id from a full URL or a bare id. Returns null
+    // for short links (vm.tiktok.com/…) that only resolve via a redirect.
+    function parseTikTokId(input) {
+      if (!input) return null;
+      input = String(input).trim();
+      if (/^\d{17,21}$/.test(input)) return input;              // bare post id
+      if (!/tiktok\.com/i.test(input)) return null;
+      let u;
+      try { u = new URL(input); } catch (_) { return null; }
+      let m = u.pathname.match(/\/(?:video|photo|v|embed)\/(\d{6,25})/);
+      if (m) return m[1];
+      m = u.pathname.match(/\/player\/v1\/(\d{6,25})/);
+      if (m) return m[1];
+      m = u.pathname.match(/(\d{17,25})/);
+      if (m) return m[1];
+      return null;
+    }
+
+    // Best-effort: expand any TikTok input (incl. short links) to a numeric id
+    // via the public oEmbed endpoint. Returns null if it can't be resolved.
+    async function resolveTikTokId(input) {
+      const direct = parseTikTokId(input);
+      if (direct) return direct;
+      try {
+        const r = await fetch("https://www.tiktok.com/oembed?url=" + encodeURIComponent(String(input).trim()));
+        if (r.ok) {
+          const d = await r.json();
+          if (d && d.embed_product_id && /^\d+$/.test(d.embed_product_id)) return d.embed_product_id;
+          const m = String((d && d.html) || "").match(/\/(?:video|embed)\/(\d{6,25})/);
+          if (m) return m[1];
+        }
+      } catch (_) {}
+      return null;
+    }
+
+    // Async wrapper around parseSource that expands TikTok short links, so every
+    // downstream consumer receives a concrete { kind, src }.
+    async function normalizeSource(input) {
+      const parsed = parseSource(input);
+      if (!parsed) return null;
+      if (parsed.kind === "tiktok" && !parsed.src) {
+        const id = await resolveTikTokId(parsed.shortUrl || input);
+        if (!id) return null;
+        return { kind: "tiktok", src: id };
+      }
+      return { kind: parsed.kind, src: parsed.src };
     }
 
     // ============================================================
@@ -838,12 +897,16 @@
 
     const fileVid = $("filevid");
     const ytEl = $("ytplayer");
+    const ttEl = $("ttplayer");
 
     function showPlayer(kind) {
+      // Leaving TikTok? Stop its audio — the hidden iframe keeps playing otherwise.
+      if (currentKind === "tiktok" && kind !== "tiktok") { try { ttPost("pause"); } catch (_) {} }
       currentKind = kind;
       ytEl.style.display    = kind === "yt"   ? "block" : "none";
       // both "file" and "screen" render through the native <video> element
       fileVid.style.display = (kind === "file" || kind === "screen") ? "block" : "none";
+      ttEl.style.display    = kind === "tiktok" ? "block" : "none";
     }
 
     window.onYouTubeIframeAPIReady = function () {
@@ -861,6 +924,109 @@
       t.src = "https://www.youtube.com/iframe_api";
       document.head.appendChild(t);
     })();
+
+    // ============================================================
+    //  TikTok embedded player  (postMessage control API)
+    //  Docs: https://developers.tiktok.com/doc/embed-player
+    //  We drive an <iframe src="tiktok.com/player/v1/{id}"> with
+    //  play / pause / seekTo messages and listen for its state +
+    //  currentTime events — enough to keep the whole room in sync.
+    //  (TikTok exposes no playback-rate control, so drift is fixed
+    //   with a hard seek rather than the gentle nudging YT/file use.)
+    // ============================================================
+    let ttReady = false;        // is the current TikTok iframe ready for commands?
+    let ttPlayState = -1;       // -1 init · 0 ended · 1 playing · 2 paused · 3 buffering
+    let ttTime = 0;             // last reported playback position (seconds)
+    let ttDuration = 0;
+    let ttMuted = false;
+    let ttPendingCmd = null;    // {seek, play} applied once the player reports ready
+
+    function ttPost(type, value) {
+      try {
+        const win = ttEl && ttEl.contentWindow;
+        if (!win) return;
+        const msg = { type, "x-tiktok-player": true };
+        if (value !== undefined) msg.value = value;
+        win.postMessage(msg, "*");
+      } catch (_) {}
+    }
+    function ttPlay()    { ttPost("play"); }
+    function ttPause()   { ttPost("pause"); }
+    function ttSeek(sec) { ttPost("seekTo", Math.max(0, Number(sec) || 0)); }
+
+    // (Re)load a TikTok post. TikTok has no "swap source" call, so every clip is
+    // a fresh iframe src; we stash the desired start position / play state and
+    // apply it when onPlayerReady fires.
+    function ttLoad(id, opts) {
+      opts = opts || {};
+      ttReady = false; ttPlayState = -1; ttTime = 0; ttDuration = 0;
+      ttPendingCmd = { seek: opts.startSeconds || 0, play: !!opts.autoplay };
+      const params = new URLSearchParams({
+        autoplay: opts.autoplay ? "1" : "0",
+        loop: "0", controls: "1", rel: "0",
+        native_context_menu: "0", closed_caption: "0",
+        description: "1", music_info: "1", timestamp: "1",
+      });
+      ttEl.src = "https://www.tiktok.com/player/v1/" + encodeURIComponent(id) + "?" + params.toString();
+    }
+
+    function ttApplyPending() {
+      if (!ttPendingCmd) return;
+      const { seek, play } = ttPendingCmd;
+      ttPendingCmd = null;
+      if (seek > 2) ttSeek(seek);
+      if (play) ttPlay(); else ttPause();
+    }
+
+    window.addEventListener("message", (e) => {
+      // Only trust messages coming from the TikTok player iframe.
+      let host = "";
+      try { host = new URL(e.origin).hostname; } catch (_) {}
+      if (!/(^|\.)tiktok\.com$/.test(host)) return;
+      const d = e.data;
+      if (!d || d["x-tiktok-player"] !== true) return;
+      const type = d.type, val = d.value;
+
+      if (type === "onPlayerReady") { ttReady = true; ttApplyPending(); return; }
+      // Ignore a stale iframe we've since navigated away from.
+      if (currentKind !== "tiktok") return;
+
+      if (type === "onCurrentTime") {
+        if (val && typeof val === "object") {
+          if (typeof val.currentTime === "number") ttTime = val.currentTime;
+          if (typeof val.duration === "number") ttDuration = val.duration;
+        } else if (typeof val === "number") { ttTime = val; }
+        return;
+      }
+      if (type === "onMute") { ttMuted = !!val; return; }
+      if (type === "onStateChange") {
+        const st = (val && typeof val === "object") ? val.state : val;
+        if (typeof st === "number") ttPlayState = st;
+        if (ttPlayState === 3) setBuffering(true);
+        else if (ttPlayState === 1) setBuffering(false);
+        if (ttPlayState === 0 || ttPlayState === 1 || ttPlayState === 2) syncWakeLock();
+        if (ttPlayState === 0) {                 // ended -> advance the queue
+          setBuffering(false);
+          if (!applyingRemote) advanceQueue(currentSrc);
+          return;
+        }
+        if (applyingRemote) return;
+        if (ttPlayState === 1) broadcast("playing");
+        else if (ttPlayState === 2) broadcast("paused");
+        return;
+      }
+      if (type === "onPlayerError") {
+        setBuffering(false);
+        const code = d.value && (d.value.errorCode !== undefined ? d.value.errorCode : d.value);
+        const etype = d.value && d.value.errorType;
+        if (String(code) === "3002" || (etype && /autoplay/i.test(etype))) {
+          toast("Tap the TikTok to start playing ▶");
+        } else {
+          toast("Couldn't load that TikTok");
+        }
+        return;
+      }
+    });
 
     function onPlayerStateChange(e) {
       if (currentKind !== "yt") return;
@@ -976,6 +1142,7 @@
     function getPos() {
       try {
         if (currentKind === "file") return fileVid.currentTime || 0;
+        if (currentKind === "tiktok") return ttTime || 0;
         if (currentKind === "yt" && player) {
           if (currentIsLive) return 0;   // live streams have no stable position
           return player.getCurrentTime() || 0;
@@ -986,6 +1153,7 @@
     function isPlayingNow() {
       try {
         if (currentKind === "file") return !fileVid.paused;
+        if (currentKind === "tiktok") return ttPlayState === 1;
         if (currentKind === "yt" && player) return player.getPlayerState() === 1;
       } catch (_) {}
       return false;
@@ -1109,6 +1277,7 @@
         const target = estimatePos(s);
         const cur = (currentKind === "yt")
           ? (player && player.getCurrentTime ? (player.getCurrentTime() || 0) : 0)
+          : (currentKind === "tiktok") ? (ttTime || 0)
           : (fileVid.currentTime || 0);
         return Math.abs(cur - target) > driftThreshold();
       } catch (_) {
@@ -1172,6 +1341,22 @@
                 (r) => { try { player.setPlaybackRate(r); } catch (_) {} });
             }
             if (s.status === "playing") player.playVideo(); else { player.pauseVideo(); cancelDriftCorrection(); }
+          }
+        } else if (kind === "tiktok") {
+          if (currentKind !== "tiktok") showPlayer("tiktok");
+          placeholder.style.display = "none";
+          if (currentSrc !== src) {
+            currentSrc = src;
+            cancelDriftCorrection();
+            if (currentIsLive) { currentIsLive = false; updateLiveBadge(); }
+            setNowPlaying("tiktok", src, s.title);
+            ttLoad(src, { startSeconds: estimatePos(s), autoplay: s.status === "playing" });
+          } else {
+            // No playback-rate API on TikTok's embed — correct drift by seeking.
+            const target = estimatePos(s);
+            const drift = Math.abs((ttTime || 0) - target);
+            if (force || drift > hardSeekThreshold()) ttSeek(target);
+            if (s.status === "playing") ttPlay(); else ttPause();
           }
         } else { // file
           if (currentKind !== "file") showPlayer("file");
@@ -1285,6 +1470,16 @@
       } catch (_) { return url; }
     }
 
+    // Thumbnail + label helpers shared by the queue / history / now-playing rows.
+    function mediaThumb(kind, src) {
+      if (kind === "yt") return `<img class="qThumb" src="https://i.ytimg.com/vi/${src}/mqdefault.jpg" alt="" />`;
+      if (kind === "tiktok") return `<div class="qThumb ttThumb" style="display:grid;place-items:center;font-size:16px">🎵</div>`;
+      return `<div class="qThumb" style="display:grid;place-items:center;font-size:16px">🎬</div>`;
+    }
+    function mediaLabel(kind, src, title) {
+      return title || (kind === "yt" ? src : kind === "tiktok" ? "TikTok clip" : shortName(src));
+    }
+
     // set the "now playing" line; for YouTube, look up the real title async
     const titleCache = {};
     function setNowPlaying(kind, src, knownTitle) {
@@ -1292,6 +1487,12 @@
       if (kind === "file") {
         currentTitle = shortName(src);
         nowPlaying.textContent = "▶ " + currentTitle;
+        refreshQueueNow();
+        return;
+      }
+      if (kind === "tiktok") {
+        currentTitle = "TikTok clip";
+        nowPlaying.textContent = "▶ TikTok clip";
         refreshQueueNow();
         return;
       }
@@ -1326,6 +1527,7 @@
     const titlePending = {};   // src -> Promise
     function resolveTitle(kind, src) {
       if (!src) return Promise.resolve(null);
+      if (kind === "tiktok") return Promise.resolve(null);   // no reliable client-side TikTok title
       if (kind !== "yt") return Promise.resolve(shortName(src));
       if (titleCache[src]) return Promise.resolve(titleCache[src]);
       if (titlePending[src]) return titlePending[src];
@@ -2589,9 +2791,11 @@
     // ============================================================
     //  UI wiring
     // ============================================================
-    function loadFromInput() {
-      const parsed = parseSource(urlInput.value);
-      if (!parsed) { toast("Couldn't read that link — paste a YouTube link or a direct video URL"); return; }
+    async function loadFromInput() {
+      const raw = urlInput.value;
+      if (/tiktok\.com/i.test(raw || "") && !parseTikTokId(raw)) toast("Fetching that TikTok…");
+      const parsed = await normalizeSource(raw);
+      if (!parsed) { toast("Couldn't read that link — paste a YouTube, TikTok, or a direct video URL"); return; }
       startSource(parsed);
       toast("Loaded — everyone will catch up ✨");
     }
@@ -2618,6 +2822,10 @@
         setNowPlaying("yt", parsed.src);
         if (playerReady) player.loadVideoById(parsed.src);
         else pendingState = { kind: "yt", src: parsed.src, status: "playing", position: 0, updatedAt: Date.now() };
+      } else if (parsed.kind === "tiktok") {
+        showPlayer("tiktok");
+        setNowPlaying("tiktok", parsed.src);
+        ttLoad(parsed.src, { startSeconds: 0, autoplay: true });
       } else {
         showPlayer("file");
         setNowPlaying("file", parsed.src);
@@ -2843,6 +3051,8 @@
         } else if (currentKind === "yt" && player) {
           const t = player.getCurrentTime() || 0;
           player.seekTo(Math.max(0, t + delta), true);
+        } else if (currentKind === "tiktok") {
+          ttSeek(Math.max(0, (ttTime || 0) + delta));
         }
         setTimeout(() => broadcast(isPlayingNow() ? "playing" : "paused"), 120);
       } catch (_) {}
@@ -2853,6 +3063,8 @@
           if (fileVid.paused) fileVid.play().catch(()=>{}); else fileVid.pause();
         } else if (currentKind === "yt" && player) {
           if (player.getPlayerState() === 1) player.pauseVideo(); else player.playVideo();
+        } else if (currentKind === "tiktok") {
+          if (ttPlayState === 1) ttPause(); else ttPlay();
         }
       } catch (_) {}
     }
@@ -2860,6 +3072,7 @@
       try {
         if (currentKind === "file") { fileVid.muted = !fileVid.muted; }
         else if (currentKind === "yt" && player) { player.isMuted() ? player.unMute() : player.mute(); }
+        else if (currentKind === "tiktok") { ttMuted = !ttMuted; ttPost(ttMuted ? "mute" : "unMute"); }
       } catch (_) {}
     }
     document.addEventListener("keydown", (e) => {
@@ -2909,10 +3122,8 @@
 
       // Pinned "now playing" row at the very top of the queue.
       if (hasNow) {
-        const nowThumb = currentKind === "yt"
-          ? `<img class="qThumb" src="https://i.ytimg.com/vi/${currentSrc}/mqdefault.jpg" alt="" />`
-          : `<div class="qThumb" style="display:grid;place-items:center;font-size:16px">🎬</div>`;
-        const nowLabel = currentTitle || (currentKind === "yt" ? currentSrc : shortName(currentSrc));
+        const nowThumb = mediaThumb(currentKind, currentSrc);
+        const nowLabel = mediaLabel(currentKind, currentSrc, currentTitle);
         const nowRow = document.createElement("div");
         nowRow.className = "qItem nowItem";
         nowRow.innerHTML =
@@ -2925,10 +3136,8 @@
       entries.forEach(([key, it], idx) => {
         const kind = it.kind || (it.videoId ? "yt" : "file");
         const src  = it.src  || it.videoId || "";
-        const thumb = kind === "yt"
-          ? `<img class="qThumb" src="https://i.ytimg.com/vi/${src}/mqdefault.jpg" alt="" />`
-          : `<div class="qThumb" style="display:grid;place-items:center;font-size:16px">🎬</div>`;
-        const label = it.title || (kind === "yt" ? src : shortName(src));
+        const thumb = mediaThumb(kind, src);
+        const label = mediaLabel(kind, src, it.title);
         // Backfill a missing title: resolve it, update this row in place, and
         // write it back to Firebase so it persists and everyone sees it.
         if (!it.title && kind === "yt" && src) {
@@ -3071,8 +3280,8 @@
       });
     }
 
-    function addToQueue() {
-      const parsed = parseSource(queueInput.value);
+    async function addToQueue() {
+      const parsed = await normalizeSource(queueInput.value);
       if (!parsed) { toast("Couldn't read that link"); return; }
       if (!FIREBASE_READY || !queueRef) { toast("Queue needs Firebase set up first"); return; }
       if (isInQueue(parsed.kind, parsed.src)) { toast("That's already in the queue"); return; }
@@ -3084,7 +3293,7 @@
       }
       // Use a title we already know if any; otherwise the queue render backfills
       // it asynchronously (and writes it back so everyone sees the real title).
-      const known = parsed.kind === "yt" ? (titleCache[parsed.src] || null) : shortName(parsed.src);
+      const known = parsed.kind === "yt" ? (titleCache[parsed.src] || null) : parsed.kind === "tiktok" ? null : shortName(parsed.src);
       safeWrite(() => push(queueRef, { kind: parsed.kind, src: parsed.src, title: known, t: Date.now(), by: myName }), "Couldn't add to queue");
       queueInput.value = "";
       toast("Added to queue 🎞️");
@@ -3278,6 +3487,7 @@
       try {
         if (currentKind === "yt" && player) { player.seekTo(0, true); player.playVideo(); }
         else if (currentKind === "file") { fileVid.currentTime = 0; fileVid.play().catch(()=>{}); }
+        else if (currentKind === "tiktok") { ttSeek(0); ttPlay(); }
         setTimeout(() => broadcast("playing"), 300);
       } catch (_) {}
     }
@@ -3300,10 +3510,8 @@
       for (const [key, it] of entries) {
         const kind = it.kind || (it.videoId ? "yt" : "file");
         const src  = it.src  || it.videoId || "";
-        const thumb = kind === "yt"
-          ? `<img class="qThumb" src="https://i.ytimg.com/vi/${src}/mqdefault.jpg" alt="" />`
-          : `<div class="qThumb" style="display:grid;place-items:center;font-size:16px">🎬</div>`;
-        const label = it.title || (kind === "yt" ? src : shortName(src));
+        const thumb = mediaThumb(kind, src);
+        const label = mediaLabel(kind, src, it.title);
         if (!it.title && kind === "yt" && src) {
           resolveTitle("yt", src).then(title => {
             if (!title) return;
@@ -3445,7 +3653,7 @@
         wrap.className = "plItem";
         const itemRows = itemEntries.map(([iid, it]) => {
           const kind = it.kind || "yt";
-          const label = it.title || (kind === "yt" ? it.src : shortName(it.src));
+          const label = mediaLabel(kind, it.src, it.title);
           return `<div class="plRow">
               <span class="t">${escapeHtml(label)}</span>
               <button class="qMini play" data-play-item="${pid}:${iid}" title="Play now">▶</button>
@@ -3520,13 +3728,13 @@
       toast("Playlist deleted");
     }
 
-    function addToPlaylist(pid, link, title) {
+    async function addToPlaylist(pid, link, title) {
       // if they pasted a YouTube playlist URL, import all of its videos into this playlist
       if (parsePlaylistId(link)) {
         importYouTubePlaylist(link, pid);
         return;
       }
-      const parsed = parseSource(link);
+      const parsed = await normalizeSource(link);
       if (!parsed) { toast("Couldn't read that link"); return; }
       const id = "i" + Math.random().toString(36).slice(2, 9);
       set(ref(db, `watch/${ROOM}/playlists/${pid}/items/${id}`),
