@@ -1,0 +1,6 @@
+{
+  "name": "Mayflower Idle RPG",
+  "mode": "firebase-live",
+  "firebasePath": "leaderboards/mayflowerIdleRPG/entries",
+  "description": "The website reads live leaderboard records from Firebase Realtime Database. This JSON file is kept only as a fallback marker/documentation file."
+}

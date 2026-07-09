@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b1120" />
+  <title>Mayflower Idle RPG • Mayflower Studios</title>
+  <meta name="description" content="Download Mayflower Idle RPG, a fully idle fantasy chronicle where heroes live, travel, grow old, leave heirs, and discover a world that keeps moving while you are away." />
+  <meta property="og:title" content="Mayflower Idle RPG • Mayflower Studios" />
+  <meta property="og:description" content="A fully idle fantasy chronicle with living-world generation, heirs, offline progress, JSON event mods, and story summaries when you return." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://mayflowerstudios.net/mayflower-idle-rpg.html" />
+  <meta property="og:image" content="https://mayflowerstudios.net/assets/og/home.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="canonical" href="https://mayflowerstudios.net/mayflower-idle-rpg.html" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png?v=3" />
+  <link rel="apple-touch-icon" href="/assets/icons/favicon.png?v=3" />
+  <link rel="stylesheet" href="/style.css?v=34" />
+  <style>
+    .idle-hero { align-items: center; }
+    .idle-hero h1 { font-size: clamp(38px, 6vw, 72px); }
+    .idle-hero .muted { max-width: 70ch; }
+    .idle-card-icon {
+      width: 62px; height: 62px; display: grid; place-items: center;
+      border-radius: 18px; font-size: 32px;
+      background: rgba(249,168,212,.09); border: 1px solid rgba(249,168,212,.22);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+    }
+    .download-panel {
+      padding: 24px; border-radius: var(--r-lg); border: 1px solid rgba(249,168,212,.22);
+      background: linear-gradient(145deg, rgba(249,168,212,.10), rgba(196,181,253,.06));
+    }
+    .release-meta { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin: 16px 0; }
+    .release-meta span {
+      display: block; padding: 10px 12px; border-radius: var(--r-sm);
+      background: rgba(255,255,255,.04); border: 1px solid var(--border);
+      font-size: 12px; color: var(--text-3);
+    }
+    .release-meta strong { display: block; color: var(--text); font-size: 13px; margin-top: 2px; }
+    @media (max-width: 560px) { .release-meta { grid-template-columns: 1fr; } }
+    .feature-list { display: grid; gap: 10px; }
+    .feature-list li { color: var(--text-2); line-height: 1.65; }
+    .step-card { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; }
+    .step-num {
+      width: 34px; height: 34px; border-radius: 999px; display: grid; place-items: center;
+      font-family: var(--font-m); font-size: 13px; color: #0b1120;
+      background: linear-gradient(135deg, var(--rose), var(--violet));
+    }
+    .leaderboard-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; }
+    @media (max-width: 720px) { .leaderboard-grid { grid-template-columns: 1fr; } }
+    .leaderboard-live-note { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; }
+    .leaderboard-status { font-size:12px; color:var(--text-3); }
+    .board-card tbody tr:nth-child(1) td:first-child { color: var(--gold); font-weight: 800; }
+    .board-card tbody tr:nth-child(2) td:first-child { color: var(--rose); font-weight: 800; }
+    .board-card tbody tr:nth-child(3) td:first-child { color: var(--violet); font-weight: 800; }
+    .board-card h3 { display:flex; justify-content:space-between; gap:10px; align-items:center; }
+    .board-card table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+    .board-card th, .board-card td { text-align: left; padding: 9px 7px; border-bottom: 1px solid var(--border); color: var(--text-2); }
+    .board-card th { color: var(--text-3); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+    .board-card tr:last-child td { border-bottom: none; }
+    .codebox-pre {
+      white-space: pre-wrap; font-family: var(--font-m); font-size: 12.5px; line-height: 1.6;
+      color: rgba(250,245,255,.82); background: rgba(0,0,0,.22);
+      border: 1px solid var(--border); border-radius: var(--r-md); padding: 14px; overflow-x: auto;
+    }
+    .soft-note {
+      padding: 14px 16px; border: 1px solid rgba(110,231,183,.18); border-radius: var(--r-md);
+      background: rgba(110,231,183,.06); color: var(--text-2); line-height: 1.7;
+    }
+    .anchor-row { display:flex; flex-wrap:wrap; gap:8px; }
+  </style>
+</head>
+<body data-nav="projects">
+  <div class="site-page">
+    <div id="site-nav"></div>
+    <main class="wrap">
+      <section class="hero idle-hero">
+        <div>
+          <p class="kicker">Desktop game • Windows</p>
+          <h1>🌙 Mayflower Idle RPG</h1>
+          <p class="muted">
+            A fully idle fantasy chronicle. Create a wanderer, choose how they tend to live, and then let the world carry them forward: roads, towns, rumors, companions, danger, children, heirs, legends, and quiet little disasters all unfold without direct control.
+          </p>
+          <div class="ctaRow">
+            <a class="btn primary" href="/downloads/MayflowerIdleRPG_v1.0.0_FirstChronicle.zip" download>⬇ Download release package</a>
+            <a class="btn ghost" href="#how-to-play">How to play</a>
+            <a class="btn ghost" href="#leaderboards">Leaderboards</a>
+            <a class="btn ghost" href="#modding">Mod tutorials</a>
+          </div>
+        </div>
+        <aside class="download-panel">
+          <div class="idle-card-icon" aria-hidden="true">📖</div>
+          <h2 style="margin-top:14px;">First Chronicle</h2>
+          <p class="muted small">The V1 release package includes the source project, release scripts, icon assets, save safety tools, offline progress, and the living atlas generation system.</p>
+          <div class="release-meta">
+            <span>Version<strong>1.0.0</strong></span>
+            <span>Platform<strong>Windows</strong></span>
+            <span>Download<strong>2.1 MB zip</strong></span>
+            <span>Build type<strong>WPF / .NET</strong></span>
+          </div>
+          <a class="btn primary" href="/downloads/MayflowerIdleRPG_v1.0.0_FirstChronicle.zip" download>Download release package</a>
+        </aside>
+      </section>
+
+      <section class="card">
+        <p class="kicker">What it is</p>
+        <h2>Not a clicker. Not a spreadsheet. A living little story machine.</h2>
+        <p class="muted" style="margin-top:10px;">
+          Mayflower Idle RPG is built around the idea that your character has a life even when you are not micromanaging them. You start a chronicle, then watch as your hero travels, works, rests, takes risks, gets hurt, recovers, meets companions, finds strange places, and eventually leaves behind a legacy. If the app is closed, the world can still progress; when you return, a <strong>While You Were Away</strong> summary tells you what changed.
+        </p>
+      </section>
+
+      <section class="grid2">
+        <article class="card">
+          <h3>✨ Core features</h3>
+          <ul class="feature-list">
+            <li>Character Builder with random heroes and custom life setup.</li>
+            <li>Fully idle simulation with travel, daily life, quests, danger, and recovery.</li>
+            <li>Living Atlas that can discover new towns, roads, wilds, dungeons, and legendary places.</li>
+            <li>Children, heirs, retirement, death, and generational continuation.</li>
+            <li>Offline progress with a return summary when you reopen the program.</li>
+            <li>Save backups, crash logs, bug report zips, and corrupt-save quarantine.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>🧭 What you actually do</h3>
+          <p class="muted">You do not directly control every action. You guide the kind of person your hero is, then let the chronicle play. The fun is watching the world remember things, surprise you, and build a family history over time.</p>
+          <div class="anchor-row" style="margin-top:14px;">
+            <a class="btn ghost" href="#download">Download</a>
+            <a class="btn ghost" href="#how-to-play">Guide</a>
+            <a class="btn ghost" href="#modding">Make mods</a>
+          </div>
+        </article>
+      </section>
+
+      <div class="sectionTitle" id="download"><h2>⬇ Download</h2><span>V1 release package</span></div>
+      <section class="card">
+        <div class="grid2">
+          <div>
+            <h3>Mayflower Idle RPG v1.0.0 — First Chronicle</h3>
+            <p class="muted">Download the latest V1 release package. After extracting it, open the project in Visual Studio or publish a single Windows executable using the included build scripts.</p>
+            <div class="ctaRow"><a class="btn primary" href="/downloads/MayflowerIdleRPG_v1.0.0_FirstChronicle.zip" download>Download zip</a></div>
+          </div>
+          <div class="soft-note">
+            <strong>Note:</strong> This is a Windows desktop app project. For a single-file EXE, open it in Visual Studio and use the included publish profile or build scripts. Saves are stored in <code>%APPDATA%\MayflowerIdleRPG</code>.
+          </div>
+        </div>
+      </section>
+
+      <div class="sectionTitle" id="how-to-play"><h2>📘 How to use it</h2><span>First ten minutes</span></div>
+      <section class="grid2">
+        <article class="card step-card"><span class="step-num">1</span><div><h3>Start a chronicle</h3><p class="muted">Open the app and choose New Chronicle. The first-launch flow opens the Character Builder so you can create a custom hero or roll one quickly.</p></div></article>
+        <article class="card step-card"><span class="step-num">2</span><div><h3>Pick a life direction</h3><p class="muted">Choose background, origin, difficulty, focus, and life rule. These do not give you direct control; they nudge what your hero tends to care about.</p></div></article>
+        <article class="card step-card"><span class="step-num">3</span><div><h3>Let it run</h3><p class="muted">The story advances on its own. Watch the journal, map, world notes, companions, family, and activity panels change as time passes.</p></div></article>
+        <article class="card step-card"><span class="step-num">4</span><div><h3>Come back later</h3><p class="muted">Close the app whenever you want. When you reopen it, the game simulates capped offline progress and shows a summary of what happened while you were away.</p></div></article>
+      </section>
+
+      <div class="sectionTitle" id="leaderboards"><h2>🏆 Leaderboards</h2><span>Live Firebase records</span></div>
+      <section class="card leaderboard-live-note">
+        <p class="muted" style="margin:0;">Mayflower Idle RPG can automatically submit public gameplay stats when the program saves. The website reads the same Firebase leaderboard path and refreshes these boards live.</p>
+        <span id="idleLeaderboardStatus" class="leaderboard-status">Loading records…</span>
+      </section>
+      <section class="leaderboard-grid">
+        <article class="card board-card"><h3>Overall Score <span class="muted small">legacy points</span></h3><table><thead><tr><th>Rank</th><th>Hero</th><th>Score</th></tr></thead><tbody id="idleBoardScore"><tr><td>—</td><td>Loading…</td><td>—</td></tr></tbody></table></article>
+        <article class="card board-card"><h3>Longest Life <span class="muted small">days lived</span></h3><table><thead><tr><th>Rank</th><th>Hero</th><th>Record</th></tr></thead><tbody id="idleBoardLife"><tr><td>—</td><td>Loading…</td><td>—</td></tr></tbody></table></article>
+        <article class="card board-card"><h3>Richest Legacy <span class="muted small">gold earned</span></h3><table><thead><tr><th>Rank</th><th>House</th><th>Gold</th></tr></thead><tbody id="idleBoardGold"><tr><td>—</td><td>Loading…</td><td>—</td></tr></tbody></table></article>
+        <article class="card board-card"><h3>Atlas Discoveries <span class="muted small">places found</span></h3><table><thead><tr><th>Rank</th><th>Hero</th><th>Places</th></tr></thead><tbody id="idleBoardAtlas"><tr><td>—</td><td>Loading…</td><td>—</td></tr></tbody></table></article>
+      </section>
+
+      <div class="sectionTitle" id="modding"><h2>🧩 Mod tutorials</h2><span>JSON events</span></div>
+      <section class="card">
+        <h3>What V1 modding supports</h3>
+        <p class="muted">Mayflower Idle RPG creates a <code>Mods</code> folder beside the save files. V1 can load JSON event files from that folder and its subfolders. The stable documented format is custom events; the other folders are reserved for future expansion.</p>
+        <div class="soft-note" style="margin-top:14px;">Recommended folder: <code>%APPDATA%\MayflowerIdleRPG\Saves\Mods\Events</code> or the Mods folder shown inside the app's Tools panel.</div>
+      </section>
+      <section class="grid2">
+        <article class="card">
+          <h3>Tutorial: create your first event</h3>
+          <p class="muted">Open the app, go to Tools, choose the mod/sample option, then edit the generated JSON file. You can also create a new <code>.json</code> file manually. Each file should contain an array of event objects.</p>
+          <pre class="codebox-pre">[
+  {
+    "Name": "The Door With No Handle",
+    "Rarity": "Epic",
+    "Location": "Any",
+    "MinimumYear": 3,
+    "Text": "A door with no handle appears on a wall that had no business having doors.",
+    "Effect": "Luck:+3;Morale:-1"
+  }
+]</pre>
+        </article>
+        <article class="card">
+          <h3>Event fields</h3>
+          <ul class="feature-list">
+            <li><strong>Name</strong> — the event title shown in the journal.</li>
+            <li><strong>Rarity</strong> — Common, Uncommon, Rare, Epic, or Legendary.</li>
+            <li><strong>Location</strong> — use Any, or the exact name of a known place.</li>
+            <li><strong>MinimumYear</strong> — prevents an event from appearing too early.</li>
+            <li><strong>Text</strong> — the story sentence shown when it triggers.</li>
+            <li><strong>Effect</strong> — stat changes separated by semicolons.</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>Supported effects</h3>
+          <pre class="codebox-pre">Luck:+1
+Morale:+2
+Gold:+25
+Reputation:+1
+Faith:+3
+Magic:+1
+RoadSafety:+2</pre>
+          <p class="muted small" style="margin-top:10px;">You can combine them like <code>Luck:+2;Gold:+10;Morale:-1</code>.</p>
+        </article>
+        <article class="card">
+          <h3>Reload and test</h3>
+          <p class="muted">After saving your JSON file, use Reload Mods in the app. If nothing happens right away, that is normal: custom events are chance-based and still follow rarity, location, and year rules.</p>
+        </article>
+      </section>
+    </main>
+    <div id="site-footer"></div>
+  </div>
+  <script src="/shared.js?v=33"></script>
+  <script src="/mayflower-idle-rpg-leaderboard.js?v=1"></script>
+</body>
+</html>
