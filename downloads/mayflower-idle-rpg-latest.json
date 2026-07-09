@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "codename": "First Chronicle",
   "platform": "Windows",
-  "file": "/downloads/MayflowerIdleRPG_v1.0.0_FirstChronicle.zip",
-  "size": "2.1 MB",
-  "notes": "Release package/source project with automatic Firebase leaderboard sync, offline progress, Living Atlas generation, and JSON event mod support."
+  "file": "/downloads/MayflowerIdleRPG_v1.0.0_FirstChronicle.exe",
+  "size": "Single EXE",
+  "notes": "Single-file Windows executable with automatic Firebase leaderboard sync, offline progress, Living Atlas generation, and JSON event mod support."
 }
