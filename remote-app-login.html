@@ -38,12 +38,9 @@ const cfg = {
   storageBucket: "watchtogether-95d7d.firebasestorage.app"
 };
 
-// Current app versions use the query string because URL fragments can be lost by
-// redirects or browser navigation. Keep fragment support for older app builds.
-const query = new URLSearchParams(location.search);
 const fragment = new URLSearchParams(location.hash.slice(1));
-const state = query.get("state") || fragment.get("state") || "";
-const keyText = query.get("key") || fragment.get("key") || "";
+const state = fragment.get("state") || "";
+const keyText = fragment.get("key") || "";
 const status = document.getElementById("status");
 const button = document.getElementById("google");
 const valid = /^[a-f0-9]{64}$/.test(state) && /^[A-Za-z0-9_-]{40,48}$/.test(keyText);
