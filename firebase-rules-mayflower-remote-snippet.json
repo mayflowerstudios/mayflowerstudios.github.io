@@ -1,0 +1,11 @@
+{
+  "remoteDevices": {
+    "$uid": {
+      ".read": "auth != null && auth.uid === $uid",
+      "$deviceId": {
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "!newData.exists() || (newData.hasChildren(['name','room','pair','platform','online','lastSeen','createdAt']) && newData.child('name').isString() && newData.child('name').val().length > 0 && newData.child('name').val().length <= 48 && newData.child('room').isString() && newData.child('room').val().length >= 16 && newData.child('room').val().length <= 80 && newData.child('pair').isString() && newData.child('pair').val().length >= 32 && newData.child('pair').val().length <= 128 && newData.child('platform').val() === 'windows' && newData.child('online').isBoolean() && newData.child('lastSeen').isNumber() && newData.child('createdAt').isNumber())"
+      }
+    }
+  }
+}
