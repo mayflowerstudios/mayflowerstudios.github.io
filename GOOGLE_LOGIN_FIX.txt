@@ -1,0 +1,19 @@
+MAYFLOWER REMOTE GOOGLE LOGIN FIX
+=================================
+
+The previous Google login stalled at “Returning to Mayflower Remote…” because
+it depended on an HTTPS webpage connecting back to a temporary localhost port.
+Some current browsers block or stall that public-to-local connection.
+
+INSTALL IN THIS ORDER
+---------------------
+1. In Firebase Realtime Database > Rules, replace your current rules with
+   firebase-rules-full-google-handoff.json and click Publish.
+2. Upload the new remote-app-login.html to the root of mayflowerstudios.net,
+   replacing the old copy.
+3. Rebuild/publish MayflowerRemote 1.1.2 and run the new executable.
+4. Click Continue with Google and keep the app open while signing in.
+
+The new flow stores only AES-GCM encrypted ciphertext in a random, one-time
+Firebase location. The encryption key stays in the app/browser URL fragment and
+is never written to Firebase. The app deletes the ticket after login.

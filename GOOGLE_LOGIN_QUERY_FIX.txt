@@ -1,0 +1,15 @@
+MAYFLOWER REMOTE GOOGLE SIGN-IN FIX — v1.1.4
+
+Problem fixed:
+The previous app put the one-time Google login state and encryption key in the
+URL fragment (#state=...). On some deployed-site redirect/browser paths that
+fragment was removed, so the page reported that the sign-in link was invalid.
+
+Install:
+1. Upload remote-app-login.html to the root of mayflowerstudios.net, replacing
+   the existing copy.
+2. Rebuild MayflowerRemote from this v1.1.4 source.
+3. Make sure you launch the newly rebuilt executable, then click Continue with Google.
+
+No Firebase rules change is required for this v1.1.4 correction.
+The page also continues to accept old fragment-style links for compatibility.

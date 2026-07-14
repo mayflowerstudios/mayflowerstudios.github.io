@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="robots" content="noindex,nofollow" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
   <title>Sign in to Mayflower Remote</title>
   <style>
     :root{color-scheme:dark;--bg:#10162a;--panel:#18213a;--line:#33405f;--text:#eef3ff;--muted:#aebbd6;--accent:#ff8fbe}
@@ -18,14 +19,16 @@
     <h1>Sign in to Mayflower Remote</h1>
     <p class="sub">Use the same Google account you use on mayflowerstudios.net.</p>
     <button id="google">Continue with Google</button>
-    <p class="status" id="status">The signed-in session will be returned only to Mayflower Remote running on this PC.</p>
-    <p class="tiny">You may close this tab after the app confirms the sign-in.</p>
+    <p class="status" id="status">Your encrypted sign-in will be sent to Mayflower Remote through Firebase.</p>
+    <p class="tiny">Keep Mayflower Remote open until it confirms the sign-in.</p>
   </main>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, setPersistence, browserSessionPersistence }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getDatabase, ref, set }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const cfg = {
   apiKey: "AIzaSyDVJ0Tiq0gimaB-epcD9HQlVBrOWHq-IXI",
@@ -34,12 +37,17 @@ const cfg = {
   projectId: "watchtogether-95d7d",
   storageBucket: "watchtogether-95d7d.firebasestorage.app"
 };
-const params = new URLSearchParams(location.search);
-const port = Number(params.get("port"));
-const state = params.get("state") || "";
+
+// Current app versions use the query string because URL fragments can be lost by
+// redirects or browser navigation. Keep fragment support for older app builds.
+const query = new URLSearchParams(location.search);
+const fragment = new URLSearchParams(location.hash.slice(1));
+const state = query.get("state") || fragment.get("state") || "";
+const keyText = query.get("key") || fragment.get("key") || "";
 const status = document.getElementById("status");
 const button = document.getElementById("google");
-const valid = Number.isInteger(port) && port >= 1024 && port <= 65535 && /^[a-f0-9]{64}$/.test(state);
+const valid = /^[a-f0-9]{64}$/.test(state) && /^[A-Za-z0-9_-]{40,48}$/.test(keyText);
+history.replaceState(null, "", location.pathname);
 
 if (!valid) {
   button.disabled = true;
@@ -48,7 +56,20 @@ if (!valid) {
 
 const app = initializeApp(cfg);
 const auth = getAuth(app);
+const db = getDatabase(app);
 try { await setPersistence(auth, browserSessionPersistence); } catch (_) {}
+
+function fromBase64Url(value) {
+  let b64 = value.replace(/-/g, "+").replace(/_/g, "/");
+  while (b64.length % 4) b64 += "=";
+  const binary = atob(b64);
+  return Uint8Array.from(binary, c => c.charCodeAt(0));
+}
+function toBase64Url(value) {
+  let binary = "";
+  for (const byte of new Uint8Array(value)) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
 
 button.addEventListener("click", async () => {
   if (!valid) return;
@@ -59,22 +80,40 @@ button.addEventListener("click", async () => {
     const user = result.user;
     const idToken = await user.getIdToken(true);
     if (!user.refreshToken) throw new Error("Firebase did not return a refresh session.");
-    const payload = new URLSearchParams({
+
+    status.textContent = "Encrypting your sign-in…";
+    const payload = new TextEncoder().encode(JSON.stringify({
       state,
       uid: user.uid,
       email: user.email || "",
       idToken,
       refreshToken: user.refreshToken,
-      expiresIn: "3600"
+      expiresIn: 3600
+    }));
+    const aesKey = await crypto.subtle.importKey(
+      "raw", fromBase64Url(keyText), { name: "AES-GCM" }, false, ["encrypt"]
+    );
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, aesKey, payload);
+    const now = Date.now();
+
+    await set(ref(db, `remoteLoginSessions/${state}`), {
+      createdBy: user.uid,
+      iv: toBase64Url(iv),
+      ciphertext: toBase64Url(encrypted),
+      createdAt: now,
+      expiresAt: now + 5 * 60 * 1000
     });
-    status.textContent = "Returning to Mayflower Remote…";
-    location.replace(`http://127.0.0.1:${port}/callback#${payload.toString()}`);
+
+    status.textContent = "Signed in! Return to Mayflower Remote — the app is finishing now.";
+    button.textContent = "Sign-in sent ✓";
   } catch (err) {
     const code = err && err.code || "";
     status.textContent = ({
       "auth/popup-blocked":"Your browser blocked the Google window. Allow popups and try again.",
       "auth/popup-closed-by-user":"The Google sign-in window was closed.",
-      "auth/network-request-failed":"A network error interrupted sign-in."
+      "auth/network-request-failed":"A network error interrupted sign-in.",
+      "PERMISSION_DENIED":"Firebase blocked the login ticket. Publish the updated Firebase rules."
     })[code] || (err && err.message) || "Google sign-in failed.";
     button.disabled = false;
   }
