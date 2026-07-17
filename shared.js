@@ -688,7 +688,7 @@
     // auth.js defines window.MFAuth (universal identity).
     if (!window.MFAuth) loadScript('/auth.js', { 'data-mf-auth': '1' });
     // rooms.js defines window.MFRooms (unified activity room registry).
-    loadScript('/rooms.js', { 'data-mf-rooms': '1' });
+    loadScript('/rooms.js?v=2', { 'data-mf-rooms': '1' });
     // profile-view.js defines window.MFProfile (public profile overlay).
     loadScript('/profile-view.js', { 'data-mf-profile': '1' });
     // chat.js injects the universal floating chat once MFAuth is ready.
