@@ -106,6 +106,8 @@ const LESSONS = [
   }
 ];
 
+const MAX_HEARTS = 5;
+const SESSION_SIZE = 12;
 const params = new URLSearchParams(location.search);
 const presetRoom = cleanRoom(params.get("room"));
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
@@ -119,401 +121,361 @@ let homeworkData = {};
 let phrasebookData = {};
 let currentGoal = "pt";
 let displayName = localStorage.getItem("lc_name") || "";
+let currentTab = "learn";
+let connected = false;
+let activeSession = null;
 let myId = localStorage.getItem("lc_device_id");
 if (!myId){ myId = "lc" + Math.random().toString(36).slice(2, 10); localStorage.setItem("lc_device_id", myId); }
 const identityKey = () => (window.MFAuth && MFAuth.uid) ? MFAuth.uid : myId;
 const rootPath = sub => `together/${ROOM}/language${sub ? "/" + sub : ""}`;
 const roomPath = sub => `together/${ROOM}/${sub}`;
+const lessonById = id => LESSONS.find(l => l.id === id);
+const normalize = value => String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+const slug = value => normalize(value).replace(/\s+/g, "_").slice(0, 90);
+const clamp = (n,min,max) => Math.max(min,Math.min(max,n));
+const shuffle = arr => { const copy=[...arr]; for(let i=copy.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[copy[i],copy[j]]=[copy[j],copy[i]];} return copy; };
+const todayKey = () => new Intl.DateTimeFormat("en-CA", {timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone}).format(new Date());
+const yesterdayKey = () => { const d=new Date(); d.setDate(d.getDate()-1); return new Intl.DateTimeFormat("en-CA", {timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone}).format(d); };
+const mine = () => progressData[identityKey()] || {};
+const lessonProgress = id => { const raw=(mine().lessons || {})[id]; return raw===true ? {completed:true,stars:1,bestScore:100,legacy:true} : (raw||{}); };
+const hearts = () => Number.isFinite(Number(mine().hearts)) ? Number(mine().hearts) : MAX_HEARTS;
 
 function waitForRooms(tries = 0){
-  if (window.MFRooms && MFRooms.whenReady){
-    MFRooms.whenReady(() => gateAndEnter(presetRoom));
-    return;
-  }
+  if (window.MFRooms && MFRooms.whenReady){ MFRooms.whenReady(() => gateAndEnter(presetRoom)); return; }
   if (tries > 100){ location.href = "/together.html"; return; }
   setTimeout(() => waitForRooms(tries + 1), 100);
 }
-
 async function gateAndEnter(room){
   if (!room){ location.href = "/together.html"; return; }
-  try {
+  try{
     const info = await MFRooms.get(room);
     if (!info){ bounce("missing", room); return; }
     if (info.type !== "learn"){ location.href = MFRooms.urlFor(info); return; }
     const access = await MFRooms.canEnter(info);
     if (!access.ok){ bounce(access.reason, room); return; }
-    try { await MFRooms.touch(room); } catch(_){}
+    try{ await MFRooms.touch(room); }catch(_){ }
     enterRoom(room);
-  } catch (err){ console.error(err); bounce("missing", room); }
+  }catch(err){ console.error(err); bounce("missing", room); }
 }
-function bounce(reason, room){
-  location.href = `/together.html?denied=${encodeURIComponent(reason || "missing")}&room=${encodeURIComponent(room || "")}`;
-}
-
+function bounce(reason, room){ location.href = `/together.html?denied=${encodeURIComponent(reason || "missing")}&room=${encodeURIComponent(room || "")}`; }
 function trackIdentity(){
-  let tries = 0;
-  const iv = setInterval(() => {
-    if (!window.MFAuth){ if (++tries > 150) clearInterval(iv); return; }
+  let tries=0;
+  const iv=setInterval(()=>{
+    if(!window.MFAuth){ if(++tries>150) clearInterval(iv); return; }
     clearInterval(iv);
-    if (!MFAuth.isConfigured()) return;
-    MFAuth.onChange(user => {
-      const input = $("nameInput");
-      if (user && MFAuth.name()){
-        displayName = MFAuth.name();
-        input.value = displayName;
-        input.readOnly = true;
-      } else {
-        input.value = displayName;
-        input.readOnly = false;
-      }
-      if (ROOM) writePresence();
+    if(!MFAuth.isConfigured()) return;
+    MFAuth.onChange(user=>{
+      const input=$("nameInput");
+      if(user && MFAuth.name()){ displayName=MFAuth.name(); input.value=displayName; input.readOnly=true; }
+      else{ input.value=displayName; input.readOnly=false; }
+      if(ROOM) writePresence();
     });
-  }, 100);
+  },100);
 }
 trackIdentity();
 
 function enterRoom(room){
-  if (roomEntered) return;
-  roomEntered = true;
-  ROOM = room;
-  $("gateView").hidden = true;
-  $("roomView").hidden = false;
-  $("roomBar").hidden = false;
-  $("nameInput").value = displayName;
-  const u = new URL(location.href); u.searchParams.set("room", room); history.replaceState(null, "", u);
-  setupTabs();
-  setupPresence();
-  setupSharedState();
-  setupActions();
-  renderEverything();
+  if(roomEntered) return;
+  roomEntered=true; ROOM=room;
+  $("gateView").hidden=true; $("roomView").hidden=false; $("roomBar").hidden=false; $("nameInput").value=displayName;
+  const u=new URL(location.href); u.searchParams.set("room",room); history.replaceState(null,"",u);
+  setupTabs(); setupPresence(); setupSharedState(); setupActions(); renderEverything();
 }
-
 function setupTabs(){
-  $("tabs").querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => {
-    $("tabs").querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t === tab));
-    document.querySelectorAll(".panel").forEach(panel => panel.classList.toggle("active", panel.dataset.panel === tab.dataset.tab));
-    try { currentTab = tab.dataset.tab; update(ref(db, roomPath(`presence/${myId}`)), { tab: currentTab, t: now() }); } catch(_){}
+  $("tabs").querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>{
+    currentTab=tab.dataset.tab;
+    $("tabs").querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t===tab));
+    document.querySelectorAll(".panel").forEach(panel=>panel.classList.toggle("active",panel.dataset.panel===currentTab));
+    if(ROOM) update(ref(db,roomPath(`presence/${myId}`)),{tab:currentTab,t:now()}).catch(()=>{});
   }));
 }
-
-let connected = false;
-let currentTab = "classroom";
 function paintConnection(){
-  $("connDot").className = "dot " + (connected ? "on" : "off");
-  const identities = new Set(Object.entries(presenceData).filter(([,v]) => v && now() - (v.t || 0) < 70000).map(([id,v]) => v.idk || id));
-  $("connText").textContent = connected ? (identities.size > 1 ? `Connected · ${identities.size} here` : "Connected · waiting for your person") : "Offline";
+  $("connDot").className="dot "+(connected?"on":"off");
+  const identities=new Set(Object.entries(presenceData).filter(([,v])=>v&&now()-(v.t||0)<70000).map(([id,v])=>v.idk||id));
+  $("connText").textContent=connected?(identities.size>1?`Connected · ${identities.size} here`:"Connected · waiting for your person"):"Offline";
 }
 function writePresence(){
-  if (!ROOM) return;
-  const p = ref(db, roomPath(`presence/${myId}`));
-  set(p, { name: displayName || "someone", idk: identityKey(), tab: currentTab, joined: serverTimestamp(), t: now() });
+  if(!ROOM) return;
+  const p=ref(db,roomPath(`presence/${myId}`));
+  set(p,{name:displayName||"someone",idk:identityKey(),tab:currentTab,lessonId:LESSONS[currentLessonIndex]?.id||LESSONS[0].id,joined:serverTimestamp(),t:now()});
   onDisconnect(p).remove();
 }
 function setupPresence(){
-  writePresence();
-  setInterval(writePresence, 20000);
-  onValue(ref(db, ".info/connected"), snap => { connected = snap.val() === true; paintConnection(); if (connected) writePresence(); });
-  onValue(ref(db, roomPath("presence")), snap => {
-    const raw = snap.val() || {};
-    const fresh = {};
-    Object.entries(raw).forEach(([id,v]) => {
-      if (id === myId || now() - ((v && v.t) || 0) < 70000) fresh[id] = v;
-      else remove(ref(db, roomPath(`presence/${id}`))).catch(() => {});
-    });
-    presenceData = fresh;
-    renderPresence();
-    paintConnection();
+  writePresence(); setInterval(writePresence,20000);
+  onValue(ref(db,".info/connected"),snap=>{connected=snap.val()===true;paintConnection();if(connected)writePresence();});
+  onValue(ref(db,roomPath("presence")),snap=>{
+    const raw=snap.val()||{},fresh={};
+    Object.entries(raw).forEach(([id,v])=>{ if(id===myId||now()-((v&&v.t)||0)<70000)fresh[id]=v; else remove(ref(db,roomPath(`presence/${id}`))).catch(()=>{}); });
+    presenceData=fresh; renderPresence(); paintConnection();
   });
 }
-
 function setupSharedState(){
-  onValue(ref(db, rootPath("settings/currentLesson")), snap => {
-    const id = snap.val();
-    const idx = LESSONS.findIndex(l => l.id === id);
-    currentLessonIndex = idx >= 0 ? idx : 0;
-    renderLessonList(); renderLesson(); renderStats(); resetFlashDeck(); renderChallenge();
+  onValue(ref(db,rootPath("progress")),snap=>{
+    progressData=snap.val()||{};
+    const me=mine(); currentGoal=me.goal||currentGoal;
+    if(me.currentLesson){ const idx=LESSONS.findIndex(l=>l.id===me.currentLesson); if(idx>=0) currentLessonIndex=idx; }
+    $("goalSelect").value=currentGoal;
+    renderEverything();
   });
-  onValue(ref(db, rootPath("progress")), snap => {
-    progressData = snap.val() || {};
-    const mine = progressData[identityKey()] || {};
-    currentGoal = mine.goal || currentGoal;
-    $("goalSelect").value = currentGoal;
-    renderLessonList(); renderStats(); renderScoreboard();
+  onValue(ref(db,rootPath("homework")),snap=>{homeworkData=snap.val()||{};renderHomework();});
+  onValue(ref(db,rootPath("phrasebook")),snap=>{phrasebookData=snap.val()||{};renderPhrasebook();});
+  get(ref(db,rootPath(`progress/${identityKey()}`))).then(s=>{
+    if(!s.exists()) update(ref(db,rootPath(`progress/${identityKey()}`)),{name:displayName||"someone",goal:currentGoal,hearts:MAX_HEARTS,xp:0,streak:0,currentLesson:LESSONS[0].id,updated:now()});
   });
-  onValue(ref(db, rootPath("homework")), snap => { homeworkData = snap.val() || {}; renderHomework(); });
-  onValue(ref(db, rootPath("phrasebook")), snap => { phrasebookData = snap.val() || {}; renderPhrasebook(); });
-  get(ref(db, rootPath("settings/currentLesson"))).then(s => { if (!s.exists()) set(ref(db, rootPath("settings/currentLesson")), LESSONS[0].id); });
 }
-
 function setupActions(){
-  $("copyRoomBtn").addEventListener("click", async () => {
-    try { await navigator.clipboard.writeText(location.href); toast("Class link copied 🔗"); }
-    catch(_) { toast(location.href); }
-  });
-  $("nameInput").addEventListener("input", e => {
-    if (e.target.readOnly) return;
-    displayName = e.target.value.slice(0,24) || "someone";
-    localStorage.setItem("lc_name", displayName);
-    writePresence();
-  });
-  $("goalSelect").addEventListener("change", e => {
-    currentGoal = e.target.value;
-    update(ref(db, rootPath(`progress/${identityKey()}`)), { name:displayName || "someone", goal:currentGoal, updated:now() });
-    setDirectionsFromGoal();
-  });
-  $("flashcard").addEventListener("click", () => $("flashcard").classList.toggle("flipped"));
-  $("flashPrev").addEventListener("click", () => moveFlash(-1));
-  $("flashNext").addEventListener("click", () => moveFlash(1));
-  $("flashShuffle").addEventListener("click", () => { shuffle(flashDeck); flashIndex = 0; renderFlash(); });
-  $("flashSpeak").addEventListener("click", speakFlash);
-  wireSegments("flashDirection", dir => { flashDirection = dir; resetFlashDeck(); });
-  wireSegments("quizDirection", dir => { quizDirection = dir; });
-  $("newChallenge").addEventListener("click", renderChallenge);
-  $("startQuiz").addEventListener("click", startQuiz);
-  $("assignLessonHomework").addEventListener("click", assignLessonHomework);
-  $("createHomework").addEventListener("click", createHomework);
-  $("addPhrase").addEventListener("click", addPhrase);
-  $("bookSearch").addEventListener("input", renderPhrasebook);
+  $("copyRoomBtn").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(location.href);toast("Class link copied 🔗");}catch(_){toast(location.href);}});
+  $("nameInput").addEventListener("input",e=>{if(e.target.readOnly)return;displayName=e.target.value.slice(0,24)||"someone";localStorage.setItem("lc_name",displayName);writePresence();});
+  $("goalSelect").addEventListener("change",e=>{currentGoal=e.target.value;updateMyProgress({name:displayName||"someone",goal:currentGoal});renderLessonOverview();});
+  $("closeSession").addEventListener("click",closeSession);
+  $("smartPracticeBtn").addEventListener("click",()=>startPractice("weak"));
+  $("randomPracticeBtn").addEventListener("click",()=>startPractice("mixed"));
+  $("practiceMistakesBtn").addEventListener("click",()=>startPractice("mistakes"));
+  $("refillHeartsBtn").addEventListener("click",()=>startPractice("hearts"));
+  $("assignLessonHomework").addEventListener("click",assignLessonHomework);
+  $("createHomework").addEventListener("click",createHomework);
+  $("addPhrase").addEventListener("click",addPhrase);
+  $("bookSearch").addEventListener("input",renderPhrasebook);
 }
-function wireSegments(id, cb){
-  $(id).querySelectorAll(".seg").forEach(btn => btn.addEventListener("click", () => {
-    $(id).querySelectorAll(".seg").forEach(b => b.classList.toggle("active", b === btn));
-    cb(btn.dataset.direction);
-  }));
-}
-function setDirectionsFromGoal(){
-  const dir = currentGoal === "en" ? "en" : currentGoal === "both" ? "mix" : "pt";
-  flashDirection = dir; quizDirection = dir;
-  ["flashDirection","quizDirection"].forEach(id => $(id).querySelectorAll(".seg").forEach(b => b.classList.toggle("active", b.dataset.direction === dir)));
-  resetFlashDeck();
-}
+function updateMyProgress(values){ return update(ref(db,rootPath(`progress/${identityKey()}`)),{name:displayName||"someone",goal:currentGoal,updated:now(),...values}); }
 
-function renderEverything(){
-  renderLessonList(); renderLesson(); renderStats(); renderPresence(); resetFlashDeck(); renderChallenge(); renderScoreboard(); renderHomework(); renderPhrasebook(); setDirectionsFromGoal();
-}
-
-function renderPresence(){
-  const freshest = new Map();
-  Object.entries(presenceData).forEach(([id,v]) => {
-    if (!v || now() - (v.t || 0) >= 70000) return;
-    const key = v.idk || id;
-    const old = freshest.get(key);
-    if (!old || (v.t || 0) > (old.v.t || 0)) freshest.set(key, {id,v});
-  });
-  const box = $("whoHere"); box.innerHTML = "";
-  freshest.forEach(({id,v},key) => {
-    const chip = document.createElement("span");
-    chip.className = "whoChip" + (key === identityKey() ? " me" : "");
-    chip.textContent = (v.name || "someone") + (key === identityKey() ? " (you)" : "");
-    box.appendChild(chip);
-  });
-  $("waitNote").style.display = freshest.size < 2 ? "block" : "none";
-}
-
-function renderLessonList(){
-  const mine = progressData[identityKey()] || {};
-  const completed = mine.lessons || {};
-  const box = $("lessonList"); box.innerHTML = "";
-  LESSONS.forEach((lesson, index) => {
-    const btn = document.createElement("button");
-    btn.className = "lessonBtn" + (index === currentLessonIndex ? " active" : "");
-    btn.innerHTML = `<span class="num">${lesson.emoji}</span><span class="lt">${index + 1}. ${esc(lesson.title)}</span><span class="done">${completed[lesson.id] ? "✓" : ""}</span>`;
-    btn.addEventListener("click", () => set(ref(db, rootPath("settings/currentLesson")), lesson.id));
-    box.appendChild(btn);
-  });
-}
-function speakerButton(text, lang){ return `<button class="speak" data-say="${esc(text)}" data-lang="${lang}" title="Hear pronunciation">🔊</button>`; }
-function renderLesson(){
-  const lesson = LESSONS[currentLessonIndex];
-  const done = !!(((progressData[identityKey()] || {}).lessons || {})[lesson.id]);
-  $("lessonStat").textContent = `Lesson ${currentLessonIndex + 1} of ${LESSONS.length}`;
-  $("lessonContent").innerHTML = `
-    <div class="lessonHero"><span class="lessonEmoji">${lesson.emoji}</span><div><h2>${esc(lesson.title)}</h2><div class="goal">${esc(lesson.goal)}</div></div></div>
-    <div class="tip"><strong>Language note:</strong> ${esc(lesson.tip)}</div>
-    <div class="sectionTitle"><h3>Core vocabulary</h3><span class="muted">tap 🔊 to hear it</span></div>
-    <div class="vocabTable">${lesson.vocab.map(([en,pt]) => `<div class="vocabRow"><span class="word">${esc(en)}</span>${speakerButton(en,"en-US")}<span class="arrow">↔</span><span class="word">${esc(pt)}</span>${speakerButton(pt,"pt-BR")}</div>`).join("")}</div>
-    <div class="sectionTitle"><h3>Useful phrases</h3></div>
-    <div class="phraseGrid">${lesson.phrases.map(([en,pt]) => `<div class="phrase"><div class="en"><span>${esc(en)}</span>${speakerButton(en,"en-US")}</div><div class="pt"><span>${esc(pt)}</span>${speakerButton(pt,"pt-BR")}</div></div>`).join("")}</div>
-    <div class="sectionTitle"><h3>Talk together</h3></div>
-    <div class="challenge"><strong>Conversation challenge</strong>${esc(lesson.challenge)}</div>
-    <div class="lessonFoot"><span class="muted">Completing a lesson is personal—your partner keeps their own progress.</span><button class="btn ${done ? "green" : "primary"}" id="completeLesson">${done ? "✓ Lesson completed" : "Mark lesson complete"}</button></div>`;
-  $("lessonContent").querySelectorAll("[data-say]").forEach(btn => btn.addEventListener("click", () => speak(btn.dataset.say, btn.dataset.lang)));
-  $("completeLesson").addEventListener("click", toggleLessonComplete);
-  $("pronunciationTip").textContent = lesson.tip;
-}
-function toggleLessonComplete(){
-  const lesson = LESSONS[currentLessonIndex];
-  const done = !!((((progressData[identityKey()] || {}).lessons || {})[lesson.id]));
-  set(ref(db, rootPath(`progress/${identityKey()}/lessons/${lesson.id}`)), done ? null : true);
-  update(ref(db, rootPath(`progress/${identityKey()}`)), { name:displayName || "someone", goal:currentGoal, updated:now() });
-  toast(done ? "Lesson reopened" : "Lesson complete 🎉");
-}
+function renderEverything(){ renderStats();renderPresence();renderPath();renderLessonOverview();renderWeakWords();renderMistakes();renderClassProgress();renderHomework();renderPhrasebook(); }
 function renderStats(){
-  const mine = progressData[identityKey()] || {};
-  const completed = Object.values(mine.lessons || {}).filter(Boolean).length;
-  const points = Number(mine.quizPoints || 0);
-  $("myProgressStat").textContent = `${completed} complete`;
-  $("classScoreStat").textContent = `${points} quiz point${points === 1 ? "" : "s"}`;
+  const me=mine(); const complete=LESSONS.reduce((n,l)=>n+(lessonProgress(l.id).completed?1:0),0);
+  const mastery=LESSONS.length?Math.round((complete/LESSONS.length)*100):0;
+  $("streakStat").textContent=Number(me.streak||0); $("xpStat").textContent=`${Number(me.xp||0)} XP`; $("heartsStat").textContent=`${hearts()} / ${MAX_HEARTS}`; $("masteryStat").textContent=`${mastery}%`;
 }
+function renderPresence(){
+  const freshest=new Map();
+  Object.entries(presenceData).forEach(([id,v])=>{if(!v||now()-(v.t||0)>=70000)return;const key=v.idk||id,old=freshest.get(key);if(!old||(v.t||0)>(old.v.t||0))freshest.set(key,{id,v});});
+  const box=$("whoHere"); if(!box)return; box.innerHTML="";
+  freshest.forEach(({v},key)=>{const chip=document.createElement("span");chip.className="whoChip"+(key===identityKey()?" me":"");chip.textContent=(v.name||"someone")+(key===identityKey()?" (you)":"");box.appendChild(chip);});
+}
+function isLessonUnlocked(index){ if(index===0)return true; return !!lessonProgress(LESSONS[index-1].id).completed; }
+function renderPath(){
+  const box=$("pathList"); if(!box)return; box.innerHTML="";
+  LESSONS.forEach((lesson,index)=>{
+    const p=lessonProgress(lesson.id), unlocked=isLessonUnlocked(index), done=!!p.completed, current=index===currentLessonIndex;
+    const wrap=document.createElement("div");wrap.className="pathNodeWrap";
+    const btn=document.createElement("button");btn.className="pathNode "+(done?"done ":"")+(current?"current ":"")+(!unlocked?"locked":"");btn.disabled=!unlocked;btn.textContent=!unlocked?"🔒":done?"✓":lesson.emoji;btn.title=lesson.title;
+    btn.addEventListener("click",()=>selectLesson(index));
+    const info=document.createElement("div");info.className="pathInfo"; const stars=Number(p.stars||0); info.innerHTML=`<strong>${index+1}. ${esc(lesson.title)}</strong><span>${!unlocked?"Complete the lesson above":done?`Best: ${Number(p.bestScore||0)}% · <span class="stars">${"★".repeat(stars)}${"☆".repeat(3-stars)}</span>`:"New lesson"}</span>`;
+    wrap.append(btn,info);box.appendChild(wrap);
+  });
+}
+function selectLesson(index){ if(!isLessonUnlocked(index)){toast("Complete the previous lesson first 🔒");return;} currentLessonIndex=index;updateMyProgress({currentLesson:LESSONS[index].id});writePresence();renderPath();renderLessonOverview(); }
+function direction(){ return currentGoal==="en"?"en":currentGoal==="both"?"mix":"pt"; }
+function renderLessonOverview(){
+  const box=$("lessonOverview"); if(!box)return;
+  const lesson=LESSONS[currentLessonIndex],p=lessonProgress(lesson.id),unlocked=isLessonUnlocked(currentLessonIndex),score=Number(p.bestScore||0),done=!!p.completed;
+  const learned=(lesson.vocab.length+lesson.phrases.length); const langLabel=currentGoal==="en"?"Portuguese → English":currentGoal==="both"?"Both directions":"English → Portuguese";
+  box.innerHTML=`
+    <div class="lessonBanner"><div class="lessonEmoji">${lesson.emoji}</div><div><h2>${currentLessonIndex+1}. ${esc(lesson.title)}</h2><p>${esc(lesson.goal)}</p><div class="lessonMeta"><span class="tag">${learned} words & phrases</span><span class="tag">${langLabel}</span><span class="tag">${done?"Completed":"About 5–8 min"}</span></div></div></div>
+    <div class="progressTrack"><div class="progressFill" style="width:${done?100:score}%"></div></div><div class="progressText"><span>${done?"Lesson complete":"Best lesson score"}</span><span>${done?`${Number(p.stars||1)} star${Number(p.stars||1)===1?"":"s"}`:`${score}%`}</span></div>
+    <div class="lessonActions"><button class="btn primary" id="startLessonBtn" ${unlocked?"":"disabled"}>${done?"Practice again":"Start lesson"}</button><button class="btn purple" id="previewAudioBtn">🔊 Hear lesson words</button></div>
+    <h3 style="margin:0 0 4px">What you’ll practice</h3><div class="skillGrid"><div class="skill"><strong>👂 Listening</strong><p>Hear words naturally and identify what was said.</p></div><div class="skill"><strong>🧩 Sentence building</strong><p>Put useful sentences together in the right order.</p></div><div class="skill"><strong>⌨️ Recall</strong><p>Type translations without seeing the answer first.</p></div><div class="skill"><strong>🔗 Matching</strong><p>Connect words across both languages quickly.</p></div></div>
+    <h3 style="margin:19px 0 4px">Words introduced</h3><div class="wordPreview">${lesson.vocab.slice(0,8).map(([en,pt])=>`<span class="wordChip">${esc(en)} · <b>${esc(pt)}</b></span>`).join("")}</div>
+    <div class="tip"><strong>Language note:</strong> ${esc(lesson.tip)}</div>`;
+  $("startLessonBtn").addEventListener("click",()=>startLesson(currentLessonIndex));
+  $("previewAudioBtn").addEventListener("click",()=>speakSequence(lesson.vocab.slice(0,5)));
+}
+async function speakSequence(rows){ for(const [en,pt] of rows){ const text=direction()==="en"?en:pt; await speakAndWait(text,direction()==="en"?"en-US":"pt-BR"); await new Promise(r=>setTimeout(r,180)); } }
 
-function speak(text, lang){
-  if (!("speechSynthesis" in window)){ toast("Speech playback isn’t supported in this browser"); return; }
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text); u.lang = lang; u.rate = .84;
-  const voices = speechSynthesis.getVoices();
-  const exact = voices.find(v => v.lang.toLowerCase() === lang.toLowerCase()) || voices.find(v => v.lang.toLowerCase().startsWith(lang.slice(0,2).toLowerCase()));
-  if (exact) u.voice = exact;
-  speechSynthesis.speak(u);
+function allLessonItems(lesson){ return lesson.vocab.concat(lesson.phrases).map(([en,pt],i)=>({en,pt,key:`${lesson.id}_${slug(en)}_${i}`,lessonId:lesson.id,isPhrase:i>=lesson.vocab.length})); }
+function masteryFor(item){ return Number((mine().mastery||{})[item.key]||0); }
+function buildLessonExercises(lesson){
+  const items=shuffle(allLessonItems(lesson)); const dir=direction(); const exercises=[];
+  items.slice(0,2).forEach(item=>exercises.push({type:"introduce",item,direction:dir==="mix"?(exercises.length%2?"en":"pt"):dir}));
+  items.slice(0,5).forEach((item,i)=>exercises.push(buildExercise(item,["choice","listen","type","bank","choice"][i],dir==="mix"?(i%2?"en":"pt"):dir,lesson)));
+  exercises.push({type:"match",items:shuffle(items).slice(0,4),direction:dir});
+  items.slice(5,8).forEach((item,i)=>exercises.push(buildExercise(item,["type","listen","bank"][i],dir==="mix"?(i%2?"pt":"en"):dir,lesson)));
+  exercises.push({type:"conversation",lesson,direction:dir});
+  return exercises.slice(0,SESSION_SIZE);
 }
-
-let flashDirection = "pt", flashDeck = [], flashIndex = 0;
-function resetFlashDeck(){
-  const lesson = LESSONS[currentLessonIndex];
-  flashDeck = lesson.vocab.concat(lesson.phrases).map(([en,pt]) => ({en,pt}));
-  flashIndex = Math.min(flashIndex, Math.max(0, flashDeck.length - 1));
-  renderFlash();
+function buildExercise(item,type,dir,lesson){
+  const actualDir=dir==="mix"?"pt":dir;
+  if(type==="bank" && (!(actualDir==="pt"?item.pt:item.en).includes(" ") || (actualDir==="pt"?item.pt:item.en).includes("/"))) type="choice";
+  if(type==="listen") return {type,item,direction:actualDir,choices:choicePool(item,actualDir==="pt"?"en":"pt",lesson)};
+  if(type==="choice") return {type,item,direction:actualDir,choices:choicePool(item,actualDir,lesson)};
+  return {type,item,direction:actualDir};
 }
-function directionForCard(){ return flashDirection === "mix" ? (flashIndex % 2 ? "en" : "pt") : flashDirection; }
-function renderFlash(){
-  if (!flashDeck.length) return;
-  const item = flashDeck[flashIndex], dir = directionForCard();
-  $("flashcard").classList.remove("flipped");
-  $("flashLabel").textContent = dir === "pt" ? "Translate into Portuguese" : "Translate into English";
-  $("flashWord").textContent = dir === "pt" ? item.en : item.pt;
-  $("flashAnswer").textContent = dir === "pt" ? item.pt : item.en;
+function choicePool(item,dir,lesson){
+  const answer=dir==="pt"?item.pt:item.en; const pool=shuffle(allLessonItems(lesson).map(x=>dir==="pt"?x.pt:x.en).filter(x=>x!==answer));
+  return shuffle([answer,...pool.slice(0,3)]);
 }
-function moveFlash(delta){ flashIndex = (flashIndex + delta + flashDeck.length) % flashDeck.length; renderFlash(); }
-function shuffle(arr){ for (let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
-function speakFlash(){
-  const item = flashDeck[flashIndex], dir = directionForCard(), flipped = $("flashcard").classList.contains("flipped");
-  const text = flipped ? (dir === "pt" ? item.pt : item.en) : (dir === "pt" ? item.en : item.pt);
-  speak(text, flipped ? (dir === "pt" ? "pt-BR" : "en-US") : (dir === "pt" ? "en-US" : "pt-BR"));
+function buildPracticeExercises(mode){
+  const all=LESSONS.filter((_,i)=>isLessonUnlocked(i)).flatMap(allLessonItems); const mistakes=Object.values(mine().mistakes||{}).filter(Boolean);
+  let source=[];
+  if(mode==="mistakes") source=mistakes.map(m=>({...m,key:m.key||`${m.lessonId}_${slug(m.en)}`}));
+  else if(mode==="weak"||mode==="hearts") source=shuffle(all).sort((a,b)=>masteryFor(a)-masteryFor(b)).slice(0,18);
+  else source=shuffle(all).slice(0,18);
+  if(!source.length) source=shuffle(all).slice(0,18);
+  const dir=direction(); const exercises=[];
+  source.slice(0,10).forEach((item,i)=>{const lesson=lessonById(item.lessonId)||LESSONS[0];exercises.push(buildExercise(item,["choice","listen","type","bank"][i%4],dir==="mix"?(i%2?"en":"pt"):dir,lesson));});
+  if(source.length>=4) exercises.splice(5,0,{type:"match",items:shuffle(source).slice(0,4),direction:dir});
+  return exercises.slice(0,SESSION_SIZE-1);
 }
-function renderChallenge(){
-  const lesson = LESSONS[currentLessonIndex];
-  const extras = [lesson.challenge, `Choose three phrases from “${lesson.title}” and use each one in a new sentence about your real relationship.`, `One person asks five questions in English. The other answers in Portuguese. Then swap languages.`, `Tell a tiny two-minute story using at least four words from this lesson. Your partner may only help by asking questions.`];
-  $("conversationChallenge").innerHTML = `<strong>Try this together</strong>${esc(extras[Math.floor(Math.random()*extras.length)])}`;
+function startLesson(index){
+  if(!isLessonUnlocked(index)){toast("Complete the previous lesson first");return;}
+  if(hearts()<=0){toast("Practice to refill your hearts first ❤️");switchTab("practice");return;}
+  activeSession={kind:"lesson",lessonIndex:index,mode:"lesson",exercises:buildLessonExercises(LESSONS[index]),position:0,correct:0,wrong:0,xp:0,hearts:hearts(),locked:false,selected:null,bank:[],matched:0};
+  showSession();renderExercise();
 }
-
-let quizDirection = "pt", quizItems = [], quizPosition = 0, quizCorrect = 0, quizLocked = false;
-function buildQuizQuestion(item, direction){
-  const lesson = LESSONS[currentLessonIndex];
-  const pool = lesson.vocab.concat(lesson.phrases).map(([en,pt]) => ({en,pt}));
-  const answer = direction === "pt" ? item.pt : item.en;
-  const choices = [answer];
-  const candidates = shuffle(pool.map(x => direction === "pt" ? x.pt : x.en).filter(x => x !== answer));
-  for (const candidate of candidates){ if (!choices.includes(candidate)) choices.push(candidate); if (choices.length === 4) break; }
-  return { item, direction, answer, choices: shuffle(choices) };
+function startPractice(mode){
+  const exercises=buildPracticeExercises(mode);
+  if(!exercises.length){toast("Complete a lesson first so there is something to practice");return;}
+  activeSession={kind:"practice",mode,exercises,position:0,correct:0,wrong:0,xp:0,hearts:hearts(),locked:false,selected:null,bank:[],matched:0};
+  showSession();renderExercise();
 }
-function startQuiz(){
-  const pool = shuffle(LESSONS[currentLessonIndex].vocab.concat(LESSONS[currentLessonIndex].phrases).map(([en,pt]) => ({en,pt})));
-  quizItems = pool.slice(0,8).map((item,i) => buildQuizQuestion(item, quizDirection === "mix" ? (i%2 ? "en" : "pt") : quizDirection));
-  quizPosition = 0; quizCorrect = 0; quizLocked = false;
-  $("startQuiz").style.display = "none";
-  renderQuizQuestion();
+function showSession(){ $("normalView").hidden=true;$("courseHeader").hidden=true;$("roomBar").hidden=true;$("sessionView").hidden=false;window.scrollTo({top:0,behavior:"smooth"}); }
+function closeSession(){ if(!activeSession)return; const started=activeSession.position>0; if(started&&!confirm("Leave this lesson? Your unfinished attempt will not be scored."))return; activeSession=null;$("sessionView").hidden=true;$("normalView").hidden=false;$("courseHeader").hidden=false;$("roomBar").hidden=false;renderEverything(); }
+function switchTab(name){ const tab=$("tabs").querySelector(`[data-tab="${name}"]`); if(tab)tab.click(); }
+function targetText(ex){ return ex.direction==="pt"?ex.item.pt:ex.item.en; }
+function sourceText(ex){ return ex.direction==="pt"?ex.item.en:ex.item.pt; }
+function targetLang(ex){ return ex.direction==="pt"?"pt-BR":"en-US"; }
+function sourceLang(ex){ return ex.direction==="pt"?"en-US":"pt-BR"; }
+function renderExercise(){
+  if(!activeSession)return;
+  if(activeSession.position>=activeSession.exercises.length){finishSession();return;}
+  activeSession.locked=false;activeSession.selected=null;activeSession.bank=[];activeSession.matched=0;
+  const ex=activeSession.exercises[activeSession.position];
+  $("sessionProgress").style.width=`${Math.round((activeSession.position/activeSession.exercises.length)*100)}%`;$("sessionHearts").textContent=`❤️ ${activeSession.hearts}`;
+  const card=$("exerciseCard");
+  if(ex.type==="introduce") renderIntroduce(card,ex);
+  else if(ex.type==="choice") renderChoice(card,ex,false);
+  else if(ex.type==="listen") renderChoice(card,ex,true);
+  else if(ex.type==="type") renderType(card,ex);
+  else if(ex.type==="bank") renderBank(card,ex);
+  else if(ex.type==="match") renderMatch(card,ex);
+  else if(ex.type==="conversation") renderConversation(card,ex);
 }
-function renderQuizQuestion(){
-  const area = $("quizArea");
-  if (quizPosition >= quizItems.length){ finishQuiz(); return; }
-  const q = quizItems[quizPosition];
-  const prompt = q.direction === "pt" ? q.item.en : q.item.pt;
-  area.innerHTML = `<div class="quizPrompt"><div class="qLabel">Question ${quizPosition+1} of ${quizItems.length} · ${q.direction === "pt" ? "English → Portuguese" : "Portuguese → English"}</div><div class="qWord">${esc(prompt)}</div></div><div class="answers">${q.choices.map(c => `<button class="answerBtn" data-choice="${esc(c)}">${esc(c)}</button>`).join("")}</div><div class="muted" style="text-align:center;margin:10px 0 14px">Score: ${quizCorrect}/${quizPosition}</div>`;
-  area.querySelectorAll(".answerBtn").forEach(btn => btn.addEventListener("click", () => answerQuiz(btn)));
+function baseCheckBar(label="Check"){ return `<div class="checkBar"><div class="feedbackMsg" id="feedbackMsg"></div><button class="btn primary" id="checkAnswer">${label}</button></div>`; }
+function renderIntroduce(card,ex){
+  card.innerHTML=`<div class="exerciseType">New word</div><div class="exercisePrompt">Learn this ${ex.item.isPhrase?"phrase":"word"}</div><div class="bigWord">${esc(sourceText(ex))}</div><div style="text-align:center;font-size:25px;color:var(--lc-purple2)">${esc(targetText(ex))}</div><button class="speakerBig" id="introSpeak">🔊</button>${baseCheckBar("Got it")}`;
+  $("introSpeak").addEventListener("click",()=>speak(targetText(ex),targetLang(ex)));$("checkAnswer").addEventListener("click",()=>{if(activeSession.locked)return;activeSession.locked=true;completeExercise(true,ex);});
 }
-function answerQuiz(btn){
-  if (quizLocked) return;
-  quizLocked = true;
-  const q = quizItems[quizPosition];
-  const chosen = btn.dataset.choice;
-  if (chosen === q.answer){ quizCorrect++; btn.classList.add("good"); }
-  else {
-    btn.classList.add("bad");
-    $("quizArea").querySelectorAll(".answerBtn").forEach(b => { if (b.dataset.choice === q.answer) b.classList.add("good"); });
+function renderChoice(card,ex,listening){
+  const prompt=listening?"What does this mean?":`Translate into ${ex.direction==="pt"?"Portuguese":"English"}`;
+  card.innerHTML=`<div class="exerciseType">${listening?"Listening":"Multiple choice"}</div><div class="exercisePrompt">${prompt}</div>${listening?`<button class="speakerBig" id="listenBtn">🔊</button>`:`<div class="bigWord">${esc(sourceText(ex))}</div>`}<div class="choiceGrid">${ex.choices.map(c=>`<button class="choice" data-choice="${esc(c)}">${esc(c)}</button>`).join("")}</div>${baseCheckBar()}`;
+  if(listening){$("listenBtn").addEventListener("click",()=>speak(targetText(ex),targetLang(ex)));setTimeout(()=>speak(targetText(ex),targetLang(ex)),250);}
+  card.querySelectorAll(".choice").forEach(btn=>btn.addEventListener("click",()=>{if(activeSession.locked)return;activeSession.selected=btn.dataset.choice;card.querySelectorAll(".choice").forEach(b=>b.classList.toggle("selected",b===btn));}));
+  $("checkAnswer").addEventListener("click",()=>{if(!activeSession.selected){toast("Choose an answer first");return;}const expected=listening?sourceText(ex):targetText(ex);gradeCurrent(normalize(activeSession.selected)===normalize(expected),ex,activeSession.selected,expected);});
+}
+function renderType(card,ex){
+  card.innerHTML=`<div class="exerciseType">Write the answer</div><div class="exercisePrompt">Translate into ${ex.direction==="pt"?"Portuguese":"English"}</div><div class="bigWord">${esc(sourceText(ex))}</div><input class="input typeAnswer" id="typedAnswer" autocomplete="off" autocapitalize="sentences" placeholder="Type your answer…" />${baseCheckBar()}`;
+  const input=$("typedAnswer");input.focus();input.addEventListener("keydown",e=>{if(e.key==="Enter")$("checkAnswer").click();});
+  $("checkAnswer").addEventListener("click",()=>{const answer=input.value.trim();if(!answer){toast("Type an answer first");return;}gradeCurrent(isCloseAnswer(answer,targetText(ex)),ex,answer);});
+}
+function isCloseAnswer(given,expected){ const a=normalize(given),b=normalize(expected); if(a===b)return true; const variants=String(expected).split(/\s*\/\s*|\s*;\s*/).map(normalize); return variants.includes(a); }
+function renderBank(card,ex){
+  const words=shuffle(targetText(ex).replace(/[.,!?]/g,"").split(/\s+/).filter(Boolean));
+  card.innerHTML=`<div class="exerciseType">Build the sentence</div><div class="exercisePrompt">Translate this sentence</div><div class="bigWord" style="font-size:34px">${esc(sourceText(ex))}</div><div class="wordBank" id="answerBank"></div><div class="bankWords">${words.map((w,i)=>`<button class="bankWord" data-i="${i}" data-word="${esc(w)}">${esc(w)}</button>`).join("")}</div>${baseCheckBar()}`;
+  const redraw=()=>{$("answerBank").innerHTML=activeSession.bank.map((x,i)=>`<button class="answerWord" data-remove="${i}">${esc(x.word)}</button>`).join("");card.querySelectorAll("[data-remove]").forEach(b=>b.addEventListener("click",()=>{const [removed]=activeSession.bank.splice(Number(b.dataset.remove),1);card.querySelector(`[data-i="${removed.i}"]`).disabled=false;redraw();}));};
+  card.querySelectorAll(".bankWord").forEach(btn=>btn.addEventListener("click",()=>{activeSession.bank.push({word:btn.dataset.word,i:Number(btn.dataset.i)});btn.disabled=true;redraw();}));
+  $("checkAnswer").addEventListener("click",()=>{if(!activeSession.bank.length){toast("Build the sentence first");return;}const answer=activeSession.bank.map(x=>x.word).join(" ");gradeCurrent(normalize(answer)===normalize(targetText(ex)),ex,answer);});
+}
+function renderMatch(card,ex){
+  const pairs=ex.items.map((item,i)=>({i,item})); const left=shuffle(pairs.map(p=>({side:"left",i:p.i,text:p.item.en}))), right=shuffle(pairs.map(p=>({side:"right",i:p.i,text:p.item.pt})));
+  card.innerHTML=`<div class="exerciseType">Matching</div><div class="exercisePrompt">Match each pair</div><div class="matchGrid"><div>${left.map(x=>`<button class="matchItem" style="width:100%;margin-bottom:9px" data-side="${x.side}" data-pair="${x.i}">${esc(x.text)}</button>`).join("")}</div><div>${right.map(x=>`<button class="matchItem" style="width:100%;margin-bottom:9px" data-side="${x.side}" data-pair="${x.i}">${esc(x.text)}</button>`).join("")}</div></div>${baseCheckBar("Continue")}`;
+  let selected=null;
+  card.querySelectorAll(".matchItem").forEach(btn=>btn.addEventListener("click",()=>{
+    if(btn.classList.contains("matched")||activeSession.locked)return;
+    if(!selected){selected=btn;btn.classList.add("selected");return;}
+    if(selected.dataset.side===btn.dataset.side){selected.classList.remove("selected");selected=btn;btn.classList.add("selected");return;}
+    if(selected.dataset.pair===btn.dataset.pair){selected.classList.remove("selected");selected.classList.add("matched");btn.classList.add("matched");activeSession.matched++;selected=null;if(activeSession.matched===ex.items.length){$("feedbackMsg").textContent="Perfect matches!";$("feedbackMsg").className="feedbackMsg good";}}
+    else{const first=selected;selected=null;first.classList.remove("selected");first.classList.add("bad");btn.classList.add("bad");setTimeout(()=>{first.classList.remove("bad");btn.classList.remove("bad");},260);}
+  }));
+  $("checkAnswer").addEventListener("click",()=>{if(activeSession.matched<ex.items.length){toast("Match all of the pairs first");return;}if(activeSession.locked)return;activeSession.locked=true;completeExercise(true,ex);});
+}
+function renderConversation(card,ex){
+  card.innerHTML=`<div class="exerciseType">Real conversation</div><div class="exercisePrompt">Use what you learned together</div><div class="tip" style="font-size:15px;margin-top:8px"><strong>Challenge:</strong> ${esc(ex.lesson.challenge)}</div><p class="muted" style="margin-top:18px">Say it aloud. You may use the lesson words, but try not to use a translator. This final checkpoint is based on doing the activity—not being perfect.</p>${baseCheckBar("We did it")}`;
+  $("checkAnswer").addEventListener("click",()=>{if(activeSession.locked)return;activeSession.locked=true;completeExercise(true,ex);});
+}
+function gradeCurrent(correct,ex,given,expectedOverride){
+  if(activeSession.locked)return;activeSession.locked=true;
+  const card=$("exerciseCard"),msg=$("feedbackMsg"),btn=$("checkAnswer");
+  card.querySelectorAll("button.choice,.bankWord,.answerWord").forEach(b=>b.disabled=true);
+  const expected=expectedOverride||targetText(ex);
+  if(correct){msg.textContent="Correct! +10 XP";msg.className="feedbackMsg good";btn.textContent="Continue";highlightChoice(expected,true);recordCorrect(ex);}
+  else{msg.innerHTML=`Not quite. Correct answer: <strong>${esc(expected)}</strong>`;msg.className="feedbackMsg bad";btn.textContent="Continue";highlightChoice(expected,false);recordWrong(ex,given);if(!ex.retry)activeSession.exercises.push({...ex,retry:true});}
+  btn.onclick=()=>completeExercise(correct,ex);
+}
+function highlightChoice(answer,correct){ $("exerciseCard").querySelectorAll(".choice").forEach(b=>{if(normalize(b.dataset.choice)===normalize(answer))b.classList.add("correct");else if(b.classList.contains("selected")&&!correct)b.classList.add("wrong");}); }
+function recordCorrect(ex){ activeSession.correct++;activeSession.xp+=10;if(ex.item){const strength=clamp(masteryFor(ex.item)+1,0,5);set(ref(db,rootPath(`progress/${identityKey()}/mastery/${ex.item.key}`)),strength);remove(ref(db,rootPath(`progress/${identityKey()}/mistakes/${ex.item.key}`))).catch(()=>{});} }
+function recordWrong(ex,given){
+  activeSession.wrong++;activeSession.hearts=Math.max(0,activeSession.hearts-1);$("sessionHearts").textContent=`❤️ ${activeSession.hearts}`;
+  if(ex.item){const old=(mine().mistakes||{})[ex.item.key]||{};set(ref(db,rootPath(`progress/${identityKey()}/mastery/${ex.item.key}`)),Math.max(0,masteryFor(ex.item)-1));set(ref(db,rootPath(`progress/${identityKey()}/mistakes/${ex.item.key}`)),{key:ex.item.key,en:ex.item.en,pt:ex.item.pt,lessonId:ex.item.lessonId,count:Number(old.count||0)+1,lastGiven:given||"",lastWrong:now()});}
+  updateMyProgress({hearts:activeSession.hearts});
+}
+function completeExercise(correct,ex){
+  if(!activeSession)return;
+  if(ex.type==="introduce"||ex.type==="match"||ex.type==="conversation"){activeSession.correct++;activeSession.xp+=ex.type==="conversation"?15:5;}
+  if(activeSession.hearts<=0 && activeSession.kind==="lesson"){renderOutOfHearts();return;}
+  activeSession.position++;renderExercise();
+}
+function renderOutOfHearts(){
+  $("exerciseCard").innerHTML=`<div class="resultCard" style="display:flex;flex-direction:column;min-height:410px"><div class="resultEmoji">💔</div><h2>You’re out of hearts</h2><p class="muted">Your mistakes were saved. Do a short practice session to refill your hearts, then try the lesson again.</p><button class="btn primary" id="goPractice" style="margin-top:20px">Practice to refill</button></div>`;
+  $("goPractice").addEventListener("click",()=>{activeSession=null;$("sessionView").hidden=true;$("normalView").hidden=false;$("courseHeader").hidden=false;$("roomBar").hidden=false;switchTab("practice");renderEverything();});
+}
+async function finishSession(){
+  const s=activeSession,total=s.exercises.length,accuracy=Math.round((s.correct/Math.max(1,s.correct+s.wrong))*100),xpEarned=s.xp+(accuracy===100?20:accuracy>=80?10:0);
+  const me=mine(),newXp=Number(me.xp||0)+xpEarned; const today=todayKey(),last=me.lastPracticeDate||""; let streak=Number(me.streak||0); if(last!==today)streak=last===yesterdayKey()?streak+1:1;
+  const values={xp:newXp,streak,lastPracticeDate:today,hearts:s.kind==="practice"&&s.mode==="hearts"?MAX_HEARTS:s.hearts,lastSessionAccuracy:accuracy};
+  if(s.kind==="lesson"){
+    const lesson=LESSONS[s.lessonIndex],old=lessonProgress(lesson.id),passed=accuracy>=70,stars=accuracy>=95?3:accuracy>=82?2:passed?1:0;
+    values[`lessons/${lesson.id}/attempts`]=Number(old.attempts||0)+1; values[`lessons/${lesson.id}/bestScore`]=Math.max(Number(old.bestScore||0),accuracy);values[`lessons/${lesson.id}/stars`]=Math.max(Number(old.stars||0),stars);values[`lessons/${lesson.id}/lastAttempt`]=now();
+    if(passed||old.completed){values[`lessons/${lesson.id}/completed`]=true;values[`lessons/${lesson.id}/completedAt`]=old.completedAt||now();}
+    if(passed){const next=LESSONS[s.lessonIndex+1];if(next)values.currentLesson=next.id;}
   }
-  $("quizArea").querySelectorAll(".answerBtn").forEach(b => b.disabled = true);
-  setTimeout(() => { quizPosition++; quizLocked = false; renderQuizQuestion(); }, 850);
+  await updateMyProgress(values);
+  const passed=s.kind==="practice"||accuracy>=70;
+  $("sessionProgress").style.width="100%";
+  $("exerciseCard").innerHTML=`<div class="resultCard" style="display:flex;flex-direction:column;min-height:430px"><div class="resultEmoji">${passed?accuracy>=90?"🏆":"🎉":"📚"}</div><h2>${s.kind==="practice"?"Practice complete!":passed?"Lesson complete!":"Almost there"}</h2><p class="muted">${s.kind==="lesson"&&!passed?"You need 70% to unlock the next lesson. Your mistakes are ready for review.":"That was real retrieval practice—not just reading a list of phrases."}</p><div class="resultStats"><div class="resultStat"><strong>${accuracy}%</strong><span>accuracy</span></div><div class="resultStat"><strong>+${xpEarned}</strong><span>XP earned</span></div><div class="resultStat"><strong>${s.wrong}</strong><span>mistakes saved</span></div></div><button class="btn primary" id="finishDone">${s.kind==="lesson"&&!passed?"Review and try again":"Continue"}</button></div>`;
+  $("finishDone").addEventListener("click",()=>{activeSession=null;$("sessionView").hidden=true;$("normalView").hidden=false;$("courseHeader").hidden=false;$("roomBar").hidden=false;if(s.kind==="lesson"&&!passed)switchTab("mistakes");renderEverything();});
 }
-async function finishQuiz(){
-  const points = quizCorrect;
-  const key = identityKey();
-  const mine = progressData[key] || {};
-  const newTotal = Number(mine.quizPoints || 0) + points;
-  const attempts = Number(mine.quizAttempts || 0) + 1;
-  await update(ref(db, rootPath(`progress/${key}`)), { name:displayName || "someone", goal:currentGoal, quizPoints:newTotal, quizAttempts:attempts, lastQuiz:points, updated:now() });
-  $("quizArea").innerHTML = `<div class="quizPrompt"><div class="qLabel">Quiz complete</div><div class="qWord">${quizCorrect} / ${quizItems.length}</div><p class="muted" style="margin:10px 0 0">${quizCorrect >= 7 ? "Amazing—this lesson is sticking. 🌟" : quizCorrect >= 5 ? "Nice work. Review the missed cards and try again." : "Learning is allowed to look messy. Flip through the cards, then come back."}</p></div>`;
-  $("startQuiz").style.display = "inline-flex";
-  $("startQuiz").textContent = "Try another quiz";
-}
-function renderScoreboard(){
-  const rows = Object.entries(progressData).filter(([,v]) => v && v.name).sort((a,b) => Number(b[1].quizPoints||0)-Number(a[1].quizPoints||0));
-  $("scoreboard").innerHTML = rows.length ? rows.map(([key,v]) => `<div class="scoreRow"><span>🧠</span><span class="who">${esc(v.name)}${key===identityKey()?" (you)":""}<br><small class="muted">${Number(v.quizAttempts||0)} quizzes · ${goalLabel(v.goal)}</small></span><span class="score">${Number(v.quizPoints||0)} pts</span></div>`).join("") : `<div class="empty">No quiz scores yet. Be the first brave student. 📚</div>`;
-}
-function goalLabel(goal){ return goal === "en" ? "learning English" : goal === "both" ? "practicing both" : "learning Portuguese"; }
 
-async function addHomework(title,instructions,target){
-  const itemRef = push(ref(db, rootPath("homework")));
-  await set(itemRef, { title, instructions, target, createdBy:identityKey(), createdName:displayName || "someone", lessonId:LESSONS[currentLessonIndex].id, t:now() });
-  toast("Homework assigned 📝");
+function renderWeakWords(){
+  const box=$("weakWordsList");if(!box)return;const unlocked=LESSONS.filter((_,i)=>isLessonUnlocked(i)).flatMap(allLessonItems).sort((a,b)=>masteryFor(a)-masteryFor(b)).slice(0,8);
+  if(!unlocked.length){box.innerHTML=`<div class="empty">Start your first lesson to build a review list.</div>`;return;}
+  box.innerHTML=unlocked.map(item=>{const m=masteryFor(item);return `<div class="reviewRow"><span>🧠</span><div class="grow"><strong>${esc(currentGoal==="en"?item.pt:item.en)}</strong><div class="muted">${esc(currentGoal==="en"?item.en:item.pt)}</div></div><div class="masteryDots">${[1,2,3,4,5].map(n=>`<span class="${n<=m?"on":""}"></span>`).join("")}</div></div>`;}).join("");
 }
-function assignLessonHomework(){
-  const l = LESSONS[currentLessonIndex];
-  addHomework(`${l.emoji} ${l.title} assignment`, l.homework, "both");
+function renderMistakes(){
+  const box=$("mistakeList");if(!box)return;const rows=Object.values(mine().mistakes||{}).filter(Boolean).sort((a,b)=>(b.lastWrong||0)-(a.lastWrong||0));
+  if(!rows.length){box.innerHTML=`<div class="empty">No saved mistakes. That either means you’re brand new or suspiciously brilliant. 🌟</div>`;return;}
+  box.innerHTML=rows.map(m=>`<div class="mistakeRow"><div><strong>${esc(m.en)}</strong><small>${esc(lessonById(m.lessonId)?.title||"Course review")}</small></div><div class="pt">${esc(m.pt)}<small>missed ${Number(m.count||1)} time${Number(m.count||1)===1?"":"s"}</small></div><button class="btn sm danger" data-forget="${esc(m.key)}">Remove</button></div>`).join("");
+  box.querySelectorAll("[data-forget]").forEach(b=>b.addEventListener("click",()=>remove(ref(db,rootPath(`progress/${identityKey()}/mistakes/${b.dataset.forget}`)))));
 }
-function createHomework(){
-  const title = $("hwTitle").value.trim(), instructions = $("hwInstructions").value.trim(), target = $("hwTarget").value;
-  if (!title || !instructions){ toast("Add a title and instructions"); return; }
-  addHomework(title,instructions,target);
-  $("hwTitle").value = ""; $("hwInstructions").value = "";
+function renderClassProgress(){
+  const box=$("classProgressList");if(!box)return;const rows=Object.entries(progressData).filter(([,v])=>v&&v.name);
+  box.innerHTML=rows.length?rows.map(([key,v])=>{const done=Object.values(v.lessons||{}).filter(x=>x===true||(x&&x.completed)).length;return `<div class="reviewRow"><span>${key===identityKey()?"🌟":"💞"}</span><div class="grow"><strong>${esc(v.name)}${key===identityKey()?" (you)":""}</strong><div class="muted">${goalLabel(v.goal)} · ${done}/${LESSONS.length} lessons</div></div><strong>${Number(v.xp||0)} XP</strong></div>`;}).join(""):`<div class="empty">Progress will appear after someone starts learning.</div>`;
 }
+function goalLabel(goal){return goal==="en"?"learning English":goal==="both"?"practicing both":"learning Portuguese";}
+
+function speak(text,lang){
+  if(!("speechSynthesis" in window)){toast("Speech playback isn’t supported in this browser");return;}
+  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=lang;u.rate=.84;const voices=speechSynthesis.getVoices();const exact=voices.find(v=>v.lang.toLowerCase()===lang.toLowerCase())||voices.find(v=>v.lang.toLowerCase().startsWith(lang.slice(0,2).toLowerCase()));if(exact)u.voice=exact;speechSynthesis.speak(u);
+}
+function speakAndWait(text,lang){return new Promise(resolve=>{if(!("speechSynthesis" in window)){resolve();return;}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=lang;u.rate=.84;u.onend=resolve;u.onerror=resolve;speechSynthesis.speak(u);});}
+function speakerButton(text,lang){return `<button class="speak" data-say="${esc(text)}" data-lang="${lang}" title="Hear pronunciation">🔊</button>`;}
+
+async function addHomework(title,instructions,target){const itemRef=push(ref(db,rootPath("homework")));await set(itemRef,{title,instructions,target,createdBy:identityKey(),createdName:displayName||"someone",lessonId:LESSONS[currentLessonIndex].id,t:now()});toast("Homework assigned 📝");}
+function assignLessonHomework(){const l=LESSONS[currentLessonIndex];addHomework(`${l.emoji} ${l.title} assignment`,l.homework,"both");}
+function createHomework(){const title=$("hwTitle").value.trim(),instructions=$("hwInstructions").value.trim(),target=$("hwTarget").value;if(!title||!instructions){toast("Add a title and instructions");return;}addHomework(title,instructions,target);$("hwTitle").value="";$("hwInstructions").value="";}
 function renderHomework(){
-  const box = $("homeworkList");
-  const entries = Object.entries(homeworkData).filter(([,v]) => v).sort((a,b)=>(b[1].t||0)-(a[1].t||0));
-  if (!entries.length){ box.innerHTML = `<div class="empty">No homework yet. Assign the current lesson’s activity when you’re ready. ✏️</div>`; return; }
-  box.innerHTML = entries.map(([id,hw]) => {
-    const submissions = Object.entries(hw.submissions || {});
-    const mine = (hw.submissions || {})[identityKey()] || {};
-    return `<article class="hwCard" data-hw="${esc(id)}">
-      <div class="hwHead"><span style="font-size:23px">📝</span><div class="hwMain"><div class="hwTitle">${esc(hw.title)}</div><div class="hwMeta">${targetLabel(hw.target)} · assigned by ${esc(hw.createdName||"someone")}</div></div>${hw.createdBy===identityKey()?`<button class="btn sm" data-delete-hw="${esc(id)}">Delete</button>`:""}</div>
-      <div class="hwInstructions">${esc(hw.instructions)}</div>
-      <textarea class="textarea" data-hw-answer="${esc(id)}" placeholder="Write your answer here…">${esc(mine.text||"")}</textarea>
-      <button class="btn primary sm" data-save-hw="${esc(id)}" style="margin-top:8px">Save my answer</button>
-      <div class="submissionList">${submissions.map(([key,sub]) => `<div class="submission"><strong>${esc(sub.name||"someone")}${key===identityKey()?" (you)":""}</strong><p>${esc(sub.text||"")}</p>${sub.feedback?`<div class="feedback">💛 ${esc(sub.feedback)}</div>`:""}${key!==identityKey()?`<div style="display:flex;gap:7px;margin-top:9px"><input class="input" style="padding:8px 10px" data-feedback-input="${esc(id)}|${esc(key)}" value="${esc(sub.feedback||"")}" placeholder="Leave a kind correction or encouragement"/><button class="btn sm" data-save-feedback="${esc(id)}|${esc(key)}">Save</button></div>`:""}</div>`).join("")}</div>
-    </article>`;
-  }).join("");
-  box.querySelectorAll("[data-save-hw]").forEach(btn => btn.addEventListener("click", () => saveHomeworkAnswer(btn.dataset.saveHw)));
-  box.querySelectorAll("[data-delete-hw]").forEach(btn => btn.addEventListener("click", () => remove(ref(db, rootPath(`homework/${btn.dataset.deleteHw}`)))));
-  box.querySelectorAll("[data-save-feedback]").forEach(btn => btn.addEventListener("click", () => saveFeedback(btn.dataset.saveFeedback)));
+  const box=$("homeworkList");if(!box)return;const entries=Object.entries(homeworkData).filter(([,v])=>v).sort((a,b)=>(b[1].t||0)-(a[1].t||0));
+  if(!entries.length){box.innerHTML=`<div class="empty">No homework yet. Assign the selected lesson’s real-world activity when you’re ready. ✏️</div>`;return;}
+  box.innerHTML=entries.map(([id,hw])=>{const submissions=Object.entries(hw.submissions||{}),mineSub=(hw.submissions||{})[identityKey()]||{};return `<article class="hwCard"><div class="hwHead"><span style="font-size:22px">📝</span><div class="hwMain"><div class="hwTitle">${esc(hw.title)}</div><div class="hwMeta">${targetLabel(hw.target)} · assigned by ${esc(hw.createdName||"someone")}</div></div>${hw.createdBy===identityKey()?`<button class="btn sm danger" data-delete-hw="${esc(id)}">Delete</button>`:""}</div><div class="hwInstructions">${esc(hw.instructions)}</div><textarea class="textarea" data-hw-answer="${esc(id)}" placeholder="Write your answer here…">${esc(mineSub.text||"")}</textarea><button class="btn purple sm" data-save-hw="${esc(id)}" style="margin-top:8px">Save my answer</button><div>${submissions.map(([key,sub])=>`<div class="submission"><strong>${esc(sub.name||"someone")}${key===identityKey()?" (you)":""}</strong><p>${esc(sub.text||"")}</p>${sub.feedback?`<div class="feedback">💛 ${esc(sub.feedback)}</div>`:""}${key!==identityKey()?`<div style="display:flex;gap:7px;margin-top:8px"><input class="input" style="padding:8px" data-feedback-input="${esc(id)}|${esc(key)}" value="${esc(sub.feedback||"")}" placeholder="Kind correction or encouragement"/><button class="btn sm" data-save-feedback="${esc(id)}|${esc(key)}">Save</button></div>`:""}</div>`).join("")}</div></article>`;}).join("");
+  box.querySelectorAll("[data-save-hw]").forEach(b=>b.addEventListener("click",()=>saveHomeworkAnswer(b.dataset.saveHw)));box.querySelectorAll("[data-delete-hw]").forEach(b=>b.addEventListener("click",()=>remove(ref(db,rootPath(`homework/${b.dataset.deleteHw}`)))));box.querySelectorAll("[data-save-feedback]").forEach(b=>b.addEventListener("click",()=>saveFeedback(b.dataset.saveFeedback)));
 }
-function targetLabel(target){ return target === "pt" ? "For the Portuguese learner" : target === "en" ? "For the English learner" : "For both of you"; }
-function saveHomeworkAnswer(id){
-  const text = document.querySelector(`[data-hw-answer="${CSS.escape(id)}"]`).value.trim();
-  if (!text){ toast("Write an answer first"); return; }
-  set(ref(db, rootPath(`homework/${id}/submissions/${identityKey()}`)), { name:displayName || "someone", text, t:now() });
-  toast("Homework saved ✓");
-}
-function saveFeedback(key){
-  const [hwId,studentId] = key.split("|");
-  const input = document.querySelector(`[data-feedback-input="${CSS.escape(key)}"]`);
-  update(ref(db, rootPath(`homework/${hwId}/submissions/${studentId}`)), { feedback:input.value.trim(), feedbackBy:displayName || "someone", feedbackT:now() });
-  toast("Feedback saved 💛");
-}
-
-function addPhrase(){
-  const en = $("bookEn").value.trim(), pt = $("bookPt").value.trim(), note = $("bookNote").value.trim();
-  if (!en || !pt){ toast("Add both the English and Portuguese"); return; }
-  const item = push(ref(db, rootPath("phrasebook")));
-  set(item, { en, pt, note, by:identityKey(), name:displayName || "someone", t:now() });
-  $("bookEn").value = ""; $("bookPt").value = ""; $("bookNote").value = "";
-  toast("Added to your phrasebook 💬");
-}
+function targetLabel(target){return target==="pt"?"For the Portuguese learner":target==="en"?"For the English learner":"For both of you";}
+function saveHomeworkAnswer(id){const text=document.querySelector(`[data-hw-answer="${CSS.escape(id)}"]`).value.trim();if(!text){toast("Write an answer first");return;}set(ref(db,rootPath(`homework/${id}/submissions/${identityKey()}`)),{name:displayName||"someone",text,t:now()});toast("Homework saved ✓");}
+function saveFeedback(key){const [hwId,studentId]=key.split("|");const input=document.querySelector(`[data-feedback-input="${CSS.escape(key)}"]`);update(ref(db,rootPath(`homework/${hwId}/submissions/${studentId}`)),{feedback:input.value.trim(),feedbackBy:displayName||"someone",feedbackT:now()});toast("Feedback saved 💛");}
+function addPhrase(){const en=$("bookEn").value.trim(),pt=$("bookPt").value.trim(),note=$("bookNote").value.trim();if(!en||!pt){toast("Add both English and Portuguese");return;}const item=push(ref(db,rootPath("phrasebook")));set(item,{en,pt,note,by:identityKey(),name:displayName||"someone",t:now()});$("bookEn").value="";$("bookPt").value="";$("bookNote").value="";toast("Added to your phrasebook 💬");}
 function renderPhrasebook(){
-  const q = ($("bookSearch")?.value || "").trim().toLowerCase();
-  const rows = Object.entries(phrasebookData).filter(([,v]) => v && (!q || `${v.en} ${v.pt} ${v.note||""}`.toLowerCase().includes(q))).sort((a,b)=>(b[1].t||0)-(a[1].t||0));
-  const box = $("phrasebookList");
-  if (!rows.length){ box.innerHTML = `<div class="empty">${q ? "Nothing matches that search." : "Your shared phrasebook is empty. Add the first phrase you want to remember together. 💞"}</div>`; return; }
-  box.innerHTML = rows.map(([id,v]) => `<div class="bookRow"><div class="bookEn">${esc(v.en)} ${speakerButton(v.en,"en-US")}</div><div class="bookPt">${esc(v.pt)} ${speakerButton(v.pt,"pt-BR")}</div><div class="bookNote">${esc(v.note||`added by ${v.name||"someone"}`)}</div>${v.by===identityKey()?`<button class="btn sm" data-delete-book="${esc(id)}">Delete</button>`:"<span></span>"}</div>`).join("");
-  box.querySelectorAll("[data-say]").forEach(btn => btn.addEventListener("click", () => speak(btn.dataset.say, btn.dataset.lang)));
-  box.querySelectorAll("[data-delete-book]").forEach(btn => btn.addEventListener("click", () => remove(ref(db, rootPath(`phrasebook/${btn.dataset.deleteBook}`)))));
+  const box=$("phrasebookList");if(!box)return;const q=($("bookSearch")?.value||"").trim().toLowerCase();const rows=Object.entries(phrasebookData).filter(([,v])=>v&&(!q||`${v.en} ${v.pt} ${v.note||""}`.toLowerCase().includes(q))).sort((a,b)=>(b[1].t||0)-(a[1].t||0));
+  if(!rows.length){box.innerHTML=`<div class="empty">${q?"Nothing matches that search.":"Your phrasebook is empty. Add something you truly want to remember. 💞"}</div>`;return;}
+  box.innerHTML=rows.map(([id,v])=>`<div class="bookRow"><div><strong>${esc(v.en)}</strong> ${speakerButton(v.en,"en-US")}</div><div class="bookPt">${esc(v.pt)} ${speakerButton(v.pt,"pt-BR")}</div><div class="bookNote">${esc(v.note||`added by ${v.name||"someone"}`)}</div>${v.by===identityKey()?`<button class="btn sm danger" data-delete-book="${esc(id)}">Delete</button>`:"<span></span>"}</div>`).join("");
+  box.querySelectorAll("[data-say]").forEach(b=>b.addEventListener("click",()=>speak(b.dataset.say,b.dataset.lang)));box.querySelectorAll("[data-delete-book]").forEach(b=>b.addEventListener("click",()=>remove(ref(db,rootPath(`phrasebook/${b.dataset.deleteBook}`)))));
 }
 
-window.addEventListener("DOMContentLoaded", waitForRooms);
+window.addEventListener("DOMContentLoaded",waitForRooms);

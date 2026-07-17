@@ -3,240 +3,206 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Language Class — Mayflower Studios</title>
-  <meta name="description" content="A shared English and Brazilian Portuguese classroom for couples — lessons, pronunciation, flashcards, quizzes, homework, and a shared phrasebook." />
+  <title>Language Course — Mayflower Studios</title>
+  <meta name="description" content="A guided English and Brazilian Portuguese course for couples with interactive lessons, XP, hearts, review, homework, and shared practice." />
   <meta name="robots" content="noindex, follow" />
   <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=2" />
   <link rel="stylesheet" href="/style.css?v=33" />
   <style>
-    .lcWrap{max-width:1160px;margin:0 auto;padding:22px}
-    .lcGlass{position:relative;overflow:hidden;border:1px solid var(--border);border-radius:24px;background:rgba(18,13,29,.86);box-shadow:0 22px 70px rgba(0,0,0,.45)}
-    .lcGlass::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(850px 380px at 10% 0%,rgba(196,181,253,.12),transparent 60%),radial-gradient(760px 360px at 94% 6%,rgba(251,113,133,.10),transparent 58%),radial-gradient(900px 420px at 50% 110%,rgba(110,231,183,.07),transparent 62%)}
-    .lcContent{position:relative;z-index:1;padding:26px}
-    .lcKicker{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.045);font-size:13px;color:var(--text-2)}
-    .lcTitle{margin:10px 0 7px;font-family:var(--font-d);font-size:clamp(36px,5vw,52px);font-weight:400;line-height:1.04}
-    .lcTitle em{font-style:italic;background:linear-gradient(125deg,var(--violet),var(--rose));-webkit-background-clip:text;background-clip:text;color:transparent}
-    .lcSub{max-width:76ch;margin:0;color:var(--text-2);line-height:1.65}
-    .roomBar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:18px}
-    .pill{display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.045);font-size:12.5px;color:var(--text-2)}
-    .dot{width:8px;height:8px;border-radius:50%;background:#facc15;box-shadow:0 0 8px rgba(250,204,21,.55)}
-    .dot.on{background:#34d399;box-shadow:0 0 8px rgba(52,211,153,.68)}
-    .dot.off{background:#fb7185;box-shadow:0 0 8px rgba(251,113,133,.65)}
-    .roomBar .copyBtn{margin-left:auto}
-    .nameInput{width:105px;border:0;border-bottom:1px solid var(--border-2);background:transparent;color:inherit;font:inherit;font-size:12.5px;padding:2px 0}
-    .nameInput:focus{outline:none;border-bottom-color:var(--violet)}
-    .nameInput[readonly]{border-bottom-color:transparent}
-    .divider{height:1px;background:var(--border);margin:20px 0}
-    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 15px;border:1px solid var(--border-2);border-radius:13px;background:rgba(255,255,255,.055);color:inherit;font:inherit;font-size:13.5px;cursor:pointer;text-decoration:none;transition:transform .12s ease,filter .12s ease,background .12s ease}
-    .btn:hover{transform:translateY(-1px);filter:brightness(1.08)}
-    .btn.primary{background:rgba(196,181,253,.17);border-color:rgba(196,181,253,.38)}
-    .btn.rose{background:rgba(251,113,133,.15);border-color:rgba(251,113,133,.32)}
-    .btn.green{background:rgba(110,231,183,.12);border-color:rgba(110,231,183,.28)}
-    .btn.sm{padding:7px 10px;font-size:12px;border-radius:10px}
-    .btn.full{width:100%}
-    .btn:disabled{opacity:.45;cursor:not-allowed;transform:none;filter:none}
-    .input,.textarea,.select{width:100%;padding:11px 13px;border:1px solid var(--border-2);border-radius:13px;background:rgba(0,0,0,.22);color:inherit;font:inherit;font-size:14px}
-    .textarea{min-height:94px;resize:vertical;line-height:1.55}
-    .input:focus,.textarea:focus,.select:focus{outline:none;border-color:rgba(196,181,253,.55)}
-    .select option{background:#161020;color:#f8f4ff}
-    .gate{max-width:560px;margin:6px auto 0;padding:24px;border:1px solid var(--border);border-radius:18px;background:rgba(255,255,255,.035);text-align:center}
-    .gate h2{margin:0 0 8px}.gate p{margin:0;color:var(--text-2);line-height:1.6}
-    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
-    .tab{padding:9px 14px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.035);color:var(--text-2);font:inherit;font-size:13px;cursor:pointer}
-    .tab:hover{color:var(--text);background:rgba(255,255,255,.065)}
-    .tab.active{color:var(--text);border-color:rgba(196,181,253,.48);background:rgba(196,181,253,.15)}
-    .panel{display:none}.panel.active{display:block;animation:lcIn .24s ease}@keyframes lcIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-    .topStats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
-    .stat{padding:14px 16px;border:1px solid var(--border);border-radius:15px;background:rgba(255,255,255,.035)}
-    .stat strong{display:block;font-size:19px;margin-bottom:2px}.stat span{font-size:12px;color:var(--text-3)}
-    .classGrid{display:grid;grid-template-columns:285px 1fr;gap:18px;align-items:start}
-    .sideCard,.mainCard,.toolCard{border:1px solid var(--border);border-radius:18px;background:rgba(255,255,255,.032);padding:17px}
-    .sideCard{position:sticky;top:18px}
-    .sideCard h3,.mainCard h2,.toolCard h2{margin:0 0 5px}.muted{color:var(--text-2);font-size:13px;line-height:1.55}
-    .lessonList{display:flex;flex-direction:column;gap:7px;margin-top:14px;max-height:570px;overflow:auto;padding-right:3px}
-    .lessonBtn{display:grid;grid-template-columns:34px 1fr auto;gap:9px;align-items:center;width:100%;padding:10px;border:1px solid transparent;border-radius:12px;background:transparent;color:inherit;text-align:left;cursor:pointer}
-    .lessonBtn:hover{background:rgba(255,255,255,.05)}.lessonBtn.active{background:rgba(196,181,253,.13);border-color:rgba(196,181,253,.30)}
-    .lessonBtn .num{display:flex;align-items:center;justify-content:center;width:31px;height:31px;border-radius:10px;background:rgba(255,255,255,.06);font-size:13px}.lessonBtn .lt{font-size:13px;font-weight:600}.lessonBtn .done{color:var(--emerald);font-size:13px}
-    .lessonHero{display:flex;gap:15px;align-items:flex-start;margin-bottom:16px}.lessonEmoji{font-size:38px;line-height:1}.lessonHero h2{font-size:27px}.goal{margin-top:5px;color:var(--text-2);line-height:1.55}
-    .tip{padding:12px 14px;border-left:3px solid var(--gold);border-radius:0 12px 12px 0;background:rgba(253,230,138,.055);font-size:13px;line-height:1.55;color:var(--text-2);margin-bottom:17px}
-    .sectionTitle{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 0 10px}.sectionTitle h3{margin:0;font-size:17px}
-    .vocabTable{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:14px;overflow:hidden}
-    .vocabRow{display:grid;grid-template-columns:1fr auto 1fr auto;gap:10px;align-items:center;padding:11px 13px;border-bottom:1px solid var(--border)}.vocabRow:last-child{border-bottom:0}.vocabRow:nth-child(even){background:rgba(255,255,255,.018)}
-    .word{font-size:14px}.arrow{color:var(--text-3)}.speak{width:31px;height:31px;border:1px solid var(--border);border-radius:9px;background:rgba(255,255,255,.04);color:inherit;cursor:pointer}
-    .phraseGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.phrase{padding:13px;border:1px solid var(--border);border-radius:13px;background:rgba(255,255,255,.025)}.phrase .en,.phrase .pt{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;font-size:13.5px;line-height:1.45}.phrase .pt{margin-top:7px;color:var(--violet)}
-    .challenge{padding:15px;border:1px solid rgba(251,113,133,.25);border-radius:14px;background:rgba(251,113,133,.055);line-height:1.58}.challenge strong{display:block;margin-bottom:4px}
-    .lessonFoot{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap}
-    .twoCol{display:grid;grid-template-columns:1fr 1fr;gap:18px}.directionRow{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 16px}.seg{padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.035);color:var(--text-2);cursor:pointer;font:inherit;font-size:12.5px}.seg.active{color:var(--text);background:rgba(196,181,253,.15);border-color:rgba(196,181,253,.4)}
-    .flashcard{min-height:270px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;border:1px solid rgba(196,181,253,.30);border-radius:20px;background:linear-gradient(145deg,rgba(196,181,253,.11),rgba(251,113,133,.055));text-align:center;cursor:pointer;user-select:none}.flashLabel{font-size:11px;text-transform:uppercase;letter-spacing:.13em;color:var(--text-3);margin-bottom:15px}.flashWord{font-size:clamp(28px,5vw,46px);font-family:var(--font-d)}.flashAnswer{display:none;margin-top:18px;padding-top:18px;border-top:1px solid var(--border);width:100%;font-size:22px;color:var(--violet)}.flashcard.flipped .flashAnswer{display:block}.flashHint{margin-top:12px;font-size:12px;color:var(--text-3)}.cardControls{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin-top:13px}
-    .quizPrompt{padding:22px;border:1px solid var(--border);border-radius:17px;background:rgba(255,255,255,.03);text-align:center}.quizPrompt .qLabel{font-size:12px;color:var(--text-3);margin-bottom:10px}.quizPrompt .qWord{font-size:31px;font-family:var(--font-d)}.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}.answerBtn{padding:13px;border:1px solid var(--border);border-radius:13px;background:rgba(255,255,255,.035);color:inherit;font:inherit;cursor:pointer}.answerBtn:hover{background:rgba(255,255,255,.07)}.answerBtn.good{border-color:rgba(110,231,183,.55);background:rgba(110,231,183,.12)}.answerBtn.bad{border-color:rgba(251,113,133,.5);background:rgba(251,113,133,.11)}
-    .scoreboard{display:flex;flex-direction:column;gap:8px;margin-top:13px}.scoreRow{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:12px}.scoreRow .who{flex:1;font-size:13px}.scoreRow .score{font-weight:600;color:var(--violet)}
-    .formGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field label{display:block;margin-bottom:6px;font-size:12px;color:var(--text-2);font-weight:600}.field.full{grid-column:1/-1}
-    .homeworkList,.phrasebookList{display:flex;flex-direction:column;gap:12px;margin-top:15px}.hwCard,.bookRow{padding:15px;border:1px solid var(--border);border-radius:15px;background:rgba(255,255,255,.027)}.hwHead{display:flex;align-items:flex-start;gap:10px}.hwHead .hwMain{flex:1}.hwTitle{font-weight:600}.hwMeta{font-size:11.5px;color:var(--text-3);margin-top:3px}.hwInstructions{margin:11px 0 13px;color:var(--text-2);font-size:13.5px;line-height:1.55}.submission{margin-top:10px;padding:11px;border:1px solid var(--border);border-radius:12px;background:rgba(0,0,0,.13)}.submission strong{font-size:12.5px}.submission p{white-space:pre-wrap;margin:7px 0 0;font-size:13px;line-height:1.5}.feedback{margin-top:8px;font-size:12px;color:var(--emerald)}
-    .bookRow{display:grid;grid-template-columns:1fr 1fr minmax(110px,.6fr) auto;gap:10px;align-items:center}.bookEn{font-weight:600}.bookPt{color:var(--violet)}.bookNote{font-size:12px;color:var(--text-3)}
-    .empty{padding:24px;text-align:center;color:var(--text-3);font-size:13px;border:1px dashed var(--border-2);border-radius:14px}
-    .whoHere{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}.whoChip{padding:6px 9px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.035);font-size:11.5px;color:var(--text-2)}.whoChip.me{border-color:rgba(196,181,253,.35);color:var(--text)}
-    .waitNote{margin-top:12px;padding:11px 13px;border:1px solid rgba(253,230,138,.24);border-radius:12px;background:rgba(253,230,138,.055);font-size:12.5px;color:var(--text-2)}
-    .toast{position:fixed;left:50%;bottom:24px;z-index:100;transform:translate(-50%,16px);opacity:0;pointer-events:none;padding:11px 16px;border:1px solid var(--border-2);border-radius:13px;background:rgba(20,14,29,.96);box-shadow:0 12px 40px rgba(0,0,0,.45);transition:.18s ease;font-size:13px}.toast.show{opacity:1;transform:translate(-50%,0)}
-    @media(max-width:880px){.classGrid,.twoCol{grid-template-columns:1fr}.sideCard{position:static}.topStats{grid-template-columns:1fr}.phraseGrid{grid-template-columns:1fr}}
-    @media(max-width:620px){.lcWrap{padding:10px}.lcContent{padding:18px}.roomBar .copyBtn{margin-left:0}.vocabRow{grid-template-columns:1fr auto}.vocabRow .arrow{display:none}.phraseGrid,.answers,.formGrid{grid-template-columns:1fr}.field.full{grid-column:auto}.bookRow{grid-template-columns:1fr auto}.bookPt,.bookNote{grid-column:1/-1}}
+    :root{--lc-purple:#8b5cf6;--lc-purple2:#c4b5fd;--lc-green:#58cc02;--lc-green-dark:#46a302;--lc-blue:#1cb0f6;--lc-red:#ff4b4b;--lc-gold:#ffc800;--lc-ink:#f8f4ff;--lc-soft:#bdb5ca}
+    *{box-sizing:border-box}
+    .lcWrap{max-width:1220px;margin:0 auto;padding:20px}
+    .lcShell{position:relative;overflow:hidden;border:1px solid var(--border);border-radius:26px;background:rgba(17,12,27,.94);box-shadow:0 24px 80px rgba(0,0,0,.5)}
+    .lcShell::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(900px 420px at 7% 0%,rgba(139,92,246,.16),transparent 61%),radial-gradient(780px 400px at 96% 3%,rgba(28,176,246,.10),transparent 61%)}
+    .lcInner{position:relative;z-index:1;padding:24px}
+    .heroRow{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;flex-wrap:wrap}
+    .lcKicker{display:inline-flex;align-items:center;gap:8px;padding:7px 11px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.045);font-size:12px;color:var(--text-2)}
+    .lcTitle{margin:9px 0 6px;font-family:var(--font-d);font-size:clamp(34px,5vw,52px);font-weight:400;line-height:1.05}.lcTitle em{font-style:italic;color:var(--lc-purple2)}
+    .lcSub{max-width:720px;margin:0;color:var(--text-2);line-height:1.6}
+    .roomBar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:15px}.roomBar .push{margin-left:auto}
+    .pill{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.04);font-size:12px;color:var(--text-2);text-decoration:none}
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--lc-gold)}.dot.on{background:#58cc02;box-shadow:0 0 9px rgba(88,204,2,.6)}.dot.off{background:var(--lc-red)}
+    .nameInput{width:105px;border:0;border-bottom:1px solid var(--border-2);background:transparent;color:inherit;font:inherit;font-size:12px}.nameInput:focus{outline:0;border-color:var(--lc-purple2)}.nameInput[readonly]{border-color:transparent}
+    .divider{height:1px;background:var(--border);margin:18px 0}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 16px;border:1px solid var(--border-2);border-radius:14px;background:rgba(255,255,255,.055);color:inherit;font:700 13px/1 var(--font-b,inherit);cursor:pointer;text-decoration:none;transition:.14s ease}.btn:hover{transform:translateY(-1px);filter:brightness(1.08)}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+    .btn.primary{background:var(--lc-green);border-color:var(--lc-green);color:#102000;box-shadow:0 4px 0 var(--lc-green-dark)}.btn.primary:active{transform:translateY(3px);box-shadow:0 1px 0 var(--lc-green-dark)}
+    .btn.blue{background:var(--lc-blue);border-color:var(--lc-blue);color:#041722;box-shadow:0 4px 0 #1184b9}.btn.purple{background:rgba(139,92,246,.22);border-color:rgba(196,181,253,.46)}.btn.danger{background:rgba(255,75,75,.12);border-color:rgba(255,75,75,.35)}.btn.sm{padding:8px 11px;border-radius:11px;font-size:12px}.btn.full{width:100%}
+    .gate{max-width:560px;margin:10px auto;padding:28px;border:1px solid var(--border);border-radius:20px;background:rgba(255,255,255,.035);text-align:center}.gate h2{margin:0 0 7px}.gate p{margin:0;color:var(--text-2);line-height:1.55}
+    .courseStats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0 20px}.courseStat{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--border);border-radius:15px;background:rgba(255,255,255,.035)}.courseStat .icon{font-size:24px}.courseStat strong{display:block;font-size:18px}.courseStat span{display:block;font-size:11px;color:var(--text-3);margin-top:2px}
+    .tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px}.tab{padding:9px 13px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.03);color:var(--text-2);font:600 12.5px var(--font-b,inherit);cursor:pointer}.tab.active{color:#fff;background:rgba(139,92,246,.2);border-color:rgba(196,181,253,.43)}
+    .panel{display:none}.panel.active{display:block;animation:in .2s ease}@keyframes in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+    .learnGrid{display:grid;grid-template-columns:minmax(280px,330px) 1fr;gap:18px;align-items:start}
+    .pathCard,.mainCard,.toolCard{border:1px solid var(--border);border-radius:19px;background:rgba(255,255,255,.032)}.pathCard{padding:16px;position:sticky;top:14px}.mainCard,.toolCard{padding:20px}
+    .pathHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.pathHead h2,.mainCard h2,.toolCard h2{margin:0 0 5px}.muted{color:var(--text-2);font-size:13px;line-height:1.55}
+    .goalSelect,.input,.textarea,.select{width:100%;padding:11px 12px;border:1px solid var(--border-2);border-radius:13px;background:rgba(0,0,0,.24);color:inherit;font:inherit;font-size:13px}.select option{background:#171020}.input:focus,.textarea:focus,.select:focus,.goalSelect:focus{outline:0;border-color:rgba(196,181,253,.55)}.textarea{min-height:96px;resize:vertical;line-height:1.5}
+    .pathList{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:18px;padding:2px 0 8px}.pathNodeWrap{width:100%;display:grid;grid-template-columns:58px 1fr;gap:12px;align-items:center;position:relative}.pathNodeWrap:not(:last-child)::after{content:"";position:absolute;left:28px;top:54px;width:4px;height:26px;border-radius:8px;background:rgba(255,255,255,.10)}
+    .pathNode{width:58px;height:58px;border-radius:50%;border:2px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:inherit;font-size:25px;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,.35)}.pathNode.current{background:var(--lc-green);border-color:#7ee53e;color:#183000;box-shadow:0 5px 0 var(--lc-green-dark)}.pathNode.done{background:var(--lc-gold);border-color:#ffe269;color:#332800;box-shadow:0 5px 0 #c79c00}.pathNode.locked{filter:grayscale(.7);opacity:.48;cursor:not-allowed}.pathNode.review{background:var(--lc-blue);border-color:#71d2ff;color:#062338;box-shadow:0 5px 0 #1184b9}
+    .pathInfo{min-width:0}.pathInfo strong{display:block;font-size:13px}.pathInfo span{display:block;color:var(--text-3);font-size:11px;margin-top:3px}.stars{color:var(--lc-gold);letter-spacing:1px}
+    .lessonBanner{display:flex;align-items:center;gap:16px;padding:18px;border-radius:17px;background:linear-gradient(130deg,rgba(139,92,246,.26),rgba(28,176,246,.12));border:1px solid rgba(196,181,253,.25)}.lessonEmoji{font-size:48px}.lessonBanner h2{font-size:28px}.lessonBanner p{margin:4px 0 0;color:var(--text-2);line-height:1.5}.lessonMeta{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.tag{padding:6px 9px;border-radius:999px;border:1px solid var(--border);background:rgba(0,0,0,.13);font-size:11px;color:var(--text-2)}
+    .progressTrack{height:12px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin:17px 0 8px}.progressFill{height:100%;background:linear-gradient(90deg,var(--lc-green),#8eea52);border-radius:inherit;transition:width .3s ease}.progressText{display:flex;justify-content:space-between;font-size:11px;color:var(--text-3)}
+    .lessonActions{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.lessonActions .btn{min-width:145px}
+    .skillGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}.skill{padding:13px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.026)}.skill strong{font-size:13px}.skill p{margin:5px 0 0;color:var(--text-3);font-size:11.5px;line-height:1.45}
+    .wordPreview{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.wordChip{padding:7px 10px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.035);font-size:12px}.wordChip b{color:var(--lc-purple2)}
+    .tip{padding:12px 14px;border-left:3px solid var(--lc-gold);border-radius:0 12px 12px 0;background:rgba(255,200,0,.06);font-size:12.5px;line-height:1.55;color:var(--text-2);margin-top:17px}
+    .whoHere{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.whoChip{padding:6px 9px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.035);font-size:11px;color:var(--text-2)}.whoChip.me{border-color:rgba(196,181,253,.4);color:#fff}
+    .session{max-width:760px;margin:0 auto}.sessionTop{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;margin-bottom:22px}.closeSession{width:38px;height:38px;border:0;background:transparent;color:var(--text-2);font-size:24px;cursor:pointer}.sessionTrack{height:13px;border-radius:999px;background:rgba(255,255,255,.1);overflow:hidden}.sessionTrack span{display:block;height:100%;background:var(--lc-green);border-radius:inherit;transition:width .3s ease}.sessionHearts{font-weight:800;color:var(--lc-red);white-space:nowrap}
+    .exerciseCard{min-height:460px;padding:28px;border:1px solid var(--border);border-radius:22px;background:rgba(255,255,255,.03);display:flex;flex-direction:column}.exerciseType{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--text-3);font-weight:800}.exercisePrompt{font-size:clamp(23px,4vw,34px);font-weight:800;line-height:1.25;margin:13px 0 18px}.exerciseSub{color:var(--text-2);font-size:13px;margin-top:-9px;margin-bottom:18px}.bigWord{font-family:var(--font-d);font-size:clamp(34px,6vw,54px);text-align:center;margin:25px 0}.speakerBig{width:82px;height:82px;border:0;border-radius:50%;margin:20px auto;background:var(--lc-blue);font-size:35px;cursor:pointer;box-shadow:0 6px 0 #1184b9}.speakerBig:active{transform:translateY(4px);box-shadow:0 2px 0 #1184b9}
+    .choiceGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.choice{padding:14px;border:2px solid var(--border);border-radius:14px;background:rgba(255,255,255,.035);color:inherit;font:600 14px/1.35 inherit;cursor:pointer;text-align:left}.choice:hover{background:rgba(255,255,255,.07)}.choice.selected{border-color:var(--lc-blue);background:rgba(28,176,246,.12)}.choice.correct{border-color:var(--lc-green);background:rgba(88,204,2,.13)}.choice.wrong{border-color:var(--lc-red);background:rgba(255,75,75,.12)}
+    .typeAnswer{font-size:18px;padding:15px}.wordBank{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:14px;min-height:61px;border-bottom:2px solid var(--border);margin-bottom:16px}.bankWords{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.bankWord{padding:10px 13px;border:1px solid var(--border-2);border-radius:11px;background:rgba(255,255,255,.06);color:inherit;font:600 13px inherit;cursor:pointer}.bankWord:disabled{opacity:.28}.answerWord{padding:9px 12px;border-radius:10px;background:rgba(139,92,246,.18);cursor:pointer}
+    .matchGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.matchItem{padding:12px;border:2px solid var(--border);border-radius:13px;background:rgba(255,255,255,.035);color:inherit;font:600 13px inherit;cursor:pointer}.matchItem.selected{border-color:var(--lc-blue)}.matchItem.matched{border-color:var(--lc-green);opacity:.42;pointer-events:none}.matchItem.bad{animation:shake .25s ease;border-color:var(--lc-red)}@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+    .checkBar{margin-top:auto;padding-top:22px;display:flex;gap:12px;align-items:center}.checkBar .feedbackMsg{flex:1;font-weight:700}.feedbackMsg.good{color:#7ee53e}.feedbackMsg.bad{color:#ff8585}
+    .resultCard{text-align:center;align-items:center;justify-content:center}.resultEmoji{font-size:66px}.resultCard h2{font-size:33px;margin:8px 0}.resultStats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;margin:20px 0}.resultStat{padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.035)}.resultStat strong{display:block;font-size:22px}.resultStat span{font-size:11px;color:var(--text-3)}
+    .twoCol{display:grid;grid-template-columns:1fr 1fr;gap:16px}.practiceButtons{display:grid;gap:10px;margin-top:15px}.reviewList,.mistakeList,.homeworkList,.phrasebookList{display:flex;flex-direction:column;gap:10px;margin-top:14px}.reviewRow,.mistakeRow,.hwCard,.bookRow{padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.027)}.reviewRow{display:flex;align-items:center;gap:10px}.reviewRow .grow{flex:1}.masteryDots{display:flex;gap:3px}.masteryDots span{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.12)}.masteryDots span.on{background:var(--lc-green)}
+    .mistakeRow{display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:center}.mistakeRow .pt{color:var(--lc-purple2)}.mistakeRow small{display:block;color:var(--text-3);margin-top:3px}.empty{padding:25px;border:1px dashed var(--border-2);border-radius:14px;text-align:center;color:var(--text-3);font-size:13px}
+    .formGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field label{display:block;margin-bottom:6px;font-size:11px;color:var(--text-2);font-weight:700}.field.full{grid-column:1/-1}.hwHead{display:flex;gap:10px;align-items:flex-start}.hwMain{flex:1}.hwTitle{font-weight:700}.hwMeta{font-size:11px;color:var(--text-3);margin-top:3px}.hwInstructions{margin:10px 0 12px;color:var(--text-2);font-size:13px;line-height:1.5}.submission{margin-top:10px;padding:10px;border:1px solid var(--border);border-radius:11px;background:rgba(0,0,0,.14)}.submission p{white-space:pre-wrap;margin:6px 0 0;font-size:12.5px}.feedback{margin-top:7px;color:#7ee53e;font-size:12px}.bookRow{display:grid;grid-template-columns:1fr 1fr minmax(90px,.55fr) auto;gap:10px;align-items:center}.bookPt{color:var(--lc-purple2)}.bookNote{font-size:11.5px;color:var(--text-3)}.speak{width:30px;height:30px;border:1px solid var(--border);border-radius:9px;background:rgba(255,255,255,.04);color:inherit;cursor:pointer}
+    .toast{position:fixed;left:50%;bottom:24px;z-index:200;transform:translate(-50%,15px);opacity:0;pointer-events:none;padding:11px 15px;border:1px solid var(--border-2);border-radius:13px;background:#181020;box-shadow:0 12px 40px rgba(0,0,0,.45);transition:.18s ease;font-size:13px}.toast.show{opacity:1;transform:translate(-50%,0)}
+    [hidden]{display:none!important}
+    @media(max-width:900px){.learnGrid,.twoCol{grid-template-columns:1fr}.pathCard{position:static}.courseStats{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:620px){.lcWrap{padding:9px}.lcInner{padding:16px}.courseStats{grid-template-columns:1fr 1fr}.courseStat{padding:10px}.choiceGrid,.skillGrid,.formGrid{grid-template-columns:1fr}.field.full{grid-column:auto}.exerciseCard{padding:19px;min-height:440px}.resultStats{grid-template-columns:1fr}.mistakeRow,.bookRow{grid-template-columns:1fr auto}.mistakeRow .pt,.bookPt,.bookNote{grid-column:1/-1}.roomBar .push{margin-left:0}.sessionTop{gap:8px}}
   </style>
 </head>
 <body data-nav="together">
   <div class="site-shell">
     <div id="site-nav"></div>
     <main class="lcWrap">
-      <section class="lcGlass">
-        <div class="lcContent">
-          <span class="lcKicker">📚 English ↔ Português do Brasil</span>
-          <h1 class="lcTitle">Our little <em>language class</em></h1>
-          <p class="lcSub">Learn the words you need to understand each other better. Study a lesson together, hear every phrase aloud, quiz yourselves, turn in homework, and keep a shared phrasebook of the things that matter to you.</p>
+      <section class="lcShell">
+        <div class="lcInner">
+          <div class="heroRow" id="courseHeader">
+            <div>
+              <span class="lcKicker">🦉 English ↔ Português do Brasil</span>
+              <h1 class="lcTitle">Learn it. Use it. <em>Remember it.</em></h1>
+              <p class="lcSub">Short guided lessons that teach vocabulary, listening, sentence building, and real conversation—made for the two of you.</p>
+            </div>
+          </div>
 
           <div class="roomBar" id="roomBar" hidden>
             <a class="pill" href="/together.html">← Together hub</a>
             <span class="pill"><span class="dot" id="connDot"></span><span id="connText">Connecting…</span></span>
             <span class="pill">👤 <input id="nameInput" class="nameInput" maxlength="24" placeholder="your name" /></span>
-            <button class="btn sm copyBtn" id="copyRoomBtn">🔗 Copy class link</button>
+            <button class="btn sm push" id="copyRoomBtn">🔗 Copy class link</button>
           </div>
 
-          <div class="divider"></div>
-
           <div id="gateView" class="gate">
-            <h2>Opening the classroom…</h2>
-            <p>This class is opened from the Together hub. You’ll be sent there if this room is missing or you don’t have access.</p>
+            <h2>Opening your course…</h2>
+            <p>This course opens from your Together room. You’ll be returned there if the room is missing or unavailable.</p>
           </div>
 
           <div id="roomView" hidden>
-            <div class="tabs" id="tabs">
-              <button class="tab active" data-tab="classroom">📖 Classroom</button>
-              <button class="tab" data-tab="flashcards">🃏 Flashcards</button>
-              <button class="tab" data-tab="quiz">🧠 Quiz</button>
-              <button class="tab" data-tab="homework">📝 Homework</button>
-              <button class="tab" data-tab="phrasebook">💬 Our Phrasebook</button>
+            <div id="normalView">
+              <div class="courseStats">
+                <div class="courseStat"><span class="icon">🔥</span><div><strong id="streakStat">0</strong><span>day streak</span></div></div>
+                <div class="courseStat"><span class="icon">💎</span><div><strong id="xpStat">0 XP</strong><span>total earned</span></div></div>
+                <div class="courseStat"><span class="icon">❤️</span><div><strong id="heartsStat">5 / 5</strong><span>lesson hearts</span></div></div>
+                <div class="courseStat"><span class="icon">⭐</span><div><strong id="masteryStat">0%</strong><span>course mastery</span></div></div>
+              </div>
+
+              <div class="tabs" id="tabs">
+                <button class="tab active" data-tab="learn">🏠 Learn</button>
+                <button class="tab" data-tab="practice">🎯 Practice</button>
+                <button class="tab" data-tab="mistakes">💔 Mistakes</button>
+                <button class="tab" data-tab="homework">📝 Homework</button>
+                <button class="tab" data-tab="phrasebook">💬 Phrasebook</button>
+              </div>
+
+              <section class="panel active" data-panel="learn">
+                <div class="learnGrid">
+                  <aside class="pathCard">
+                    <div class="pathHead"><div><h2>Your course</h2><p class="muted">Lessons unlock in order.</p></div></div>
+                    <select id="goalSelect" class="goalSelect" style="margin-top:10px">
+                      <option value="pt">Learning Portuguese 🇧🇷</option>
+                      <option value="en">Learning English 🇺🇸</option>
+                      <option value="both">Practicing both ↔</option>
+                    </select>
+                    <div class="whoHere" id="whoHere"></div>
+                    <div class="pathList" id="pathList"></div>
+                  </aside>
+                  <article class="mainCard" id="lessonOverview"></article>
+                </div>
+              </section>
+
+              <section class="panel" data-panel="practice">
+                <div class="twoCol">
+                  <div class="toolCard">
+                    <h2>Personalized practice</h2>
+                    <p class="muted">Practice prioritizes words you missed and skills with low mastery.</p>
+                    <div class="practiceButtons">
+                      <button class="btn primary full" id="smartPracticeBtn">🎯 Practice weak words</button>
+                      <button class="btn blue full" id="refillHeartsBtn">❤️ Refill hearts with practice</button>
+                      <button class="btn purple full" id="randomPracticeBtn">🔀 Mixed course practice</button>
+                    </div>
+                  </div>
+                  <div class="toolCard">
+                    <h2>Your weakest words</h2>
+                    <p class="muted">A word grows stronger when you answer it correctly in different exercise types.</p>
+                    <div class="reviewList" id="weakWordsList"></div>
+                  </div>
+                </div>
+                <div class="toolCard" style="margin-top:16px">
+                  <h2>Class progress</h2>
+                  <p class="muted">You each keep separate learning progress, even inside the same room.</p>
+                  <div class="reviewList" id="classProgressList"></div>
+                </div>
+              </section>
+
+              <section class="panel" data-panel="mistakes">
+                <div class="twoCol">
+                  <div class="toolCard">
+                    <h2>Mistakes notebook</h2>
+                    <p class="muted">Wrong answers are saved here and automatically mixed into future practice.</p>
+                    <button class="btn primary full" id="practiceMistakesBtn" style="margin-top:13px">Practice my mistakes</button>
+                  </div>
+                  <div class="toolCard">
+                    <h2>Why this helps</h2>
+                    <p class="muted">Seeing an answer once feels familiar. Retrieving it after a mistake is what makes it stick. The course will repeat missed words later instead of letting them disappear.</p>
+                  </div>
+                </div>
+                <div class="mistakeList" id="mistakeList"></div>
+              </section>
+
+              <section class="panel" data-panel="homework">
+                <div class="twoCol">
+                  <div class="toolCard">
+                    <h2>Assign real-world homework</h2>
+                    <p class="muted">Use the current lesson assignment or create something personal for each other.</p>
+                    <button class="btn purple full" id="assignLessonHomework" style="margin-top:12px">✨ Assign selected lesson homework</button>
+                    <div class="divider"></div>
+                    <div class="formGrid">
+                      <div class="field full"><label for="hwTitle">Title</label><input class="input" id="hwTitle" maxlength="60" placeholder="Write me a good-morning message" /></div>
+                      <div class="field full"><label for="hwInstructions">Instructions</label><textarea class="textarea" id="hwInstructions" maxlength="600" placeholder="Write 3–5 sentences using today’s lesson..."></textarea></div>
+                      <div class="field"><label for="hwTarget">For</label><select class="select" id="hwTarget"><option value="both">Both of us</option><option value="pt">Portuguese learner</option><option value="en">English learner</option></select></div>
+                      <div class="field"><label>&nbsp;</label><button class="btn primary full" id="createHomework">Add assignment</button></div>
+                    </div>
+                  </div>
+                  <div class="toolCard"><h2>Kind corrections</h2><div class="tip">Start with what was understood, then suggest a more natural version. The goal is confidence plus accuracy—not making each other afraid to try. 💛</div></div>
+                </div>
+                <div class="homeworkList" id="homeworkList"></div>
+              </section>
+
+              <section class="panel" data-panel="phrasebook">
+                <div class="twoCol">
+                  <div class="toolCard">
+                    <h2>Add a useful phrase</h2>
+                    <p class="muted">Save pet names, game language, comfort phrases, and things you genuinely say.</p>
+                    <div class="formGrid" style="margin-top:13px">
+                      <div class="field"><label for="bookEn">English</label><input class="input" id="bookEn" maxlength="120" placeholder="I miss you" /></div>
+                      <div class="field"><label for="bookPt">Português</label><input class="input" id="bookPt" maxlength="120" placeholder="Estou com saudade de você" /></div>
+                      <div class="field full"><label for="bookNote">Note</label><input class="input" id="bookNote" maxlength="180" placeholder="Natural, romantic, game-specific, etc." /></div>
+                    </div>
+                    <button class="btn purple full" id="addPhrase" style="margin-top:10px">Add to phrasebook</button>
+                  </div>
+                  <div class="toolCard"><h2>Search</h2><p class="muted">Search either language or your notes.</p><input class="input" id="bookSearch" placeholder="Search phrasebook…" style="margin-top:13px" /></div>
+                </div>
+                <div class="phrasebookList" id="phrasebookList"></div>
+              </section>
             </div>
 
-            <section class="panel active" data-panel="classroom">
-              <div class="topStats">
-                <div class="stat"><strong id="lessonStat">Lesson 1 of 10</strong><span>Shared class position</span></div>
-                <div class="stat"><strong id="myProgressStat">0 complete</strong><span>Your lesson progress</span></div>
-                <div class="stat"><strong id="classScoreStat">0 quiz points</strong><span>Your total quiz score</span></div>
+            <section id="sessionView" class="session" hidden>
+              <div class="sessionTop">
+                <button class="closeSession" id="closeSession" aria-label="Close lesson">×</button>
+                <div class="sessionTrack"><span id="sessionProgress"></span></div>
+                <div class="sessionHearts" id="sessionHearts">❤️ 5</div>
               </div>
-              <div class="classGrid">
-                <aside class="sideCard">
-                  <h3>My learning goal</h3>
-                  <p class="muted">This only changes your own defaults and progress label.</p>
-                  <select id="goalSelect" class="select" style="margin-top:10px">
-                    <option value="pt">I’m learning Portuguese 🇧🇷</option>
-                    <option value="en">I’m learning English 🇺🇸</option>
-                    <option value="both">I’m practicing both ↔</option>
-                  </select>
-                  <div class="whoHere" id="whoHere"></div>
-                  <div class="waitNote" id="waitNote">Waiting for your person to join…</div>
-                  <div class="divider" style="margin:15px 0"></div>
-                  <h3>Curriculum</h3>
-                  <div class="lessonList" id="lessonList"></div>
-                </aside>
-                <article class="mainCard" id="lessonContent"></article>
-              </div>
-            </section>
-
-            <section class="panel" data-panel="flashcards">
-              <div class="twoCol">
-                <div class="toolCard">
-                  <h2>Flashcard practice</h2>
-                  <p class="muted">Tap the card to reveal the translation. The deck follows the lesson selected in the classroom.</p>
-                  <div class="directionRow" id="flashDirection">
-                    <button class="seg active" data-direction="pt">English → Portuguese</button>
-                    <button class="seg" data-direction="en">Portuguese → English</button>
-                    <button class="seg" data-direction="mix">Mixed</button>
-                  </div>
-                  <div class="flashcard" id="flashcard">
-                    <div class="flashLabel" id="flashLabel">Translate into Portuguese</div>
-                    <div class="flashWord" id="flashWord">Hello</div>
-                    <div class="flashAnswer" id="flashAnswer">Olá</div>
-                    <div class="flashHint">click to flip</div>
-                  </div>
-                  <div class="cardControls">
-                    <button class="btn sm" id="flashPrev">← Previous</button>
-                    <button class="btn sm" id="flashSpeak">🔊 Hear it</button>
-                    <button class="btn sm" id="flashShuffle">🔀 Shuffle</button>
-                    <button class="btn sm" id="flashNext">Next →</button>
-                  </div>
-                </div>
-                <div class="toolCard">
-                  <h2>Conversation challenge</h2>
-                  <p class="muted">Use the target language—mistakes are welcome. The point is understanding each other, not sounding perfect.</p>
-                  <div class="challenge" style="margin-top:15px" id="conversationChallenge"></div>
-                  <button class="btn primary full" style="margin-top:12px" id="newChallenge">Give us another challenge</button>
-                  <div class="divider"></div>
-                  <h3 style="margin:0 0 6px">Pronunciation tip</h3>
-                  <p class="muted" id="pronunciationTip"></p>
-                </div>
-              </div>
-            </section>
-
-            <section class="panel" data-panel="quiz">
-              <div class="twoCol">
-                <div class="toolCard">
-                  <h2>Mini quiz</h2>
-                  <p class="muted">Eight questions from the current lesson. Your score is saved to the classroom.</p>
-                  <div class="directionRow" id="quizDirection">
-                    <button class="seg active" data-direction="pt">Test my Portuguese</button>
-                    <button class="seg" data-direction="en">Test my English</button>
-                    <button class="seg" data-direction="mix">Mix both</button>
-                  </div>
-                  <div id="quizArea"></div>
-                  <button class="btn primary full" id="startQuiz">Start a new 8-question quiz</button>
-                </div>
-                <div class="toolCard">
-                  <h2>Class scores</h2>
-                  <p class="muted">Friendly competition only. Bragging rights may be exchanged for kisses.</p>
-                  <div class="scoreboard" id="scoreboard"></div>
-                </div>
-              </div>
-            </section>
-
-            <section class="panel" data-panel="homework">
-              <div class="twoCol">
-                <div class="toolCard">
-                  <h2>Assign homework</h2>
-                  <p class="muted">Use the lesson assignment or make your own. Both of you can answer in the same card.</p>
-                  <button class="btn green full" id="assignLessonHomework">✨ Assign this lesson’s homework</button>
-                  <div class="divider"></div>
-                  <div class="formGrid">
-                    <div class="field full"><label for="hwTitle">Title</label><input class="input" id="hwTitle" maxlength="60" placeholder="Write me a good-morning message" /></div>
-                    <div class="field full"><label for="hwInstructions">Instructions</label><textarea class="textarea" id="hwInstructions" maxlength="600" placeholder="Write 3–5 sentences using today’s phrases..."></textarea></div>
-                    <div class="field"><label for="hwTarget">For</label><select class="select" id="hwTarget"><option value="both">Both of us</option><option value="pt">Portuguese learner</option><option value="en">English learner</option></select></div>
-                    <div class="field"><label>&nbsp;</label><button class="btn primary full" id="createHomework">Add assignment</button></div>
-                  </div>
-                </div>
-                <div class="toolCard">
-                  <h2>How homework works</h2>
-                  <p class="muted">Open an assignment, write your answer, and save it. Your partner can read it and leave a little correction or encouragement. Answers remain in this class room.</p>
-                  <div class="tip" style="margin-top:14px;margin-bottom:0">A useful correction sounds like: “I understood you perfectly. A more natural way to say it would be…” Kind first, grammar second. 💛</div>
-                </div>
-              </div>
-              <div class="homeworkList" id="homeworkList"></div>
-            </section>
-
-            <section class="panel" data-panel="phrasebook">
-              <div class="twoCol">
-                <div class="toolCard">
-                  <h2>Add a word or phrase</h2>
-                  <p class="muted">Save the things you actually say—pet names, jokes, game words, comfort phrases, anything.</p>
-                  <div class="formGrid" style="margin-top:14px">
-                    <div class="field"><label for="bookEn">English</label><input class="input" id="bookEn" maxlength="120" placeholder="I miss you" /></div>
-                    <div class="field"><label for="bookPt">Português</label><input class="input" id="bookPt" maxlength="120" placeholder="Estou com saudade de você" /></div>
-                    <div class="field full"><label for="bookNote">Note (optional)</label><input class="input" id="bookNote" maxlength="180" placeholder="More natural/romantic than a literal translation" /></div>
-                  </div>
-                  <button class="btn primary full" id="addPhrase" style="margin-top:10px">Add to our phrasebook</button>
-                </div>
-                <div class="toolCard">
-                  <h2>Find something</h2>
-                  <p class="muted">Search either language or your notes.</p>
-                  <input class="input" id="bookSearch" placeholder="Search our phrasebook…" style="margin-top:14px" />
-                </div>
-              </div>
-              <div class="phrasebookList" id="phrasebookList"></div>
+              <div class="exerciseCard" id="exerciseCard"></div>
             </section>
           </div>
         </div>
@@ -248,6 +214,6 @@
   <script src="/shared.js?v=33"></script>
   <script>window._firefliesLoaded = true;</script>
   <script src="/fireflies.js"></script>
-  <script type="module" src="/language-class.js?v=2"></script>
+  <script type="module" src="/language-class.js?v=3"></script>
 </body>
 </html>
