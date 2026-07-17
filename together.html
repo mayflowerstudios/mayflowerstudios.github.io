@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Together — Mayflower Studios</title>
-  <meta name="description" content="One hub for being in the same moment as someone. Open a room — watch party, games, or date night — public, friends-only, or private, and invite your friends." />
+  <meta name="description" content="One hub for being in the same moment as someone. Open a room — watch party, games, date night, or language class — public, friends-only, or private, and invite your friends." />
   <meta property="og:title" content="Together — Mayflower Studios" />
-  <meta property="og:description" content="One hub for being in the same moment as someone. Watch party, games, or date night — your account, your friends." />
+  <meta property="og:description" content="One hub for being in the same moment as someone. Watch party, games, date night, or language class — your account, your friends." />
   <meta property="og:url" content="https://mayflowerstudios.net/together.html" />
   <link rel="canonical" href="https://mayflowerstudios.net/together.html" />
   <meta property="og:type" content="website" />
@@ -52,7 +52,8 @@
     /* option cards (type + visibility) */
     .optGrid{ display:grid; gap:9px; }
     .optGrid.three{ grid-template-columns:1fr 1fr 1fr; }
-    @media (max-width: 480px){ .optGrid.three{ grid-template-columns:1fr; } }
+    .optGrid.four{ grid-template-columns:1fr 1fr; }
+    @media (max-width: 480px){ .optGrid.three,.optGrid.four{ grid-template-columns:1fr; } }
     .opt{
       display:flex; flex-direction:column; gap:3px; cursor:pointer; user-select:none;
       padding:13px 13px; border-radius:var(--r-md); outline:none; text-align:left;
@@ -124,6 +125,7 @@
     .rTag.watch{ color:#fda4af; border-color:rgba(249,168,212,.3); }
     .rTag.games{ color:var(--violet); border-color:rgba(196,181,253,.3); }
     .rTag.date{ color:var(--gold); border-color:rgba(253,230,138,.3); }
+    .rTag.learn{ color:var(--emerald); border-color:rgba(110,231,183,.32); }
     .rTag.vis{ color:var(--text-2); }
     .roomCard .rGo{ font-size:13px; color:var(--text-3); flex:0 0 auto; }
     .roomCard .rBtn{
@@ -176,7 +178,7 @@
         <h1 class="page-title">Open a room, <em>together</em></h1>
         <p class="page-sub">
           One place for being in the same moment as someone. Make a room and pick what it's for —
-          a <strong>watch party</strong>, a <strong>games room</strong>, or a <strong>date night</strong> —
+          a <strong>watch party</strong>, a <strong>games room</strong>, a <strong>date night</strong>, or a <strong>language class</strong> —
           then choose who gets in: <strong>public</strong>, <strong>friends&nbsp;only</strong>, or
           <strong>private</strong> with invites. It all runs on your account and your friends list.
         </p>
@@ -207,7 +209,7 @@
             <div id="createForm">
               <div class="field">
                 <label>What's it for?</label>
-                <div class="optGrid three" id="typePicker">
+                <div class="optGrid four" id="typePicker">
                   <button class="opt active" data-type="watch" type="button">
                     <span class="oIco">📺</span><span class="oName">Watch Party</span>
                     <span class="oDesc">YouTube &amp; videos in perfect sync, with chat &amp; a queue.</span>
@@ -219,6 +221,10 @@
                   <button class="opt" data-type="date" type="button">
                     <span class="oIco">🌙</span><span class="oName">Date Night</span>
                     <span class="oDesc">A cozy scene, synced music, and love notes.</span>
+                  </button>
+                  <button class="opt" data-type="learn" type="button">
+                    <span class="oIco">📚</span><span class="oName">Language Class</span>
+                    <span class="oDesc">English and Brazilian Portuguese lessons, quizzes, and homework.</span>
                   </button>
                 </div>
               </div>
@@ -271,6 +277,7 @@
               <span class="chip" data-filter="watch">📺 Watch</span>
               <span class="chip" data-filter="games">🎲 Games</span>
               <span class="chip" data-filter="date">🌙 Date</span>
+              <span class="chip" data-filter="learn">📚 Learn</span>
             </div>
 
             <div class="roomList" id="roomList">
@@ -350,7 +357,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/shared.js?v=33"></script>
+  <script src="/shared.js?v=34"></script>
 
   <script type="module">
     const $ = (id) => document.getElementById(id);
@@ -383,7 +390,11 @@
         });
       });
     }
-    wirePicker("typePicker", "type", v => { selType = v; });
+    wirePicker("typePicker", "type", v => {
+      selType = v;
+      const placeholders = { watch:"movie night 🌙", games:"game night 🎲", date:"our date night 💞", learn:"our language class 📚" };
+      $("roomName").placeholder = placeholders[v] || "our room";
+    });
     wirePicker("visPicker", "vis", v => {
       selVis = v;
       $("inviteField").hidden = (v !== "private");

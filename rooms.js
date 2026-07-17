@@ -3,14 +3,14 @@
 
    A room is a single shared space. Its TYPE decides which experience page
    it opens (watch party / games / date), and its VISIBILITY decides who can
-   see and enter it. All three types share one registry so the hub can list,
+   see and enter it. All room types share one registry so the hub can list,
    create, invite, and route them uniformly — built around your account and
    your friends list.
 
    Data model
    ----------
    rooms/{id} = {
-     id, type:'watch'|'games'|'date', vis:'public'|'friends'|'private',
+     id, type:'watch'|'games'|'date'|'learn', vis:'public'|'friends'|'private',
      name,                       // friendly label, shown in lobby & room bar
      owner, ownerName,           // creator's uid + display name
      ownerUsername,              // @handle, for "by @x" + friend lookups
@@ -34,6 +34,7 @@
     watch: { label: "Watch Party", emoji: "📺", page: "watch-together.html", verb: "Watch in sync" },
     games: { label: "Games Room",  emoji: "🎲", page: "together-room.html",  verb: "Play together" },
     date:  { label: "Date Night",  emoji: "🌙", page: "date-night.html",     verb: "A cozy space for two" },
+    learn: { label: "Language Class", emoji: "📚", page: "language-class.html", verb: "Learn each other’s language" },
   };
   const VIS = {
     public:  { label: "Public",       emoji: "🌐", desc: "Listed for everyone. Anyone can drop in." },
@@ -295,7 +296,7 @@
   // Live member/presence count for a room, read from the per-type namespace so
   // the lobby can show "2 here" without the room page being open. Each type
   // stores presence under {ns}/{id}/presence.
-  const NS = { watch: "watch", games: "together", date: "datenight" };
+  const NS = { watch: "watch", games: "together", date: "datenight", learn: "together" };
   MFRooms.watchCount = function (room, cb) {
     if (!ready()) { cb(0); return () => {}; }
     const m = dbmod(), d = db();
@@ -320,9 +321,9 @@
   };
 
   // Count rooms the given user owns (one-shot read; for profile stats). Returns
-  // { total, watch, games, date }.
+  // { total, watch, games, date, learn }.
   MFRooms.countOwned = async function (uid) {
-    const empty = { total: 0, watch: 0, games: 0, date: 0 };
+    const empty = { total: 0, watch: 0, games: 0, date: 0, learn: 0 };
     if (!ready() || !uid) return empty;
     const m = dbmod(), d = db();
     try {

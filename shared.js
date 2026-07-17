@@ -673,7 +673,7 @@
 
   // Bump this whenever auth.js / chat.js / profile-view.js change, so browsers
   // and the GitHub Pages CDN fetch the new version instead of a cached copy.
-  var MF_ASSET_VER = '33';
+  var MF_ASSET_VER = '34';
 
   function loadScript(src, attrs) {
     if (document.querySelector(`script[data-mf-src="${src}"]`)) return;
@@ -687,7 +687,7 @@
   function loadAuthAndChat() {
     // auth.js defines window.MFAuth (universal identity).
     if (!window.MFAuth) loadScript('/auth.js', { 'data-mf-auth': '1' });
-    // rooms.js defines window.MFRooms (unified watch/games/date room registry).
+    // rooms.js defines window.MFRooms (unified activity room registry).
     loadScript('/rooms.js', { 'data-mf-rooms': '1' });
     // profile-view.js defines window.MFProfile (public profile overlay).
     loadScript('/profile-view.js', { 'data-mf-profile': '1' });
