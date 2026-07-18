@@ -139,8 +139,9 @@ function setupActions(){
  $("copyRoomBtn").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(location.href);toast("Course link copied 🔗");}catch(_){toast(location.href);}});
  $("nameInput").addEventListener("input",e=>{if(e.target.readOnly)return;displayName=e.target.value.slice(0,24)||"someone";localStorage.setItem("lc_name",displayName);writePresence();updateMy({name:displayName});});
  $("goalSelect").addEventListener("change",e=>updateMy({goal:e.target.value}));$("audioToggle").addEventListener("change",e=>updateMy({audioEnabled:e.target.checked}));
- $("voicePtSelect").addEventListener("change",e=>updateMy({voicePortuguese:e.target.value}));$("voiceEnSelect").addEventListener("change",e=>updateMy({voiceEnglish:e.target.value}));
- $("speechRate").addEventListener("input",e=>paintSpeechRate(Number(e.target.value)));$("speechRate").addEventListener("change",e=>updateMy({speechRate:Number(e.target.value)}));
+ $("voicePtSelect").addEventListener("change",e=>{updateMy({voicePortuguese:e.target.value});requestAnimationFrame(applyVoiceSettingsUI);});$("voiceEnSelect").addEventListener("change",e=>{updateMy({voiceEnglish:e.target.value});requestAnimationFrame(applyVoiceSettingsUI);});
+ $("speechRate").addEventListener("input",e=>{paintSpeechRate(Number(e.target.value));paintVoiceSummary();});$("speechRate").addEventListener("change",e=>updateMy({speechRate:Number(e.target.value)}));
+ const voicePanel=$("voiceSettings");if(voicePanel){const saved=localStorage.getItem("lc_voice_settings_open");voicePanel.open=saved===null?true:saved==="1";voicePanel.addEventListener("toggle",()=>localStorage.setItem("lc_voice_settings_open",voicePanel.open?"1":"0"));}
  $("testPtVoice").addEventListener("click",()=>speak("Olá! Como você está hoje?", "pt-BR", true));$("testEnVoice").addEventListener("click",()=>speak("Hello! How are you today?", "en-US", true));
  $("closeSession").addEventListener("click",closeSession);$("placementBtn").addEventListener("click",startPlacement);$("smartPracticeBtn").addEventListener("click",()=>startReview("smart"));$("recallPracticeBtn").addEventListener("click",()=>startReview("recall"));$("practiceMistakesBtn").addEventListener("click",()=>startReview("mistakes"));
  $("startQuizBtn").addEventListener("click",()=>startQuiz($("quizScopeSelect").value,$("quizTypeSelect").value,12));$("courseQuizBtn").addEventListener("click",()=>startQuiz("course:all","mixed",20));
@@ -275,10 +276,12 @@ function fillVoiceSelect(id,lang,value){
  select.value=[...select.options].some(o=>o.value===value)?value:"auto";
 }
 function paintSpeechRate(value){const label=$("speechRateLabel");if(!label)return;label.textContent=value<=.72?"Very slow":value<=.82?"Slow":value<=.92?"Natural":value<=1.02?"Quick":"Fast";}
+function shortVoiceName(voice){if(!voice)return"browser default";return voice.name.replace(/Microsoft |Google |Apple /gi,"").replace(/ Online \(Natural\)/gi," Natural").trim();}
+function paintVoiceSummary(){const status=$("voiceSummaryStatus");if(!status)return;const pt=bestVoice("pt-BR"),en=bestVoice("en-US"),rate=speechRate();const rateName=rate<=.72?"very slow":rate<=.82?"slow":rate<=.92?"natural":rate<=1.02?"quick":"fast";status.textContent=`PT: ${shortVoiceName(pt)} · EN: ${shortVoiceName(en)} · ${rateName}`;}
 function applyVoiceSettingsUI(){
  const rate=speechRate();if($("speechRate"))$("speechRate").value=String(rate);paintSpeechRate(rate);
  fillVoiceSelect("voicePtSelect","pt-BR",mine().voicePortuguese||"auto");fillVoiceSelect("voiceEnSelect","en-US",mine().voiceEnglish||"auto");
- const pt=bestVoice("pt-BR"),en=bestVoice("en-US");if($("voiceQualityNote"))$("voiceQualityNote").textContent=availableVoices.length?`Automatic currently uses ${pt?pt.name:"your browser default"} for Portuguese and ${en?en.name:"your browser default"} for English.`:"Loading the voices available on this device…";
+ const pt=bestVoice("pt-BR"),en=bestVoice("en-US");if($("voiceQualityNote"))$("voiceQualityNote").textContent=availableVoices.length?`Automatic currently uses ${pt?pt.name:"your browser default"} for Portuguese and ${en?en.name:"your browser default"} for English.`:"Loading the voices available on this device…";paintVoiceSummary();
 }
 function setupVoiceSystem(){
  if(!("speechSynthesis" in window)){if($("voiceSettings"))$("voiceSettings").hidden=true;return;}
