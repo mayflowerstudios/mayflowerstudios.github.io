@@ -143,6 +143,11 @@ function setupActions(){
  $("speechRate").addEventListener("input",e=>{paintSpeechRate(Number(e.target.value));paintVoiceSummary();});$("speechRate").addEventListener("change",e=>updateMy({speechRate:Number(e.target.value)}));
  const voicePanel=$("voiceSettings");if(voicePanel){const saved=localStorage.getItem("lc_voice_settings_open");voicePanel.open=saved===null?true:saved==="1";voicePanel.addEventListener("toggle",()=>localStorage.setItem("lc_voice_settings_open",voicePanel.open?"1":"0"));}
  $("testPtVoice").addEventListener("click",()=>speak("Olá! Como você está hoje?", "pt-BR", true));$("testEnVoice").addEventListener("click",()=>speak("Hello! How are you today?", "en-US", true));
+ const showVoiceInstaller=()=>{renderVoiceGuide();$("voiceInstallPanel").hidden=false;$("voiceInstallPanel").scrollIntoView({behavior:"smooth",block:"nearest"});};
+ $("getMoreVoices").addEventListener("click",showVoiceInstaller);$("closeVoiceInstall").addEventListener("click",()=>$("voiceInstallPanel").hidden=true);
+ $("refreshVoices").addEventListener("click",()=>refreshVoiceList(true));$("refreshVoicesAfterInstall").addEventListener("click",()=>refreshVoiceList(true));
+ $("openVoiceSettings").addEventListener("click",openDeviceVoiceSettings);$("openVoiceHelp").addEventListener("click",()=>{const g=currentVoiceGuide||voiceGuide();if(g.help)window.open(g.help,"_blank","noopener");});
+ $("copyVoiceSteps").addEventListener("click",()=>navigator.clipboard?.writeText(voiceGuideText()).then(()=>toast("Voice installation steps copied")).catch(()=>toast("Could not copy the steps")));
  $("closeSession").addEventListener("click",closeSession);$("placementBtn").addEventListener("click",startPlacement);$("smartPracticeBtn").addEventListener("click",()=>startReview("smart"));$("recallPracticeBtn").addEventListener("click",()=>startReview("recall"));$("practiceMistakesBtn").addEventListener("click",()=>startReview("mistakes"));
  $("startQuizBtn").addEventListener("click",()=>startQuiz($("quizScopeSelect").value,$("quizTypeSelect").value,12));$("courseQuizBtn").addEventListener("click",()=>startQuiz("course:all","mixed",20));
  $("generateWorksheetBtn").addEventListener("click",generateWorksheet);$("printWorksheetBtn").addEventListener("click",()=>window.print());$("assignLessonHomework").addEventListener("click",assignLessonHomework);$("createHomework").addEventListener("click",createHomework);
@@ -278,14 +283,69 @@ function fillVoiceSelect(id,lang,value){
 function paintSpeechRate(value){const label=$("speechRateLabel");if(!label)return;label.textContent=value<=.72?"Very slow":value<=.82?"Slow":value<=.92?"Natural":value<=1.02?"Quick":"Fast";}
 function shortVoiceName(voice){if(!voice)return"browser default";return voice.name.replace(/Microsoft |Google |Apple /gi,"").replace(/ Online \(Natural\)/gi," Natural").trim();}
 function paintVoiceSummary(){const status=$("voiceSummaryStatus");if(!status)return;const pt=bestVoice("pt-BR"),en=bestVoice("en-US"),rate=speechRate();const rateName=rate<=.72?"very slow":rate<=.82?"slow":rate<=.92?"natural":rate<=1.02?"quick":"fast";status.textContent=`PT: ${shortVoiceName(pt)} · EN: ${shortVoiceName(en)} · ${rateName}`;}
+function voicePlatform(){
+ const raw=`${navigator.userAgentData?.platform||""} ${navigator.platform||""} ${navigator.userAgent||""}`.toLowerCase();
+ if(raw.includes("windows")||raw.includes("win32")||raw.includes("win64"))return"windows";
+ if(/iphone|ipad|ipod/.test(raw))return"ios";
+ if(raw.includes("android"))return"android";
+ if(raw.includes("mac"))return"mac";
+ if(raw.includes("linux")||raw.includes("cros"))return"linux";
+ return"other";
+}
+function voiceCounts(){
+ const pt=availableVoices.filter(v=>(v.lang||"").toLowerCase().startsWith("pt")).length;
+ const ptBr=availableVoices.filter(v=>(v.lang||"").toLowerCase().replace("_","-").startsWith("pt-br")).length;
+ const en=availableVoices.filter(v=>(v.lang||"").toLowerCase().startsWith("en")).length;
+ return{pt,ptBr,en,total:availableVoices.length};
+}
+function paintVoiceAvailability(){
+ const el=$("voiceAvailability");if(!el)return;const c=voiceCounts();
+ if(!c.total){el.textContent="No voice list has loaded yet. Try Refresh voice list.";return;}
+ el.textContent=`Found ${c.total} voices on this device · ${c.ptBr||c.pt} Portuguese · ${c.en} English`;
+}
+function voiceGuide(){
+ const platform=voicePlatform();
+ const guides={
+  windows:{title:"Add Windows voices",intro:"Windows voice and language packs can add new voices that the browser may expose to this course.",steps:["Open Windows Speech settings.","Under Manage voices, choose Add voices.","Install Brazilian Portuguese and any English variants you want.","Wait for the download to finish, then completely close and reopen the browser if Refresh does not find them."],settings:"ms-settings:speech",help:"https://support.microsoft.com/en-us/accessibility/windows/narrator/appendix-a-supported-languages-and-voices",button:"Open Windows voice settings"},
+  mac:{title:"Download more Mac voices",intro:"macOS lets you download additional system voices and enhanced-quality versions.",steps:["Open System Settings.","Go to Accessibility, then Spoken Content or Read & Speak.","Open the System Voice menu and choose Manage Voices.","Download Brazilian Portuguese and English voices, then return here and refresh."],help:"https://support.apple.com/en-sg/guide/mac-help/mchlp2290/mac",button:"View Apple voice instructions"},
+  ios:{title:"Download more iPhone or iPad voices",intro:"iOS and iPadOS include extra voices and enhanced-quality downloads.",steps:["Open Settings.","Go to Accessibility, then Spoken Content.","Choose Voices, select Portuguese (Brazil) or English, and download another voice or enhanced version.","Return to the browser and refresh the list. You may need to reopen the browser."],help:"https://support.apple.com/en-gb/111798",button:"View Apple voice instructions"},
+  android:{title:"Add Android text-to-speech voices",intro:"Android voices come from the installed text-to-speech engine and its downloaded language data.",steps:["Open Android Settings.","Search for Text-to-speech output.","Open the preferred engine settings and install voice data for Portuguese (Brazil) or English.","Return here and refresh. Available voices vary by phone and browser."],button:"Copy Android steps"},
+  linux:{title:"Add Linux speech voices",intro:"Browser voices depend on the speech engines and voice packages installed by your Linux distribution.",steps:["Install a text-to-speech engine and Portuguese/English voice packages using your distribution's software manager.","Restart the browser completely.","Return here and refresh the list."],button:"Copy Linux steps"},
+  other:{title:"Add voices to this device",intro:"The browser can only use voices supplied by your device or browser.",steps:["Open your device Accessibility, Speech, or Text-to-speech settings.","Install Brazilian Portuguese and English voices or enhanced-quality versions.","Restart the browser if needed, then refresh the list here."],button:"Copy installation steps"}
+ };
+ return{platform,...guides[platform]};
+}
+let currentVoiceGuide=null;
+function renderVoiceGuide(){
+ currentVoiceGuide=voiceGuide();const g=currentVoiceGuide;
+ if($("voiceInstallTitle"))$("voiceInstallTitle").textContent=g.title;
+ if($("voiceInstallIntro"))$("voiceInstallIntro").textContent=g.intro;
+ if($("voiceInstallSteps"))$("voiceInstallSteps").innerHTML=g.steps.map(step=>`<li>${esc(step)}</li>`).join("");
+ const settings=$("openVoiceSettings");if(settings){settings.textContent=g.button;settings.hidden=!(g.settings||g.help||["android","linux","other"].includes(g.platform));}
+ const help=$("openVoiceHelp");if(help)help.hidden=!g.help;
+}
+function voiceGuideText(){const g=currentVoiceGuide||voiceGuide();return`${g.title}
+
+${g.steps.map((x,i)=>`${i+1}. ${x}`).join("
+")}`;}
+function refreshVoiceList(showToast=false){
+ if(!("speechSynthesis" in window))return;availableVoices=speechSynthesis.getVoices()||[];applyVoiceSettingsUI();paintVoiceAvailability();
+ if(showToast){const c=voiceCounts();toast(c.total?`Voice list refreshed · ${c.total} found`:"No voices appeared yet — try reopening the browser");}
+}
+function openDeviceVoiceSettings(){
+ const g=currentVoiceGuide||voiceGuide();
+ if(g.settings){try{location.href=g.settings;return;}catch(_){}}
+ if(g.help){window.open(g.help,"_blank","noopener");return;}
+ navigator.clipboard?.writeText(voiceGuideText()).then(()=>toast("Installation steps copied")).catch(()=>toast("Follow the steps shown above"));
+}
 function applyVoiceSettingsUI(){
  const rate=speechRate();if($("speechRate"))$("speechRate").value=String(rate);paintSpeechRate(rate);
  fillVoiceSelect("voicePtSelect","pt-BR",mine().voicePortuguese||"auto");fillVoiceSelect("voiceEnSelect","en-US",mine().voiceEnglish||"auto");
- const pt=bestVoice("pt-BR"),en=bestVoice("en-US");if($("voiceQualityNote"))$("voiceQualityNote").textContent=availableVoices.length?`Automatic currently uses ${pt?pt.name:"your browser default"} for Portuguese and ${en?en.name:"your browser default"} for English.`:"Loading the voices available on this device…";paintVoiceSummary();
+ const pt=bestVoice("pt-BR"),en=bestVoice("en-US");if($("voiceQualityNote"))$("voiceQualityNote").textContent=availableVoices.length?`Automatic currently uses ${pt?pt.name:"your browser default"} for Portuguese and ${en?en.name:"your browser default"} for English.`:"Loading the voices available on this device…";paintVoiceSummary();paintVoiceAvailability();
 }
 function setupVoiceSystem(){
  if(!("speechSynthesis" in window)){if($("voiceSettings"))$("voiceSettings").hidden=true;return;}
- const refresh=()=>{availableVoices=speechSynthesis.getVoices()||[];applyVoiceSettingsUI();};refresh();
+ renderVoiceGuide();const refresh=()=>refreshVoiceList(false);refresh();
  if(typeof speechSynthesis.addEventListener==="function")speechSynthesis.addEventListener("voiceschanged",refresh);else speechSynthesis.onvoiceschanged=refresh;
  setTimeout(refresh,250);setTimeout(refresh,1000);
 }
