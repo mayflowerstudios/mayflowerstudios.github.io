@@ -2,702 +2,253 @@ import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebase
 import { getDatabase, ref, onValue, set, get, update, remove, push, onDisconnect, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDVJ0Tiq0gimaB-epcD9HQlVBrOWHq-IXI",
-  authDomain: "watchtogether-95d7d.firebaseapp.com",
-  databaseURL: "https://watchtogether-95d7d-default-rtdb.firebaseio.com",
-  projectId: "watchtogether-95d7d",
-  storageBucket: "watchtogether-95d7d.firebasestorage.app",
-};
-
-const $ = id => document.getElementById(id);
-const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const cleanRoom = s => (s || "").replace(/[.#$\[\]\/]/g, "").trim().slice(0, 60);
-const now = () => Date.now();
+const firebaseConfig={apiKey:"AIzaSyDVJ0Tiq0gimaB-epcD9HQlVBrOWHq-IXI",authDomain:"watchtogether-95d7d.firebaseapp.com",databaseURL:"https://watchtogether-95d7d-default-rtdb.firebaseio.com",projectId:"watchtogether-95d7d",storageBucket:"watchtogether-95d7d.firebasestorage.app"};
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const cleanRoom=s=>(s||"").replace(/[.#$\[\]\/]/g,"").trim().slice(0,60);
+const now=()=>Date.now();
+const day=86400000;
+const normalize=v=>String(v||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’']/g,"").replace(/[^a-z0-9\s]/g," ").replace(/\s+/g," ").trim();
+const slug=v=>normalize(v).replace(/\s+/g,"_").slice(0,90);
+const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+const shuffle=a=>{const x=[...a];for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]];}return x;};
+const sample=(a,n)=>shuffle(a).slice(0,Math.min(n,a.length));
+const splitAnswers=v=>String(v||"").split(/\s*\/\s*|\s*;\s*|\s*\|\s*/).filter(Boolean);
+const tokenize=v=>String(v||"").match(/[\p{L}\p{N}]+|[^\p{L}\p{N}\s]+/gu)||[];
 let toastTimer;
-function toast(message){
-  const el = $("toast");
-  el.textContent = message;
-  el.classList.add("show");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove("show"), 2500);
-}
+function toast(message){const el=$("toast");el.textContent=message;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2500);}
 
-const LESSONS = [
-  {
-    id:"greetings", emoji:"👋", title:"Hello, My Love", goal:"Greet each other, introduce yourselves, and handle the first little moments of a conversation.",
-    tip:"Portuguese greetings change with the time of day: bom dia, boa tarde, and boa noite. In English, “good night” is usually a goodbye before sleep—not a greeting.",
-    vocab:[["hello","olá"],["hi","oi"],["good morning","bom dia"],["good afternoon","boa tarde"],["good evening / good night","boa noite"],["please","por favor"],["thank you","obrigada"],["you’re welcome","de nada"]],
-    phrases:[["How are you?","Como você está?"],["I’m doing well.","Eu estou bem."],["What is your name?","Qual é o seu nome?"],["My name is…","Meu nome é…"],["It’s nice to meet you.","Prazer em conhecer você."],["Talk to you later.","Falo com você mais tarde."]],
-    challenge:"Take turns starting a brand-new conversation. Greet each other, ask how the other person is, and say goodbye entirely in the language you are learning.",
-    homework:"Write a six-line first conversation between you two. Include a greeting, names, how you feel, thank you, and a goodbye."
-  },
-  {
-    id:"affection", emoji:"💗", title:"Affection & Pet Names", goal:"Say loving, reassuring things naturally instead of relying on literal translations.",
-    tip:"Brazilian Portuguese often uses diminutives to sound affectionate: amor → amorzinho. English uses lots of pet names, but which ones feel natural depends heavily on the couple.",
-    vocab:[["love","amor"],["my love","meu amor"],["baby","bebê / amor"],["beautiful","linda"],["cute","fofa"],["kiss","beijo"],["hug","abraço"],["girlfriend","namorada"]],
-    phrases:[["I love you.","Eu te amo."],["You are beautiful.","Você é linda."],["Come give me a kiss.","Vem me dar um beijo."],["I wish I could hug you.","Queria poder te abraçar."],["You make me happy.","Você me faz feliz."],["You are my favorite person.","Você é a minha pessoa favorita."]],
-    challenge:"Give each other three compliments: one about appearance, one about personality, and one about how the other person makes you feel.",
-    homework:"Write a short love note of at least five sentences in your learning language. Use one pet name and two phrases from this lesson."
-  },
-  {
-    id:"checkins", emoji:"☀️", title:"Everyday Check-ins", goal:"Ask about sleep, meals, work, games, and what the other person is doing right now.",
-    tip:"Portuguese frequently drops the subject pronoun when it is obvious. English usually needs it: “Estou cansada” becomes “I am tired,” not simply “Am tired.”",
-    vocab:[["today","hoje"],["now","agora"],["later","mais tarde"],["busy","ocupada"],["tired","cansada"],["hungry","com fome"],["sleepy","com sono"],["working","trabalhando"]],
-    phrases:[["Did you sleep well?","Você dormiu bem?"],["Have you eaten yet?","Você já comeu?"],["What are you doing?","O que você está fazendo?"],["I’m a little busy.","Estou um pouco ocupada."],["I’ll be free later.","Vou estar livre mais tarde."],["Tell me about your day.","Me conta sobre o seu dia."]],
-    challenge:"Do a five-minute check-in using only the target language. Ask about sleep, food, mood, and today’s plans.",
-    homework:"Keep a tiny diary for one day: morning, afternoon, and night. Write one or two sentences for each part of the day."
-  },
-  {
-    id:"feelings", emoji:"🌧️", title:"Feelings & Comfort", goal:"Explain how you feel and comfort each other when a conversation matters.",
-    tip:"“Estou com saudade” has no perfect English twin. “I miss you” is correct, but saudade can carry a deeper feeling of loving absence and longing.",
-    vocab:[["happy","feliz"],["sad","triste"],["worried","preocupada"],["calm","calma"],["angry","brava"],["afraid","com medo"],["safe","segura"],["proud","orgulhosa"]],
-    phrases:[["I miss you.","Estou com saudade de você."],["I’m here with you.","Estou aqui com você."],["You can talk to me.","Você pode falar comigo."],["Everything will be okay.","Vai ficar tudo bem."],["I understand how you feel.","Eu entendo como você se sente."],["I’m proud of you.","Tenho orgulho de você."]],
-    challenge:"Each person names one real feeling from today. The other person responds with comfort, one question, and reassurance in the language they are learning.",
-    homework:"Write a comforting reply to this situation: “I had a difficult day and I feel alone.” Use at least four lesson words or phrases."
-  },
-  {
-    id:"food", emoji:"🍓", title:"Food & Little Treats", goal:"Talk about meals, favorites, cooking, ordering, and what you want to share someday.",
-    tip:"In Portuguese, hunger and thirst are things you “have”: estou com fome / estou com sede. English uses “I am hungry / thirsty.”",
-    vocab:[["breakfast","café da manhã"],["lunch","almoço"],["dinner","jantar"],["water","água"],["coffee","café"],["sweet","doce"],["delicious","delicioso"],["favorite","favorito"]],
-    phrases:[["What do you want to eat?","O que você quer comer?"],["This is delicious.","Isso está delicioso."],["I’m hungry.","Estou com fome."],["Do you want some coffee?","Você quer café?"],["What is your favorite food?","Qual é a sua comida favorita?"],["I want to cook for you.","Quero cozinhar para você."]],
-    challenge:"Plan an imaginary meal together. Choose a drink, main dish, dessert, and who is cooking what—using the target languages.",
-    homework:"Create a bilingual menu for your perfect date-night meal. Include at least six items and one sentence explaining each person’s favorite."
-  },
-  {
-    id:"routines", emoji:"🏡", title:"Home & Routines", goal:"Describe ordinary life: waking up, chores, showers, relaxing, and getting ready for bed.",
-    tip:"English phrasal verbs can be tricky: wake up, get up, clean up, lie down. Learn each as one chunk rather than translating every word separately.",
-    vocab:[["home","casa"],["bed","cama"],["shower","banho"],["clothes","roupas"],["clean","limpar"],["rest","descansar"],["wake up","acordar"],["go to sleep","dormir"]],
-    phrases:[["I just woke up.","Acabei de acordar."],["I’m taking a shower.","Estou tomando banho."],["I need to clean the house.","Preciso limpar a casa."],["Come lie down with me.","Vem deitar comigo."],["I’m getting ready for bed.","Estou me preparando para dormir."],["Sleep well, my love.","Dorme bem, meu amor."]],
-    challenge:"Walk each other through your real evening routine from dinner until sleep. Ask at least two follow-up questions.",
-    homework:"Write your normal weekday routine in eight short steps. Try to use time words such as first, then, after that, and finally."
-  },
-  {
-    id:"timeplans", emoji:"🗓️", title:"Time, Dates & Plans", goal:"Make plans clearly across time zones without the classic “wait—today for you or me?” problem.",
-    tip:"When planning long-distance, always repeat the time zone or both local times. Language confidence is lovely; calendar confidence prevents chaos.",
-    vocab:[["yesterday","ontem"],["tomorrow","amanhã"],["morning","manhã"],["afternoon","tarde"],["night","noite"],["week","semana"],["weekend","fim de semana"],["time","horário / tempo"]],
-    phrases:[["What time works for you?","Que horário funciona para você?"],["Are you free tomorrow?","Você está livre amanhã?"],["Let’s do it this weekend.","Vamos fazer isso neste fim de semana."],["I’ll call you at eight.","Vou te ligar às oito."],["Is that your time or mine?","Esse horário é o seu ou o meu?"],["I can’t wait.","Mal posso esperar."]],
-    challenge:"Plan your next three shared activities. Say the day, both local times, what you will do, and how long it should take.",
-    homework:"Write a bilingual schedule for one imaginary weekend together, from Saturday morning to Sunday night."
-  },
-  {
-    id:"games", emoji:"🎮", title:"Games & Hobbies", goal:"Play together with less confusion: directions, reactions, help, and friendly teasing.",
-    tip:"Game language is full of shorthand and borrowed English words in Brazil. Ask what people actually say in the game instead of forcing a textbook translation.",
-    vocab:[["game","jogo"],["team","equipe / time"],["win","ganhar"],["lose","perder"],["help","ajuda"],["left","esquerda"],["right","direita"],["behind you","atrás de você"]],
-    phrases:[["Wait for me!","Espera por mim!"],["I need help.","Preciso de ajuda."],["They’re behind you.","Eles estão atrás de você."],["That was so close!","Foi por pouco!"],["Good game.","Bom jogo."],["Let’s play one more.","Vamos jogar mais uma."]],
-    challenge:"Play one round of something together while each person uses only the target language for directions and reactions.",
-    homework:"Make a list of ten words or phrases you use in your favorite shared game, with natural translations—not just dictionary translations."
-  },
-  {
-    id:"travel", emoji:"✈️", title:"Distance & Travel", goal:"Talk about visits, airports, directions, packing, and finally being in the same place.",
-    tip:"Travel vocabulary rewards full phrases. Memorize “Where is the bathroom?” and “I have a reservation” as complete tools you can pull out under stress.",
-    vocab:[["airport","aeroporto"],["flight","voo"],["ticket","passagem"],["passport","passaporte"],["suitcase","mala"],["hotel","hotel"],["reservation","reserva"],["arrive","chegar"]],
-    phrases:[["My flight arrives at…","Meu voo chega às…"],["I have a reservation.","Eu tenho uma reserva."],["Where is the bathroom?","Onde fica o banheiro?"],["I can’t wait to see you.","Mal posso esperar para te ver."],["Text me when you arrive.","Me manda mensagem quando você chegar."],["We’re finally together.","Finalmente estamos juntas."]],
-    challenge:"Role-play an airport arrival: one person has landed, the other explains where to meet and asks about luggage, food, and the flight.",
-    homework:"Write a step-by-step arrival plan for your first or next visit, including the airport, messages, meeting place, and first thing you want to do."
-  },
-  {
-    id:"realconvo", emoji:"🌙", title:"A Real Conversation", goal:"Combine everything into a natural conversation about love, daily life, plans, and what you need from each other.",
-    tip:"Fluency is not speaking without mistakes. It is staying connected even while searching for a word, rephrasing, laughing, and trying again.",
-    vocab:[["understand","entender"],["explain","explicar"],["repeat","repetir"],["slowly","devagar"],["meaning","significado"],["mistake","erro"],["learn","aprender"],["together","juntas"]],
-    phrases:[["Can you say that again?","Você pode repetir?"],["Please speak more slowly.","Por favor, fale mais devagar."],["What does that mean?","O que isso significa?"],["I don’t know the word yet.","Eu ainda não sei essa palavra."],["Let me try again.","Deixa eu tentar de novo."],["We’re learning together.","Estamos aprendendo juntas."]],
-    challenge:"Have a ten-minute conversation with no translation app. You may ask for repetition, explanations, or simpler words—but stay in your learning language.",
-    homework:"Write a letter about why learning each other’s language matters to you. Then read it aloud to each other."
-  }
+const UNIT_SEEDS=[
+ {id:"foundations",emoji:"👋",title:"Foundations",summary:"Greetings, introductions, pronouns, questions, and the difference between ser and estar.",
+  grammar:{title:"Ser vs. estar",explain:"Both can mean “to be.” Use ser for identity or lasting description and estar for location, feelings, or temporary states. In English, both usually become a form of “to be.”",examples:[["Eu sou a Sammie.","I am Sammie."],["Eu estou cansada.","I am tired."],["Você é linda.","You are beautiful."],["Você está bem?","Are you okay?"]]},
+  vocab:[["hello","olá"],["hi","oi"],["good morning","bom dia"],["good night","boa noite"],["please","por favor"],["thank you","obrigada"],["I","eu"],["you","você"]],
+  phrases:[["How are you?","Como você está?"],["I am doing well.","Eu estou bem."],["What is your name?","Qual é o seu nome?"],["My name is…","Meu nome é…"],["It is nice to meet you.","Prazer em conhecer você."],["I do not understand yet.","Eu ainda não entendo."]],
+  reading:{pt:"Camylla: Oi! Como você está?\nSammie: Estou bem, obrigada. E você?\nCamylla: Estou feliz. Prazer em conhecer você!",en:"Camylla: Hi! How are you?\nSammie: I am well, thank you. And you?\nCamylla: I am happy. Nice to meet you!",questions:[["How does Sammie feel?","She is well.","Ela está bem."],["Who says she is happy?","Camylla.","Camylla."],["What does “Prazer em conhecer você” mean?","Nice to meet you.","Prazer em conhecer você."]]},
+  mission:"Introduce yourself in five lines. Greet the reader, say your name, say how you feel, ask a question, and say goodbye.",homework:"Write a short first conversation between you and your partner. Use a greeting, both names, one feeling, one question, and a goodbye."},
+ {id:"daily",emoji:"☀️",title:"Everyday Life",summary:"Daily check-ins, routines, present tense, negatives, and common question patterns.",
+  grammar:{title:"Present tense and negatives",explain:"Portuguese often drops the subject when the verb makes it clear. Put não before the verb to make a sentence negative. English normally keeps the subject and uses do not, is not, or are not.",examples:[["Estou trabalhando.","I am working."],["Não estou ocupada.","I am not busy."],["Você já comeu?","Have you eaten yet?"],["Eu acordo cedo.","I wake up early."]]},
+  vocab:[["today","hoje"],["now","agora"],["later","mais tarde"],["busy","ocupada"],["tired","cansada"],["hungry","com fome"],["sleepy","com sono"],["working","trabalhando"]],
+  phrases:[["Did you sleep well?","Você dormiu bem?"],["Have you eaten yet?","Você já comeu?"],["What are you doing?","O que você está fazendo?"],["I am a little busy.","Estou um pouco ocupada."],["I will be free later.","Vou estar livre mais tarde."],["Tell me about your day.","Me conta sobre o seu dia."]],
+  reading:{pt:"De manhã, eu acordo cedo e tomo café. Depois, trabalho por algumas horas. À noite, eu descanso e falo com a minha namorada.",en:"In the morning, I wake up early and drink coffee. Then I work for a few hours. At night, I rest and talk with my girlfriend.",questions:[["When does the speaker drink coffee?","In the morning.","De manhã."],["What happens after coffee?","The speaker works.","A pessoa trabalha."],["Who does the speaker talk with at night?","Her girlfriend.","A namorada dela."]]},
+  mission:"Describe your real day from waking up until bedtime. Include at least two time words and one negative sentence.",homework:"Keep a three-part diary: morning, afternoon, and night. Write two sentences for each part."},
+ {id:"feelings",emoji:"💗",title:"Feelings & Connection",summary:"Affection, emotions, adjective agreement, comfort, and natural relationship language.",
+  grammar:{title:"Adjective agreement",explain:"Many Portuguese adjectives change to match gender: cansado/cansada, feliz stays the same. English adjectives do not change. Learn the form that matches the person you are describing.",examples:[["Eu estou cansada.","I am tired."],["Você é linda.","You are beautiful."],["Nós estamos felizes.","We are happy."],["Ela está preocupada.","She is worried."]]},
+  vocab:[["happy","feliz"],["sad","triste"],["worried","preocupada"],["calm","calma"],["safe","segura"],["proud","orgulhosa"],["kiss","beijo"],["hug","abraço"]],
+  phrases:[["I love you.","Eu te amo."],["I miss you.","Estou com saudade de você."],["I am here with you.","Estou aqui com você."],["You can talk to me.","Você pode falar comigo."],["Everything will be okay.","Vai ficar tudo bem."],["I am proud of you.","Tenho orgulho de você."]],
+  reading:{pt:"Hoje foi um dia difícil para Camylla. Ela está triste e preocupada. Sammie diz: “Estou aqui com você. Você pode falar comigo.” Camylla se sente mais segura.",en:"Today was a difficult day for Camylla. She is sad and worried. Sammie says, “I am here with you. You can talk to me.” Camylla feels safer.",questions:[["How does Camylla feel at first?","Sad and worried.","Triste e preocupada."],["What does Sammie offer?","Support and a chance to talk.","Apoio e uma chance de conversar."],["How does Camylla feel afterward?","Safer.","Mais segura."]]},
+  mission:"Respond to someone who had a difficult day. Name their feeling, offer comfort, ask one gentle question, and reassure them.",homework:"Write a loving note with one compliment, one feeling, one reassurance, and one thing you appreciate."},
+ {id:"homefood",emoji:"🏡",title:"Home & Food",summary:"Meals, chores, possession, articles, gender, and the ordinary language of sharing a home.",
+  grammar:{title:"Articles and possession",explain:"Portuguese nouns have grammatical gender and usually use o/a or um/uma. Possession may use meu/minha, seu/sua, or de. English uses the, a/an, my, and your without grammatical gender.",examples:[["a casa","the house"],["meu café","my coffee"],["minha comida favorita","my favorite food"],["um banho","a shower"]]},
+  vocab:[["breakfast","café da manhã"],["lunch","almoço"],["dinner","jantar"],["water","água"],["coffee","café"],["home","casa"],["bed","cama"],["shower","banho"]],
+  phrases:[["What do you want to eat?","O que você quer comer?"],["This is delicious.","Isso está delicioso."],["I am hungry.","Estou com fome."],["I need to clean the house.","Preciso limpar a casa."],["I am taking a shower.","Estou tomando banho."],["Come lie down with me.","Vem deitar comigo."]],
+  reading:{pt:"Hoje nós vamos cozinhar juntas. Camylla prepara o jantar e Sammie faz a sobremesa. Depois, elas limpam a cozinha e descansam na cama.",en:"Today we are going to cook together. Camylla prepares dinner and Sammie makes dessert. Afterward, they clean the kitchen and rest in bed.",questions:[["Who prepares dinner?","Camylla.","Camylla."],["What does Sammie make?","Dessert.","A sobremesa."],["What do they do after cooking?","They clean and rest.","Elas limpam e descansam."]]},
+  mission:"Plan a date-night meal and evening at home. Include a drink, food, one chore, and how the night ends.",homework:"Create a bilingual menu and write six steps for preparing your ideal evening at home."},
+ {id:"plans",emoji:"🗓️",title:"Time & Plans",summary:"Dates, future plans, time zones, invitations, and useful ways to clarify when something happens.",
+  grammar:{title:"Talking about the future",explain:"Brazilian Portuguese often uses ir + infinitive for the near future: vou ligar, vamos jogar. English commonly uses going to or will. Time expressions usually make the meaning clear.",examples:[["Vou te ligar amanhã.","I will call you tomorrow."],["Vamos jogar à noite.","We are going to play at night."],["Você está livre sábado?","Are you free Saturday?"],["Eu posso às oito.","I can at eight."]]},
+  vocab:[["yesterday","ontem"],["tomorrow","amanhã"],["morning","manhã"],["afternoon","tarde"],["night","noite"],["week","semana"],["weekend","fim de semana"],["time","horário"]],
+  phrases:[["What time works for you?","Que horário funciona para você?"],["Are you free tomorrow?","Você está livre amanhã?"],["Let us do it this weekend.","Vamos fazer isso neste fim de semana."],["I will call you at eight.","Vou te ligar às oito."],["Is that your time or mine?","Esse horário é o seu ou o meu?"],["I cannot wait.","Mal posso esperar."]],
+  reading:{pt:"Sammie e Camylla querem assistir a um filme no sábado. Para Sammie, oito da noite funciona. Para Camylla, será nove da noite. Elas confirmam os dois horários antes de marcar.",en:"Sammie and Camylla want to watch a movie on Saturday. For Sammie, eight at night works. For Camylla, it will be nine at night. They confirm both times before scheduling it.",questions:[["What do they want to do?","Watch a movie.","Assistir a um filme."],["What day do they choose?","Saturday.","Sábado."],["Why do they repeat both times?","They are in different time zones.","Elas estão em fusos horários diferentes."]]},
+  mission:"Plan three shared activities. Give the day, both local times, the activity, and how long it should take.",homework:"Write a bilingual weekend schedule from Saturday morning through Sunday night."},
+ {id:"hobbies",emoji:"🎮",title:"Games & Hobbies",summary:"Directions, reactions, requests, imperatives, and the language people actually use while doing things together.",
+  grammar:{title:"Commands and requests",explain:"Commands can sound direct, so tone matters. Brazilian Portuguese often softens them with por favor, espera, or você pode… English does the same with please, can you, or could you.",examples:[["Espera por mim!","Wait for me!"],["Vira à esquerda.","Turn left."],["Você pode me ajudar?","Can you help me?"],["Vamos jogar mais uma.","Let us play one more."]]},
+  vocab:[["game","jogo"],["team","equipe"],["win","ganhar"],["lose","perder"],["help","ajuda"],["left","esquerda"],["right","direita"],["behind you","atrás de você"]],
+  phrases:[["Wait for me!","Espera por mim!"],["I need help.","Preciso de ajuda."],["They are behind you.","Eles estão atrás de você."],["That was so close!","Foi por pouco!"],["Good game.","Bom jogo."],["Let us play one more.","Vamos jogar mais uma."]],
+  reading:{pt:"Durante o jogo, Sammie diz: “Eles estão atrás de você!” Camylla vira à direita e pede ajuda. As duas vencem a rodada e decidem jogar mais uma.",en:"During the game, Sammie says, “They are behind you!” Camylla turns right and asks for help. The two win the round and decide to play one more.",questions:[["What warning does Sammie give?","They are behind you.","Eles estão atrás de você."],["Which way does Camylla turn?","Right.","Direita."],["What do they do after winning?","Play one more.","Jogam mais uma."]]},
+  mission:"Explain how to complete a simple game objective. Give at least four directions and two reactions.",homework:"Make a natural bilingual glossary of fifteen words you actually use in a shared game or hobby."},
+ {id:"travel",emoji:"✈️",title:"Travel & Visits",summary:"Airports, directions, polite survival phrases, past events, and finally being in the same place.",
+  grammar:{title:"Simple past for completed events",explain:"Use the simple past for finished actions: cheguei, comi, fui. English uses arrived, ate, went. Start by learning high-use complete phrases rather than every conjugation table at once.",examples:[["Eu cheguei cedo.","I arrived early."],["O voo atrasou.","The flight was delayed."],["Nós fomos ao hotel.","We went to the hotel."],["Você trouxe o passaporte?","Did you bring the passport?"]]},
+  vocab:[["airport","aeroporto"],["flight","voo"],["ticket","passagem"],["passport","passaporte"],["suitcase","mala"],["hotel","hotel"],["reservation","reserva"],["arrive","chegar"]],
+  phrases:[["My flight arrives at…","Meu voo chega às…"],["I have a reservation.","Eu tenho uma reserva."],["Where is the bathroom?","Onde fica o banheiro?"],["I cannot wait to see you.","Mal posso esperar para te ver."],["Text me when you arrive.","Me manda mensagem quando você chegar."],["We are finally together.","Finalmente estamos juntas."]],
+  reading:{pt:"O voo chegou às dez. Camylla pegou a mala e mandou uma mensagem. Sammie esperava perto da saída. Quando se encontraram, disseram: “Finalmente estamos juntas.”",en:"The flight arrived at ten. Camylla picked up the suitcase and sent a message. Sammie waited near the exit. When they met, they said, “We are finally together.”",questions:[["What time did the flight arrive?","At ten.","Às dez."],["What did Camylla do after getting the suitcase?","She sent a message.","Ela mandou uma mensagem."],["Where was Sammie waiting?","Near the exit.","Perto da saída."]]},
+  mission:"Write an airport arrival plan: flight time, luggage, messages, meeting place, and the first thing you want to do together.",homework:"Create a practical travel card with ten survival phrases and a step-by-step arrival plan."},
+ {id:"conversation",emoji:"🌙",title:"Natural Conversation",summary:"Longer thoughts, clarification, connectors, natural alternatives, and keeping a conversation going through mistakes.",
+  grammar:{title:"Connecting ideas",explain:"Use connectors to move beyond isolated sentences: porque/because, mas/but, então/so, depois/afterward, embora/although. Natural conversation also relies on repair phrases when you need help.",examples:[["Estou cansada, mas quero falar com você.","I am tired, but I want to talk with you."],["Não entendi, então vou perguntar.","I did not understand, so I am going to ask."],["Eu sorri porque você chegou.","I smiled because you arrived."],["Depois disso, fomos dormir.","After that, we went to sleep."]]},
+  vocab:[["understand","entender"],["explain","explicar"],["repeat","repetir"],["slowly","devagar"],["meaning","significado"],["mistake","erro"],["learn","aprender"],["together","juntas"]],
+  phrases:[["Can you say that again?","Você pode repetir?"],["Please speak more slowly.","Por favor, fale mais devagar."],["What does that mean?","O que isso significa?"],["I do not know the word yet.","Eu ainda não sei essa palavra."],["Let me try again.","Deixa eu tentar de novo."],["We are learning together.","Estamos aprendendo juntas."]],
+  reading:{pt:"Camylla fala uma frase muito rápido. Sammie não entende tudo, mas não muda para o tradutor. Ela pergunta: “Você pode repetir mais devagar?” Camylla explica com palavras mais simples, e a conversa continua.",en:"Camylla says a sentence very quickly. Sammie does not understand everything, but she does not switch to the translator. She asks, “Can you repeat more slowly?” Camylla explains with simpler words, and the conversation continues.",questions:[["Why does Sammie ask for repetition?","Camylla spoke quickly.","Camylla falou rápido."],["Does Sammie immediately use a translator?","No.","Não."],["How does Camylla help?","She uses simpler words.","Ela usa palavras mais simples."]]},
+  mission:"Have or write a ten-minute conversation using clarification phrases instead of a translator. Connect ideas with because, but, so, and afterward.",homework:"Write a letter about why learning each other’s language matters. Use at least four connectors and two clarification phrases."}
 ];
 
+const LESSON_TYPES=[
+ {kind:"vocab",emoji:"🧩",name:"Core vocabulary",blurb:"Learn the essential words and recognize them in context."},
+ {kind:"grammar",emoji:"🔎",name:"Grammar in use",blurb:"Understand one useful pattern and practice it inside real sentences."},
+ {kind:"sentences",emoji:"🧱",name:"Build sentences",blurb:"Move from recognition to producing complete thoughts."},
+ {kind:"reading",emoji:"📖",name:"Story & dialogue",blurb:"Read a short passage and prove that you understand the meaning."},
+ {kind:"mission",emoji:"🌟",name:"Real-world mission",blurb:"Use the unit in a practical piece of communication."}
+];
+const COURSE=UNIT_SEEDS.map((u,ui)=>({...u,index:ui,lessons:LESSON_TYPES.map((t,li)=>({id:`${u.id}-${li+1}`,unitId:u.id,unitIndex:ui,index:li,kind:t.kind,emoji:t.emoji,title:t.name,blurb:t.blurb}))}));
+const ALL_LESSONS=COURSE.flatMap(u=>u.lessons);
+const unitById=id=>COURSE.find(u=>u.id===id);
+const lessonById=id=>ALL_LESSONS.find(l=>l.id===id);
+const seedForLesson=l=>unitById(l.unitId);
 
-const SESSION_SIZE = 12;
-const params = new URLSearchParams(location.search);
-const presetRoom = cleanRoom(params.get("room"));
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-let ROOM = null;
-let roomEntered = false;
-let currentLessonIndex = 0;
-let progressData = {};
-let presenceData = {};
-let homeworkData = {};
-let phrasebookData = {};
-let suggestionsData = {};
-let worksheetData = {};
-let currentGoal = "pt";
-let displayName = localStorage.getItem("lc_name") || "";
-let currentTab = "learn";
-let connected = false;
-let activeSession = null;
-let worksheetState = null;
-let myId = localStorage.getItem("lc_device_id");
-if (!myId){ myId = "lc" + Math.random().toString(36).slice(2, 10); localStorage.setItem("lc_device_id", myId); }
-
-const identityKey = () => (window.MFAuth && MFAuth.uid) ? MFAuth.uid : myId;
-const rootPath = sub => `together/${ROOM}/language${sub ? "/" + sub : ""}`;
-const roomPath = sub => `together/${ROOM}/${sub}`;
-const lessonById = id => LESSONS.find(l => l.id === id);
-const normalize = value => String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
-const slug = value => normalize(value).replace(/\s+/g, "_").slice(0, 90);
-const clamp = (n,min,max) => Math.max(min,Math.min(max,n));
-const shuffle = arr => { const copy=[...arr]; for(let i=copy.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[copy[i],copy[j]]=[copy[j],copy[i]];} return copy; };
-const mine = () => progressData[identityKey()] || {};
-const noAudio = () => !!mine().noAudio;
-const lessonProgress = id => { const raw=(mine().lessons || {})[id]; return raw===true ? {completed:true,bestScore:100,legacy:true} : (raw||{}); };
-const myWorksheets = () => worksheetData[identityKey()] || {};
-const dateLabel = value => value ? new Intl.DateTimeFormat(undefined,{month:"short",day:"numeric",year:"numeric"}).format(new Date(value)) : "";
-const timeLabel = value => value ? new Intl.DateTimeFormat(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}).format(new Date(value)) : "";
-const safeOn = (id,event,handler) => { const el=$(id); if(el) el.addEventListener(event,handler); };
-
-const COMMON_EN_PT = {
-  "i":"eu","im":"estou","me":"me / mim","my":"meu / minha","you":"você / te","your":"seu / sua","we":"nós","our":"nosso / nossa",
-  "how":"como","what":"o que / qual","where":"onde","when":"quando","why":"por que","who":"quem","is":"é / está","are":"é / está / são",
-  "am":"estou","do":"fazer","does":"faz","did":"fez","can":"pode","could":"poderia","will":"vai / vou","would":"iria","have":"ter","has":"tem",
-  "the":"o / a","a":"um / uma","an":"um / uma","to":"para / a","of":"de","for":"para","with":"com","in":"em","on":"em / sobre",
-  "and":"e","or":"ou","but":"mas","not":"não","yes":"sim","no":"não","this":"isso / este","that":"isso / aquilo","it":"isso / ele / ela",
-  "good":"bom / boa","morning":"manhã","afternoon":"tarde","night":"noite","later":"mais tarde","today":"hoje","tomorrow":"amanhã","yesterday":"ontem",
-  "love":"amor / amar","beautiful":"linda","happy":"feliz","sad":"triste","tired":"cansada","hungry":"com fome","sleep":"dormir","well":"bem",
-  "name":"nome","please":"por favor","thanks":"obrigada","thank":"agradecer / obrigada","hello":"olá","hi":"oi","again":"de novo","slowly":"devagar",
-  "understand":"entender","mean":"significar","word":"palavra","together":"juntas","game":"jogo","help":"ajuda","left":"esquerda","right":"direita"
+const EN_PT={
+ "i":"eu","you":"você","she":"ela","we":"nós","they":"eles/elas","my":"meu/minha","your":"seu/sua","the":"o/a","a":"um/uma","am":"sou/estou","is":"é/está","are":"são/estão","not":"não","do":"fazer","does":"faz","did":"fez","have":"ter","has":"tem","what":"o que","how":"como","where":"onde","when":"quando","why":"por que","who":"quem","and":"e","but":"mas","because":"porque","so":"então","after":"depois","with":"com","for":"para","in":"em","at":"em/às","to":"para","from":"de","now":"agora","today":"hoje","tomorrow":"amanhã","later":"mais tarde","good":"bom/boa","well":"bem","love":"amor/amar","happy":"feliz","tired":"cansada","beautiful":"linda","together":"juntas","again":"de novo","slowly":"devagar","word":"palavra","mean":"significar","understand":"entender","help":"ajuda/ajudar","eat":"comer","sleep":"dormir","work":"trabalhar","home":"casa","game":"jogo","flight":"voo"
 };
-const WORD_MAP_EN_PT = {...COMMON_EN_PT};
-const WORD_MAP_PT_EN = {};
-LESSONS.forEach(lesson => lesson.vocab.forEach(([en,pt]) => {
-  if(!en.includes(" ") && !en.includes("/")) WORD_MAP_EN_PT[normalize(en)] = pt;
-  const firstPt=String(pt).split("/")[0].trim();
-  if(!firstPt.includes(" ")) WORD_MAP_PT_EN[normalize(firstPt)] = en;
-}));
-Object.entries(COMMON_EN_PT).forEach(([en,pt]) => String(pt).split("/").forEach(piece => {
-  const key=normalize(piece);
-  if(key && !key.includes(" ") && !WORD_MAP_PT_EN[key]) WORD_MAP_PT_EN[key]=en;
-}));
+const PT_EN={};Object.entries(EN_PT).forEach(([en,pt])=>splitAnswers(pt).forEach(p=>PT_EN[normalize(p)]=en));
+Object.assign(PT_EN,{"eu":"I","voce":"you","você":"you","ela":"she","nos":"we","nós":"we","meu":"my","minha":"my","seu":"your","sua":"your","nao":"not","não":"not","como":"how","onde":"where","quando":"when","quem":"who","porque":"because","mas":"but","entao":"so","então":"so","depois":"after","com":"with","para":"for/to","agora":"now","hoje":"today","amanha":"tomorrow","amanhã":"tomorrow","bem":"well","feliz":"happy","cansada":"tired","linda":"beautiful","juntas":"together","devagar":"slowly","palavra":"word","entender":"understand","ajuda":"help","comer":"eat","dormir":"sleep","trabalhar":"work","casa":"home","jogo":"game","voo":"flight"});
 
-function waitForRooms(tries = 0){
-  if (window.MFRooms && MFRooms.whenReady){ MFRooms.whenReady(() => gateAndEnter(presetRoom)); return; }
-  if (tries > 100){ location.href = "/together.html"; return; }
-  setTimeout(() => waitForRooms(tries + 1), 100);
-}
-async function gateAndEnter(room){
-  if (!room){ location.href = "/together.html"; return; }
-  try{
-    const info = await MFRooms.get(room);
-    if (!info){ bounce("missing", room); return; }
-    if (info.type !== "learn"){ location.href = MFRooms.urlFor(info); return; }
-    const access = await MFRooms.canEnter(info);
-    if (!access.ok){ bounce(access.reason, room); return; }
-    try{ await MFRooms.touch(room); }catch(_){ }
-    enterRoom(room);
-  }catch(err){ console.error(err); bounce("missing", room); }
-}
-function bounce(reason, room){ location.href = `/together.html?denied=${encodeURIComponent(reason || "missing")}&room=${encodeURIComponent(room || "")}`; }
-function trackIdentity(){
-  let tries=0;
-  const iv=setInterval(()=>{
-    if(!window.MFAuth){ if(++tries>150) clearInterval(iv); return; }
-    clearInterval(iv);
-    if(!MFAuth.isConfigured()) return;
-    MFAuth.onChange(user=>{
-      const input=$("nameInput");
-      if(user && MFAuth.name()){ displayName=MFAuth.name(); if(input){input.value=displayName;input.readOnly=true;} }
-      else if(input){input.value=displayName;input.readOnly=false;}
-      if(ROOM) writePresence();
-    });
-  },100);
-}
-trackIdentity();
+const CONVERSATIONS={
+ foundations:{enPrompt:"How are you?",ptPrompt:"Como você está?",enAnswer:"I am doing well, thank you.",ptAnswer:"Eu estou bem, obrigada.",followEn:"Nice! It is good to hear from you.",followPt:"Que bom! É bom falar com você."},
+ daily:{enPrompt:"What are you doing?",ptPrompt:"O que você está fazendo?",enAnswer:"I am working now, but I will be free later.",ptAnswer:"Estou trabalhando agora, mas vou estar livre mais tarde.",followEn:"Okay, tell me when you are free.",followPt:"Tudo bem, me avisa quando estiver livre."},
+ feelings:{enPrompt:"I had a difficult day.",ptPrompt:"Eu tive um dia difícil.",enAnswer:"I am here with you. You can talk to me.",ptAnswer:"Estou aqui com você. Você pode falar comigo.",followEn:"Thank you. I feel safer with you.",followPt:"Obrigada. Eu me sinto mais segura com você."},
+ homefood:{enPrompt:"What do you want to eat?",ptPrompt:"O que você quer comer?",enAnswer:"I am hungry. Let us make dinner together.",ptAnswer:"Estou com fome. Vamos fazer o jantar juntas.",followEn:"Perfect. I will make dessert.",followPt:"Perfeito. Eu vou fazer a sobremesa."},
+ plans:{enPrompt:"Are you free tomorrow?",ptPrompt:"Você está livre amanhã?",enAnswer:"Yes. What time works for you?",ptAnswer:"Sim. Que horário funciona para você?",followEn:"Eight works for me.",followPt:"Oito horas funciona para mim."},
+ hobbies:{enPrompt:"I need help!",ptPrompt:"Preciso de ajuda!",enAnswer:"I am coming. They are behind you.",ptAnswer:"Estou indo. Eles estão atrás de você.",followEn:"That was close. Good game!",followPt:"Foi por pouco. Bom jogo!"},
+ travel:{enPrompt:"My flight arrived.",ptPrompt:"Meu voo chegou.",enAnswer:"Text me when you get your suitcase.",ptAnswer:"Me manda mensagem quando você pegar a sua mala.",followEn:"I will meet you near the exit.",followPt:"Vou encontrar você perto da saída."},
+ conversation:{enPrompt:"I do not understand that word yet.",ptPrompt:"Eu ainda não entendo essa palavra.",enAnswer:"I can explain it more slowly.",ptAnswer:"Eu posso explicar mais devagar.",followEn:"Thank you. Let me try again.",followPt:"Obrigada. Deixa eu tentar de novo."}
+};
 
-function enterRoom(room){
-  if(roomEntered) return;
-  roomEntered=true; ROOM=room;
-  $("gateView").hidden=true; $("roomView").hidden=false; $("roomBar").hidden=false; $("nameInput").value=displayName;
-  const u=new URL(location.href); u.searchParams.set("room",room); history.replaceState(null,"",u);
-  populateLessonSelects(); setupTabs(); setupPresence(); setupSharedState(); setupActions(); renderEverything();
-}
-function setupTabs(){
-  $("tabs").querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>{
-    currentTab=tab.dataset.tab;
-    $("tabs").querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t===tab));
-    document.querySelectorAll(".panel").forEach(panel=>panel.classList.toggle("active",panel.dataset.panel===currentTab));
-    if(ROOM) update(ref(db,roomPath(`presence/${myId}`)),{tab:currentTab,t:now()}).catch(()=>{});
-  }));
-}
-function paintConnection(){
-  $("connDot").className="dot "+(connected?"on":"off");
-  const identities=new Set(Object.entries(presenceData).filter(([,v])=>v&&now()-(v.t||0)<70000).map(([id,v])=>v.idk||id));
-  $("connText").textContent=connected?(identities.size>1?"Connected · partner online":"Connected"):"Offline";
-}
-function writePresence(){
-  if(!ROOM) return;
-  const p=ref(db,roomPath(`presence/${myId}`));
-  set(p,{name:displayName||"someone",idk:identityKey(),tab:currentTab,lessonId:LESSONS[currentLessonIndex]?.id||LESSONS[0].id,joined:serverTimestamp(),t:now()});
-  onDisconnect(p).remove();
-}
-function setupPresence(){
-  writePresence(); setInterval(writePresence,20000);
-  onValue(ref(db,".info/connected"),snap=>{connected=snap.val()===true;paintConnection();if(connected)writePresence();});
-  onValue(ref(db,roomPath("presence")),snap=>{
-    const raw=snap.val()||{},fresh={};
-    Object.entries(raw).forEach(([id,v])=>{ if(id===myId||now()-((v&&v.t)||0)<70000) fresh[id]=v; else remove(ref(db,roomPath(`presence/${id}`))).catch(()=>{}); });
-    presenceData=fresh; paintConnection(); renderPartnerProgress();
-  });
-}
-function setupSharedState(){
-  onValue(ref(db,rootPath("progress")),snap=>{
-    progressData=snap.val()||{};
-    const me=mine(); currentGoal=me.goal||currentGoal;
-    if(me.currentLesson){ const idx=LESSONS.findIndex(l=>l.id===me.currentLesson); if(idx>=0) currentLessonIndex=idx; }
-    if($("goalSelect")) $("goalSelect").value=currentGoal;
-    if($("noAudioToggle")) $("noAudioToggle").checked=!!me.noAudio;
-    renderEverything();
-  });
-  onValue(ref(db,rootPath("homework")),snap=>{homeworkData=snap.val()||{};renderHomework();renderStats();renderPartnerProgress();});
-  onValue(ref(db,rootPath("phrasebook")),snap=>{phrasebookData=snap.val()||{};renderPhrasebook();renderPath();renderLessonOverview();renderWeakWords();});
-  onValue(ref(db,rootPath("suggestions")),snap=>{suggestionsData=snap.val()||{};renderSuggestions();});
-  onValue(ref(db,rootPath("worksheets")),snap=>{worksheetData=snap.val()||{};renderWorksheetHistory();renderStats();renderPartnerProgress();});
-  get(ref(db,rootPath(`progress/${identityKey()}`))).then(s=>{
-    if(!s.exists()) update(ref(db,rootPath(`progress/${identityKey()}`)),{name:displayName||"someone",goal:currentGoal,currentLesson:LESSONS[0].id,updated:now()});
-  });
-}
+const params=new URLSearchParams(location.search);const presetRoom=cleanRoom(params.get("room"));
+const app=getApps().length?getApp():initializeApp(firebaseConfig);const db=getDatabase(app);
+let ROOM=null,roomEntered=false,currentLessonId=ALL_LESSONS[0].id,currentTab="learn",connected=false,activeSession=null,currentWorksheet=null,migrationStarted=false;
+let progressData={},presenceData={},homeworkData={},suggestionsData={};
+let displayName=localStorage.getItem("lc_name")||"";let myId=localStorage.getItem("lc_device_id");if(!myId){myId="lc"+Math.random().toString(36).slice(2,10);localStorage.setItem("lc_device_id",myId);}
+const identityKey=()=>window.MFAuth&&MFAuth.uid?MFAuth.uid:myId;
+const rootPath=sub=>`together/${ROOM}/language${sub?"/"+sub:""}`;const roomPath=sub=>`together/${ROOM}/${sub}`;
+const mine=()=>progressData[identityKey()]||{};const currentLesson=()=>lessonById(currentLessonId)||ALL_LESSONS[0];const currentUnit=()=>seedForLesson(currentLesson());
+const audioEnabled=()=>mine().audioEnabled!==false;
+const customPhrases=()=>Object.entries(mine().customPhrases||{}).filter(([,v])=>v).map(([id,v])=>({...v,id,custom:true,key:v.key||`custom_${id}`}));
+const lessonItems=l=>{const u=seedForLesson(l);let pairs=[];if(l.kind==="vocab")pairs=u.vocab;if(l.kind==="grammar")pairs=u.vocab.slice(0,4).concat(u.phrases.slice(0,4));if(l.kind==="sentences")pairs=u.phrases;if(l.kind==="reading")pairs=u.vocab.slice(2,6).concat(u.phrases.slice(0,3));if(l.kind==="mission")pairs=u.phrases.concat(u.vocab.slice(0,3));const base=pairs.map(([en,pt],i)=>({en,pt,lessonId:l.id,unitId:l.unitId,key:`${l.unitId}_${slug(en)}`,isPhrase:en.split(/\s+/).length>2,index:i}));return base.concat(customPhrases().filter(p=>p.lessonId===l.id||p.unitId===l.unitId).map(p=>({...p,lessonId:l.id,unitId:l.unitId})));};
+const allCourseItems=()=>{const map=new Map();ALL_LESSONS.forEach(l=>lessonItems(l).forEach(i=>map.set(i.key,i)));return [...map.values()];};
+const direction=()=>mine().goal==="en"?"en":mine().goal==="both"?"mix":"pt";
+const itemSource=(item,dir)=>dir==="pt"?item.en:item.pt;const itemTarget=(item,dir)=>dir==="pt"?item.pt:item.en;
+const lessonProgress=id=>{const raw=(mine().lessons||{})[id];return raw===true?{completed:true,legacy:true}:raw||{};};
+const masteryFor=item=>{const raw=(mine().mastery||{})[item.key];if(typeof raw==="number")return{recognition:raw,build:raw,recall:raw,reading:raw,last:0,due:0,attempts:0,correct:0};return raw||{recognition:0,build:0,recall:0,reading:0,last:0,due:0,attempts:0,correct:0};};
+const avgMastery=m=>(Number(m.recognition||0)+Number(m.build||0)+Number(m.recall||0)+Number(m.reading||0))/4;
+const skillName=t=>t==="readingChoice"?"reading":["choice","listen"].includes(t)?"recognition":["bank","fill","correct","conversation"].includes(t)?"build":"recall";
+function updateMy(values){return update(ref(db,rootPath(`progress/${identityKey()}`)),{name:displayName||"someone",updated:now(),...values});}
+
+function waitForRooms(tries=0){if(window.MFRooms&&MFRooms.whenReady){MFRooms.whenReady(()=>gateAndEnter(presetRoom));return;}if(tries>100){location.href="/together.html";return;}setTimeout(()=>waitForRooms(tries+1),100);}
+async function gateAndEnter(room){if(!room){location.href="/together.html";return;}try{const info=await MFRooms.get(room);if(!info){bounce("missing",room);return;}if(info.type!=="learn"){location.href=MFRooms.urlFor(info);return;}const access=await MFRooms.canEnter(info);if(!access.ok){bounce(access.reason,room);return;}try{await MFRooms.touch(room);}catch(_){}enterRoom(room);}catch(err){console.error(err);bounce("missing",room);}}
+function bounce(reason,room){location.href=`/together.html?denied=${encodeURIComponent(reason||"missing")}&room=${encodeURIComponent(room||"")}`;}
+function trackIdentity(){let tries=0;const iv=setInterval(()=>{if(!window.MFAuth){if(++tries>150)clearInterval(iv);return;}clearInterval(iv);if(!MFAuth.isConfigured())return;MFAuth.onChange(user=>{const input=$("nameInput");if(user&&MFAuth.name()){displayName=MFAuth.name();input.value=displayName;input.readOnly=true;}else{input.value=displayName;input.readOnly=false;}if(ROOM)writePresence();});},100);}trackIdentity();
+function enterRoom(room){if(roomEntered)return;roomEntered=true;ROOM=room;$("gateView").hidden=true;$("roomView").hidden=false;$("roomBar").hidden=false;$("nameInput").value=displayName;const u=new URL(location.href);u.searchParams.set("room",room);history.replaceState(null,"",u);populateSelects();setupTabs();setupPresence();setupState();setupActions();renderEverything();}
+function setupTabs(){$("tabs").querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>{currentTab=tab.dataset.tab;$("tabs").querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t===tab));document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",p.dataset.panel===currentTab));writePresence();}));}
+function paintConnection(){$("connDot").className="dot "+(connected?"on":"off");const ids=new Set(Object.entries(presenceData).filter(([,v])=>v&&now()-(v.t||0)<70000).map(([id,v])=>v.idk||id));$("connText").textContent=connected?(ids.size>1?`Connected · ${ids.size} learners`:`Connected`):"Offline";}
+function writePresence(){if(!ROOM)return;const p=ref(db,roomPath(`presence/${myId}`));set(p,{name:displayName||"someone",idk:identityKey(),tab:currentTab,lessonId:currentLessonId,joined:serverTimestamp(),t:now()});onDisconnect(p).remove();}
+function setupPresence(){writePresence();setInterval(writePresence,20000);onValue(ref(db,".info/connected"),s=>{connected=s.val()===true;paintConnection();if(connected)writePresence();});onValue(ref(db,roomPath("presence")),s=>{const raw=s.val()||{},fresh={};Object.entries(raw).forEach(([id,v])=>{if(id===myId||now()-((v&&v.t)||0)<70000)fresh[id]=v;else remove(ref(db,roomPath(`presence/${id}`))).catch(()=>{});});presenceData=fresh;paintConnection();});}
+function setupState(){onValue(ref(db,rootPath("progress")),s=>{progressData=s.val()||{};const me=mine();migrateLegacyProgress(me);if(me.currentLesson&&lessonById(me.currentLesson))currentLessonId=me.currentLesson;$("goalSelect").value=me.goal||"pt";$("audioToggle").checked=me.audioEnabled!==false;renderEverything();});onValue(ref(db,rootPath("homework")),s=>{homeworkData=s.val()||{};renderHomework();});onValue(ref(db,rootPath("suggestions")),s=>{suggestionsData=s.val()||{};renderPartner();});get(ref(db,rootPath(`progress/${identityKey()}`))).then(s=>{if(!s.exists())updateMy({version:9,goal:"pt",audioEnabled:true,currentLesson:ALL_LESSONS[0].id,createdAt:now()});});}
+function migrateLegacyProgress(me){if(migrationStarted||!me||me.version===9)return;migrationStarted=true;const map={greetings:"foundations-1",affection:"feelings-1",checkins:"daily-1",feelings:"feelings-2",food:"homefood-1",routines:"daily-3",timeplans:"plans-1",games:"hobbies-1",travel:"travel-1",realconvo:"conversation-1"};const values={version:9};Object.entries(map).forEach(([oldId,newId])=>{const old=(me.lessons||{})[oldId];if(old===true||(old&&old.completed)){values[`lessons/${newId}/completed`]=true;values[`lessons/${newId}/completedAt`]=old.completedAt||now();}});updateMy(values).catch(()=>{});}
+function populateSelects(){const lessonOptions=ALL_LESSONS.map(l=>{const u=seedForLesson(l);return `<option value="lesson:${l.id}">${u.emoji} ${u.title} · ${l.title}</option>`;}).join("");const unitOptions=COURSE.map(u=>`<option value="unit:${u.id}">${u.emoji} Unit ${u.index+1}: ${esc(u.title)}</option>`).join("");$("quizScopeSelect").innerHTML=`<option value="lesson:${currentLessonId}">Selected lesson</option>${unitOptions}<option value="course:all">Entire course</option>`;$("worksheetScopeSelect").innerHTML=`${lessonOptions}${unitOptions}<option value="course:all">Entire course</option>`;["noteLesson","suggestLesson","bookLesson"].forEach(id=>$(id).innerHTML=lessonOptions);}
 function setupActions(){
-  safeOn("copyRoomBtn","click",async()=>{try{await navigator.clipboard.writeText(location.href);toast("Course link copied 🔗");}catch(_){toast(location.href);}});
-  safeOn("nameInput","input",e=>{if(e.target.readOnly)return;displayName=e.target.value.slice(0,24)||"someone";localStorage.setItem("lc_name",displayName);updateMyProgress({name:displayName});writePresence();});
-  safeOn("goalSelect","change",e=>{currentGoal=e.target.value;updateMyProgress({goal:currentGoal});renderEverything();});
-  safeOn("noAudioToggle","change",e=>{updateMyProgress({noAudio:!!e.target.checked});toast(e.target.checked?"Audio exercises turned off":"Audio exercises turned on");});
-  safeOn("closeSession","click",closeSession);
-  safeOn("smartPracticeBtn","click",()=>startPractice("weak"));
-  safeOn("randomPracticeBtn","click",()=>startPractice("mixed"));
-  safeOn("practiceMistakesBtn","click",()=>startPractice("mistakes"));
-  safeOn("quickQuizBtn","click",()=>startQuiz("quick"));
-  safeOn("vocabQuizBtn","click",()=>startQuiz("vocab"));
-  safeOn("sentenceQuizBtn","click",()=>startQuiz("sentences"));
-  safeOn("courseQuizBtn","click",()=>startQuiz("course"));
-  safeOn("generateWorksheetBtn","click",generateWorksheet);
-  safeOn("printWorksheetBtn","click",printWorksheet);
-  safeOn("assignLessonHomework","click",assignLessonHomework);
-  safeOn("createHomework","click",createHomework);
-  safeOn("sendSuggestion","click",sendSuggestion);
-  safeOn("addPhrase","click",addPhrase);
-  safeOn("bookSearch","input",renderPhrasebook);
-}
-function updateMyProgress(values){ return update(ref(db,rootPath(`progress/${identityKey()}`)),{name:displayName||"someone",goal:currentGoal,updated:now(),...values}); }
-
-function populateLessonSelects(){
-  const options=LESSONS.map((l,i)=>`<option value="${esc(l.id)}">${i+1}. ${esc(l.title)}</option>`).join("");
-  ["quizLessonSelect","worksheetLessonSelect","suggestLesson","bookLesson"].forEach(id=>{const el=$(id);if(el)el.innerHTML=options;});
-}
-function renderEverything(){
-  renderStats(); renderPath(); renderLessonOverview(); renderWeakWords(); renderMistakes(); renderQuizHistory(); renderWorksheetHistory(); renderHomework(); renderPartnerProgress(); renderSuggestions(); renderPhrasebook(); populatePartnerTargets();
-}
-function renderStats(){
-  const me=mine();
-  const complete=LESSONS.reduce((n,l)=>n+(lessonProgress(l.id).completed?1:0),0);
-  const practiced=Object.values(me.mastery||{}).filter(v=>Number(v)>0).length;
-  const quizzes=Object.values(me.quizzes||{}).filter(Boolean).length;
-  const homeworkDone=Object.values(homeworkData).filter(hw=>hw&&hw.submissions&&hw.submissions[identityKey()]&&hw.submissions[identityKey()].text).length;
-  const worksheets=Object.values(myWorksheets()).filter(Boolean).length;
-  $("lessonsStat").textContent=`${complete} / ${LESSONS.length}`;
-  $("wordsStat").textContent=String(practiced);
-  $("quizzesStat").textContent=String(quizzes);
-  $("assignmentsStat").textContent=String(homeworkDone+worksheets);
-}
-function recommendedLessonIndex(){ const idx=LESSONS.findIndex(l=>!lessonProgress(l.id).completed); return idx<0?LESSONS.length-1:idx; }
-function renderPath(){
-  const box=$("pathList"); if(!box)return; box.innerHTML="";
-  const recommended=recommendedLessonIndex();
-  LESSONS.forEach((lesson,index)=>{
-    const p=lessonProgress(lesson.id),done=!!p.completed,current=index===currentLessonIndex;
-    const wrap=document.createElement("div");wrap.className="pathNodeWrap";
-    const btn=document.createElement("button");btn.className="pathNode "+(done?"done ":"")+(current?"current ":"")+(index===recommended&&!done?"recommended":"");btn.textContent=done?"✓":lesson.emoji;btn.title=lesson.title;btn.addEventListener("click",()=>selectLesson(index));
-    const info=document.createElement("div");info.className="pathInfo";const best=Number(p.bestScore||0);info.innerHTML=`<strong>${index+1}. ${esc(lesson.title)}</strong><span class="${index===recommended&&!done?"recommended":""}">${done?`Completed${best?` · best recall ${best}%`:""}`:index===recommended?"Recommended next":"Available anytime"}</span>`;
-    wrap.append(btn,info);box.appendChild(wrap);
-  });
-}
-function selectLesson(index){
-  currentLessonIndex=index;updateMyProgress({currentLesson:LESSONS[index].id});writePresence();renderPath();renderLessonOverview();
-  if($("quizLessonSelect")) $("quizLessonSelect").value=LESSONS[index].id;
-  if($("worksheetLessonSelect")) $("worksheetLessonSelect").value=LESSONS[index].id;
-}
-function direction(){ return currentGoal==="en"?"en":currentGoal==="both"?"mix":"pt"; }
-function customPhraseRowsFor(lessonId){
-  return Object.entries(phrasebookData).filter(([,v])=>v && (v.owner===identityKey()||(!v.owner&&v.by===identityKey())) && (v.lessonId||LESSONS[0].id)===lessonId);
-}
-function allLessonItems(lesson){
-  const built=lesson.vocab.concat(lesson.phrases).map(([en,pt],i)=>({en,pt,key:`${lesson.id}_${slug(en)}_${i}`,lessonId:lesson.id,isPhrase:i>=lesson.vocab.length,custom:false}));
-  const custom=customPhraseRowsFor(lesson.id).map(([id,v])=>({en:v.en,pt:v.pt,key:`custom_${id}`,lessonId:lesson.id,isPhrase:true,custom:true,note:v.note||""}));
-  return built.concat(custom);
-}
-function masteryFor(item){ return Number((mine().mastery||{})[item.key]||0); }
-function renderLessonOverview(){
-  const box=$("lessonOverview");if(!box)return;
-  const lesson=LESSONS[currentLessonIndex],p=lessonProgress(lesson.id),items=allLessonItems(lesson),done=!!p.completed;
-  box.innerHTML=`<div class="lessonBanner"><div class="lessonEmoji">${lesson.emoji}</div><div><h2>${esc(lesson.title)}</h2><p>${esc(lesson.goal)}</p><div class="lessonMeta"><span class="tag">${items.length} words & phrases</span><span class="tag">${done?"Completed":"Not completed yet"}</span>${p.bestScore?`<span class="tag">Best independent recall ${Number(p.bestScore)}%</span>`:""}</div></div></div>
-    <div class="lessonActions"><button class="btn primary" id="startLessonBtn">${done?"Study this lesson again":"Start guided lesson"}</button><button class="btn purple" id="lessonQuizBtn">✅ Quiz this lesson</button><button class="btn blue" id="lessonWorksheetBtn">📝 Make worksheet</button>${noAudio()?"":`<button class="btn" id="previewAudioBtn">🔊 Hear lesson words</button>`}</div>
-    <h3 style="margin:0 0 4px">What you’ll do</h3><div class="skillGrid"><div class="skill"><strong>🧠 Learn first</strong><p>New material is shown before it is tested.</p></div><div class="skill"><strong>🧩 Build sentences</strong><p>Put useful phrases together in the right order.</p></div><div class="skill"><strong>⌨️ Recall</strong><p>Type answers from memory. Accents are optional.</p></div><div class="skill"><strong>🔎 Use clues</strong><p>Tap highlighted words when you need help; clue-assisted answers return later.</p></div></div>
-    <div class="wordPreview">${items.slice(0,8).map(item=>`<span class="wordChip">${esc(currentGoal==="en"?item.pt:item.en)} <b>→</b> ${esc(currentGoal==="en"?item.en:item.pt)}</span>`).join("")}</div>
-    <div class="tip"><strong>Language note:</strong> ${esc(lesson.tip)}</div>`;
-  safeOn("startLessonBtn","click",()=>startLesson(currentLessonIndex));
-  safeOn("lessonQuizBtn","click",()=>{$("quizLessonSelect").value=lesson.id;switchTab("quizzes");});
-  safeOn("lessonWorksheetBtn","click",()=>{$("worksheetLessonSelect").value=lesson.id;switchTab("assignments");generateWorksheet();});
-  safeOn("previewAudioBtn","click",()=>speakSequence(lesson.vocab.slice(0,6)));
-}
-async function speakSequence(rows){ for(const [en,pt] of rows){ const dir=direction()==="en"?"en":"pt"; await speakAndWait(dir==="en"?en:pt,dir==="en"?"en-US":"pt-BR"); await new Promise(r=>setTimeout(r,150)); } }
-
-function dirForIndex(i){ const d=direction(); return d==="mix"?(i%2?"en":"pt"):d; }
-function focusItems(lesson,count=3){
-  const items=allLessonItems(lesson); const grouped=[...items].sort((a,b)=>masteryFor(a)-masteryFor(b));
-  const lowest=grouped.slice(0,Math.max(count,6)); return shuffle(lowest).slice(0,Math.min(count,items.length));
-}
-function choicePool(item,dir,lesson){
-  const answer=dir==="pt"?item.pt:item.en;
-  const pool=shuffle(allLessonItems(lesson).map(x=>dir==="pt"?x.pt:x.en).filter(x=>normalize(x)!==normalize(answer)));
-  return shuffle([answer,...pool.slice(0,3)]);
-}
-function buildExercise(item,type,dir,lesson){
-  const actualDir=dir==="mix"?"pt":dir;
-  const target=actualDir==="pt"?item.pt:item.en;
-  if(type==="listen" && noAudio()) type="choice";
-  if(type==="bank" && (!target.includes(" ") || target.includes("/"))) type="type";
-  if(type==="cloze" && (!target.includes(" ") || target.includes("/"))) type="choice";
-  if(type==="listen") return {type,item,direction:actualDir,lessonId:lesson.id,choices:choicePool(item,actualDir==="pt"?"en":"pt",lesson)};
-  if(type==="choice") return {type,item,direction:actualDir,lessonId:lesson.id,choices:choicePool(item,actualDir,lesson)};
-  if(type==="cloze") return buildCloze(item,actualDir,lesson);
-  return {type,item,direction:actualDir,lessonId:lesson.id};
-}
-function buildCloze(item,dir,lesson){
-  const target=dir==="pt"?item.pt:item.en;
-  const words=target.replace(/[.,!?…]/g,"").split(/\s+/).filter(Boolean);
-  const candidates=words.filter(w=>normalize(w).length>2);
-  const missing=candidates[Math.floor(Math.random()*candidates.length)]||words[Math.max(0,words.length-1)];
-  const blanked=target.replace(new RegExp(`\\b${missing.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}\\b`,"i"),"_____");
-  const pool=shuffle(allLessonItems(lesson).flatMap(x=>(dir==="pt"?x.pt:x.en).replace(/[.,!?…]/g,"").split(/\s+/)).filter(w=>normalize(w)!==normalize(missing)&&normalize(w).length>2));
-  return {type:"cloze",item,direction:dir,lessonId:lesson.id,missing,blanked,choices:shuffle([missing,...pool.slice(0,3)])};
-}
-function buildLessonExercises(lesson){
-  const items=allLessonItems(lesson); if(!items.length)return[];
-  const focus=focusItems(lesson,3),extras=shuffle(items.filter(x=>!focus.some(f=>f.key===x.key))),ex=[];
-  focus.forEach((item,i)=>{
-    const dir=dirForIndex(i);
-    ex.push({type:"introduce",item,direction:dir,lessonId:lesson.id});
-    ex.push(buildExercise(item,i===0?"choice":i===1?"type":"bank",dir,lesson));
-  });
-  const matchItems=shuffle(items).slice(0,Math.min(4,items.length)); if(matchItems.length>=2) ex.push({type:"match",items:matchItems,direction:direction(),lessonId:lesson.id});
-  focus.forEach((item,i)=>ex.push(buildExercise(item,["type","listen","cloze"][i],dirForIndex(i+3),lesson)));
-  extras.slice(0,2).forEach((item,i)=>ex.push(buildExercise(item,i?"bank":"choice",dirForIndex(i+6),lesson)));
-  return ex.slice(0,SESSION_SIZE);
-}
-function buildPracticeExercises(mode){
-  const all=LESSONS.flatMap(allLessonItems); const mistakes=Object.values(mine().mistakes||{}).filter(Boolean);
-  let source=[];
-  if(mode==="mistakes") source=mistakes.map(m=>({...m,key:m.key||`${m.lessonId}_${slug(m.en)}`,isPhrase:(m.en||"").includes(" ")}));
-  else if(mode==="weak") source=[...all].sort((a,b)=>masteryFor(a)-masteryFor(b)).slice(0,18);
-  else source=shuffle(all).slice(0,18);
-  if(!source.length)source=shuffle(all).slice(0,18);
-  const ex=[];
-  source.slice(0,10).forEach((item,i)=>{const lesson=lessonById(item.lessonId)||LESSONS[0];ex.push(buildExercise(item,["choice","type","bank","listen","cloze"][i%5],dirForIndex(i),lesson));});
-  if(source.length>=4)ex.splice(5,0,{type:"match",items:shuffle(source).slice(0,4),direction:direction(),lessonId:source[0].lessonId});
-  return ex.slice(0,SESSION_SIZE);
-}
-function buildQuizExercises(kind,lessonId){
-  let pool=[]; let count=10;
-  if(kind==="course"){pool=LESSONS.flatMap(allLessonItems);count=20;}
-  else{
-    const lesson=lessonById(lessonId)||LESSONS[currentLessonIndex];
-    pool=allLessonItems(lesson);
-    if(kind==="vocab")pool=pool.filter(x=>!x.isPhrase);
-    if(kind==="sentences")pool=pool.filter(x=>x.isPhrase);
-    if(!pool.length)pool=allLessonItems(lesson);
-    count=kind==="vocab"?12:10;
-  }
-  const selected=[]; while(selected.length<count&&pool.length){selected.push(...shuffle(pool).slice(0,Math.min(pool.length,count-selected.length)));}
-  return selected.slice(0,count).map((item,i)=>{
-    const lesson=lessonById(item.lessonId)||LESSONS[0];
-    const types=kind==="sentences"?["bank","cloze","type","choice"]:kind==="vocab"?["choice","type","listen"]:["choice","type","bank","listen","cloze"];
-    return buildExercise(item,types[i%types.length],dirForIndex(i),lesson);
-  });
-}
-function startLesson(index){ startSession("lesson",buildLessonExercises(LESSONS[index]),{lessonIndex:index,title:LESSONS[index].title}); }
-function startPractice(mode){
-  const exercises=buildPracticeExercises(mode); if(!exercises.length){toast("There is nothing to review yet");return;}
-  startSession("practice",exercises,{mode,title:mode==="mistakes"?"Mistakes review":mode==="weak"?"Weak words review":"Mixed review"});
-}
-function startQuiz(kind){
-  const lessonId=$("quizLessonSelect")?.value||LESSONS[currentLessonIndex].id;
-  const exercises=buildQuizExercises(kind,lessonId); if(!exercises.length){toast("This quiz has no material yet");return;}
-  const title=kind==="course"?"Full course quiz":kind==="vocab"?"Vocabulary quiz":kind==="sentences"?"Sentence quiz":"Quick quiz";
-  startSession("quiz",exercises,{quizKind:kind,lessonId:kind==="course"?"course":lessonId,title});
-}
-function startSession(kind,exercises,meta={}){
-  activeSession={kind,exercises,position:0,correct:0,assisted:0,wrong:0,graded:0,locked:false,selected:null,bank:[],matched:0,usedClue:false,...meta};
-  showSession();renderExercise();
-}
-function showSession(){ $("normalView").hidden=true;$("courseHeader").hidden=true;$("roomBar").hidden=true;$("sessionView").hidden=false;window.scrollTo({top:0,behavior:"smooth"}); }
-function closeSession(){
-  if(!activeSession)return;
-  const started=activeSession.position>0;
-  if(started&&!confirm("Leave this session? The unfinished attempt will not be saved."))return;
-  exitSession();
-}
-function exitSession(){activeSession=null;$("sessionView").hidden=true;$("normalView").hidden=false;$("courseHeader").hidden=false;$("roomBar").hidden=false;renderEverything();}
-function switchTab(name){const tab=$("tabs").querySelector(`[data-tab="${name}"]`);if(tab)tab.click();}
-function targetText(ex){return ex.direction==="pt"?ex.item.pt:ex.item.en;}
-function sourceText(ex){return ex.direction==="pt"?ex.item.en:ex.item.pt;}
-function targetLang(ex){return ex.direction==="pt"?"pt-BR":"en-US";}
-function sourceLang(ex){return ex.direction==="pt"?"en-US":"pt-BR";}
-
-function wordClue(token,ex){
-  const key=normalize(token); if(!key)return"";
-  return ex.direction==="pt"?(WORD_MAP_EN_PT[key]||""):(WORD_MAP_PT_EN[key]||"");
-}
-function clueMarkup(text,ex){
-  return String(text).split(/(\s+)/).map(part=>{
-    if(/^\s+$/.test(part))return part;
-    const clean=part.replace(/^[^A-Za-zÀ-ÿ]+|[^A-Za-zÀ-ÿ]+$/g,"");
-    const clue=wordClue(clean,ex);
-    return clue?`<button class="clueToken" type="button" data-clue="${esc(clue)}" title="Show word clue">${esc(part)}</button>`:esc(part);
-  }).join("");
-}
-function clueTools(ex,fullLabel="Show the whole phrase meaning"){
-  return `<div class="cluePopup" id="cluePopup"></div><div class="assistNote">Tap highlighted words for a clue. Clue-assisted answers are tracked separately.</div><button class="fullClueBtn" id="fullClueBtn" type="button">${esc(fullLabel)}</button>`;
-}
-function wireClues(ex,fullText=targetText(ex)){
-  $("exerciseCard").querySelectorAll("[data-clue]").forEach(btn=>btn.addEventListener("click",()=>{
-    activeSession.usedClue=true;ex.usedClue=true;$("cluePopup").textContent=btn.dataset.clue;
-  }));
-  safeOn("fullClueBtn","click",()=>{activeSession.usedClue=true;ex.usedClue=true;$("cluePopup").textContent=fullText;});
-}
-function renderExercise(){
-  if(!activeSession)return;
-  if(activeSession.position>=activeSession.exercises.length){finishSession();return;}
-  activeSession.locked=false;activeSession.selected=null;activeSession.bank=[];activeSession.matched=0;activeSession.usedClue=false;
-  const ex=activeSession.exercises[activeSession.position];
-  $("sessionProgress").style.width=`${Math.round((activeSession.position/Math.max(1,activeSession.exercises.length))*100)}%`;
-  $("sessionCount").textContent=`${activeSession.position+1} / ${activeSession.exercises.length}`;
-  const card=$("exerciseCard");
-  if(ex.type==="introduce")renderIntroduce(card,ex);
-  else if(ex.type==="choice")renderChoice(card,ex,false);
-  else if(ex.type==="listen")renderChoice(card,ex,true);
-  else if(ex.type==="type")renderType(card,ex);
-  else if(ex.type==="bank")renderBank(card,ex);
-  else if(ex.type==="cloze")renderCloze(card,ex);
-  else if(ex.type==="match")renderMatch(card,ex);
-}
-function baseCheckBar(label="Check"){return `<div class="checkBar"><div class="feedbackMsg" id="feedbackMsg"></div><button class="btn primary" id="checkAnswer">${label}</button></div>`;}
-function renderIntroduce(card,ex){
-  card.innerHTML=`<div class="exerciseType">Learn first</div><div class="exercisePrompt">Study this ${ex.item.isPhrase?"phrase":"word"}</div><div class="teachingPair"><div><span>${ex.direction==="pt"?"English":"Português"}</span><strong>${esc(sourceText(ex))}</strong></div><div class="teachArrow">↓</div><div><span>${ex.direction==="pt"?"Português":"English"}</span><strong>${esc(targetText(ex))}</strong></div></div>${noAudio()?"":`<button class="speakerBig" id="introSpeak">🔊</button>`}<div class="teachNote">You are seeing this before it is tested. Later questions will ask you to recognize it, build it, and recall it without the full answer.</div>${baseCheckBar("Continue")}`;
-  safeOn("introSpeak","click",()=>speak(targetText(ex),targetLang(ex)));
-  safeOn("checkAnswer","click",()=>{if(activeSession.locked)return;activeSession.locked=true;activeSession.position++;renderExercise();});
-}
-function renderChoice(card,ex,listening){
-  const expected=listening?sourceText(ex):targetText(ex);
-  const prompt=listening?"Choose what this means":`Translate into ${ex.direction==="pt"?"Portuguese":"English"}`;
-  card.innerHTML=`<div class="exerciseType">${listening?"Listening":"Multiple choice"}</div><div class="exercisePrompt">${prompt}</div>${listening?`<button class="speakerBig" id="listenBtn">🔊</button><div style="text-align:center;margin-bottom:10px"><button class="btn sm" id="cantListenBtn">I can’t listen right now</button></div>${clueTools(ex,"Show what was said")}`:`<div class="bigWord clueBar">${clueMarkup(sourceText(ex),ex)}</div>${clueTools(ex)}`}<div class="choiceGrid">${ex.choices.map(c=>`<button class="choice" data-choice="${esc(c)}">${esc(c)}</button>`).join("")}</div>${baseCheckBar()}`;
-  if(listening){safeOn("listenBtn","click",()=>speak(targetText(ex),targetLang(ex)));setTimeout(()=>speak(targetText(ex),targetLang(ex)),220);safeOn("cantListenBtn","click",()=>{updateMyProgress({noAudio:true});ex.type="choice";ex.choices=choicePool(ex.item,ex.direction,lessonById(ex.lessonId)||LESSONS[0]);renderExercise();});wireClues(ex,targetText(ex));}
-  else wireClues(ex,targetText(ex));
-  card.querySelectorAll(".choice").forEach(btn=>btn.addEventListener("click",()=>{if(activeSession.locked)return;activeSession.selected=btn.dataset.choice;card.querySelectorAll(".choice").forEach(b=>b.classList.toggle("selected",b===btn));}));
-  safeOn("checkAnswer","click",()=>{if(!activeSession.selected){toast("Choose an answer first");return;}gradeCurrent(normalize(activeSession.selected)===normalize(expected),ex,activeSession.selected,expected);});
-}
-function renderType(card,ex){
-  card.innerHTML=`<div class="exerciseType">Write the answer</div><div class="exercisePrompt">Translate into ${ex.direction==="pt"?"Portuguese":"English"}</div><div class="bigWord clueBar">${clueMarkup(sourceText(ex),ex)}</div>${clueTools(ex)}<input class="input typeAnswer" id="typedAnswer" autocomplete="off" autocapitalize="sentences" placeholder="Type your answer…" />${baseCheckBar()}`;
-  wireClues(ex,targetText(ex));const input=$("typedAnswer");input.focus();input.addEventListener("keydown",e=>{if(e.key==="Enter")$("checkAnswer").click();});
-  safeOn("checkAnswer","click",()=>{const answer=input.value.trim();if(!answer){toast("Type an answer first");return;}gradeCurrent(isCloseAnswer(answer,targetText(ex)),ex,answer);});
-}
-function isCloseAnswer(given,expected){
-  const a=normalize(given),b=normalize(expected);if(a===b)return true;
-  const variants=String(expected).split(/\s*\/\s*|\s*;\s*/).map(normalize);return variants.includes(a);
-}
-function renderBank(card,ex){
-  const target=targetText(ex).replace(/[.,!?…]/g,"");const words=shuffle(target.split(/\s+/).filter(Boolean));
-  card.innerHTML=`<div class="exerciseType">Build the sentence</div><div class="exercisePrompt">Put the translation in order</div><div class="bigWord clueBar" style="font-size:34px">${clueMarkup(sourceText(ex),ex)}</div>${clueTools(ex)}<div class="wordBank" id="answerBank"><span class="bankPlaceholder">Choose words below</span></div><div class="bankWords">${words.map((w,i)=>`<button class="bankWord" data-i="${i}" data-word="${esc(w)}">${esc(w)}</button>`).join("")}</div>${baseCheckBar()}`;
-  wireClues(ex,targetText(ex));
-  const redraw=()=>{$("answerBank").innerHTML=activeSession.bank.length?activeSession.bank.map((x,i)=>`<button class="answerWord" data-remove="${i}">${esc(x.word)}</button>`).join(""):`<span class="bankPlaceholder">Choose words below</span>`;card.querySelectorAll("[data-remove]").forEach(b=>b.addEventListener("click",()=>{const [removed]=activeSession.bank.splice(Number(b.dataset.remove),1);card.querySelector(`[data-i="${removed.i}"]`).disabled=false;redraw();}));};
-  card.querySelectorAll(".bankWord").forEach(btn=>btn.addEventListener("click",()=>{activeSession.bank.push({word:btn.dataset.word,i:Number(btn.dataset.i)});btn.disabled=true;redraw();}));
-  safeOn("checkAnswer","click",()=>{if(!activeSession.bank.length){toast("Build the sentence first");return;}const answer=activeSession.bank.map(x=>x.word).join(" ");gradeCurrent(normalize(answer)===normalize(target),ex,answer,targetText(ex));});
-}
-function renderCloze(card,ex){
-  card.innerHTML=`<div class="exerciseType">Complete the sentence</div><div class="exercisePrompt">Choose the missing word</div><div class="clozeSource clueBar">${clueMarkup(sourceText(ex),ex)}</div>${clueTools(ex)}<div class="clozeSentence">${esc(ex.blanked)}</div><div class="choiceGrid">${ex.choices.map(c=>`<button class="choice" data-choice="${esc(c)}">${esc(c)}</button>`).join("")}</div>${baseCheckBar()}`;
-  wireClues(ex,targetText(ex));
-  card.querySelectorAll(".choice").forEach(btn=>btn.addEventListener("click",()=>{if(activeSession.locked)return;activeSession.selected=btn.dataset.choice;card.querySelectorAll(".choice").forEach(b=>b.classList.toggle("selected",b===btn));}));
-  safeOn("checkAnswer","click",()=>{if(!activeSession.selected){toast("Choose a word first");return;}gradeCurrent(normalize(activeSession.selected)===normalize(ex.missing),ex,activeSession.selected,ex.missing);});
-}
-function renderMatch(card,ex){
-  const pairs=ex.items.map((item,i)=>({i,item}));const left=shuffle(pairs.map(p=>({side:"left",i:p.i,text:p.item.en}))),right=shuffle(pairs.map(p=>({side:"right",i:p.i,text:p.item.pt})));
-  card.innerHTML=`<div class="exerciseType">Matching</div><div class="exercisePrompt">Match each pair</div><div class="matchGrid"><div>${left.map(x=>`<button class="matchItem" style="width:100%;margin-bottom:9px" data-side="${x.side}" data-pair="${x.i}">${esc(x.text)}</button>`).join("")}</div><div>${right.map(x=>`<button class="matchItem" style="width:100%;margin-bottom:9px" data-side="${x.side}" data-pair="${x.i}">${esc(x.text)}</button>`).join("")}</div></div>${baseCheckBar("Continue")}`;
-  let selected=null;
-  card.querySelectorAll(".matchItem").forEach(btn=>btn.addEventListener("click",()=>{
-    if(btn.classList.contains("matched")||activeSession.locked)return;
-    if(!selected){selected=btn;btn.classList.add("selected");return;}
-    if(selected.dataset.side===btn.dataset.side){selected.classList.remove("selected");selected=btn;btn.classList.add("selected");return;}
-    if(selected.dataset.pair===btn.dataset.pair){selected.classList.remove("selected");selected.classList.add("matched");btn.classList.add("matched");activeSession.matched++;selected=null;if(activeSession.matched===ex.items.length){$("feedbackMsg").textContent="All pairs matched";$("feedbackMsg").className="feedbackMsg good";}}
-    else{const first=selected;selected=null;first.classList.remove("selected");first.classList.add("bad");btn.classList.add("bad");setTimeout(()=>{first.classList.remove("bad");btn.classList.remove("bad");},260);}
-  }));
-  safeOn("checkAnswer","click",()=>{if(activeSession.matched<ex.items.length){toast("Match all pairs first");return;}if(activeSession.locked)return;activeSession.locked=true;activeSession.graded++;activeSession.correct++;ex.items.forEach(recordIndependentCorrect);activeSession.position++;renderExercise();});
-}
-function gradeCurrent(correct,ex,given,expectedOverride){
-  if(activeSession.locked)return;activeSession.locked=true;activeSession.graded++;
-  const card=$("exerciseCard"),msg=$("feedbackMsg"),btn=$("checkAnswer"),expected=expectedOverride||targetText(ex),assisted=!!(activeSession.usedClue||ex.usedClue);
-  card.querySelectorAll("button.choice,.bankWord,.answerWord").forEach(b=>b.disabled=true);
-  if(correct){
-    if(assisted){activeSession.assisted++;msg.textContent="Correct with a clue — this will return once more for independent recall.";msg.className="feedbackMsg good";if(activeSession.kind!=="quiz"&&!ex.retry)activeSession.exercises.push({...ex,retry:true,usedClue:false});}
-    else{activeSession.correct++;msg.textContent="Correct";msg.className="feedbackMsg good";recordIndependentCorrect(ex.item);}
-    btn.textContent="Continue";highlightChoice(expected,true);
-  }else{
-    activeSession.wrong++;msg.innerHTML=`Not quite. A correct answer is <strong>${esc(expected)}</strong>`;msg.className="feedbackMsg bad";btn.textContent="Continue";highlightChoice(expected,false);recordWrong(ex,given);if(activeSession.kind!=="quiz"&&!ex.retry)activeSession.exercises.push({...ex,retry:true,usedClue:false});
-  }
-  btn.onclick=()=>{activeSession.position++;renderExercise();};
-}
-function highlightChoice(answer,correct){$("exerciseCard").querySelectorAll(".choice").forEach(b=>{if(normalize(b.dataset.choice)===normalize(answer))b.classList.add("correct");else if(b.classList.contains("selected")&&!correct)b.classList.add("wrong");});}
-function recordIndependentCorrect(item){
-  if(!item)return;const strength=clamp(masteryFor(item)+1,0,5);set(ref(db,rootPath(`progress/${identityKey()}/mastery/${item.key}`)),strength);remove(ref(db,rootPath(`progress/${identityKey()}/mistakes/${item.key}`))).catch(()=>{});
-}
-function recordWrong(ex,given){
-  if(!ex.item)return;const old=(mine().mistakes||{})[ex.item.key]||{};
-  set(ref(db,rootPath(`progress/${identityKey()}/mistakes/${ex.item.key}`)),{key:ex.item.key,en:ex.item.en,pt:ex.item.pt,lessonId:ex.item.lessonId,count:Number(old.count||0)+1,lastGiven:given||"",lastWrong:now()});
-}
-async function finishSession(){
-  const s=activeSession,graded=Math.max(1,s.graded),overall=Math.round(((s.correct+s.assisted)/graded)*100),independent=Math.round((s.correct/graded)*100);
-  const values={lastStudyAt:now(),lastSessionAccuracy:overall,lastIndependentRecall:independent};
-  if(s.kind==="lesson"){
-    const lesson=LESSONS[s.lessonIndex],old=lessonProgress(lesson.id);
-    values[`lessons/${lesson.id}/attempts`]=Number(old.attempts||0)+1;
-    values[`lessons/${lesson.id}/bestScore`]=Math.max(Number(old.bestScore||0),independent);
-    values[`lessons/${lesson.id}/lastAttempt`]=now();values[`lessons/${lesson.id}/completed`]=true;values[`lessons/${lesson.id}/completedAt`]=old.completedAt||now();
-    const next=LESSONS.slice(s.lessonIndex+1).find(l=>!lessonProgress(l.id).completed)||LESSONS.find(l=>l.id!==lesson.id&&!lessonProgress(l.id).completed);if(next)values.currentLesson=next.id;
-    await updateMyProgress(values);
-  }else if(s.kind==="quiz"){
-    await updateMyProgress(values);
-    const qref=push(ref(db,rootPath(`progress/${identityKey()}/quizzes`)));
-    await set(qref,{kind:s.quizKind,lessonId:s.lessonId,title:s.title,overall,independent,assisted:s.assisted,wrong:s.wrong,t:now()});
-  }else await updateMyProgress(values);
-  $("sessionProgress").style.width="100%";
-  const heading=s.kind==="lesson"?"Lesson finished":s.kind==="quiz"?"Quiz finished":"Review finished";
-  const note=s.kind==="quiz"?"The independent recall score excludes answers completed with clues.":s.wrong?"Missed items were saved for review and may have returned during this session.":"You completed the session without any artificial limits or penalties.";
-  $("exerciseCard").innerHTML=`<div class="resultCard" style="display:flex;flex-direction:column;min-height:430px"><div class="resultEmoji">${s.kind==="quiz"?"✅":s.wrong?"📚":"🎉"}</div><h2>${heading}</h2><p class="muted">${note}</p><div class="resultStats"><div class="resultStat"><strong>${independent}%</strong><span>independent recall</span></div><div class="resultStat"><strong>${s.assisted}</strong><span>answers with clues</span></div><div class="resultStat"><strong>${s.wrong}</strong><span>items to review</span></div></div><div style="display:flex;gap:9px;flex-wrap:wrap;justify-content:center"><button class="btn primary" id="finishDone">Continue</button>${s.wrong?`<button class="btn purple" id="finishReview">Review mistakes</button>`:""}</div></div>`;
-  safeOn("finishDone","click",exitSession);safeOn("finishReview","click",()=>{exitSession();switchTab("review");});
+ $("copyRoomBtn").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(location.href);toast("Course link copied 🔗");}catch(_){toast(location.href);}});
+ $("nameInput").addEventListener("input",e=>{if(e.target.readOnly)return;displayName=e.target.value.slice(0,24)||"someone";localStorage.setItem("lc_name",displayName);writePresence();updateMy({name:displayName});});
+ $("goalSelect").addEventListener("change",e=>updateMy({goal:e.target.value}));$("audioToggle").addEventListener("change",e=>updateMy({audioEnabled:e.target.checked}));
+ $("closeSession").addEventListener("click",closeSession);$("placementBtn").addEventListener("click",startPlacement);$("smartPracticeBtn").addEventListener("click",()=>startReview("smart"));$("recallPracticeBtn").addEventListener("click",()=>startReview("recall"));$("practiceMistakesBtn").addEventListener("click",()=>startReview("mistakes"));
+ $("startQuizBtn").addEventListener("click",()=>startQuiz($("quizScopeSelect").value,$("quizTypeSelect").value,12));$("courseQuizBtn").addEventListener("click",()=>startQuiz("course:all","mixed",20));
+ $("generateWorksheetBtn").addEventListener("click",generateWorksheet);$("printWorksheetBtn").addEventListener("click",()=>window.print());$("assignLessonHomework").addEventListener("click",assignLessonHomework);$("createHomework").addEventListener("click",createHomework);
+ $("addNotebookEntry").addEventListener("click",addNotebookEntry);$("notebookSearch").addEventListener("input",renderNotebook);$("sendSuggestion").addEventListener("click",sendSuggestion);$("addPhrase").addEventListener("click",addPhrase);$("bookSearch").addEventListener("input",renderPhrasebook);
 }
 
-function renderWeakWords(){
-  const box=$("weakWordsList");if(!box)return;const all=LESSONS.flatMap(allLessonItems).sort((a,b)=>masteryFor(a)-masteryFor(b)).slice(0,10);
-  if(!all.length){box.innerHTML=`<div class="empty">Start a lesson to build a review list.</div>`;return;}
-  box.innerHTML=all.map(item=>{const m=masteryFor(item);return `<div class="reviewRow"><span>🧠</span><div class="grow"><strong>${esc(currentGoal==="en"?item.pt:item.en)}</strong><div class="muted">${esc(currentGoal==="en"?item.en:item.pt)}</div></div><div class="masteryDots" title="Familiarity ${m}/5">${[1,2,3,4,5].map(n=>`<span class="${n<=m?"on":""}"></span>`).join("")}</div></div>`;}).join("");
-}
-function renderMistakes(){
-  const box=$("mistakeList");if(!box)return;const rows=Object.values(mine().mistakes||{}).filter(Boolean).sort((a,b)=>(b.lastWrong||0)-(a.lastWrong||0));
-  if(!rows.length){box.innerHTML=`<div class="empty">Nothing is waiting here. Mistakes will appear as study notes, not penalties.</div>`;return;}
-  box.innerHTML=rows.map(m=>`<div class="mistakeRow"><div><strong>${esc(m.en)}</strong><small>${esc(lessonById(m.lessonId)?.title||"Course review")}</small></div><div class="pt">${esc(m.pt)}<small>reviewed after ${Number(m.count||1)} miss${Number(m.count||1)===1?"":"es"}</small></div><button class="btn sm danger" data-forget="${esc(m.key)}">Remove</button></div>`).join("");
-  box.querySelectorAll("[data-forget]").forEach(b=>b.addEventListener("click",()=>remove(ref(db,rootPath(`progress/${identityKey()}/mistakes/${b.dataset.forget}`)))));
-}
-function renderQuizHistory(){
-  const box=$("quizHistoryList");if(!box)return;const rows=Object.entries(mine().quizzes||{}).filter(([,v])=>v).sort((a,b)=>(b[1].t||0)-(a[1].t||0)).slice(0,10);
-  if(!rows.length){box.innerHTML=`<div class="empty">No quizzes yet. Results will appear here without ranks or XP.</div>`;return;}
-  box.innerHTML=rows.map(([,q])=>`<div class="historyRow"><span>✅</span><div class="grow"><strong>${esc(q.title||"Quiz")}</strong><small>${q.lessonId&&q.lessonId!=="course"?esc(lessonById(q.lessonId)?.title||"")+" · ":""}${timeLabel(q.t)} · ${Number(q.assisted||0)} with clues</small></div><span class="scoreBadge">${Number(q.independent||0)}% recall</span></div>`).join("");
-}
+function renderEverything(){if(!ROOM)return;renderStats();renderUnits();renderLessonOverview();renderReview();renderQuizHistory();renderWorksheetHistory();renderHomework();renderNotebook();renderPartner();renderPhrasebook();refreshDynamicSelects();}
+function renderStats(){const me=mine();const lessons=ALL_LESSONS.filter(l=>lessonProgress(l.id).completed).length;const practiced=Object.keys(me.mastery||{}).length;const quizzes=Object.keys(me.quizHistory||{}).length;const assignments=Object.keys(me.worksheetHistory||{}).length+Object.values(homeworkData).filter(h=>h&&h.submissions&&h.submissions[identityKey()]).length;$("lessonsStat").textContent=`${lessons} / ${ALL_LESSONS.length}`;$("wordsStat").textContent=practiced;$("quizzesStat").textContent=quizzes;$("assignmentsStat").textContent=assignments;}
+function refreshDynamicSelects(){if($("quizScopeSelect")&&$("quizScopeSelect").options[0])$("quizScopeSelect").options[0].value=`lesson:${currentLessonId}`;const partners=Object.entries(progressData).filter(([k,v])=>k!==identityKey()&&v&&v.name);$("suggestTarget").innerHTML=partners.length?partners.map(([k,v])=>`<option value="${esc(k)}">${esc(v.name)}</option>`).join(""):`<option value="">No partner has opened the course yet</option>`;}
+function renderUnits(){const box=$("unitList");box.innerHTML="";COURSE.forEach(u=>{const complete=u.lessons.filter(l=>lessonProgress(l.id).completed).length;const block=document.createElement("div");const open=currentLesson().unitId===u.id;block.className="unitBlock"+(open?" open":"");block.innerHTML=`<button class="unitHead ${open?"active":""}"><span class="unitEmoji">${u.emoji}</span><span><strong>Unit ${u.index+1}: ${esc(u.title)}</strong><small>${complete}/${u.lessons.length} complete</small></span><span>${open?"▾":"▸"}</span></button><div class="unitLessons"></div>`;block.querySelector(".unitHead").addEventListener("click",()=>block.classList.toggle("open"));const list=block.querySelector(".unitLessons");u.lessons.forEach((l,i)=>{const done=lessonProgress(l.id).completed;const b=document.createElement("button");b.className=`lessonRow ${l.id===currentLessonId?"active":""} ${done?"done":""}`;b.innerHTML=`<span class="lessonNum">${i+1}</span><span><strong>${esc(l.title)}</strong><small>${esc(l.blurb)}</small></span><span class="check">${done?"✓":""}</span>`;b.addEventListener("click",()=>selectLesson(l.id));list.appendChild(b);});box.appendChild(block);});}
+function selectLesson(id){currentLessonId=id;updateMy({currentLesson:id});writePresence();populateSelects();renderUnits();renderLessonOverview();}
+function lessonSkillSummary(l){const items=lessonItems(l);if(!items.length)return 0;return Math.round(items.reduce((s,i)=>s+avgMastery(masteryFor(i)),0)/(items.length*5)*100);}
+function renderLessonOverview(){const l=currentLesson(),u=currentUnit(),p=lessonProgress(l.id),items=lessonItems(l);let content=`<div class="lessonHero"><span class="emoji">${l.emoji}</span><div><h2>${esc(u.title)} · ${esc(l.title)}</h2><p>${esc(l.blurb)}</p><div class="tags"><span class="tag">Unit ${u.index+1} of ${COURSE.length}</span><span class="tag">Lesson ${l.index+1} of 5</span><span class="tag">${lessonSkillSummary(l)}% familiar</span>${p.completed?'<span class="tag">✓ completed</span>':""}</div></div></div><div class="lessonActions"><button class="btn primary" id="startLessonBtn">${p.completed?"Practice lesson again":"Start lesson"}</button><button class="btn purple" id="lessonQuizBtn">Take lesson quiz</button><button class="btn" id="saveGrammarBtn">📓 Save teaching note</button></div>`;
+ if(l.kind==="vocab")content+=`<div class="teachBox"><h3>Words you will use</h3><div class="previewChips">${u.vocab.map(([en,pt])=>`<span class="miniTag">${esc(en)} · <b>${esc(pt)}</b></span>`).join("")}</div></div>`;
+ if(l.kind==="grammar")content+=`<div class="grammarBox"><h3>${esc(u.grammar.title)}</h3><p class="muted">${esc(u.grammar.explain)}</p><div class="examples">${u.grammar.examples.map(([pt,en])=>`<div class="example">${esc(en)}<b>${esc(pt)}</b></div>`).join("")}</div></div>`;
+ if(l.kind==="sentences")content+=`<div class="teachBox"><h3>Sentence goals</h3><p class="muted">You will recognize, build, and type complete phrases. Accents and punctuation are optional when typing.</p><div class="examples">${u.phrases.slice(0,4).map(([en,pt])=>`<div class="example">${esc(en)}<b>${esc(pt)}</b></div>`).join("")}</div></div>`;
+ if(l.kind==="reading")content+=`<div class="readingBox"><h3>Story preview</h3><p class="muted">Read for meaning first. You can tap highlighted words during the lesson, then answer comprehension questions.</p><div class="readingPassage">${esc(direction()==="pt"?u.reading.pt:u.reading.en)}</div></div>`;
+ if(l.kind==="mission")content+=`<div class="missionBox"><h3>Real-world mission</h3><p class="muted">${esc(u.mission)}</p></div>`;
+ content+=`<div class="grammarBox"><h3>Unit teaching note</h3><p class="muted">${esc(u.grammar.explain)}</p></div>`;$("lessonOverview").innerHTML=content;$("startLessonBtn").addEventListener("click",()=>startLesson(l.id));$("lessonQuizBtn").addEventListener("click",()=>startQuiz(`lesson:${l.id}`,"mixed",10));$("saveGrammarBtn").addEventListener("click",()=>saveNotebookAuto("grammar",u.grammar.title,u.grammar.explain,l.id));}
 
-function generateWorksheet(){
-  const lessonId=$("worksheetLessonSelect")?.value||LESSONS[currentLessonIndex].id,lesson=lessonById(lessonId)||LESSONS[currentLessonIndex],items=shuffle(allLessonItems(lesson));
-  if(!items.length){toast("This lesson has no worksheet material");return;}
-  const dir=direction()==="en"?"en":"pt";
-  const match=items.slice(0,Math.min(4,items.length)).map(item=>({item,choices:choicePool(item,dir,lesson)}));
-  const translate=items.slice(4,7).length?items.slice(4,7):items.slice(0,3);
-  const sentence=(items.find(x=>x.isPhrase)||items[0]);
-  worksheetState={lessonId:lesson.id,dir,match,translate,sentence,writing:lesson.homework,createdAt:now(),savedId:null};
-  renderWorksheet();$("printWorksheetBtn").disabled=false;
-}
-function renderWorksheet(){
-  const box=$("worksheetArea");if(!box||!worksheetState){if(box)box.innerHTML="";return;}
-  const ws=worksheetState,lesson=lessonById(ws.lessonId),source=item=>ws.dir==="pt"?item.en:item.pt,target=item=>ws.dir==="pt"?item.pt:item.en;
-  const wordBank=shuffle([...ws.match.map(x=>target(x.item)),...ws.translate.map(target)]).slice(0,8);
-  box.innerHTML=`<article class="worksheetSheet"><div class="worksheetHeader"><div><h3>${lesson.emoji} ${esc(lesson.title)} worksheet</h3><p class="muted" style="margin:4px 0 0">${ws.dir==="pt"?"English → Portuguese":"Portuguese → English"}</p></div><span class="tag">Name: ${esc(displayName||"________")}</span></div>
-    <details><summary>Helpful word bank</summary><div class="wordPreview">${wordBank.map(w=>`<span class="wordChip">${esc(w)}</span>`).join("")}</div></details>
-    <section class="worksheetSection"><h4>A. Choose the matching translation</h4>${ws.match.map((row,i)=>`<div class="worksheetQuestion" data-wq="m${i}"><label>${i+1}. ${esc(source(row.item))}</label><select class="select" data-match="${i}"><option value="">Choose…</option>${row.choices.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join("")}</select><span class="worksheetAnswer" hidden></span></div>`).join("")}</section>
-    <section class="worksheetSection"><h4>B. Translate from memory</h4>${ws.translate.map((item,i)=>`<div class="worksheetQuestion" data-wq="t${i}"><label>${i+1}. ${esc(source(item))}</label><input class="input" data-translate="${i}" placeholder="Write the translation"/><span class="worksheetAnswer" hidden></span></div>`).join("")}</section>
-    <section class="worksheetSection"><h4>C. Write the complete sentence</h4><div class="worksheetQuestion" data-wq="s0"><label>${esc(source(ws.sentence))}</label><input class="input" data-sentence placeholder="Write the full translation"/><span class="worksheetAnswer" hidden></span></div></section>
-    <section class="worksheetSection"><h4>D. Use the language yourself</h4><div class="worksheetQuestion"><label>${esc(ws.writing)}</label><textarea class="textarea" data-writing placeholder="Write your response here..."></textarea></div></section>
-    <button class="btn primary full" id="checkWorksheetBtn">Check and save worksheet</button><div id="worksheetResult"></div></article>`;
-  safeOn("checkWorksheetBtn","click",checkWorksheet);
-}
-async function checkWorksheet(){
-  if(!worksheetState)return;const ws=worksheetState,source=item=>ws.dir==="pt"?item.en:item.pt,target=item=>ws.dir==="pt"?item.pt:item.en;let correct=0,total=0;const answers={match:[],translate:[],sentence:"",writing:""};
-  ws.match.forEach((row,i)=>{total++;const el=document.querySelector(`[data-match="${i}"]`),given=el.value,ok=isCloseAnswer(given,target(row.item));answers.match.push(given);markWorksheetQuestion(`m${i}`,ok,target(row.item));if(ok)correct++;});
-  ws.translate.forEach((item,i)=>{total++;const el=document.querySelector(`[data-translate="${i}"]`),given=el.value.trim(),ok=isCloseAnswer(given,target(item));answers.translate.push(given);markWorksheetQuestion(`t${i}`,ok,target(item));if(ok)correct++;});
-  total++;const sentenceEl=document.querySelector("[data-sentence]"),sentence=sentenceEl.value.trim(),sentenceOk=isCloseAnswer(sentence,target(ws.sentence));answers.sentence=sentence;markWorksheetQuestion("s0",sentenceOk,target(ws.sentence));if(sentenceOk)correct++;
-  answers.writing=document.querySelector("[data-writing]").value.trim();const score=Math.round((correct/Math.max(1,total))*100);
-  const payload={lessonId:ws.lessonId,direction:ws.dir,score,correct,total,answers,writingPrompt:ws.writing,t:now()};
-  if(ws.savedId)await set(ref(db,rootPath(`worksheets/${identityKey()}/${ws.savedId}`)),payload);else{const item=push(ref(db,rootPath(`worksheets/${identityKey()}`)));ws.savedId=item.key;await set(item,payload);}
-  $("worksheetResult").innerHTML=`<div class="worksheetResult">Auto-graded section: ${correct}/${total} (${score}%). Your open writing was saved for you and your partner to review.</div>`;toast("Worksheet saved 📝");
-}
-function markWorksheetQuestion(key,ok,answer){const q=document.querySelector(`[data-wq="${key}"]`);if(!q)return;q.classList.remove("correct","incorrect");q.classList.add(ok?"correct":"incorrect");const note=q.querySelector(".worksheetAnswer");note.hidden=ok;note.textContent=ok?"":`Suggested answer: ${answer}`;}
-function printWorksheet(){if(!worksheetState){toast("Create a worksheet first");return;}document.body.classList.add("printingWorksheet");window.print();setTimeout(()=>document.body.classList.remove("printingWorksheet"),300);}
-function renderWorksheetHistory(){
-  const box=$("worksheetHistoryList");if(!box)return;const rows=Object.entries(myWorksheets()).filter(([,v])=>v).sort((a,b)=>(b[1].t||0)-(a[1].t||0)).slice(0,10);
-  if(!rows.length){box.innerHTML=`<div class="empty">No saved worksheets yet.</div>`;return;}
-  box.innerHTML=rows.map(([,w])=>`<div class="historyRow"><span>📝</span><div class="grow"><strong>${esc(lessonById(w.lessonId)?.title||"Worksheet")}</strong><small>${timeLabel(w.t)} · ${Number(w.correct||0)}/${Number(w.total||0)} auto-graded answers</small></div><span class="scoreBadge">${Number(w.score||0)}%</span></div>`).join("");
-}
+function exerciseDir(i=0){const d=direction();return d==="mix"?(i%2?"en":"pt"):d;}
+function buildLessonExercises(l){const u=seedForLesson(l),items=lessonItems(l),ex=[];if(l.kind==="vocab")sample(items,5).forEach((item,i)=>{const dir=exerciseDir(i);ex.push({type:"intro",item,dir},{type:"choice",item,dir},{type:i%2?"type":"bank",item,dir});});if(l.kind==="vocab"&&items[0])ex.push(audioEnabled()?{type:"listen",item:items[0],dir:exerciseDir(0)}:{type:"choice",item:items[0],dir:exerciseDir(0)});
+ if(l.kind==="grammar"){ex.push({type:"teach",title:u.grammar.title,body:u.grammar.explain,examples:u.grammar.examples});sample(items,5).forEach((item,i)=>ex.push({type:i%3===0?"fill":i%3===1?"correct":"bank",item,dir:exerciseDir(i)}));ex.push({type:"type",item:items[0],dir:exerciseDir(0)});}
+ if(l.kind==="sentences"){sample(items,5).forEach((item,i)=>{const dir=exerciseDir(i);if(i<2)ex.push({type:"intro",item,dir});ex.push({type:"choice",item,dir},{type:"bank",item,dir},{type:"type",item,dir});});if(items[0])ex.push(audioEnabled()?{type:"listen",item:items[0],dir:exerciseDir(0)}:{type:"choice",item:items[0],dir:exerciseDir(0)});const conv=CONVERSATIONS[u.id];if(conv)ex.push({type:"conversation",conversation:conv,dir:exerciseDir(0),unitIndex:u.index});}
+ if(l.kind==="reading"){ex.push({type:"readingIntro",passage:direction()==="pt"?u.reading.pt:u.reading.en,translation:direction()==="pt"?u.reading.en:u.reading.pt,unit:u});u.reading.questions.forEach((q,i)=>ex.push({type:"readingChoice",question:q[0],answer:q[1],choices:readingChoices(u,q,i),unitIndex:u.index}));sample(items,4).forEach((item,i)=>ex.push({type:i%2?"type":"bank",item,dir:exerciseDir(i)}));}
+ if(l.kind==="mission"){ex.push({type:"teach",title:"Prepare for the mission",body:u.mission,examples:u.grammar.examples.slice(0,2)});sample(items,5).forEach((item,i)=>ex.push({type:i%2?"type":"bank",item,dir:exerciseDir(i)}));ex.push({type:"open",title:"Complete the mission",prompt:u.mission,lessonId:l.id});}
+ return ex;}
+function readingChoices(u,q,i){const answer=q[1];const distractors=UNIT_SEEDS.flatMap(x=>x.reading.questions.map(y=>y[1])).filter(x=>normalize(x)!==normalize(answer));return shuffle([answer,...sample(distractors,3)]);}
+function buildItemExercise(item,type,dir,index=0){if(type==="adaptive"){const m=masteryFor(item);type=m.recall<2?"type":m.build<2?"bank":"choice";}return{type,item,dir:dir||exerciseDir(index)};}
+function scopeLessons(scope){const [kind,id]=scope.split(":");if(kind==="lesson")return[lessonById(id)].filter(Boolean);if(kind==="unit")return unitById(id)?.lessons||[];return ALL_LESSONS;}
+function scopeItems(scope){const map=new Map();scopeLessons(scope).forEach(l=>lessonItems(l).forEach(i=>map.set(i.key,i)));return[...map.values()];}
+function buildQuizExercises(scope,type,count){const lessons=scopeLessons(scope),items=scopeItems(scope),ex=[];if(type==="reading"){const units=[...new Set(lessons.map(l=>l.unitId))].map(unitById);units.forEach(u=>u.reading.questions.forEach((q,i)=>ex.push({type:"readingChoice",question:q[0],answer:q[1],choices:readingChoices(u,q,i),unitIndex:u.index})));return sample(ex,count);}
+ const pool=sample(items,Math.max(count,items.length));pool.forEach((item,i)=>{let t="choice";if(type==="vocab")t=i%2?"choice":"type";else if(type==="sentences")t=i%2?"bank":"type";else if(type==="grammar")t=i%3===0?"fill":i%3===1?"correct":"bank";else t=["choice","bank","type","fill","correct"][i%5];ex.push(buildItemExercise(item,t,exerciseDir(i),i));});return ex.slice(0,count);}
+function startLesson(id){const l=lessonById(id);activeSession={kind:"lesson",title:`${seedForLesson(l).title} · ${l.title}`,lessonId:id,exercises:buildLessonExercises(l),position:0,independent:0,assisted:0,wrong:0,openResponses:[],assistedCurrent:false,requeues:0};showSession();renderExercise();}
+function startReview(mode){let items=allCourseItems();if(mode==="mistakes"){const keys=new Set(Object.keys(mine().mistakes||{}));items=items.filter(i=>keys.has(i.key));}else items=items.filter(i=>{const m=masteryFor(i);return avgMastery(m)<4||Number(m.due||0)<=now();}).sort((a,b)=>avgMastery(masteryFor(a))-avgMastery(masteryFor(b)));if(!items.length){toast("Nothing is waiting for review right now 🌟");return;}const picked=sample(items.slice(0,24),12);const exercises=picked.map((item,i)=>buildItemExercise(item,mode==="recall"?(i%2?"type":"bank"):"adaptive",exerciseDir(i),i));activeSession={kind:"review",title:mode==="mistakes"?"Mistake review":mode==="recall"?"Recall practice":"Smart review",exercises,position:0,independent:0,assisted:0,wrong:0,assistedCurrent:false,requeues:0};showSession();renderExercise();}
+function startQuiz(scope,type,count){const ex=buildQuizExercises(scope,type,count);if(!ex.length){toast("There is not enough material for that quiz yet");return;}activeSession={kind:"quiz",title:type==="mixed"?"Mixed skills quiz":`${type[0].toUpperCase()+type.slice(1)} quiz`,scope,type,exercises:ex,position:0,independent:0,assisted:0,wrong:0,assistedCurrent:false,requeues:0,results:[]};showSession();renderExercise();}
+function startPlacement(){const ex=[];COURSE.forEach((u,ui)=>{const item=u.lessons.flatMap(lessonItems)[ui%Math.max(1,u.lessons.flatMap(lessonItems).length)];if(item)ex.push({...buildItemExercise(item,ui%2?"type":"choice",exerciseDir(ui),ui),unitIndex:ui});const q=u.reading.questions[0];ex.push({type:"readingChoice",question:q[0],answer:q[1],choices:readingChoices(u,q,0),unitIndex:ui});});activeSession={kind:"placement",title:"Placement check",exercises:ex,position:0,independent:0,assisted:0,wrong:0,assistedCurrent:false,requeues:0,unitResults:{}};showSession();renderExercise();}
+function showSession(){$("normalView").hidden=true;$("courseHeader").hidden=true;$("roomBar").hidden=true;$("sessionView").hidden=false;window.scrollTo({top:0,behavior:"smooth"});}
+function closeSession(){if(!activeSession)return;if(activeSession.position>0&&!confirm("Leave this activity? Your completed answers are already saved, but the activity will remain unfinished."))return;activeSession=null;$("sessionView").hidden=true;$("normalView").hidden=false;$("courseHeader").hidden=false;$("roomBar").hidden=false;renderEverything();}
+function renderExercise(){const s=activeSession;if(!s)return;if(s.position>=s.exercises.length){finishSession();return;}const ex=s.exercises[s.position];s.assistedCurrent=false;$("sessionProgress").style.width=`${Math.round((s.position/s.exercises.length)*100)}%`;$("sessionCount").textContent=`${s.position+1} / ${s.exercises.length}`;$("sessionLabel").textContent=s.title;const card=$("exerciseCard");card.innerHTML="";if(ex.type==="intro")renderIntro(card,ex);else if(ex.type==="teach")renderTeach(card,ex);else if(ex.type==="readingIntro")renderReadingIntro(card,ex);else if(ex.type==="choice"||ex.type==="readingChoice")renderChoice(card,ex);else if(ex.type==="listen")renderListen(card,ex);else if(ex.type==="type")renderType(card,ex);else if(ex.type==="bank")renderBank(card,ex);else if(ex.type==="fill")renderFill(card,ex);else if(ex.type==="correct")renderCorrect(card,ex);else if(ex.type==="conversation")renderConversation(card,ex);else if(ex.type==="open")renderOpen(card,ex);}
+function clueForToken(token,sourceLang){const n=normalize(token);return sourceLang==="en"?EN_PT[n]||"":PT_EN[n]||"";}
+function clueMarkup(text,sourceLang){return tokenize(text).map(tok=>{if(!/[\p{L}\p{N}]/u.test(tok))return esc(tok);const clue=clueForToken(tok,sourceLang);return clue?`<button type="button" class="clueWord" data-clue="${esc(clue)}">${esc(tok)}</button>`:esc(tok);}).join(" ").replace(/\s+([,.!?;:])/g,"$1");}
+function wireClues(card,ex){card.querySelectorAll(".clueWord").forEach(b=>b.addEventListener("click",()=>{activeSession.assistedCurrent=true;b.classList.add("revealed");let bubble=card.querySelector(".clueBubble");if(!bubble){bubble=document.createElement("div");bubble.className="clueBubble";b.closest(".hintLine,.bigWord,.readingPassage")?.after(bubble);}bubble.textContent=`${b.textContent}: ${b.dataset.clue}`;}));const full=card.querySelector("[data-full-clue]");if(full)full.addEventListener("click",()=>{activeSession.assistedCurrent=true;let bubble=card.querySelector(".clueBubble");if(!bubble){bubble=document.createElement("div");bubble.className="clueBubble";full.after(bubble);}bubble.textContent=full.dataset.fullClue;});}
+function sourceAndTarget(ex){return{source:itemSource(ex.item,ex.dir),target:itemTarget(ex.item,ex.dir),sourceLang:ex.dir==="pt"?"en":"pt",targetName:ex.dir==="pt"?"Portuguese":"English"};}
+function baseCheck(label="Check answer"){return`<div class="checkBar"><div class="feedbackMsg" id="feedbackMsg"></div><button class="btn primary" id="checkAnswer">${label}</button></div>`;}
+function renderIntro(card,ex){const{source,target}=sourceAndTarget(ex);card.innerHTML=`<div class="teachCard"><div class="exerciseType">Learn this first</div><div class="teachPair"><div class="source">${esc(source)}</div><div class="target">${esc(target)}</div></div><p class="muted">Read both sides, say them aloud when possible, and notice the word order. You will be asked to recall this again without the answer showing.</p><div class="lessonActions">${audioEnabled()?`<button class="btn blue" id="hearTeach">🔊 Hear target</button>`:""}<button class="btn" id="saveTeach">📓 Save to notebook</button><button class="btn primary" id="continueTeach">Continue</button></div></div>`;if($("hearTeach"))$("hearTeach").addEventListener("click",()=>speak(target,ex.dir==="pt"?"pt-BR":"en-US"));$("saveTeach").addEventListener("click",()=>saveNotebookAuto("word",source,target,ex.item.lessonId));$("continueTeach").addEventListener("click",()=>nextExercise(true,ex,{teaching:true}));}
+function renderTeach(card,ex){card.innerHTML=`<div class="exerciseType">Teaching note</div><h2>${esc(ex.title)}</h2><p class="muted" style="font-size:15px">${esc(ex.body)}</p><div class="examples">${(ex.examples||[]).map(([pt,en])=>`<div class="example">${esc(en)}<b>${esc(pt)}</b></div>`).join("")}</div><div class="lessonActions"><button class="btn" id="saveTeach">📓 Save note</button><button class="btn primary" id="continueTeach">Practice it</button></div>`;$("saveTeach").addEventListener("click",()=>saveNotebookAuto("grammar",ex.title,ex.body,currentLessonId));$("continueTeach").addEventListener("click",()=>nextExercise(true,ex,{teaching:true}));}
+function renderReadingIntro(card,ex){card.innerHTML=`<div class="exerciseType">Read for meaning</div><h2>Short story or dialogue</h2><div class="readingPassage hintLine">${clueMarkup(ex.passage,direction()==="pt"?"pt":"en")}</div><div class="hintLine"><button class="btn sm" data-full-clue="${esc(ex.translation)}">Show full translation</button>${audioEnabled()?'<button class="btn sm blue" id="hearReading">🔊 Hear passage</button>':""}</div><div class="checkBar"><span class="muted">Take your time. The questions come next.</span><button class="btn primary" id="continueReading">Continue</button></div>`;wireClues(card,ex);if($("hearReading"))$("hearReading").addEventListener("click",()=>speak(ex.passage,direction()==="pt"?"pt-BR":"en-US"));$("continueReading").addEventListener("click",()=>nextExercise(true,ex,{teaching:true}));}
+function choiceOptions(ex){if(ex.type==="readingChoice")return ex.choices;const{target}=sourceAndTarget(ex);const unit=seedForLesson(lessonById(ex.item.lessonId));const pool=unit.vocab.concat(unit.phrases).map(([en,pt])=>ex.dir==="pt"?pt:en).filter(x=>normalize(x)!==normalize(target));return shuffle([target,...sample(pool,3)]);}
+function renderChoice(card,ex){const reading=ex.type==="readingChoice";const source=reading?ex.question:sourceAndTarget(ex).source;const expected=reading?ex.answer:sourceAndTarget(ex).target;const sourceLang=reading?"en":(ex.dir==="pt"?"en":"pt");card.innerHTML=`<div class="exerciseType">${reading?"Reading comprehension":"Choose the correct meaning"}</div><div class="exercisePrompt">${reading?"Answer the question":"Translate into "+(ex.dir==="pt"?"Portuguese":"English")}</div><div class="bigWord hintLine">${clueMarkup(source,sourceLang)}</div><div class="choiceGrid">${choiceOptions(ex).map(c=>`<button class="choice" data-choice="${esc(c)}">${esc(c)}</button>`).join("")}</div><div class="hintLine"><button class="btn sm" data-full-clue="${esc(expected)}">Show answer clue</button></div>${baseCheck()}`;wireClues(card,ex);let selected="";card.querySelectorAll(".choice").forEach(b=>b.addEventListener("click",()=>{selected=b.dataset.choice;card.querySelectorAll(".choice").forEach(x=>x.classList.toggle("selected",x===b));}));$("checkAnswer").addEventListener("click",()=>{if(!selected){toast("Choose an answer first");return;}gradeAnswer(isClose(selected,expected),ex,selected,expected);});}
+function renderListen(card,ex){if(!audioEnabled()){ex.type="choice";renderChoice(card,ex);return;}const{target}=sourceAndTarget(ex);const unit=seedForLesson(lessonById(ex.item.lessonId));const pool=unit.vocab.concat(unit.phrases).map(([en,pt])=>ex.dir==="pt"?pt:en).filter(x=>normalize(x)!==normalize(target));const choices=shuffle([target,...sample(pool,3)]);card.innerHTML=`<div class="exerciseType">Listening practice</div><div class="exercisePrompt">Which phrase do you hear?</div><div class="lessonActions"><button class="btn blue" id="playListening">🔊 Play audio</button><button class="btn sm" id="skipListening">I cannot listen right now</button></div><div class="choiceGrid">${choices.map(c=>`<button class="choice" data-choice="${esc(c)}">${esc(c)}</button>`).join("")}</div>${baseCheck()}`;let selected="";card.querySelectorAll(".choice").forEach(b=>b.addEventListener("click",()=>{selected=b.dataset.choice;card.querySelectorAll(".choice").forEach(x=>x.classList.toggle("selected",x===b));}));$("playListening").addEventListener("click",()=>speak(target,ex.dir==="pt"?"pt-BR":"en-US"));$("skipListening").addEventListener("click",async()=>{await updateMy({audioEnabled:false});ex.type="choice";renderChoice(card,ex);toast("Audio exercises turned off. You can re-enable them in Course settings.");});$("checkAnswer").addEventListener("click",()=>{if(!selected){toast("Choose an answer first");return;}gradeAnswer(isClose(selected,target),ex,selected,target);});setTimeout(()=>speak(target,ex.dir==="pt"?"pt-BR":"en-US"),180);}
+function renderType(card,ex){const{source,target,sourceLang,targetName}=sourceAndTarget(ex);card.innerHTML=`<div class="exerciseType">Recall from memory</div><div class="exercisePrompt">Translate into ${targetName}</div><div class="bigWord hintLine">${clueMarkup(source,sourceLang)}</div><input id="typedAnswer" class="input" autocomplete="off" placeholder="Type your answer…" /><div class="hintLine"><button class="btn sm" data-full-clue="${esc(target)}">Show full phrase meaning</button><span class="muted">Accents, capitalization, and punctuation are optional.</span></div>${baseCheck()}`;wireClues(card,ex);$("typedAnswer").focus();$("typedAnswer").addEventListener("keydown",e=>{if(e.key==="Enter")$("checkAnswer").click();});$("checkAnswer").addEventListener("click",()=>{const v=$("typedAnswer").value.trim();if(!v){toast("Type an answer first");return;}gradeAnswer(isClose(v,target),ex,v,target);});}
+function bankWords(target){const words=tokenize(target).filter(t=>/[\p{L}\p{N}]/u.test(t));const extras=sample(allCourseItems().flatMap(i=>tokenize(i.pt+" "+i.en)).filter(w=>/[\p{L}\p{N}]/u.test(w)&&!words.some(x=>normalize(x)===normalize(w))),2);return shuffle(words.concat(extras));}
+function renderBank(card,ex){const{source,target,sourceLang,targetName}=sourceAndTarget(ex);const words=bankWords(target);card.innerHTML=`<div class="exerciseType">Build the sentence</div><div class="exercisePrompt">Translate into ${targetName}</div><div class="bigWord hintLine">${clueMarkup(source,sourceLang)}</div><div class="answerBank" id="answerBank"><span class="muted">Choose words below</span></div><div class="wordBank">${words.map((w,i)=>`<button class="bankWord" data-index="${i}" data-word="${esc(w)}">${esc(w)}</button>`).join("")}</div><div class="hintLine"><button class="btn sm" data-full-clue="${esc(target)}">Show phrase meaning</button><button class="btn sm" id="clearBank">Clear</button></div>${baseCheck()}`;wireClues(card,ex);let chosen=[];const paint=()=>{$("answerBank").innerHTML=chosen.length?chosen.map((x,i)=>`<button class="bankWord" data-remove="${i}">${esc(x.word)}</button>`).join(""):`<span class="muted">Choose words below</span>`;card.querySelectorAll("[data-remove]").forEach(b=>b.addEventListener("click",()=>{const x=chosen.splice(Number(b.dataset.remove),1)[0];card.querySelector(`[data-index="${x.index}"]`)?.classList.remove("used");paint();}));};card.querySelectorAll(".wordBank .bankWord").forEach(b=>b.addEventListener("click",()=>{if(b.classList.contains("used"))return;b.classList.add("used");chosen.push({word:b.dataset.word,index:b.dataset.index});paint();}));$("clearBank").addEventListener("click",()=>{chosen=[];card.querySelectorAll(".wordBank .bankWord").forEach(b=>b.classList.remove("used"));paint();});$("checkAnswer").addEventListener("click",()=>{if(!chosen.length){toast("Build an answer first");return;}const v=chosen.map(x=>x.word).join(" ");gradeAnswer(isClose(v,target),ex,v,target);});}
+function makeBlank(target){const words=tokenize(target).filter(x=>/[\p{L}\p{N}]/u.test(x));const pick=words[Math.max(0,Math.floor(words.length/2))]||words[0]||target;return{blank:target.replace(new RegExp(pick.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"i"),"_____"),answer:pick};}
+function renderFill(card,ex){const{source,target,sourceLang}=sourceAndTarget(ex);const b=makeBlank(target);ex.fillAnswer=b.answer;card.innerHTML=`<div class="exerciseType">Complete the sentence</div><div class="exercisePrompt hintLine">${clueMarkup(source,sourceLang)}</div><div class="bigWord">${esc(b.blank)}</div><input id="typedAnswer" class="input" autocomplete="off" placeholder="Missing word…" /><div class="hintLine"><button class="btn sm" data-full-clue="${esc(target)}">Show sentence meaning</button></div>${baseCheck()}`;wireClues(card,ex);$("checkAnswer").addEventListener("click",()=>{const v=$("typedAnswer").value.trim();if(!v){toast("Type the missing word");return;}gradeAnswer(isClose(v,b.answer),ex,v,b.answer);});}
+function corruptSentence(target){const words=tokenize(target);const wordIndexes=words.map((w,i)=>/[\p{L}\p{N}]/u.test(w)?i:-1).filter(i=>i>=0);if(wordIndexes.length>2){const a=wordIndexes[Math.floor(wordIndexes.length/2)-1]??wordIndexes[0],b=wordIndexes[Math.floor(wordIndexes.length/2)]??wordIndexes[1];[words[a],words[b]]=[words[b],words[a]];}else words.push("não");return words.join(" ").replace(/\s+([,.!?;:])/g,"$1");}
+function renderCorrect(card,ex){const{target}=sourceAndTarget(ex);const wrong=corruptSentence(target);card.innerHTML=`<div class="exerciseType">Correct the sentence</div><div class="exercisePrompt">Rewrite this naturally</div><div class="bigWord">${esc(wrong)}</div><input id="typedAnswer" class="input" autocomplete="off" placeholder="Correct sentence…" /><div class="hintLine"><button class="btn sm" data-full-clue="${esc(target)}">Show intended meaning</button></div>${baseCheck()}`;wireClues(card,ex);$("checkAnswer").addEventListener("click",()=>{const v=$("typedAnswer").value.trim();if(!v){toast("Write the corrected sentence");return;}gradeAnswer(isClose(v,target),ex,v,target);});}
+function renderConversation(card,ex){const c=ex.conversation,learningPt=ex.dir==="pt";const prompt=learningPt?c.enPrompt:c.ptPrompt,answer=learningPt?c.ptAnswer:c.enAnswer,follow=learningPt?c.ptFollow||c.followPt:c.enFollow||c.followEn;const unit=COURSE[ex.unitIndex]||currentUnit();const distractors=unit.phrases.map(([en,pt])=>learningPt?pt:en).filter(x=>normalize(x)!==normalize(answer));const choices=shuffle([answer,...sample(distractors,3)]);card.innerHTML=`<div class="exerciseType">Branching conversation</div><div class="exercisePrompt">Your partner says:</div><div class="bigWord">“${esc(prompt)}”</div><p class="muted">Choose the most natural response. Your choice reveals the next line of the conversation.</p><div class="choiceGrid">${choices.map(x=>`<button class="choice" data-choice="${esc(x)}">${esc(x)}</button>`).join("")}</div><div id="conversationFollow" class="clueBubble" style="display:none"></div>${baseCheck("Choose response")}`;let selected="";card.querySelectorAll(".choice").forEach(b=>b.addEventListener("click",()=>{selected=b.dataset.choice;card.querySelectorAll(".choice").forEach(x=>x.classList.toggle("selected",x===b));}));$("checkAnswer").addEventListener("click",()=>{if(!selected){toast("Choose a response first");return;}const ok=isClose(selected,answer);const followBox=$("conversationFollow");followBox.style.display="block";followBox.textContent=ok?`Next line: ${follow}`:`A more natural response is: ${answer}`;gradeAnswer(ok,ex,selected,answer);});}
+function renderOpen(card,ex){card.innerHTML=`<div class="exerciseType">Real-world writing</div><h2>${esc(ex.title)}</h2><p class="muted" style="font-size:15px">${esc(ex.prompt)}</p><textarea id="openAnswer" class="textarea" style="min-height:190px" placeholder="Write your response here…"></textarea><div class="checkBar"><span class="muted">Open writing is saved, not auto-graded.</span><button class="btn primary" id="saveOpen">Save and continue</button></div>`;$("saveOpen").addEventListener("click",()=>{const text=$("openAnswer").value.trim();if(!text){toast("Write something before continuing");return;}activeSession.openResponses.push({prompt:ex.prompt,text});nextExercise(true,ex,{open:true});});}
+function isClose(given,expected){const a=normalize(given);if(!a)return false;return splitAnswers(expected).some(v=>{const b=normalize(v);if(a===b)return true;const aw=a.split(" "),bw=b.split(" ");if(Math.abs(aw.length-bw.length)>1)return false;const shared=aw.filter(x=>bw.includes(x)).length;return shared/Math.max(aw.length,bw.length)>=.85;});}
+function gradeAnswer(correct,ex,given,expected){const assisted=activeSession.assistedCurrent;const msg=$("feedbackMsg"),button=$("checkAnswer");button.disabled=true;document.querySelectorAll(".choice,.bankWord").forEach(b=>b.disabled=true);if(correct){if(assisted){activeSession.assisted++;msg.textContent=`Correct with a clue. It will return later for independent recall.`;msg.className="feedbackMsg good";requeue(ex);}else{activeSession.independent++;msg.textContent="Correct — you recalled it independently.";msg.className="feedbackMsg good";}recordMastery(ex,true,assisted);}else{activeSession.wrong++;msg.textContent=`A natural answer is: ${expected}`;msg.className="feedbackMsg bad";recordMastery(ex,false,false,given);requeue(ex);}if(activeSession.kind==="placement"){const ui=ex.unitIndex??lessonById(ex.item?.lessonId)?.unitIndex??0;const r=activeSession.unitResults[ui]||{correct:0,total:0};r.total++;if(correct&&!assisted)r.correct++;activeSession.unitResults[ui]=r;}if(activeSession.kind==="quiz")activeSession.results.push({correct,assisted,expected,given,type:ex.type,item:ex.item||null});button.textContent="Continue";button.disabled=false;button.onclick=()=>nextExercise(correct,ex,{given,expected,assisted});}
+function requeue(ex){if(activeSession.requeues>=8||["intro","teach","readingIntro","open"].includes(ex.type))return;activeSession.requeues++;const clone={...ex,type:ex.type==="listen"?"choice":ex.type==="choice"?"type":ex.type==="type"?"bank":ex.type==="bank"?"type":ex.type};activeSession.exercises.push(clone);}
+function recordMastery(ex,correct,assisted,given=""){if(!ex.item)return;const m={...masteryFor(ex.item)},skill=skillName(ex.type);m.attempts=Number(m.attempts||0)+1;m.last=now();if(correct&&!assisted){m.correct=Number(m.correct||0)+1;m[skill]=clamp(Number(m[skill]||0)+1,0,5);const level=Math.floor(avgMastery(m));m.due=now()+[0,1,3,7,14,30][clamp(level,0,5)]*day;remove(ref(db,rootPath(`progress/${identityKey()}/mistakes/${ex.item.key}`))).catch(()=>{});}else if(!correct){m[skill]=clamp(Number(m[skill]||0)-.35,0,5);m.due=now();const old=(mine().mistakes||{})[ex.item.key]||{};set(ref(db,rootPath(`progress/${identityKey()}/mistakes/${ex.item.key}`)),{key:ex.item.key,en:ex.item.en,pt:ex.item.pt,lessonId:ex.item.lessonId,count:Number(old.count||0)+1,lastWrong:now(),given});}set(ref(db,rootPath(`progress/${identityKey()}/mastery/${ex.item.key}`)),m);}
+function nextExercise(){activeSession.position++;renderExercise();}
+function analyzeQuiz(results){const groups={recognition:[],"sentence building":[],recall:[],reading:[]};(results||[]).forEach(r=>{const name=r.type==="readingChoice"?"reading":["choice","listen"].includes(r.type)?"recognition":["bank","fill","correct","conversation"].includes(r.type)?"sentence building":"recall";groups[name].push(r.correct?1:0);});const scored=Object.entries(groups).filter(([,a])=>a.length).map(([name,a])=>({name,score:a.reduce((x,y)=>x+y,0)/a.length})).sort((a,b)=>b.score-a.score);if(!scored.length)return"This result will guide your review.";const best=scored[0],weak=scored[scored.length-1];return best.name===weak.name?`This quiz focused on ${best.name}.`:`Strongest area: ${best.name}. Best next review: ${weak.name}.`; }
+async function finishSession(){const s=activeSession;let placementRecommended=null;$("sessionProgress").style.width="100%";if(s.kind==="lesson"){const total=s.independent+s.assisted+s.wrong;await updateMy({[`lessons/${s.lessonId}/completed`]:true,[`lessons/${s.lessonId}/completedAt`]:lessonProgress(s.lessonId).completedAt||now(),[`lessons/${s.lessonId}/lastIndependent`]:s.independent,[`lessons/${s.lessonId}/lastAssisted`]:s.assisted,[`lessons/${s.lessonId}/lastWrong`]:s.wrong,[`lessons/${s.lessonId}/lastAccuracy`]:total?Math.round((s.independent+s.assisted)/total*100):100});if(s.openResponses?.length){const key=push(ref(db,rootPath("homework")));await set(key,{title:`${seedForLesson(lessonById(s.lessonId)).emoji} Mission response`,instructions:s.openResponses[0].prompt,target:"me",targetId:identityKey(),createdBy:identityKey(),createdName:displayName||"someone",lessonId:s.lessonId,t:now(),submissions:{[identityKey()]:{name:displayName||"someone",text:s.openResponses[0].text,t:now()}}});}}
+ if(s.kind==="quiz"){const key=push(ref(db,rootPath(`progress/${identityKey()}/quizHistory`)));await set(key,{title:s.title,scope:s.scope,type:s.type,independent:s.independent,assisted:s.assisted,wrong:s.wrong,total:s.independent+s.assisted+s.wrong,t:now()});}
+ if(s.kind==="placement"){let recommended=0;for(let i=0;i<COURSE.length;i++){const r=s.unitResults[i]||{correct:0,total:1};if(r.correct/r.total>=.7)recommended=i+1;else break;}recommended=clamp(recommended,0,COURSE.length-1);placementRecommended=recommended;await updateMy({placement:{takenAt:now(),recommendedUnit:recommended,results:s.unitResults},currentLesson:COURSE[recommended].lessons[0].id});}
+ const total=s.independent+s.assisted+s.wrong;const accuracy=total?Math.round((s.independent+s.assisted)/total*100):100;let title=s.kind==="placement"?"Placement check complete":s.kind==="quiz"?"Quiz complete":s.kind==="lesson"?"Lesson complete":"Review complete";let detail="";if(s.kind==="placement"){const rec=COURSE[placementRecommended??0]||COURSE[0];detail=`Your recommended starting area is ${rec.title}. Every lesson remains open.`;}else if(s.kind==="quiz")detail=`${analyzeQuiz(s.results)} ${s.independent} independent · ${s.assisted} with clues · ${s.wrong} to review.`;else detail=`${s.independent} independent · ${s.assisted} with clues · ${s.wrong} to review`;
+ $("exerciseCard").innerHTML=`<div style="text-align:center"><div style="font-size:58px">${s.kind==="quiz"?"✅":s.kind==="placement"?"🧭":"🎉"}</div><h2>${title}</h2><p class="muted">${esc(detail)}</p><div class="resultGrid"><div class="resultBox"><strong>${accuracy}%</strong><span>understood</span></div><div class="resultBox"><strong>${s.independent}</strong><span>independent recall</span></div><div class="resultBox"><strong>${s.assisted}</strong><span>used clues</span></div></div><p class="muted">There is no pass requirement. Results only guide your next review.</p><button class="btn primary" id="finishDone">Return to course</button></div>`;$("finishDone").addEventListener("click",()=>{activeSession=null;$("sessionView").hidden=true;$("normalView").hidden=false;$("courseHeader").hidden=false;$("roomBar").hidden=false;renderEverything();});}
 
-async function addHomework(title,instructions,target){
-  const itemRef=push(ref(db,rootPath("homework")));await set(itemRef,{title,instructions,target,createdBy:identityKey(),createdName:displayName||"someone",lessonId:LESSONS[currentLessonIndex].id,t:now()});toast("Homework added 📝");
-}
-function assignLessonHomework(){const l=LESSONS[currentLessonIndex];addHomework(`${l.emoji} ${l.title} homework`,l.homework,"both");}
-function createHomework(){const title=$("hwTitle").value.trim(),instructions=$("hwInstructions").value.trim(),target=$("hwTarget").value;if(!title||!instructions){toast("Add a title and instructions");return;}addHomework(title,instructions,target);$("hwTitle").value="";$("hwInstructions").value="";}
-function renderHomework(){
-  const box=$("homeworkList");if(!box)return;const entries=Object.entries(homeworkData).filter(([,v])=>v&&(v.target!=="self"||v.createdBy===identityKey())).sort((a,b)=>(b[1].t||0)-(a[1].t||0));
-  if(!entries.length){box.innerHTML=`<div class="empty">No homework yet. Add the selected lesson’s writing task or create your own.</div>`;return;}
-  box.innerHTML=entries.map(([id,hw])=>{const submissions=Object.entries(hw.submissions||{}),mineSub=(hw.submissions||{})[identityKey()]||{};return `<article class="hwCard"><div class="hwHead"><span style="font-size:22px">📝</span><div class="hwMain"><div class="hwTitle">${esc(hw.title)}</div><div class="hwMeta">${targetLabel(hw.target)} · added by ${esc(hw.createdName||"someone")}</div></div>${hw.createdBy===identityKey()?`<button class="btn sm danger" data-delete-hw="${esc(id)}">Delete</button>`:""}</div><div class="hwInstructions">${esc(hw.instructions)}</div><textarea class="textarea" data-hw-answer="${esc(id)}" placeholder="Write your answer here…">${esc(mineSub.text||"")}</textarea><button class="btn purple sm" data-save-hw="${esc(id)}" style="margin-top:8px">Save my answer</button><div>${submissions.map(([key,sub])=>`<div class="submission"><strong>${esc(sub.name||"someone")}${key===identityKey()?" (you)":""}</strong><p>${esc(sub.text||"")}</p>${sub.feedback?`<div class="feedback">💛 ${esc(sub.feedback)}</div>`:""}${key!==identityKey()?`<div style="display:flex;gap:7px;margin-top:8px"><input class="input" style="padding:8px" data-feedback-input="${esc(id)}|${esc(key)}" value="${esc(sub.feedback||"")}" placeholder="Kind correction or encouragement"/><button class="btn sm" data-save-feedback="${esc(id)}|${esc(key)}">Save</button></div>`:""}</div>`).join("")}</div></article>`;}).join("");
-  box.querySelectorAll("[data-save-hw]").forEach(b=>b.addEventListener("click",()=>saveHomeworkAnswer(b.dataset.saveHw)));box.querySelectorAll("[data-delete-hw]").forEach(b=>b.addEventListener("click",()=>remove(ref(db,rootPath(`homework/${b.dataset.deleteHw}`)))));box.querySelectorAll("[data-save-feedback]").forEach(b=>b.addEventListener("click",()=>saveFeedback(b.dataset.saveFeedback)));
-}
-function targetLabel(target){return target==="self"?"Personal homework":"Both learners can answer";}
-function saveHomeworkAnswer(id){const text=document.querySelector(`[data-hw-answer="${CSS.escape(id)}"]`).value.trim();if(!text){toast("Write an answer first");return;}set(ref(db,rootPath(`homework/${id}/submissions/${identityKey()}`)),{name:displayName||"someone",text,t:now()});toast("Homework saved ✓");}
-function saveFeedback(key){const [hwId,studentId]=key.split("|");const input=document.querySelector(`[data-feedback-input="${CSS.escape(key)}"]`);update(ref(db,rootPath(`homework/${hwId}/submissions/${studentId}`)),{feedback:input.value.trim(),feedbackBy:displayName||"someone",feedbackT:now()});toast("Feedback saved 💛");}
+function renderReview(){const items=allCourseItems().filter(i=>{const m=masteryFor(i);return avgMastery(m)<4||Number(m.due||0)<=now();}).sort((a,b)=>avgMastery(masteryFor(a))-avgMastery(masteryFor(b))).slice(0,12);$("reviewList").innerHTML=items.length?items.map(i=>{const m=masteryFor(i),lowest=Math.min(m.recognition||0,m.build||0,m.recall||0);return `<div class="row"><span>🧠</span><div class="grow"><strong>${esc(direction()==="en"?i.pt:i.en)}</strong><small>${esc(direction()==="en"?i.en:i.pt)} · weakest skill: ${lowest===m.recall?"recall":lowest===m.build?"sentence building":"recognition"}</small></div><div class="skillBars">${[1,2,3,4,5].map(n=>`<span class="${n<=Math.round(avgMastery(m))?"on":""}"></span>`).join("")}</div></div>`;}).join(""):`<div class="empty">Nothing is due right now. You can still start recall practice whenever you feel like it.</div>`;const mistakes=Object.values(mine().mistakes||{}).filter(Boolean).sort((a,b)=>(b.lastWrong||0)-(a.lastWrong||0));$("mistakeList").innerHTML=mistakes.length?mistakes.slice(0,12).map(m=>`<div class="row"><span>🔁</span><div class="grow"><strong>${esc(m.en)}</strong><small>${esc(m.pt)} · missed ${Number(m.count||1)} time${Number(m.count||1)===1?"":"s"}</small></div><button class="btn sm danger" data-remove-mistake="${esc(m.key)}">Remove</button></div>`).join(""):`<div class="empty">No saved mistakes yet.</div>`;$("mistakeList").querySelectorAll("[data-remove-mistake]").forEach(b=>b.addEventListener("click",()=>remove(ref(db,rootPath(`progress/${identityKey()}/mistakes/${b.dataset.removeMistake}`)))));}
+function renderQuizHistory(){const rows=Object.entries(mine().quizHistory||{}).filter(([,v])=>v).sort((a,b)=>(b[1].t||0)-(a[1].t||0));$("quizHistoryList").innerHTML=rows.length?rows.slice(0,20).map(([,q])=>{const total=Number(q.total||0),pct=total?Math.round((Number(q.independent||0)+Number(q.assisted||0))/total*100):0;return `<div class="historyCard"><strong>${esc(q.title||"Quiz")}</strong><div class="assignmentMeta">${new Date(q.t||0).toLocaleDateString()} · ${pct}% understood</div><div class="previewChips"><span class="miniTag">${Number(q.independent||0)} independent</span><span class="miniTag">${Number(q.assisted||0)} with clues</span><span class="miniTag">${Number(q.wrong||0)} review</span></div></div>`;}).join(""):`<div class="empty">Quiz results will appear here.</div>`;}
 
-function populatePartnerTargets(){
-  const select=$("suggestTarget");if(!select)return;const current=select.value;const rows=Object.entries(progressData).filter(([key,v])=>key!==identityKey()&&v&&v.name);
-  select.innerHTML=rows.length?rows.map(([key,v])=>`<option value="${esc(key)}">${esc(v.name)}</option>`).join(""):`<option value="">No partner found yet</option>`;
-  if(rows.some(([key])=>key===current))select.value=current;
-}
-function onlineIdentity(key){return Object.values(presenceData).some(v=>v&&(v.idk===key)&&now()-(v.t||0)<70000);}
-function partnerAssignmentCount(key){const hw=Object.values(homeworkData).filter(x=>x&&x.submissions&&x.submissions[key]&&x.submissions[key].text).length;const ws=Object.values(worksheetData[key]||{}).filter(Boolean).length;return hw+ws;}
-function renderPartnerProgress(){
-  const box=$("partnerProgressList");if(!box)return;const rows=Object.entries(progressData).filter(([key,v])=>key!==identityKey()&&v&&v.name);
-  if(!rows.length){box.innerHTML=`<div class="empty">Your partner’s progress appears after they open the course.</div>`;return;}
-  box.innerHTML=rows.map(([key,v])=>{const done=Object.values(v.lessons||{}).filter(x=>x===true||(x&&x.completed)).length,quizzes=Object.values(v.quizzes||{}).filter(Boolean).length,words=Object.values(v.mastery||{}).filter(x=>Number(x)>0).length,current=lessonById(v.currentLesson)?.title||"Not started";return `<div class="partnerCard"><div class="partnerCardHead"><span>${onlineIdentity(key)?"🟢":"💞"}</span><div><strong>${esc(v.name)}</strong><small>${goalLabel(v.goal)} · currently ${esc(current)}</small></div></div><div class="partnerMetrics"><div><strong>${done}/${LESSONS.length}</strong><span>lessons</span></div><div><strong>${quizzes}</strong><span>quizzes</span></div><div><strong>${partnerAssignmentCount(key)}</strong><span>assignments</span></div></div><div class="muted">${words} words practiced</div></div>`;}).join("");
-}
+function worksheetSource(scope){const lessons=scopeLessons(scope),items=scopeItems(scope),units=[...new Set(lessons.map(l=>l.unitId))].map(unitById);return{lessons,items,units};}
+function buildWorksheet(scope,type){const src=worksheetSource(scope),items=sample(src.items,12),unit=src.units[0]||currentUnit();const sections=[];
+ if(type==="mixed"||type==="vocab"||type==="weekly")sections.push({kind:"match",title:"A. Match the meanings",questions:sample(items,5).map((i,idx)=>({id:`m${idx}`,prompt:direction()==="en"?i.pt:i.en,answer:direction()==="en"?i.en:i.pt,options:shuffle(sample(items.map(x=>direction()==="en"?x.en:x.pt).filter(x=>normalize(x)!==normalize(direction()==="en"?i.en:i.pt)),4).concat(direction()==="en"?i.en:i.pt))}))});
+ if(type==="mixed"||type==="grammar"||type==="weekly")sections.push({kind:"fill",title:"B. Complete the sentences",questions:sample(items.filter(i=>i.isPhrase),4).map((i,idx)=>{const target=direction()==="en"?i.en:i.pt,b=makeBlank(target);return{id:`f${idx}`,prompt:b.blank,answer:b.answer};})});
+ if(type==="mixed"||type==="vocab"||type==="weekly")sections.push({kind:"translate",title:"C. Translate",questions:sample(items,4).map((i,idx)=>({id:`t${idx}`,prompt:direction()==="en"?i.pt:i.en,answer:direction()==="en"?i.en:i.pt}))});
+ if(type==="mixed"||type==="grammar")sections.push({kind:"correct",title:"D. Correct the sentence",questions:sample(items.filter(i=>i.isPhrase),3).map((i,idx)=>{const answer=direction()==="en"?i.en:i.pt;return{id:`c${idx}`,prompt:corruptSentence(answer),answer};})});
+ if(type==="mixed"||type==="grammar")sections.push({kind:"transform",title:"E. Grammar transformation",questions:unit.grammar.examples.slice(0,4).map(([pt,en],idx)=>({id:`g${idx}`,prompt:`Write this in ${direction()==="pt"?"Portuguese":"English"}: ${direction()==="pt"?en:pt}`,answer:direction()==="pt"?pt:en}))});
+ if(type==="mixed"||type==="reading"||type==="weekly")sections.push({kind:"reading",title:"F. Reading comprehension",passage:direction()==="pt"?unit.reading.pt:unit.reading.en,questions:unit.reading.questions.map((q,idx)=>({id:`r${idx}`,prompt:q[0],answer:q[1]}))});
+ sections.push({kind:"writing",title:"G. Personal writing",questions:[{id:"w0",prompt:type==="reading"?"Summarize the passage in your own words.":unit.homework,answer:""}]});return{id:`ws_${now()}`,scope,type,title:`${unit.emoji} ${unit.title} — ${type==="mixed"?"Complete practice":type[0].toUpperCase()+type.slice(1)} worksheet`,sections,createdAt:now()};}
+function generateWorksheet(){currentWorksheet=buildWorksheet($("worksheetScopeSelect").value,$("worksheetTypeSelect").value);renderWorksheet();}
+function renderWorksheet(){const box=$("worksheetArea");if(!currentWorksheet){box.innerHTML="";return;}box.innerHTML=`<div class="card worksheet"><h2>${esc(currentWorksheet.title)}</h2><p class="muted">Objective sections can be checked automatically. Personal writing is saved for review, not graded by a brittle exact-answer rule.</p>${currentWorksheet.sections.map(s=>`<section class="worksheetSection" data-section="${s.kind}"><h3>${esc(s.title)}</h3>${s.passage?`<div class="readingPassage">${esc(s.passage)}</div>`:""}${s.questions.map(q=>`<div class="worksheetQuestion" data-q="${q.id}"><div style="font-size:13px;line-height:1.55">${esc(q.prompt)}</div>${s.kind==="match"?`<select class="select wsAnswer" style="margin-top:7px"><option value="">Choose…</option>${q.options.map(o=>`<option>${esc(o)}</option>`).join("")}</select>`:s.kind==="writing"?`<textarea class="textarea wsAnswer" style="margin-top:7px" placeholder="Write your response…"></textarea>`:`<input class="input wsAnswer" style="margin-top:7px" placeholder="Your answer…" />`}<div class="worksheetResult"></div></div>`).join("")}</section>`).join("")}<div class="lessonActions worksheetControls"><button class="btn primary" id="checkWorksheet">Check and save worksheet</button><button class="btn" id="clearWorksheet">Clear answers</button></div></div>`;$("checkWorksheet").addEventListener("click",checkWorksheet);$("clearWorksheet").addEventListener("click",()=>{box.querySelectorAll(".wsAnswer").forEach(x=>x.value="");box.querySelectorAll(".worksheetResult").forEach(x=>x.textContent="");});}
+async function checkWorksheet(){let correct=0,total=0,writing="";currentWorksheet.sections.forEach(s=>s.questions.forEach(q=>{const row=$("worksheetArea").querySelector(`[data-q="${q.id}"]`),value=row.querySelector(".wsAnswer").value.trim(),result=row.querySelector(".worksheetResult");if(s.kind==="writing"){writing=value;result.textContent=value?"Saved for personal or partner feedback.":"No writing response yet.";result.style.color="";return;}total++;const ok=isClose(value,q.answer);if(ok)correct++;result.textContent=ok?"✓ Correct":`Suggested answer: ${q.answer}`;result.style.color=ok?"#9bea69":"#ff9d9d";}));const key=push(ref(db,rootPath(`progress/${identityKey()}/worksheetHistory`)));await set(key,{title:currentWorksheet.title,scope:currentWorksheet.scope,type:currentWorksheet.type,correct,total,writing,t:now()});toast(`Worksheet saved · ${correct}/${total} objective answers correct`);}
+function renderWorksheetHistory(){const rows=Object.entries(mine().worksheetHistory||{}).filter(([,v])=>v).sort((a,b)=>(b[1].t||0)-(a[1].t||0));$("worksheetHistoryList").innerHTML=rows.length?rows.slice(0,20).map(([,w])=>`<div class="historyCard"><strong>${esc(w.title||"Worksheet")}</strong><div class="assignmentMeta">${new Date(w.t||0).toLocaleDateString()} · ${Number(w.correct||0)}/${Number(w.total||0)} objective answers</div>${w.writing?`<small>${esc(w.writing.slice(0,120))}${w.writing.length>120?"…":""}</small>`:""}</div>`).join(""):`<div class="empty">Completed worksheets will appear here.</div>`;}
+
+function partnerEntries(){return Object.entries(progressData).filter(([k,v])=>k!==identityKey()&&v&&v.name);}
+async function addHomework(title,instructions,target){let targetId=identityKey();if(target==="partner"){const partner=partnerEntries()[0];if(!partner){toast("Your partner needs to open the course once first");return;}targetId=partner[0];}if(target==="both")targetId="both";const item=push(ref(db,rootPath("homework")));await set(item,{title,instructions,target,targetId,createdBy:identityKey(),createdName:displayName||"someone",lessonId:currentLessonId,t:now()});toast("Assignment added 📝");}
+function assignLessonHomework(){const l=currentLesson(),u=currentUnit();addHomework(`${u.emoji} ${u.title} mission`,l.kind==="mission"?u.mission:u.homework,"me");}
+function createHomework(){const title=$("hwTitle").value.trim(),instructions=$("hwInstructions").value.trim();if(!title||!instructions){toast("Add a title and instructions");return;}addHomework(title,instructions,$("hwTarget").value);$("hwTitle").value="";$("hwInstructions").value="";}
+function homeworkVisible(h){return h.createdBy===identityKey()||h.targetId===identityKey()||h.targetId==="both"||h.target==="both"||(h.target==="pt"&&mine().goal==="pt")||(h.target==="en"&&mine().goal==="en")||(h.submissions||{})[identityKey()];}
+function renderHomework(){const entries=Object.entries(homeworkData).filter(([,h])=>h&&homeworkVisible(h)).sort((a,b)=>(b[1].t||0)-(a[1].t||0));$("homeworkList").innerHTML=entries.length?entries.map(([id,h])=>{const sub=(h.submissions||{})[identityKey()]||{};const submissions=Object.entries(h.submissions||{});return `<article class="assignmentCard"><div style="display:flex;gap:9px"><span>📝</span><div class="grow"><strong>${esc(h.title)}</strong><div class="assignmentMeta">By ${esc(h.createdName||"someone")} · ${new Date(h.t||0).toLocaleDateString()}</div></div>${h.createdBy===identityKey()?`<button class="btn sm danger" data-delete-hw="${id}">Delete</button>`:""}</div><p class="muted">${esc(h.instructions)}</p><textarea class="textarea" data-hw-answer="${id}" placeholder="Write your response…">${esc(sub.text||"")}</textarea><button class="btn purple sm" data-save-hw="${id}" style="margin-top:8px">Save response</button>${sub.feedback?`<div class="feedback" style="margin-top:8px">💛 ${esc(sub.feedback)}</div>`:""}${submissions.filter(([k])=>k!==identityKey()).map(([k,s])=>`<div class="submission"><strong>${esc(s.name||"learner")}</strong><p>${esc(s.text||"")}</p>${h.createdBy===identityKey()?`<div style="display:flex;gap:7px"><input class="input" data-feedback="${id}|${k}" value="${esc(s.feedback||"")}" placeholder="Kind correction or natural alternative"/><button class="btn sm" data-save-feedback="${id}|${k}">Save</button></div>`:""}</div>`).join("")}</article>`;}).join(""):`<div class="empty">No assignments yet.</div>`;$("homeworkList").querySelectorAll("[data-save-hw]").forEach(b=>b.addEventListener("click",()=>saveHomework(b.dataset.saveHw)));$("homeworkList").querySelectorAll("[data-delete-hw]").forEach(b=>b.addEventListener("click",()=>remove(ref(db,rootPath(`homework/${b.dataset.deleteHw}`)))));$("homeworkList").querySelectorAll("[data-save-feedback]").forEach(b=>b.addEventListener("click",()=>saveHomeworkFeedback(b.dataset.saveFeedback)));}
+function saveHomework(id){const text=document.querySelector(`[data-hw-answer="${CSS.escape(id)}"]`).value.trim();if(!text){toast("Write a response first");return;}set(ref(db,rootPath(`homework/${id}/submissions/${identityKey()}`)),{name:displayName||"someone",text,t:now()});toast("Response saved ✓");}
+function saveHomeworkFeedback(key){const[id,learner]=key.split("|");const input=document.querySelector(`[data-feedback="${CSS.escape(key)}"]`);update(ref(db,rootPath(`homework/${id}/submissions/${learner}`)),{feedback:input.value.trim(),feedbackBy:displayName||"someone",feedbackT:now()});toast("Feedback saved 💛");}
+
+function addNotebookEntry(){const title=$("noteTitle").value.trim(),body=$("noteBody").value.trim();if(!title||!body){toast("Add a title and notes");return;}const key=push(ref(db,rootPath(`progress/${identityKey()}/notebook`)));set(key,{type:$("noteType").value,lessonId:$("noteLesson").value.replace("lesson:",""),title,body,t:now()});$("noteTitle").value="";$("noteBody").value="";toast("Saved to notebook 📓");}
+function saveNotebookAuto(type,title,body,lessonId){const key=push(ref(db,rootPath(`progress/${identityKey()}/notebook`)));set(key,{type,title,body,lessonId,t:now()});toast("Saved to notebook 📓");}
+function renderNotebook(){const q=($("notebookSearch")?.value||"").trim().toLowerCase();const rows=Object.entries(mine().notebook||{}).filter(([,v])=>v&&(!q||`${v.title} ${v.body} ${v.type}`.toLowerCase().includes(q))).sort((a,b)=>(b[1].t||0)-(a[1].t||0));$("notebookList").innerHTML=rows.length?rows.map(([id,n])=>`<div class="notebookCard"><div style="display:flex;gap:8px"><span>${n.type==="grammar"?"🔎":n.type==="correction"?"✏️":n.type==="example"?"💭":"📌"}</span><div class="grow"><strong>${esc(n.title)}</strong><div class="assignmentMeta">${esc(lessonById(n.lessonId)?.title||"Course note")} · ${new Date(n.t||0).toLocaleDateString()}</div></div><button class="btn sm danger" data-delete-note="${id}">Delete</button></div><p class="muted">${esc(n.body)}</p></div>`).join(""):`<div class="empty">Your saved words, grammar notes, examples, and corrections will appear here.</div>`;$("notebookList").querySelectorAll("[data-delete-note]").forEach(b=>b.addEventListener("click",()=>remove(ref(db,rootPath(`progress/${identityKey()}/notebook/${b.dataset.deleteNote}`)))));}
+
+function renderPartner(){const partners=partnerEntries();$("partnerProgressList").innerHTML=partners.length?partners.map(([key,p])=>{const done=Object.values(p.lessons||{}).filter(x=>x===true||(x&&x.completed)).length;const mastery=Object.values(p.mastery||{}).map(m=>typeof m==="number"?m:avgMastery(m));const comfortable=mastery.filter(x=>x>=3.5).length;const quizzes=Object.keys(p.quizHistory||{}).length;return `<div class="row"><span>💞</span><div class="grow"><strong>${esc(p.name)}</strong><small>${goalLabel(p.goal)} · ${done}/${ALL_LESSONS.length} lessons · ${comfortable} comfortable items · ${quizzes} quizzes</small></div></div>`;}).join(""):`<div class="empty">Your partner’s general progress will appear after they open this course room.</div>`;
+ const incoming=Object.entries(suggestionsData).filter(([,s])=>s&&s.targetId===identityKey()&&s.status!=="dismissed"&&s.status!=="accepted").sort((a,b)=>(b[1].t||0)-(a[1].t||0));$("incomingSuggestions").innerHTML=incoming.length?incoming.map(([id,s])=>`<div class="suggestionCard"><strong>${esc(s.en)}</strong><div class="bookPt">${esc(s.pt)}</div><p class="muted">${esc(s.note||"Suggested by "+(s.fromName||"your partner"))}</p><div class="lessonActions"><button class="btn primary sm" data-accept-suggestion="${id}">Add to my course</button><button class="btn sm" data-dismiss-suggestion="${id}">Dismiss</button></div></div>`).join(""):`<div class="empty">No incoming suggestions.</div>`;
+ const sent=Object.entries(suggestionsData).filter(([,s])=>s&&s.fromId===identityKey()).sort((a,b)=>(b[1].t||0)-(a[1].t||0));$("sentSuggestions").innerHTML=sent.length?sent.slice(0,20).map(([,s])=>`<div class="suggestionCard"><strong>${esc(s.en)}</strong><div class="bookPt">${esc(s.pt)}</div><div class="assignmentMeta">${esc(progressData[s.targetId]?.name||"partner")} · ${esc(s.status||"waiting")}</div></div>`).join(""):`<div class="empty">Suggestions you send will appear here.</div>`;
+ $("incomingSuggestions").querySelectorAll("[data-accept-suggestion]").forEach(b=>b.addEventListener("click",()=>acceptSuggestion(b.dataset.acceptSuggestion)));$("incomingSuggestions").querySelectorAll("[data-dismiss-suggestion]").forEach(b=>b.addEventListener("click",()=>update(ref(db,rootPath(`suggestions/${b.dataset.dismissSuggestion}`)),{status:"dismissed",respondedAt:now()})));}
 function goalLabel(goal){return goal==="en"?"learning English":goal==="both"?"practicing both":"learning Portuguese";}
-async function sendSuggestion(){
-  const to=$("suggestTarget").value,en=$("suggestEn").value.trim(),pt=$("suggestPt").value.trim(),lessonId=$("suggestLesson").value,note=$("suggestNote").value.trim();
-  if(!to){toast("Your partner needs to open the course first");return;}if(!en||!pt){toast("Add both English and Portuguese");return;}
-  const item=push(ref(db,rootPath("suggestions")));await set(item,{to,from:identityKey(),fromName:displayName||"someone",toName:progressData[to]?.name||"partner",en,pt,lessonId,note,status:"pending",t:now()});
-  $("suggestEn").value="";$("suggestPt").value="";$("suggestNote").value="";toast("Phrase suggestion sent 💞");
-}
-function renderSuggestions(){
-  const incoming=$("incomingSuggestions"),sent=$("sentSuggestions");if(!incoming||!sent)return;
-  const entries=Object.entries(suggestionsData).filter(([,v])=>v);
-  const inc=entries.filter(([,v])=>v.to===identityKey()).sort((a,b)=>(b[1].t||0)-(a[1].t||0));
-  const out=entries.filter(([,v])=>v.from===identityKey()).sort((a,b)=>(b[1].t||0)-(a[1].t||0));
-  incoming.innerHTML=inc.length?inc.map(([id,v])=>suggestionCard(id,v,true)).join(""):`<div class="empty">No phrase suggestions waiting.</div>`;
-  sent.innerHTML=out.length?out.map(([id,v])=>suggestionCard(id,v,false)).join(""):`<div class="empty">You have not sent any suggestions.</div>`;
-  incoming.querySelectorAll("[data-accept-suggestion]").forEach(b=>b.addEventListener("click",()=>acceptSuggestion(b.dataset.acceptSuggestion)));
-  incoming.querySelectorAll("[data-dismiss-suggestion]").forEach(b=>b.addEventListener("click",()=>update(ref(db,rootPath(`suggestions/${b.dataset.dismissSuggestion}`)),{status:"dismissed",respondedAt:now()})));
-}
-function suggestionCard(id,v,incoming){return `<div class="suggestionCard"><div class="suggestionHead"><strong>${incoming?`From ${esc(v.fromName||"partner")}`:`To ${esc(v.toName||"partner")}`}</strong><span class="statusPill ${esc(v.status||"pending")}">${esc(v.status||"pending")}</span></div><div class="suggestionPair"><span>${esc(v.en)}</span><span>${esc(v.pt)}</span></div><div class="muted">${esc(lessonById(v.lessonId)?.title||"Lesson phrase")}${v.note?` · ${esc(v.note)}`:""}</div>${incoming&&(v.status||"pending")==="pending"?`<div class="suggestionActions"><button class="btn sm primary" data-accept-suggestion="${esc(id)}">Add to my lesson</button><button class="btn sm" data-dismiss-suggestion="${esc(id)}">Dismiss</button></div>`:""}</div>`;}
-async function acceptSuggestion(id){
-  const v=suggestionsData[id];if(!v)return;const item=push(ref(db,rootPath("phrasebook")));await set(item,{en:v.en,pt:v.pt,note:v.note||`Suggested by ${v.fromName||"partner"}`,owner:identityKey(),by:identityKey(),name:displayName||"someone",lessonId:v.lessonId||LESSONS[0].id,sourceSuggestion:id,t:now()});await update(ref(db,rootPath(`suggestions/${id}`)),{status:"accepted",respondedAt:now()});toast("Added to your lesson 💬");
-}
+function sendSuggestion(){const targetId=$("suggestTarget").value,en=$("suggestEn").value.trim(),pt=$("suggestPt").value.trim();if(!targetId){toast("Your partner needs to open the course first");return;}if(!en||!pt){toast("Add both languages");return;}const key=push(ref(db,rootPath("suggestions")));set(key,{targetId,fromId:identityKey(),fromName:displayName||"someone",lessonId:$("suggestLesson").value.replace("lesson:",""),en,pt,note:$("suggestNote").value.trim(),status:"waiting",t:now()});$("suggestEn").value="";$("suggestPt").value="";$("suggestNote").value="";toast("Suggestion sent 💞");}
+async function acceptSuggestion(id){const s=suggestionsData[id];if(!s)return;const key=push(ref(db,rootPath(`progress/${identityKey()}/customPhrases`)));await set(key,{en:s.en,pt:s.pt,note:s.note||`Suggested by ${s.fromName||"partner"}`,lessonId:s.lessonId,unitId:lessonById(s.lessonId)?.unitId||currentLesson().unitId,key:`custom_${key.key}`,fromPartner:true,t:now()});await update(ref(db,rootPath(`suggestions/${id}`)),{status:"accepted",respondedAt:now()});toast("Added to your lessons ✨");}
 
-function addPhrase(){
-  const en=$("bookEn").value.trim(),pt=$("bookPt").value.trim(),note=$("bookNote").value.trim(),lessonId=$("bookLesson").value;
-  if(!en||!pt){toast("Add both English and Portuguese");return;}
-  const item=push(ref(db,rootPath("phrasebook")));set(item,{en,pt,note,owner:identityKey(),by:identityKey(),name:displayName||"someone",lessonId,t:now()});$("bookEn").value="";$("bookPt").value="";$("bookNote").value="";toast("Added to your lessons 💬");
-}
-function renderPhrasebook(){
-  const box=$("phrasebookList");if(!box)return;const q=($("bookSearch")?.value||"").trim().toLowerCase();const rows=Object.entries(phrasebookData).filter(([,v])=>v&&(v.owner===identityKey()||(!v.owner&&v.by===identityKey()))&&(!q||`${v.en} ${v.pt} ${v.note||""}`.toLowerCase().includes(q))).sort((a,b)=>(b[1].t||0)-(a[1].t||0));
-  if(!rows.length){box.innerHTML=`<div class="empty">Your custom phrase list is empty. Add something you genuinely want to say.</div>`;return;}
-  box.innerHTML=rows.map(([id,v])=>`<div class="bookRow"><div><strong>${esc(v.en)}</strong> ${noAudio()?"":speakerButton(v.en,"en-US")}</div><div class="bookPt">${esc(v.pt)} ${noAudio()?"":speakerButton(v.pt,"pt-BR")}</div><div class="bookNote">${esc(lessonById(v.lessonId||LESSONS[0].id)?.title||"")}${v.note?` · ${esc(v.note)}`:""}</div><button class="btn sm danger" data-delete-book="${esc(id)}">Delete</button></div>`).join("");
-  box.querySelectorAll("[data-say]").forEach(b=>b.addEventListener("click",()=>speak(b.dataset.say,b.dataset.lang)));box.querySelectorAll("[data-delete-book]").forEach(b=>b.addEventListener("click",()=>remove(ref(db,rootPath(`phrasebook/${b.dataset.deleteBook}`)))));
-}
+function addPhrase(){const en=$("bookEn").value.trim(),pt=$("bookPt").value.trim();if(!en||!pt){toast("Add both English and Portuguese");return;}const lessonId=$("bookLesson").value.replace("lesson:","");const key=push(ref(db,rootPath(`progress/${identityKey()}/customPhrases`)));set(key,{en,pt,note:$("bookNote").value.trim(),lessonId,unitId:lessonById(lessonId)?.unitId||currentLesson().unitId,key:`custom_${key.key}`,t:now()});$("bookEn").value="";$("bookPt").value="";$("bookNote").value="";toast("Added to your course 💬");}
+function renderPhrasebook(){const q=($("bookSearch")?.value||"").trim().toLowerCase();const rows=Object.entries(mine().customPhrases||{}).filter(([,v])=>v&&(!q||`${v.en} ${v.pt} ${v.note||""}`.toLowerCase().includes(q))).sort((a,b)=>(b[1].t||0)-(a[1].t||0));$("phrasebookList").innerHTML=rows.length?rows.map(([id,p])=>`<div class="bookRow"><div><strong>${esc(p.en)}</strong> ${speakerButton(p.en,"en-US")}</div><div class="bookPt">${esc(p.pt)} ${speakerButton(p.pt,"pt-BR")}</div><div class="bookNote">${esc(p.note||lessonById(p.lessonId)?.title||"Personal course phrase")}</div><button class="btn sm danger" data-delete-phrase="${id}">Delete</button></div>`).join(""):`<div class="empty">Add phrases you truly want to use. Accepted partner suggestions appear here too.</div>`;$("phrasebookList").querySelectorAll("[data-say]").forEach(b=>b.addEventListener("click",()=>speak(b.dataset.say,b.dataset.lang)));$("phrasebookList").querySelectorAll("[data-delete-phrase]").forEach(b=>b.addEventListener("click",()=>remove(ref(db,rootPath(`progress/${identityKey()}/customPhrases/${b.dataset.deletePhrase}`)))));}
 
-function speak(text,lang){
-  if(noAudio()){toast("Audio is turned off in your course settings");return;}
-  if(!("speechSynthesis" in window)){toast("Speech playback is not supported in this browser");return;}
-  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=lang;u.rate=.84;const voices=speechSynthesis.getVoices();const exact=voices.find(v=>v.lang.toLowerCase()===lang.toLowerCase())||voices.find(v=>v.lang.toLowerCase().startsWith(lang.slice(0,2).toLowerCase()));if(exact)u.voice=exact;speechSynthesis.speak(u);
-}
-function speakAndWait(text,lang){return new Promise(resolve=>{if(noAudio()||!("speechSynthesis" in window)){resolve();return;}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=lang;u.rate=.84;u.onend=resolve;u.onerror=resolve;speechSynthesis.speak(u);});}
-function speakerButton(text,lang){return `<button class="speak" data-say="${esc(text)}" data-lang="${lang}" title="Hear pronunciation">🔊</button>`;}
+function speak(text,lang){if(!audioEnabled()){toast("Audio exercises are turned off");return;}if(!("speechSynthesis" in window)){toast("Speech playback is not supported in this browser");return;}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=lang;u.rate=.84;const voices=speechSynthesis.getVoices();const exact=voices.find(v=>v.lang.toLowerCase()===lang.toLowerCase())||voices.find(v=>v.lang.toLowerCase().startsWith(lang.slice(0,2).toLowerCase()));if(exact)u.voice=exact;speechSynthesis.speak(u);}
+function speakerButton(text,lang){return`<button class="btn sm" data-say="${esc(text)}" data-lang="${lang}" title="Hear pronunciation">🔊</button>`;}
 
 window.addEventListener("DOMContentLoaded",waitForRooms);
