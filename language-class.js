@@ -1,3 +1,4 @@
+// Language Course v9.7 — real startup fix: valid voice-guide string
 import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, onValue, set, get, update, remove, push, onDisconnect, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -324,10 +325,10 @@ function renderVoiceGuide(){
  const settings=$("openVoiceSettings");if(settings){settings.textContent=g.button;settings.hidden=!(g.settings||g.help||["android","linux","other"].includes(g.platform));}
  const help=$("openVoiceHelp");if(help)help.hidden=!g.help;
 }
-function voiceGuideText(){const g=currentVoiceGuide||voiceGuide();return`${g.title}
-
-${g.steps.map((x,i)=>`${i+1}. ${x}`).join("
-")}`;}
+function voiceGuideText(){
+ const g=currentVoiceGuide||voiceGuide();
+ return `${g.title}\n\n${g.steps.map((x,i)=>`${i+1}. ${x}`).join("\n")}`;
+}
 function refreshVoiceList(showToast=false){
  if(!("speechSynthesis" in window))return;availableVoices=speechSynthesis.getVoices()||[];applyVoiceSettingsUI();paintVoiceAvailability();
  if(showToast){const c=voiceCounts();toast(c.total?`Voice list refreshed · ${c.total} found`:"No voices appeared yet — try reopening the browser");}
