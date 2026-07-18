@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Language Course — Mayflower Studios</title>
-  <meta name="description" content="A personal English and Brazilian Portuguese course with interactive lessons, accessible practice, partner progress, and custom phrase suggestions." />
+  <meta name="description" content="A personal English and Brazilian Portuguese course with guided lessons, quizzes, worksheets, homework, review, and partner-supported phrases." />
   <meta name="robots" content="noindex, follow" />
   <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=2" />
   <link rel="stylesheet" href="/style.css?v=33" />
@@ -45,7 +45,7 @@
     .wordPreview{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.wordChip{padding:7px 10px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.035);font-size:12px}.wordChip b{color:var(--lc-purple2)}
     .tip{padding:12px 14px;border-left:3px solid var(--lc-gold);border-radius:0 12px 12px 0;background:rgba(255,200,0,.06);font-size:12.5px;line-height:1.55;color:var(--text-2);margin-top:17px}
     .whoHere{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.whoChip{padding:6px 9px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.035);font-size:11px;color:var(--text-2)}.whoChip.me{border-color:rgba(196,181,253,.4);color:#fff}
-    .session{max-width:760px;margin:0 auto}.sessionTop{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;margin-bottom:22px}.closeSession{width:38px;height:38px;border:0;background:transparent;color:var(--text-2);font-size:24px;cursor:pointer}.sessionTrack{height:13px;border-radius:999px;background:rgba(255,255,255,.1);overflow:hidden}.sessionTrack span{display:block;height:100%;background:var(--lc-green);border-radius:inherit;transition:width .3s ease}.sessionHearts{font-weight:800;color:var(--lc-red);white-space:nowrap}
+    .session{max-width:760px;margin:0 auto}.sessionTop{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;margin-bottom:22px}.closeSession{width:38px;height:38px;border:0;background:transparent;color:var(--text-2);font-size:24px;cursor:pointer}.sessionTrack{height:13px;border-radius:999px;background:rgba(255,255,255,.1);overflow:hidden}.sessionTrack span{display:block;height:100%;background:var(--lc-green);border-radius:inherit;transition:width .3s ease}.sessionCount{font-weight:800;color:var(--lc-purple2);white-space:nowrap}
     .exerciseCard{min-height:460px;padding:28px;border:1px solid var(--border);border-radius:22px;background:rgba(255,255,255,.03);display:flex;flex-direction:column}.exerciseType{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--text-3);font-weight:800}.exercisePrompt{font-size:clamp(23px,4vw,34px);font-weight:800;line-height:1.25;margin:13px 0 18px}.exerciseSub{color:var(--text-2);font-size:13px;margin-top:-9px;margin-bottom:18px}.bigWord{font-family:var(--font-d);font-size:clamp(34px,6vw,54px);text-align:center;margin:25px 0}.speakerBig{width:82px;height:82px;border:0;border-radius:50%;margin:20px auto;background:var(--lc-blue);font-size:35px;cursor:pointer;box-shadow:0 6px 0 #1184b9}.speakerBig:active{transform:translateY(4px);box-shadow:0 2px 0 #1184b9}
     .choiceGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.choice{padding:14px;border:2px solid var(--border);border-radius:14px;background:rgba(255,255,255,.035);color:inherit;font:600 14px/1.35 inherit;cursor:pointer;text-align:left}.choice:hover{background:rgba(255,255,255,.07)}.choice.selected{border-color:var(--lc-blue);background:rgba(28,176,246,.12)}.choice.correct{border-color:var(--lc-green);background:rgba(88,204,2,.13)}.choice.wrong{border-color:var(--lc-red);background:rgba(255,75,75,.12)}
     .typeAnswer{font-size:18px;padding:15px}.wordBank{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:14px;min-height:61px;border-bottom:2px solid var(--border);margin-bottom:16px}.bankWords{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.bankWord{padding:10px 13px;border:1px solid var(--border-2);border-radius:11px;background:rgba(255,255,255,.06);color:inherit;font:600 13px inherit;cursor:pointer}.bankWord:disabled{opacity:.28}.answerWord{padding:9px 12px;border-radius:10px;background:rgba(139,92,246,.18);cursor:pointer}
@@ -68,6 +68,12 @@
     .partnerProgress,.suggestionList{display:grid;gap:10px;margin-top:13px}.partnerCard,.suggestionCard{padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.028)}.partnerCardHead,.suggestionHead{display:flex;align-items:center;justify-content:space-between;gap:10px}.partnerCardHead>span{font-size:24px}.partnerCardHead>div{flex:1}.partnerCardHead strong,.suggestionHead strong{display:block}.partnerCardHead small{display:block;color:var(--text-3);font-size:11px;margin-top:2px}.partnerMetrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.partnerMetrics>div{text-align:center;padding:9px;border:1px solid var(--border);border-radius:11px;background:rgba(0,0,0,.13)}.partnerMetrics strong,.partnerMetrics span{display:block}.partnerMetrics span{font-size:10px;color:var(--text-3);margin-top:2px}.suggestionPair{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:11px 0}.suggestionPair span{padding:10px;border:1px solid var(--border);border-radius:11px;background:rgba(0,0,0,.12)}.suggestionPair span:last-child{color:var(--lc-purple2)}.suggestionActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}.statusPill{padding:5px 8px;border:1px solid var(--border);border-radius:999px;font-size:10px;text-transform:capitalize;color:var(--text-2)}.statusPill.accepted{color:#8eea52;border-color:rgba(88,204,2,.35)}.statusPill.dismissed{color:#ff8585;border-color:rgba(255,75,75,.35)}
     @media(max-width:900px){.learnGrid,.twoCol{grid-template-columns:1fr}.pathCard{position:static}.courseStats{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:620px){.partnerMetrics,.suggestionPair{grid-template-columns:1fr}.lcWrap{padding:9px}.lcInner{padding:16px}.courseStats{grid-template-columns:1fr 1fr}.courseStat{padding:10px}.choiceGrid,.skillGrid,.formGrid{grid-template-columns:1fr}.field.full{grid-column:auto}.exerciseCard{padding:19px;min-height:440px}.resultStats{grid-template-columns:1fr}.mistakeRow,.bookRow{grid-template-columns:1fr auto}.mistakeRow .pt,.bookPt,.bookNote{grid-column:1/-1}.roomBar .push{margin-left:0}.sessionTop{gap:8px}}
+
+    .quizOptions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}.quizOption{padding:16px;border:1px solid var(--border);border-radius:15px;background:rgba(255,255,255,.028)}.quizOption strong{display:block;margin-bottom:5px}.quizOption p{margin:0 0 12px;color:var(--text-3);font-size:11.5px;line-height:1.45}.historyList,.worksheetHistory{display:grid;gap:9px;margin-top:13px}.historyRow{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--border);border-radius:13px;background:rgba(255,255,255,.025)}.historyRow .grow{flex:1}.historyRow small{display:block;color:var(--text-3);margin-top:3px}.scoreBadge{padding:6px 9px;border-radius:999px;background:rgba(139,92,246,.16);border:1px solid rgba(196,181,253,.3);font-size:11px;font-weight:800}
+    .assignmentGrid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:16px;align-items:start}.worksheetToolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.worksheetSheet{margin-top:14px;padding:22px;border:1px solid var(--border);border-radius:18px;background:rgba(255,255,255,.025)}.worksheetHeader{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:16px}.worksheetHeader h3{margin:0}.worksheetSection{margin-top:19px}.worksheetSection h4{margin:0 0 9px}.worksheetQuestion{padding:12px;border:1px solid var(--border);border-radius:12px;background:rgba(0,0,0,.12);margin-bottom:9px}.worksheetQuestion label{display:block;font-weight:700;font-size:13px;margin-bottom:7px}.worksheetQuestion.correct{border-color:rgba(88,204,2,.5);background:rgba(88,204,2,.07)}.worksheetQuestion.incorrect{border-color:rgba(255,75,75,.42);background:rgba(255,75,75,.06)}.worksheetResult{margin-top:15px;padding:13px;border-radius:13px;background:rgba(28,176,246,.08);border:1px solid rgba(28,176,246,.25);font-weight:700}.worksheetAnswer{display:block;color:var(--lc-purple2);font-size:11px;margin-top:6px}.homeworkBuilder{margin-top:14px}.homeworkList{margin-top:16px}
+    .clueBar{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:-5px 0 12px}.clueToken{border:0;border-bottom:2px dotted var(--lc-blue);background:transparent;color:inherit;font:inherit;cursor:pointer;padding:0 2px}.clueToken:hover{color:#71d2ff}.cluePopup{text-align:center;min-height:24px;color:#8edaff;font-size:12px;margin-bottom:7px}.assistNote{text-align:center;color:var(--text-3);font-size:10.5px;margin-bottom:7px}.sectionLead{margin:0;color:var(--text-2);font-size:13px;line-height:1.55}.recommended{color:#8eea52!important}.pathNode.recommended{outline:3px solid rgba(88,204,2,.18);outline-offset:3px}
+    @media(max-width:900px){.assignmentGrid{grid-template-columns:1fr}.quizOptions{grid-template-columns:1fr}}
+    @media print{body.printingWorksheet *{visibility:hidden!important}body.printingWorksheet #worksheetArea,body.printingWorksheet #worksheetArea *{visibility:visible!important}body.printingWorksheet #worksheetArea{position:absolute;inset:0;width:100%;margin:0;background:#fff;color:#111}body.printingWorksheet .worksheetSheet{border:0;background:#fff;color:#111}body.printingWorksheet .btn,body.printingWorksheet .worksheetResult{display:none!important}}
   </style>
 </head>
 <body data-nav="together">
@@ -78,15 +84,15 @@
         <div class="lcInner">
           <div class="heroRow" id="courseHeader">
             <div>
-              <span class="lcKicker">🦉 English ↔ Português do Brasil</span>
-              <h1 class="lcTitle">Learn it. Use it. <em>Remember it.</em></h1>
-              <p class="lcSub">A personal course where you answer questions, build sentences, type translations, and review mistakes. Your partner learns separately, but you can follow each other’s progress and suggest useful phrases.</p>
+              <span class="lcKicker">📚 English ↔ Português do Brasil</span>
+              <h1 class="lcTitle">A real <em>language course</em></h1>
+              <p class="lcSub">Learn through guided lessons, answer questions, build sentences, take quizzes, complete worksheets, and write longer homework. Your partner studies separately, but can follow your progress and suggest useful phrases.</p>
             </div>
           </div>
 
           <div class="roomBar" id="roomBar" hidden>
             <a class="pill" href="/together.html">← Together hub</a>
-            <span class="pill"><span class="dot" id="connDot"></span><span id="connText">Syncing…</span></span>
+            <span class="pill"><span class="dot" id="connDot"></span><span id="connText">Connecting…</span></span>
             <span class="pill">👤 <input id="nameInput" class="nameInput" maxlength="24" placeholder="your name" /></span>
             <button class="btn sm push" id="copyRoomBtn">🔗 Invite partner</button>
           </div>
@@ -99,16 +105,17 @@
           <div id="roomView" hidden>
             <div id="normalView">
               <div class="courseStats">
-                <div class="courseStat"><span class="icon">🔥</span><div><strong id="streakStat">0</strong><span>day streak</span></div></div>
-                <div class="courseStat"><span class="icon">💎</span><div><strong id="xpStat">0 XP</strong><span>total earned</span></div></div>
-                <div class="courseStat"><span class="icon">❤️</span><div><strong id="heartsStat">5 / 5</strong><span>lesson hearts</span></div></div>
-                <div class="courseStat"><span class="icon">⭐</span><div><strong id="masteryStat">0%</strong><span>course mastery</span></div></div>
+                <div class="courseStat"><span class="icon">📘</span><div><strong id="lessonsStat">0 / 10</strong><span>lessons completed</span></div></div>
+                <div class="courseStat"><span class="icon">🧠</span><div><strong id="wordsStat">0</strong><span>words practiced</span></div></div>
+                <div class="courseStat"><span class="icon">✅</span><div><strong id="quizzesStat">0</strong><span>quizzes taken</span></div></div>
+                <div class="courseStat"><span class="icon">📝</span><div><strong id="assignmentsStat">0</strong><span>assignments finished</span></div></div>
               </div>
 
               <div class="tabs" id="tabs">
                 <button class="tab active" data-tab="learn">🏠 Learn</button>
-                <button class="tab" data-tab="practice">🎯 Practice</button>
-                <button class="tab" data-tab="mistakes">💔 Mistakes</button>
+                <button class="tab" data-tab="review">🎯 Review</button>
+                <button class="tab" data-tab="quizzes">✅ Quizzes</button>
+                <button class="tab" data-tab="assignments">📝 Assignments</button>
                 <button class="tab" data-tab="partner">💞 Partner</button>
                 <button class="tab" data-tab="phrasebook">💬 My Phrases</button>
               </div>
@@ -116,7 +123,7 @@
               <section class="panel active" data-panel="learn">
                 <div class="learnGrid">
                   <aside class="pathCard">
-                    <div class="pathHead"><div><h2>Your course</h2><p class="muted">Lessons unlock in order.</p></div></div>
+                    <div class="pathHead"><div><h2>Your course</h2><p class="muted">Every lesson is available. The green outline is only a recommendation.</p></div></div>
                     <select id="goalSelect" class="goalSelect" style="margin-top:10px">
                       <option value="pt">Learning Portuguese 🇧🇷</option>
                       <option value="en">Learning English 🇺🇸</option>
@@ -125,9 +132,9 @@
                     <div class="settingsBox">
                       <label class="toggleRow" for="noAudioToggle">
                         <input type="checkbox" id="noAudioToggle" />
-                        <span><strong>🔇 I can’t use audio</strong><small>Listening questions will be replaced with visual exercises.</small></span>
+                        <span><strong>🔇 I can’t use audio</strong><small>Listening questions are replaced with visual exercises.</small></span>
                       </label>
-                      <div class="accessNote">⌨️ Accents and punctuation are optional in typed answers. For example, <b>voce</b>, <b>nao</b>, and <b>cafe</b> are accepted.</div>
+                      <div class="accessNote">⌨️ Accents, capitalization, and punctuation are optional. <b>voce</b>, <b>nao</b>, and <b>cafe</b> are accepted.</div>
                     </div>
                     <div class="pathList" id="pathList"></div>
                   </aside>
@@ -135,71 +142,121 @@
                 </div>
               </section>
 
-              <section class="panel" data-panel="practice">
+              <section class="panel" data-panel="review">
                 <div class="twoCol">
                   <div class="toolCard">
-                    <h2>Personalized practice</h2>
-                    <p class="muted">Practice prioritizes words you missed and skills with low mastery.</p>
+                    <h2>Review what needs attention</h2>
+                    <p class="sectionLead">Review never costs anything and never blocks the course. Missed questions simply come back in a different form.</p>
                     <div class="practiceButtons">
-                      <button class="btn primary full" id="smartPracticeBtn">🎯 Practice weak words</button>
-                      <button class="btn blue full" id="refillHeartsBtn">❤️ Refill hearts with practice</button>
-                      <button class="btn purple full" id="randomPracticeBtn">🔀 Mixed course practice</button>
+                      <button class="btn primary full" id="smartPracticeBtn">🎯 Review weak words</button>
+                      <button class="btn purple full" id="randomPracticeBtn">🔀 Mixed course review</button>
+                      <button class="btn blue full" id="practiceMistakesBtn">🧩 Retry saved mistakes</button>
                     </div>
                   </div>
                   <div class="toolCard">
-                    <h2>Your weakest words</h2>
-                    <p class="muted">A word grows stronger when you answer it correctly in different exercise types.</p>
+                    <h2>Words still becoming familiar</h2>
                     <div class="reviewList" id="weakWordsList"></div>
+                  </div>
+                </div>
+                <div class="toolCard" style="margin-top:16px">
+                  <h2>Mistakes notebook</h2>
+                  <p class="muted">This is a study list, not a penalty. Correct answers remove items automatically.</p>
+                  <div class="mistakeList" id="mistakeList"></div>
+                </div>
+              </section>
+
+              <section class="panel" data-panel="quizzes">
+                <div class="twoCol">
+                  <div class="toolCard">
+                    <h2>Choose a quiz</h2>
+                    <p class="sectionLead">Quizzes show what you know independently and what still needs clues. There is no pass requirement and nothing is locked.</p>
+                    <div class="field" style="margin-top:13px"><label for="quizLessonSelect">Lesson</label><select class="select" id="quizLessonSelect"></select></div>
+                    <div class="quizOptions">
+                      <div class="quizOption"><strong>Quick check</strong><p>Ten mixed questions from the selected lesson.</p><button class="btn primary full" id="quickQuizBtn">Start 10-question quiz</button></div>
+                      <div class="quizOption"><strong>Vocabulary quiz</strong><p>Recognition and typed recall for core words.</p><button class="btn purple full" id="vocabQuizBtn">Test vocabulary</button></div>
+                      <div class="quizOption"><strong>Sentence quiz</strong><p>Build, complete, and translate useful sentences.</p><button class="btn blue full" id="sentenceQuizBtn">Test sentences</button></div>
+                      <div class="quizOption"><strong>Course review</strong><p>Twenty questions mixed across every lesson.</p><button class="btn full" id="courseQuizBtn">Full course quiz</button></div>
+                    </div>
+                  </div>
+                  <div class="toolCard">
+                    <h2>Recent quiz results</h2>
+                    <p class="muted">Results separate independent answers from answers completed with clues.</p>
+                    <div class="historyList" id="quizHistoryList"></div>
                   </div>
                 </div>
               </section>
 
-              <section class="panel" data-panel="mistakes">
-                <div class="twoCol">
+              <section class="panel" data-panel="assignments">
+                <div class="assignmentGrid">
                   <div class="toolCard">
-                    <h2>Mistakes notebook</h2>
-                    <p class="muted">Wrong answers are saved here and automatically mixed into future practice.</p>
-                    <button class="btn primary full" id="practiceMistakesBtn" style="margin-top:13px">Practice my mistakes</button>
+                    <h2>Interactive worksheet</h2>
+                    <p class="sectionLead">Generate a worksheet for any lesson. Complete it on the page, save the result, or print it like a traditional worksheet.</p>
+                    <div class="field" style="margin-top:13px"><label for="worksheetLessonSelect">Lesson</label><select class="select" id="worksheetLessonSelect"></select></div>
+                    <div class="worksheetToolbar">
+                      <button class="btn primary" id="generateWorksheetBtn">Create worksheet</button>
+                      <button class="btn" id="printWorksheetBtn" disabled>🖨️ Print worksheet</button>
+                    </div>
+                    <div id="worksheetArea"></div>
                   </div>
                   <div class="toolCard">
-                    <h2>Why this helps</h2>
-                    <p class="muted">Seeing an answer once feels familiar. Retrieving it after a mistake is what makes it stick. The course will repeat missed words later instead of letting them disappear.</p>
+                    <h2>Worksheet history</h2>
+                    <p class="muted">Saved worksheets show the auto-graded section and preserve your writing response.</p>
+                    <div class="worksheetHistory" id="worksheetHistoryList"></div>
                   </div>
                 </div>
-                <div class="mistakeList" id="mistakeList"></div>
+
+                <div class="twoCol" style="margin-top:16px">
+                  <div class="toolCard">
+                    <h2>Longer homework</h2>
+                    <p class="sectionLead">Homework is for writing, diaries, conversations, and real-life use that cannot be reduced to one correct button.</p>
+                    <button class="btn primary full" id="assignLessonHomework" style="margin-top:13px">✨ Add selected lesson’s homework</button>
+                    <div class="homeworkBuilder formGrid">
+                      <div class="field full"><label for="hwTitle">Custom title</label><input class="input" id="hwTitle" maxlength="60" placeholder="Write a good-morning conversation" /></div>
+                      <div class="field full"><label for="hwInstructions">Instructions</label><textarea class="textarea" id="hwInstructions" maxlength="700" placeholder="Write 5–8 sentences using today’s phrases..."></textarea></div>
+                      <div class="field"><label for="hwTarget">Who can answer</label><select class="select" id="hwTarget"><option value="both">Both learners</option><option value="self">Just me</option></select></div>
+                      <div class="field"><label>&nbsp;</label><button class="btn purple full" id="createHomework">Add homework</button></div>
+                    </div>
+                  </div>
+                  <div class="toolCard">
+                    <h2>How feedback works</h2>
+                    <p class="muted">Your partner can read a submitted answer and leave a kind correction or encouragement. The course does not auto-grade open writing because there can be many natural correct answers.</p>
+                    <div class="tip">A helpful correction starts with what was understood, then gives a more natural version. Grammar police badges have been confiscated. 🚓</div>
+                  </div>
+                </div>
+                <div class="homeworkList" id="homeworkList"></div>
               </section>
 
               <section class="panel" data-panel="partner">
                 <div class="twoCol">
                   <div class="toolCard">
                     <h2>Your partner’s progress</h2>
-                    <p class="muted">You each complete lessons independently. This only shows how they are doing—it never changes their course.</p>
+                    <p class="muted">You each study independently. This view never changes their course.</p>
                     <div class="partnerProgress" id="partnerProgressList"></div>
                   </div>
                   <div class="toolCard">
                     <h2>Suggest a phrase</h2>
-                    <p class="muted">Send your partner something useful. They choose whether to add it to one of their lessons.</p>
+                    <p class="muted">Send something useful. Your partner chooses whether it enters their lessons.</p>
                     <div class="formGrid" style="margin-top:13px">
                       <div class="field"><label for="suggestTarget">Send to</label><select class="select" id="suggestTarget"></select></div>
-                      <div class="field"><label for="suggestLesson">Add to lesson</label><select class="select" id="suggestLesson"></select></div>
+                      <div class="field"><label for="suggestLesson">Lesson</label><select class="select" id="suggestLesson"></select></div>
                       <div class="field"><label for="suggestEn">English</label><input class="input" id="suggestEn" maxlength="120" placeholder="I miss you" /></div>
                       <div class="field"><label for="suggestPt">Português</label><input class="input" id="suggestPt" maxlength="120" placeholder="Estou com saudade de você" /></div>
-                      <div class="field full"><label for="suggestNote">Why it is useful</label><input class="input" id="suggestNote" maxlength="180" placeholder="Something we say often, a game phrase, a pet name..." /></div>
+                      <div class="field full"><label for="suggestNote">Why it is useful</label><input class="input" id="suggestNote" maxlength="180" placeholder="Something we say often..." /></div>
                     </div>
                     <button class="btn purple full" id="sendSuggestion" style="margin-top:10px">Send phrase suggestion</button>
                   </div>
                 </div>
                 <div class="twoCol" style="margin-top:16px">
-                  <div class="toolCard"><h2>Suggestions for you</h2><p class="muted">Accepting one adds it to your selected lesson and future practice.</p><div class="suggestionList" id="incomingSuggestions"></div></div>
-                  <div class="toolCard"><h2>Suggestions you sent</h2><p class="muted">See whether your partner added or dismissed them.</p><div class="suggestionList" id="sentSuggestions"></div></div>
+                  <div class="toolCard"><h2>Suggestions for you</h2><div class="suggestionList" id="incomingSuggestions"></div></div>
+                  <div class="toolCard"><h2>Suggestions you sent</h2><div class="suggestionList" id="sentSuggestions"></div></div>
                 </div>
               </section>
 
-                            <section class="panel" data-panel="phrasebook">
+              <section class="panel" data-panel="phrasebook">
                 <div class="twoCol">
                   <div class="toolCard">
                     <h2>Add your own phrase</h2>
-                    <p class="muted">Custom phrases become real questions inside the lesson you choose—not just entries in a list.</p>
+                    <p class="muted">Custom phrases become real lesson and review questions.</p>
                     <div class="formGrid" style="margin-top:13px">
                       <div class="field"><label for="bookEn">English</label><input class="input" id="bookEn" maxlength="120" placeholder="I miss you" /></div>
                       <div class="field"><label for="bookPt">Português</label><input class="input" id="bookPt" maxlength="120" placeholder="Estou com saudade de você" /></div>
@@ -208,7 +265,7 @@
                     </div>
                     <button class="btn purple full" id="addPhrase" style="margin-top:10px">Add to my lessons</button>
                   </div>
-                  <div class="toolCard"><h2>Your custom lesson phrases</h2><p class="muted">Search the phrases you added or accepted from your partner.</p><input class="input" id="bookSearch" placeholder="Search my phrases…" style="margin-top:13px" /></div>
+                  <div class="toolCard"><h2>Your custom phrases</h2><input class="input" id="bookSearch" placeholder="Search my phrases…" style="margin-top:13px" /></div>
                 </div>
                 <div class="phrasebookList" id="phrasebookList"></div>
               </section>
@@ -216,9 +273,9 @@
 
             <section id="sessionView" class="session" hidden>
               <div class="sessionTop">
-                <button class="closeSession" id="closeSession" aria-label="Close lesson">×</button>
+                <button class="closeSession" id="closeSession" aria-label="Close session">×</button>
                 <div class="sessionTrack"><span id="sessionProgress"></span></div>
-                <div class="sessionHearts" id="sessionHearts">❤️ 5</div>
+                <div class="sessionCount" id="sessionCount">1 / 10</div>
               </div>
               <div class="exerciseCard" id="exerciseCard"></div>
             </section>
@@ -232,6 +289,6 @@
   <script src="/shared.js?v=33"></script>
   <script>window._firefliesLoaded = true;</script>
   <script src="/fireflies.js"></script>
-  <script type="module" src="/language-class.js?v=7"></script>
+  <script type="module" src="/language-class.js?v=8"></script>
 </body>
 </html>
