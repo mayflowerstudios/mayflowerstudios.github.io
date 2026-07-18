@@ -106,544 +106,1265 @@ const LESSONS = [
   }
 ];
 
-
-const MANUAL_CLUE_PAIRS = [
-  ["I","eu"],["I am","estou"],["I'm","estou"],["I'll","vou"],["I want","quero"],["I need","preciso"],["I know","sei"],["I just","acabei de"],
-  ["me","me"],["me","mim"],["my","meu"],["my","minha"],["mine","meu"],["mine","minha"],
-  ["you","você"],["you all","vocês"],["you are","você está"],["you are","você é"],["you're","você está"],["you're","você é"],["your","seu"],["your","sua"],
-  ["we","nós"],["we are","estamos"],["we're","estamos"],["they","eles"],["they","elas"],["it","isso"],["this","isso"],["that","aquilo"],
-  ["what","o que"],["what","qual"],["what is","o que é"],["what is","qual é"],["which","qual"],["how","como"],["where","onde"],["when","quando"],["why","por que"],["who","quem"],
-  ["is","é"],["is","está"],["are","está"],["are","são"],["am","estou"],["am","sou"],["was","estava"],["was","foi"],["were","estavam"],["were","eram"],
-  ["do","fazer"],["does","faz"],["doing","fazendo"],["did","fez"],["have","ter"],["have","tenho"],["has","tem"],
-  ["want","querer"],["want","quer"],["wants","quer"],["need","precisar"],["need","preciso"],["can","poder"],["can","pode"],["could","poderia"],
-  ["will","vai"],["will","vou"],["would","iria"],["would like","gostaria"],["would like","queria"],["wanted","queria"],["to you","te"],["you","te"],["to hug","abraçar"],["let's","vamos"],["please","por favor"],
-  ["with","com"],["with me","comigo"],["with you","com você"],["for","para"],["for","por"],["for you","para você"],["from","de"],["to","para"],["about","sobre"],["of","de"],
-  ["in","em"],["on","em"],["on","sobre"],["at","em"],["at","às"],["and","e"],["or","ou"],["but","mas"],["because","porque"],
-  ["not","não"],["no","não"],["yes","sim"],["the","o"],["the","a"],["the","os"],["the","as"],["a","um"],["a","uma"],["one","um"],["one","uma"],
-  ["some","algum"],["some","um pouco"],["more","mais"],["very","muito"],["little","pouco"],["again","de novo"],["already","já"],["yet","já"],["yet","ainda"],["still","ainda"],
-  ["well","bem"],["good","bom"],["good","boa"],["nice","legal"],["later","mais tarde"],["after","depois"],["finally","finalmente"],["together","juntas"],
-  ["today","hoje"],["tomorrow","amanhã"],["yesterday","ontem"],["now","agora"],["morning","manhã"],["afternoon","tarde"],["night","noite"],["time","horário"],["time","tempo"],
-  ["free","livre"],["busy","ocupada"],["tired","cansada"],["hungry","com fome"],["sleepy","com sono"],["happy","feliz"],["sad","triste"],["worried","preocupada"],["calm","calma"],["angry","brava"],["afraid","com medo"],["safe","segura"],["proud","orgulhosa"],
-  ["love","amor"],["love you","te amo"],["beautiful","linda"],["cute","fofa"],["favorite","favorita"],["person","pessoa"],["name","nome"],["kiss","beijo"],["hug","abraço"],["girlfriend","namorada"],
-  ["talk","falar"],["talk","conversar"],["speak","falar"],["say","dizer"],["tell","contar"],["tell me","me conta"],["ask","perguntar"],["call you","te ligar"],
-  ["understand","entender"],["explain","explicar"],["repeat","repetir"],["mean","significar"],["means","significa"],["meaning","significado"],["know","saber"],["learn","aprender"],["learning","aprendendo"],["try","tentar"],["help","ajuda"],["help","ajudar"],["wait","esperar"],
-  ["sleep","dormir"],["slept","dormiu"],["wake up","acordar"],["woke up","acordei"],["eat","comer"],["ate","comeu"],["eaten","comido"],["cook","cozinhar"],["drink","beber"],
-  ["work","trabalhar"],["working","trabalhando"],["play","jogar"],["come","vir"],["come","vem"],["give","dar"],["give me","me dar"],["make","fazer"],["makes","faz"],["feel","sentir"],["feels","sente"],["arrive","chegar"],["arrives","chega"],["see","ver"],["see you","te ver"],
-  ["here","aqui"],["there","ali"],["word","palavra"],["sentence","frase"],["mistake","erro"],["slowly","devagar"],["more slowly","mais devagar"],
-  ["okay","tudo bem"],["be okay","ficar tudo bem"],["I can't wait","mal posso esperar"],["can't","não posso"],["don't","não"],["doesn't","não"],
-  ["bathroom","banheiro"],["house","casa"],["bed","cama"],["shower","banho"],["food","comida"],["coffee","café"],["flight","voo"],["reservation","reserva"],["game","jogo"],
-  ["eight","oito"],["day","dia"],["weekend","fim de semana"],["right","direita"],["left","esquerda"],["behind you","atrás de você"]
-];
-
 const MAX_HEARTS = 5;
-const SESSION_SIZE = 12;
+const FOCUS_ITEMS = 3;
+const MAX_SESSION_EXERCISES = 14;
+const REVIEW_INTERVALS = [0, 1, 3, 7, 14, 30];
+
 const params = new URLSearchParams(location.search);
 const presetRoom = cleanRoom(params.get("room"));
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getDatabase(app);
+
 let ROOM = null;
 let roomEntered = false;
 let currentLessonIndex = 0;
 let progressData = {};
-let presenceData = {};
-let suggestionData = {};
+let suggestionsData = {};
 let currentGoal = "pt";
-let displayName = localStorage.getItem("lc_name") || "";
 let currentTab = "learn";
 let connected = false;
 let activeSession = null;
-let noAudio = localStorage.getItem("lc_no_audio") === "true";
+let displayName = localStorage.getItem("lc_name") || "";
 let myId = localStorage.getItem("lc_device_id");
-if (!myId){ myId = "lc" + Math.random().toString(36).slice(2, 10); localStorage.setItem("lc_device_id", myId); }
+if (!myId) {
+  myId = "lc" + Math.random().toString(36).slice(2, 10);
+  localStorage.setItem("lc_device_id", myId);
+}
+
 const identityKey = () => (window.MFAuth && MFAuth.uid) ? MFAuth.uid : myId;
 const rootPath = sub => `together/${ROOM}/language${sub ? "/" + sub : ""}`;
-const roomPath = sub => `together/${ROOM}/${sub}`;
 const lessonById = id => LESSONS.find(l => l.id === id);
-const normalize = value => String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+const shuffle = arr => {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+};
+const normalize = value => String(value || "")
+  .toLowerCase()
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "")
+  .replace(/[’']/g, "")
+  .replace(/[^a-z0-9\s]/g, " ")
+  .replace(/\s+/g, " ")
+  .trim();
 const slug = value => normalize(value).replace(/\s+/g, "_").slice(0, 90);
-const clamp = (n,min,max) => Math.max(min,Math.min(max,n));
-const shuffle = arr => { const copy=[...arr]; for(let i=copy.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[copy[i],copy[j]]=[copy[j],copy[i]];} return copy; };
-const todayKey = () => new Intl.DateTimeFormat("en-CA", {timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone}).format(new Date());
-const yesterdayKey = () => { const d=new Date(); d.setDate(d.getDate()-1); return new Intl.DateTimeFormat("en-CA", {timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone}).format(d); };
 const mine = () => progressData[identityKey()] || {};
-const lessonProgress = id => { const raw=(mine().lessons || {})[id]; return raw===true ? {completed:true,stars:1,bestScore:100,legacy:true} : (raw||{}); };
+const noAudio = () => !!(mine().settings && mine().settings.noAudio);
 const hearts = () => Number.isFinite(Number(mine().hearts)) ? Number(mine().hearts) : MAX_HEARTS;
+const todayKey = () => new Intl.DateTimeFormat("en-CA", { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }).format(new Date());
+const yesterdayKey = () => {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return new Intl.DateTimeFormat("en-CA", { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }).format(d);
+};
+const on = (id, event, handler) => {
+  const element = $(id);
+  if (element) element.addEventListener(event, handler);
+};
 
-function waitForRooms(tries = 0){
-  if (window.MFRooms && MFRooms.whenReady){ MFRooms.whenReady(() => gateAndEnter(presetRoom)); return; }
-  if (tries > 100){ location.href = "/together.html"; return; }
+function answerAlternatives(value) {
+  return String(value || "")
+    .split(/\s*\/\s*/)
+    .map(v => v.trim())
+    .filter(Boolean);
+}
+function primaryAnswer(value) {
+  return answerAlternatives(value)[0] || String(value || "").trim();
+}
+function answerMatches(given, expected) {
+  const normalized = normalize(given);
+  return answerAlternatives(expected).some(option => normalize(option) === normalized);
+}
+function directionFor(index = 0) {
+  if (currentGoal === "en") return "en";
+  if (currentGoal === "both") return index % 2 ? "en" : "pt";
+  return "pt";
+}
+function sourceText(ex) {
+  return ex.direction === "pt" ? ex.item.en : ex.item.pt;
+}
+function targetText(ex) {
+  return ex.direction === "pt" ? ex.item.pt : ex.item.en;
+}
+function sourceLang(ex) {
+  return ex.direction === "pt" ? "en-US" : "pt-BR";
+}
+function targetLang(ex) {
+  return ex.direction === "pt" ? "pt-BR" : "en-US";
+}
+function goalLabel(goal) {
+  return goal === "en" ? "learning English" : goal === "both" ? "practicing both" : "learning Portuguese";
+}
+function lessonProgress(id) {
+  const raw = (mine().lessons || {})[id];
+  return raw === true ? { completed: true, stars: 1, bestScore: 100, legacy: true } : (raw || {});
+}
+function masteryFor(item) {
+  if (activeSession && activeSession.masteryCache && Object.prototype.hasOwnProperty.call(activeSession.masteryCache, item.key)) {
+    return Number(activeSession.masteryCache[item.key] || 0);
+  }
+  return Number((mine().mastery || {})[item.key] || 0);
+}
+function reviewFor(item) {
+  return (mine().review || {})[item.key] || {};
+}
+function dueForReview(item) {
+  const state = reviewFor(item);
+  return !state.dueAt || Number(state.dueAt) <= now();
+}
+function customPhraseRows(owner = mine()) {
+  return Object.entries(owner.customPhrases || {})
+    .filter(([, value]) => value && value.en && value.pt)
+    .map(([id, value]) => ({ id, ...value }));
+}
+function builtInLessonItems(lesson) {
+  return lesson.vocab.concat(lesson.phrases).map(([en, pt], index) => ({
+    en,
+    pt,
+    key: `${lesson.id}_${slug(en)}_${index}`,
+    lessonId: lesson.id,
+    isPhrase: index >= lesson.vocab.length,
+    custom: false
+  }));
+}
+function allLessonItems(lesson, owner = mine()) {
+  const custom = customPhraseRows(owner)
+    .filter(item => item.lessonId === lesson.id)
+    .map(item => ({
+      en: item.en,
+      pt: item.pt,
+      key: `custom_${item.id}`,
+      lessonId: item.lessonId,
+      isPhrase: true,
+      custom: true,
+      customId: item.id,
+      note: item.note || ""
+    }));
+  return builtInLessonItems(lesson).concat(custom);
+}
+function allUnlockedItems() {
+  return LESSONS.filter((_, index) => isLessonUnlocked(index)).flatMap(lesson => allLessonItems(lesson));
+}
+function isSeen(item) {
+  return !!((mine().seen || {})[item.key]);
+}
+function isLessonUnlocked(index) {
+  if (index === 0) return true;
+  return !!lessonProgress(LESSONS[index - 1].id).completed;
+}
+
+const EN_TO_PT = {
+  "i":"eu", "im":"eu estou / eu sou", "you":"você / te", "your":"seu / sua", "youre":"você é / você está",
+  "my":"meu / minha", "me":"me / mim", "we":"nós / a gente", "were":"nós estamos", "they":"eles / elas",
+  "how":"como", "what":"o que / qual", "where":"onde", "when":"quando", "why":"por que", "who":"quem",
+  "am":"estou / sou", "are":"está / são", "is":"é / está", "was":"era / estava", "will":"vai / vou",
+  "can":"pode", "could":"poderia", "do":"faz / auxiliar", "did":"fez / auxiliar", "have":"ter / já",
+  "not":"não", "no":"não", "yes":"sim", "the":"o / a", "a":"um / uma", "an":"um / uma",
+  "to":"para / a", "for":"para / por", "of":"de", "from":"de", "in":"em", "on":"em", "at":"em / às",
+  "with":"com", "and":"e", "or":"ou", "but":"mas", "this":"isso / este", "that":"isso / aquilo", "it":"isso",
+  "hello":"olá", "hi":"oi", "good":"bom / boa", "morning":"manhã", "afternoon":"tarde", "evening":"noite",
+  "night":"noite", "please":"por favor", "thank":"obrigada", "thanks":"obrigada", "welcome":"de nada / bem-vinda",
+  "name":"nome", "nice":"prazer / legal", "meet":"conhecer", "talk":"falar", "later":"mais tarde",
+  "love":"amor / amar", "baby":"bebê / amor", "beautiful":"linda", "cute":"fofa", "kiss":"beijo",
+  "hug":"abraço / abraçar", "come":"vem", "give":"dar", "wish":"queria", "make":"faz", "makes":"faz",
+  "happy":"feliz", "favorite":"favorita", "person":"pessoa", "today":"hoje", "now":"agora", "busy":"ocupada",
+  "tired":"cansada", "hungry":"com fome", "sleepy":"com sono", "working":"trabalhando", "sleep":"dormir",
+  "slept":"dormiu", "well":"bem", "eaten":"comido", "yet":"já / ainda", "doing":"fazendo", "free":"livre",
+  "tell":"conta", "about":"sobre", "day":"dia", "miss":"sentir saudade", "here":"aqui", "everything":"tudo",
+  "okay":"bem", "understand":"entender", "feel":"sentir", "proud":"orgulho / orgulhosa", "food":"comida",
+  "eat":"comer", "want":"querer", "delicious":"delicioso", "some":"um pouco / algum", "coffee":"café",
+  "cook":"cozinhar", "home":"casa", "bed":"cama", "shower":"banho", "clean":"limpar", "rest":"descansar",
+  "wake":"acordar", "just":"acabei de / só", "taking":"tomando", "need":"preciso", "house":"casa",
+  "lie":"deitar", "getting":"ficando / se preparando", "ready":"pronta", "yesterday":"ontem", "tomorrow":"amanhã",
+  "week":"semana", "weekend":"fim de semana", "time":"horário / tempo", "works":"funciona", "call":"ligar",
+  "eight":"oito", "mine":"meu / minha", "wait":"esperar", "game":"jogo", "team":"equipe / time",
+  "win":"ganhar", "lose":"perder", "help":"ajuda", "left":"esquerda", "right":"direita", "behind":"atrás",
+  "close":"perto / por pouco", "play":"jogar", "more":"mais", "airport":"aeroporto", "flight":"voo",
+  "arrives":"chega", "ticket":"passagem", "passport":"passaporte", "suitcase":"mala", "hotel":"hotel",
+  "reservation":"reserva", "bathroom":"banheiro", "text":"manda mensagem", "arrive":"chegar", "finally":"finalmente",
+  "together":"juntas", "say":"dizer", "again":"de novo", "speak":"falar", "slowly":"devagar", "mean":"significar",
+  "know":"saber", "word":"palavra", "try":"tentar", "learning":"aprendendo"
+};
+const PT_TO_EN = {
+  "eu":"I", "voce":"you", "você":"you", "te":"you / to you", "meu":"my / mine", "minha":"my / mine",
+  "seu":"your / yours", "sua":"your / yours", "estou":"I am", "sou":"I am", "esta":"is / are", "está":"is / are",
+  "e":"and / is", "é":"is", "sao":"are", "são":"are", "como":"how", "qual":"what / which", "o":"the / what",
+  "que":"what / that", "onde":"where", "quando":"when", "por":"for / by", "porque":"because / why",
+  "favor":"favor", "nao":"no / not", "não":"no / not", "sim":"yes", "de":"of / from", "com":"with",
+  "para":"for / to", "a":"the / to", "as":"the / at", "às":"at", "em":"in / on", "ou":"or",
+  "mas":"but", "isso":"this / that", "ola":"hello", "olá":"hello", "oi":"hi", "bom":"good", "boa":"good",
+  "dia":"day / morning", "manha":"morning", "manhã":"morning", "tarde":"afternoon / later", "noite":"night / evening",
+  "obrigada":"thank you", "obrigado":"thank you", "nada":"nothing / welcome", "nome":"name", "prazer":"pleasure / nice",
+  "conhecer":"meet / know", "falo":"I talk", "falar":"talk / speak", "mais":"more / later", "amor":"love",
+  "bebe":"baby", "bebê":"baby", "linda":"beautiful", "fofa":"cute", "beijo":"kiss", "abraco":"hug", "abraço":"hug",
+  "vem":"come", "dar":"give", "queria":"I wish / wanted", "poder":"can / could", "abracar":"hug", "abraçar":"hug",
+  "faz":"makes / does", "feliz":"happy", "favorita":"favorite", "pessoa":"person", "hoje":"today", "agora":"now",
+  "ocupada":"busy", "cansada":"tired", "fome":"hunger / hungry", "sono":"sleepiness / sleepy", "trabalhando":"working",
+  "dormiu":"slept", "bem":"well / okay", "ja":"already / yet", "já":"already / yet", "comeu":"ate", "fazendo":"doing",
+  "livre":"free", "conta":"tell", "sobre":"about", "saudade":"missing / longing", "aqui":"here", "pode":"can",
+  "tudo":"everything", "vai":"will / goes", "ficar":"become / stay", "entendo":"I understand", "sente":"feels",
+  "orgulho":"pride / proud", "comida":"food", "comer":"eat", "quero":"I want", "quer":"want", "delicioso":"delicious",
+  "cafe":"coffee", "café":"coffee", "cozinhar":"cook", "casa":"home / house", "cama":"bed", "banho":"shower",
+  "limpar":"clean", "descansar":"rest", "acordar":"wake up", "acabei":"I just finished", "tomando":"taking",
+  "preciso":"I need", "deitar":"lie down", "preparando":"getting ready", "dormir":"sleep", "ontem":"yesterday",
+  "amanha":"tomorrow", "amanhã":"tomorrow", "semana":"week", "horario":"time", "horário":"time", "tempo":"time",
+  "funciona":"works", "vamos":"let's / we go", "neste":"this / in this", "ligar":"call", "oito":"eight", "mal":"hardly",
+  "esperar":"wait", "jogo":"game", "equipe":"team", "time":"team", "ganhar":"win", "perder":"lose", "ajuda":"help",
+  "esquerda":"left", "direita":"right", "atras":"behind", "atrás":"behind", "pouco":"little", "jogar":"play",
+  "aeroporto":"airport", "voo":"flight", "chega":"arrives", "passagem":"ticket", "passaporte":"passport", "mala":"suitcase",
+  "hotel":"hotel", "reserva":"reservation", "banheiro":"bathroom", "manda":"send", "mensagem":"message", "chegar":"arrive",
+  "finalmente":"finally", "juntas":"together", "repetir":"repeat", "fale":"speak", "devagar":"slowly", "significa":"means",
+  "ainda":"still / yet", "sei":"I know", "palavra":"word", "deixa":"let", "tentar":"try", "novo":"new / again",
+  "aprendendo":"learning"
+};
+
+function clueForWord(word, lang) {
+  const key = normalize(word);
+  if (!key) return "";
+  return lang.startsWith("pt") ? (PT_TO_EN[key] || "") : (EN_TO_PT[key] || "");
+}
+function clueSentenceHtml(text, lang) {
+  const pieces = String(text || "").split(/(\s+)/);
+  let tokenIndex = 0;
+  return pieces.map(piece => {
+    if (/^\s+$/.test(piece)) return piece;
+    const clean = piece.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "");
+    if (!clean) return esc(piece);
+    const clue = clueForWord(clean, lang);
+    if (!clue) return esc(piece);
+    const prefix = piece.slice(0, piece.indexOf(clean));
+    const suffix = piece.slice(piece.indexOf(clean) + clean.length);
+    const index = tokenIndex++;
+    return `${esc(prefix)}<button class="clueWord" type="button" data-clue-word="${esc(clean)}" data-clue="${esc(clue)}" data-token="${index}">${esc(clean)}</button>${esc(suffix)}`;
+  }).join("");
+}
+function clueBlock(ex, text = sourceText(ex)) {
+  return `<div class="bigWord clueSentence">${clueSentenceHtml(primaryAnswer(text), sourceLang(ex))}</div>
+    <div class="clueGuide">Tap a <span>highlighted word</span> for a small clue.</div>
+    <button class="fullClueBtn" id="fullClueBtn" type="button">Show the whole phrase meaning</button>
+    <div id="clueBubble" hidden></div>`;
+}
+function wireClues(ex) {
+  const card = $("exerciseCard");
+  card.querySelectorAll("[data-clue]").forEach(button => button.addEventListener("click", () => {
+    ex.assisted = true;
+    const bubble = $("clueBubble");
+    bubble.hidden = false;
+    bubble.className = "clueBubble";
+    bubble.innerHTML = `<strong>${esc(button.dataset.clueWord)}</strong><span>${esc(button.dataset.clue)}</span><small>Using a clue gives partial credit, and this item will return later.</small>`;
+  }));
+  on("fullClueBtn", "click", () => {
+    ex.assisted = true;
+    const bubble = $("clueBubble");
+    bubble.hidden = false;
+    bubble.className = "clueBubble";
+    bubble.innerHTML = `<strong>Whole phrase</strong><span>${esc(primaryAnswer(targetText(ex)))}</span><small>You can still answer, but the course will ask this again without help.</small>`;
+  });
+}
+
+function waitForRooms(tries = 0) {
+  if (window.MFRooms && MFRooms.whenReady) {
+    MFRooms.whenReady(() => gateAndEnter(presetRoom));
+    return;
+  }
+  if (tries > 100) {
+    location.href = "/together.html";
+    return;
+  }
   setTimeout(() => waitForRooms(tries + 1), 100);
 }
-async function gateAndEnter(room){
-  if (!room){ location.href = "/together.html"; return; }
-  try{
+async function gateAndEnter(room) {
+  if (!room) {
+    location.href = "/together.html";
+    return;
+  }
+  try {
     const info = await MFRooms.get(room);
-    if (!info){ bounce("missing", room); return; }
-    if (info.type !== "learn"){ location.href = MFRooms.urlFor(info); return; }
+    if (!info) return bounce("missing", room);
+    if (info.type !== "learn") {
+      location.href = MFRooms.urlFor(info);
+      return;
+    }
     const access = await MFRooms.canEnter(info);
-    if (!access.ok){ bounce(access.reason, room); return; }
-    try{ await MFRooms.touch(room); }catch(_){ }
+    if (!access.ok) return bounce(access.reason, room);
+    try { await MFRooms.touch(room); } catch (_) {}
     enterRoom(room);
-  }catch(err){ console.error(err); bounce("missing", room); }
+  } catch (error) {
+    console.error(error);
+    bounce("missing", room);
+  }
 }
-function bounce(reason, room){ location.href = `/together.html?denied=${encodeURIComponent(reason || "missing")}&room=${encodeURIComponent(room || "")}`; }
-function trackIdentity(){
-  let tries=0;
-  const iv=setInterval(()=>{
-    if(!window.MFAuth){ if(++tries>150) clearInterval(iv); return; }
-    clearInterval(iv);
-    if(!MFAuth.isConfigured()) return;
-    MFAuth.onChange(user=>{
-      const input=$("nameInput");
-      if(user && MFAuth.name()){ displayName=MFAuth.name(); input.value=displayName; input.readOnly=true; }
-      else{ input.value=displayName; input.readOnly=false; }
-      if(ROOM) writePresence();
+function bounce(reason, room) {
+  location.href = `/together.html?denied=${encodeURIComponent(reason || "missing")}&room=${encodeURIComponent(room || "")}`;
+}
+function trackIdentity() {
+  let tries = 0;
+  const interval = setInterval(() => {
+    if (!window.MFAuth) {
+      if (++tries > 150) clearInterval(interval);
+      return;
+    }
+    clearInterval(interval);
+    if (!MFAuth.isConfigured()) return;
+    MFAuth.onChange(user => {
+      const input = $("nameInput");
+      if (user && MFAuth.name()) {
+        displayName = MFAuth.name();
+        if (input) {
+          input.value = displayName;
+          input.readOnly = true;
+        }
+      } else if (input) {
+        input.value = displayName;
+        input.readOnly = false;
+      }
+      if (ROOM) ensureProfile();
     });
-  },100);
+  }, 100);
 }
 trackIdentity();
 
-function enterRoom(room){
-  if(roomEntered) return;
-  roomEntered=true; ROOM=room;
-  $("gateView").hidden=true; $("roomView").hidden=false; $("roomBar").hidden=false; $("nameInput").value=displayName;
-  const u=new URL(location.href); u.searchParams.set("room",room); history.replaceState(null,"",u);
-  setupTabs(); setupPresence(); setupSharedState(); setupActions(); renderEverything();
+function enterRoom(room) {
+  if (roomEntered) return;
+  roomEntered = true;
+  ROOM = room;
+  $("gateView").hidden = true;
+  $("roomView").hidden = false;
+  $("roomBar").hidden = false;
+  $("nameInput").value = displayName;
+  const url = new URL(location.href);
+  url.searchParams.set("room", room);
+  history.replaceState(null, "", url);
+  setupTabs();
+  setupConnection();
+  setupSharedState();
+  setupActions();
+  populateLessonSelects();
+  renderEverything();
 }
-function setupTabs(){
-  $("tabs").querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>{
-    currentTab=tab.dataset.tab;
-    $("tabs").querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t===tab));
-    document.querySelectorAll(".panel").forEach(panel=>panel.classList.toggle("active",panel.dataset.panel===currentTab));
-    if(ROOM) update(ref(db,roomPath(`presence/${myId}`)),{tab:currentTab,t:now()}).catch(()=>{});
+function setupTabs() {
+  $("tabs").querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => {
+    currentTab = tab.dataset.tab;
+    $("tabs").querySelectorAll(".tab").forEach(item => item.classList.toggle("active", item === tab));
+    document.querySelectorAll(".panel").forEach(panel => panel.classList.toggle("active", panel.dataset.panel === currentTab));
+    if (currentTab === "partner") renderPartner();
+    if (currentTab === "phrasebook") renderPhrasebook();
   }));
 }
-function paintConnection(){
-  $("connDot").className="dot "+(connected?"on":"off");
-  $("connText").textContent=connected?"Progress synced":"Offline";
+function switchTab(name) {
+  const tab = $("tabs").querySelector(`[data-tab="${name}"]`);
+  if (tab) tab.click();
 }
-function writePresence(){
-  if(!ROOM) return;
-  const p=ref(db,roomPath(`presence/${myId}`));
-  set(p,{name:displayName||"someone",idk:identityKey(),tab:currentTab,lessonId:LESSONS[currentLessonIndex]?.id||LESSONS[0].id,joined:serverTimestamp(),t:now()});
-  onDisconnect(p).remove();
-}
-function setupPresence(){
-  writePresence(); setInterval(writePresence,20000);
-  onValue(ref(db,".info/connected"),snap=>{connected=snap.val()===true;paintConnection();if(connected)writePresence();});
-  onValue(ref(db,roomPath("presence")),snap=>{
-    const raw=snap.val()||{},fresh={};
-    Object.entries(raw).forEach(([id,v])=>{ if(id===myId||now()-((v&&v.t)||0)<70000)fresh[id]=v; else remove(ref(db,roomPath(`presence/${id}`))).catch(()=>{}); });
-    presenceData=fresh; renderPresence(); paintConnection();
+function setupConnection() {
+  onValue(ref(db, ".info/connected"), snapshot => {
+    connected = snapshot.val() === true;
+    $("connDot").className = "dot " + (connected ? "on" : "off");
+    $("connText").textContent = connected ? "Progress synced" : "Offline";
   });
 }
-function setupSharedState(){
-  onValue(ref(db,rootPath("progress")),snap=>{
-    progressData=snap.val()||{};
-    const me=mine(); currentGoal=me.goal||currentGoal;
-    if(typeof me.noAudio === "boolean") noAudio=me.noAudio;
-    if(me.currentLesson){ const idx=LESSONS.findIndex(l=>l.id===me.currentLesson); if(idx>=0) currentLessonIndex=idx; }
-    $("goalSelect").value=currentGoal;
-    if($("noAudioToggle")) $("noAudioToggle").checked=noAudio;
+function setupSharedState() {
+  onValue(ref(db, rootPath("progress")), snapshot => {
+    progressData = snapshot.val() || {};
+    const me = mine();
+    currentGoal = me.goal || currentGoal;
+    if (me.currentLesson) {
+      const index = LESSONS.findIndex(lesson => lesson.id === me.currentLesson);
+      if (index >= 0) currentLessonIndex = index;
+    }
+    $("goalSelect").value = currentGoal;
+    $("noAudioToggle").checked = noAudio();
     renderEverything();
   });
-  onValue(ref(db,rootPath("suggestions")),snap=>{suggestionData=snap.val()||{};renderPartner();});
-  get(ref(db,rootPath(`progress/${identityKey()}`))).then(s=>{
-    if(!s.exists()) update(ref(db,rootPath(`progress/${identityKey()}`)),{name:displayName||"someone",goal:currentGoal,noAudio,hearts:MAX_HEARTS,xp:0,streak:0,currentLesson:LESSONS[0].id,updated:now()});
+  onValue(ref(db, rootPath("suggestions")), snapshot => {
+    suggestionsData = snapshot.val() || {};
+    renderPartner();
   });
+  ensureProfile();
 }
-function setupActions(){
-  $("copyRoomBtn").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(location.href);toast("Partner invite copied 🔗");}catch(_){toast(location.href);}});
-  $("nameInput").addEventListener("input",e=>{if(e.target.readOnly)return;displayName=e.target.value.slice(0,24)||"someone";localStorage.setItem("lc_name",displayName);writePresence();updateMyProgress({name:displayName});});
-  $("goalSelect").addEventListener("change",e=>{currentGoal=e.target.value;updateMyProgress({name:displayName||"someone",goal:currentGoal});renderLessonOverview();renderPhrasebook();});
-  $("noAudioToggle").addEventListener("change",e=>setNoAudio(e.target.checked));
-  $("closeSession").addEventListener("click",closeSession);
-  $("smartPracticeBtn").addEventListener("click",()=>startPractice("weak"));
-  $("randomPracticeBtn").addEventListener("click",()=>startPractice("mixed"));
-  $("practiceMistakesBtn").addEventListener("click",()=>startPractice("mistakes"));
-  $("refillHeartsBtn").addEventListener("click",()=>startPractice("hearts"));
-  $("sendSuggestion").addEventListener("click",sendSuggestion);
-  $("addPhrase").addEventListener("click",addPhrase);
-  $("bookSearch").addEventListener("input",renderPhrasebook);
-  populateLessonSelects();
-}
-function updateMyProgress(values){ return update(ref(db,rootPath(`progress/${identityKey()}`)),{name:displayName||"someone",goal:currentGoal,noAudio,updated:now(),...values}); }
-function setNoAudio(value){
-  noAudio=!!value; localStorage.setItem("lc_no_audio",String(noAudio));
-  if($("noAudioToggle")) $("noAudioToggle").checked=noAudio;
-  updateMyProgress({noAudio});
-  if(activeSession && noAudio){
-    activeSession.exercises=activeSession.exercises.map(ex=>ex.type==="listen"?buildExercise(ex.item,"choice",ex.direction,lessonById(ex.item.lessonId)||LESSONS[0]):ex);
-  }
-  renderLessonOverview();
-  toast(noAudio?"Audio exercises replaced with visual practice 🔇":"Audio exercises enabled 🔊");
-}
-function populateLessonSelects(){
-  const options=LESSONS.map((l,i)=>`<option value="${l.id}">${i+1}. ${esc(l.title)}</option>`).join("");
-  if($("bookLesson")) $("bookLesson").innerHTML=options;
-  if($("suggestLesson")) $("suggestLesson").innerHTML=options;
-}
-
-function renderEverything(){ renderStats();renderPath();renderLessonOverview();renderWeakWords();renderMistakes();renderPartner();renderPhrasebook(); }
-function renderStats(){
-  const me=mine(); const complete=LESSONS.reduce((n,l)=>n+(lessonProgress(l.id).completed?1:0),0);
-  const mastery=LESSONS.length?Math.round((complete/LESSONS.length)*100):0;
-  $("streakStat").textContent=Number(me.streak||0); $("xpStat").textContent=`${Number(me.xp||0)} XP`; $("heartsStat").textContent=`${hearts()} / ${MAX_HEARTS}`; $("masteryStat").textContent=`${mastery}%`;
-}
-function renderPresence(){
-  const freshest=new Map();
-  Object.entries(presenceData).forEach(([id,v])=>{if(!v||now()-(v.t||0)>=70000)return;const key=v.idk||id,old=freshest.get(key);if(!old||(v.t||0)>(old.v.t||0))freshest.set(key,{id,v});});
-  const box=$("whoHere"); if(!box)return; box.innerHTML="";
-  freshest.forEach(({v},key)=>{const chip=document.createElement("span");chip.className="whoChip"+(key===identityKey()?" me":"");chip.textContent=(v.name||"someone")+(key===identityKey()?" (you)":"");box.appendChild(chip);});
-}
-function isLessonUnlocked(index){ if(index===0)return true; return !!lessonProgress(LESSONS[index-1].id).completed; }
-function renderPath(){
-  const box=$("pathList"); if(!box)return; box.innerHTML="";
-  LESSONS.forEach((lesson,index)=>{
-    const p=lessonProgress(lesson.id), unlocked=isLessonUnlocked(index), done=!!p.completed, current=index===currentLessonIndex;
-    const wrap=document.createElement("div");wrap.className="pathNodeWrap";
-    const btn=document.createElement("button");btn.className="pathNode "+(done?"done ":"")+(current?"current ":"")+(!unlocked?"locked":"");btn.disabled=!unlocked;btn.textContent=!unlocked?"🔒":done?"✓":lesson.emoji;btn.title=lesson.title;
-    btn.addEventListener("click",()=>selectLesson(index));
-    const info=document.createElement("div");info.className="pathInfo"; const stars=Number(p.stars||0); info.innerHTML=`<strong>${index+1}. ${esc(lesson.title)}</strong><span>${!unlocked?"Complete the lesson above":done?`Best: ${Number(p.bestScore||0)}% · <span class="stars">${"★".repeat(stars)}${"☆".repeat(3-stars)}</span>`:"New lesson"}</span>`;
-    wrap.append(btn,info);box.appendChild(wrap);
-  });
-}
-function selectLesson(index){ if(!isLessonUnlocked(index)){toast("Complete the previous lesson first 🔒");return;} currentLessonIndex=index;updateMyProgress({currentLesson:LESSONS[index].id});writePresence();renderPath();renderLessonOverview(); }
-function direction(){ return currentGoal==="en"?"en":currentGoal==="both"?"mix":"pt"; }
-function renderLessonOverview(){
-  const box=$("lessonOverview"); if(!box)return;
-  const lesson=LESSONS[currentLessonIndex],p=lessonProgress(lesson.id),unlocked=isLessonUnlocked(currentLessonIndex),score=Number(p.bestScore||0),done=!!p.completed;
-  const learned=allLessonItems(lesson).length; const customCount=customItemsForLesson(lesson.id).length;
-  const langLabel=currentGoal==="en"?"Portuguese → English":currentGoal==="both"?"Both directions":"English → Portuguese";
-  box.innerHTML=`
-    <div class="lessonBanner"><div class="lessonEmoji">${lesson.emoji}</div><div><h2>${currentLessonIndex+1}. ${esc(lesson.title)}</h2><p>${esc(lesson.goal)}</p><div class="lessonMeta"><span class="tag">${learned} words & phrases</span><span class="tag">${langLabel}</span><span class="tag">${noAudio?"Audio-free":"Audio included"}</span>${customCount?`<span class="tag">${customCount} custom</span>`:""}</div></div></div>
-    <div class="progressTrack"><div class="progressFill" style="width:${done?100:score}%"></div></div><div class="progressText"><span>${done?"Lesson complete":"Best lesson score"}</span><span>${done?`${Number(p.stars||1)} star${Number(p.stars||1)===1?"":"s"}`:`${score}%`}</span></div>
-    <div class="lessonActions"><button class="btn primary" id="startLessonBtn" ${unlocked?"":"disabled"}>${done?"Practice again":"Start lesson"}</button>${noAudio?`<button class="btn purple" id="enableAudioBtn">🔇 Audio exercises off</button>`:`<button class="btn purple" id="previewAudioBtn">🔊 Hear lesson words</button>`}</div>
-    <h3 style="margin:0 0 4px">What you’ll actually do</h3><div class="skillGrid"><div class="skill"><strong>💡 Tap-for-meaning clues</strong><p>Tap highlighted words for small translation clues. Anything answered with help returns later.</p></div><div class="skill"><strong>${noAudio?"👀 Meaning recognition":"👂 Listening"}</strong><p>${noAudio?"Choose meanings from written prompts instead of relying on sound.":"Hear words naturally and identify what was said."}</p></div><div class="skill"><strong>🧩 Sentence building</strong><p>Put complete phrases together in the right order.</p></div><div class="skill"><strong>⌨️ Typed recall</strong><p>Type translations from memory. Accents and punctuation are optional.</p></div><div class="skill"><strong>🔗 Matching</strong><p>Connect English and Portuguese without revealing cards.</p></div></div>
-    <h3 style="margin:19px 0 4px">Lesson vocabulary</h3><div class="wordPreview">${allLessonItems(lesson).slice(0,10).map(item=>`<span class="wordChip">${esc(item.en)} · <b>${esc(item.pt)}</b>${item.custom?" ✨":""}</span>`).join("")}</div>
-    <div class="tip"><strong>Language note:</strong> ${esc(lesson.tip)}<br><br><strong>Typing:</strong> You never lose a heart for missing an accent mark.<br><br><strong>Knowing it:</strong> New words are taught first. Answers completed with clues receive half credit and return later for an independent answer.</div>`;
-  $("startLessonBtn").addEventListener("click",()=>startLesson(currentLessonIndex));
-  if($("previewAudioBtn")) $("previewAudioBtn").addEventListener("click",()=>speakSequence(lesson.vocab.slice(0,5)));
-  if($("enableAudioBtn")) $("enableAudioBtn").addEventListener("click",()=>setNoAudio(false));
-}
-async function speakSequence(rows){ for(const [en,pt] of rows){ const text=direction()==="en"?en:pt; await speakAndWait(text,direction()==="en"?"en-US":"pt-BR"); await new Promise(r=>setTimeout(r,180)); } }
-
-function customItemsForLesson(lessonId){
-  return Object.entries(mine().customPhrases||{}).filter(([,v])=>v&&v.lessonId===lessonId&&v.en&&v.pt).map(([id,v])=>({en:v.en,pt:v.pt,key:`custom_${id}`,lessonId,isPhrase:true,custom:true,note:v.note||""}));
-}
-function allLessonItems(lesson){
-  const base=lesson.vocab.concat(lesson.phrases).map(([en,pt],i)=>({en,pt,key:`${lesson.id}_${slug(en)}_${i}`,lessonId:lesson.id,isPhrase:i>=lesson.vocab.length}));
-  return base.concat(customItemsForLesson(lesson.id));
-}
-function prioritizedLessonItems(lesson){
-  const all=allLessonItems(lesson),custom=shuffle(all.filter(x=>x.custom)),base=shuffle(all.filter(x=>!x.custom));
-  custom.slice(0,3).forEach((item,i)=>base.splice(Math.min(1+i*3,base.length),0,item));
-  return base;
-}
-function masteryFor(item){ return Number((mine().mastery||{})[item.key]||0); }
-function buildLessonExercises(lesson){
-  const items=prioritizedLessonItems(lesson); const dir=direction(); const exercises=[];
-  const pattern=noAudio?["choice","type","bank","choice"]:["choice","listen","type","bank"];
-  items.slice(0,10).forEach((item,i)=>exercises.push(buildExercise(item,pattern[i%pattern.length],dir==="mix"?(i%2?"en":"pt"):dir,lesson)));
-  if(items.length>=4) exercises.splice(5,0,{type:"match",items:shuffle(items).slice(0,4),direction:dir});
-  const extra=items.find(x=>x.isPhrase)||items[0];
-  if(extra) exercises.push(buildExercise(extra,noAudio?"type":"listen",dir==="mix"?"pt":dir,lesson));
-  return exercises.slice(0,SESSION_SIZE);
-}
-function buildExercise(item,type,dir,lesson){
-  const actualDir=dir==="mix"?"pt":dir;
-  if(noAudio && type==="listen") type="choice";
-  if(type==="bank" && (!(actualDir==="pt"?item.pt:item.en).includes(" ") || (actualDir==="pt"?item.pt:item.en).includes("/"))) type="choice";
-  if(type==="listen") return {type,item,direction:actualDir,choices:choicePool(item,actualDir==="pt"?"en":"pt",lesson)};
-  if(type==="choice") return {type,item,direction:actualDir,choices:choicePool(item,actualDir,lesson)};
-  return {type,item,direction:actualDir};
-}
-function choicePool(item,dir,lesson){
-  const answer=dir==="pt"?item.pt:item.en; const pool=shuffle(allLessonItems(lesson).map(x=>dir==="pt"?x.pt:x.en).filter(x=>x!==answer));
-  return shuffle([answer,...pool.slice(0,3)]);
-}
-function buildPracticeExercises(mode){
-  const all=LESSONS.filter((_,i)=>isLessonUnlocked(i)).flatMap(allLessonItems); const mistakes=Object.values(mine().mistakes||{}).filter(Boolean);
-  let source=[];
-  if(mode==="mistakes") source=mistakes.map(m=>({...m,key:m.key||`${m.lessonId}_${slug(m.en)}`}));
-  else if(mode==="weak"||mode==="hearts") source=shuffle(all).sort((a,b)=>masteryFor(a)-masteryFor(b)).slice(0,18);
-  else source=shuffle(all).slice(0,18);
-  if(!source.length) source=shuffle(all).slice(0,18);
-  const dir=direction(),pattern=noAudio?["choice","type","bank"]:["choice","listen","type","bank"],exercises=[];
-  source.slice(0,10).forEach((item,i)=>{const lesson=lessonById(item.lessonId)||LESSONS[0];exercises.push(buildExercise(item,pattern[i%pattern.length],dir==="mix"?(i%2?"en":"pt"):dir,lesson));});
-  if(source.length>=4) exercises.splice(5,0,{type:"match",items:shuffle(source).slice(0,4),direction:dir});
-  return exercises.slice(0,SESSION_SIZE-1);
-}
-function startLesson(index){
-  if(!isLessonUnlocked(index)){toast("Complete the previous lesson first");return;}
-  if(hearts()<=0){toast("Practice to refill your hearts first ❤️");switchTab("practice");return;}
-  activeSession={kind:"lesson",lessonIndex:index,mode:"lesson",exercises:buildLessonExercises(LESSONS[index]),position:0,correct:0,wrong:0,xp:0,hearts:hearts(),locked:false,selected:null,bank:[],matched:0,introduced:{},teachCount:0,hintUsed:false,justTaught:false,independentCorrect:0,assistedCorrect:0};
-  showSession();renderExercise();
-}
-function startPractice(mode){
-  const exercises=buildPracticeExercises(mode);
-  if(!exercises.length){toast("Complete a lesson first so there is something to practice");return;}
-  activeSession={kind:"practice",mode,exercises,position:0,correct:0,wrong:0,xp:0,hearts:hearts(),locked:false,selected:null,bank:[],matched:0,introduced:{},teachCount:0,hintUsed:false,justTaught:false,independentCorrect:0,assistedCorrect:0};
-  showSession();renderExercise();
-}
-function showSession(){ $("normalView").hidden=true;$("courseHeader").hidden=true;$("roomBar").hidden=true;$("sessionView").hidden=false;window.scrollTo({top:0,behavior:"smooth"}); }
-function closeSession(){ if(!activeSession)return; const started=activeSession.position>0; if(started&&!confirm("Leave this lesson? Your unfinished attempt will not be scored."))return; activeSession=null;$("sessionView").hidden=true;$("normalView").hidden=false;$("courseHeader").hidden=false;$("roomBar").hidden=false;renderEverything(); }
-function switchTab(name){ const tab=$("tabs").querySelector(`[data-tab="${name}"]`); if(tab)tab.click(); }
-function targetText(ex){ return ex.direction==="pt"?ex.item.pt:ex.item.en; }
-function sourceText(ex){ return ex.direction==="pt"?ex.item.en:ex.item.pt; }
-function targetLang(ex){ return ex.direction==="pt"?"pt-BR":"en-US"; }
-function sourceLang(ex){ return ex.direction==="pt"?"en-US":"pt-BR"; }
-function addClue(map,key,value){
-  const cleanKey=normalize(key); if(!cleanKey||!value)return;
-  const current=map.get(cleanKey)||[];
-  if(!current.some(v=>normalize(v)===normalize(value)))current.push(value);
-  map.set(cleanKey,current);
-}
-function clueMaps(ex){
-  const en=new Map(),pt=new Map();
-  const addPair=(english,portuguese)=>{addClue(en,english,portuguese);addClue(pt,portuguese,english);};
-  MANUAL_CLUE_PAIRS.forEach(([english,portuguese])=>addPair(english,portuguese));
-  LESSONS.forEach(lesson=>lesson.vocab.forEach(([english,portuguese])=>addPair(english,portuguese)));
-  if(ex&&ex.item){
-    const enWords=normalize(ex.item.en).split(" ").filter(Boolean).length;
-    const ptWords=normalize(ex.item.pt).split(" ").filter(Boolean).length;
-    if(enWords<=3&&ptWords<=3)addPair(ex.item.en,ex.item.pt);
-  }
-  return {en,pt};
-}
-function cluedText(text,lang,ex){
-  const source=String(text||"");
-  const words=[...source.matchAll(/[\p{L}\p{N}]+(?:[’'][\p{L}\p{N}]+)?/gu)].map(m=>({text:m[0],start:m.index,end:m.index+m[0].length}));
-  if(!words.length)return esc(source);
-  const map=clueMaps(ex)[lang]||new Map(); let cursor=0,i=0,html="",found=0;
-  while(i<words.length){
-    let match=null;
-    for(let size=Math.min(4,words.length-i);size>=1;size--){
-      const key=normalize(words.slice(i,i+size).map(w=>w.text).join(" "));
-      const values=map.get(key);
-      if(values&&values.length){match={size,values,key};break;}
-    }
-    if(!match){i++;continue;}
-    const first=words[i],last=words[i+match.size-1];
-    html+=esc(source.slice(cursor,first.start));
-    const visible=source.slice(first.start,last.end),clue=match.values.slice(0,3).join(" / ");
-    html+=`<button type="button" class="clueWord" data-term="${esc(visible)}" data-clue="${esc(clue)}" title="Tap for meaning">${esc(visible)}</button>`;
-    cursor=last.end;i+=match.size;found++;
-  }
-  html+=esc(source.slice(cursor));
-  return found?html:esc(source);
-}
-function cluePrompt(ex,style=""){
-  const lang=ex.direction==="pt"?"en":"pt";
-  return `<div class="bigWord clueSentence"${style?` style="${style}"`:""}>${cluedText(sourceText(ex),lang,ex)}</div><div class="clueGuide">Tap the <span>highlighted words</span> for a meaning clue.</div><button type="button" class="fullClueBtn" data-full-clue="${esc(targetText(ex))}">Show the whole phrase meaning</button><div class="clueBubble" id="clueBubble" hidden></div>`;
-}
-function wireClues(card){
-  const bubble=card.querySelector("#clueBubble");
-  const reveal=(term,clue,full=false)=>{
-    if(activeSession)activeSession.hintUsed=true;
-    if(!bubble)return;
-    bubble.hidden=false;
-    bubble.innerHTML=`<strong>${full?"Whole phrase":esc(term)}</strong><span>${esc(clue)}</span>${full?"<small>This answer will return later so you can prove it without the clue.</small>":""}`;
+async function ensureProfile() {
+  if (!ROOM) return;
+  const profileRef = ref(db, rootPath(`progress/${identityKey()}`));
+  const snapshot = await get(profileRef);
+  const defaults = {
+    name: displayName || "someone",
+    goal: currentGoal,
+    hearts: MAX_HEARTS,
+    xp: 0,
+    streak: 0,
+    currentLesson: LESSONS[0].id,
+    settings: { noAudio: false },
+    updated: now()
   };
-  card.querySelectorAll(".clueWord").forEach(btn=>btn.addEventListener("click",()=>reveal(btn.dataset.term,btn.dataset.clue)));
-  card.querySelectorAll("[data-full-clue]").forEach(btn=>btn.addEventListener("click",()=>reveal("",btn.dataset.fullClue,true)));
+  if (!snapshot.exists()) await set(profileRef, defaults);
+  else await update(profileRef, { name: displayName || snapshot.val().name || "someone", updated: now() });
 }
-function shouldTeachExercise(ex){
-  return !!(ex&&ex.item&&ex.type!=="match"&&!ex.retry&&masteryFor(ex.item)===0&&!activeSession.introduced[ex.item.key]&&activeSession.teachCount<4);
+function updateMyProgress(values) {
+  return update(ref(db, rootPath(`progress/${identityKey()}`)), {
+    name: displayName || "someone",
+    goal: currentGoal,
+    updated: now(),
+    ...values
+  });
 }
-function renderTeachingCard(card,ex){
-  const sourceLabel=ex.direction==="pt"?"English":"Português";
-  const targetLabel=ex.direction==="pt"?"Português":"English";
-  card.innerHTML=`<div class="exerciseType">New ${ex.item.isPhrase?"phrase":"word"}</div><div class="exercisePrompt">Learn this before we test it</div><div class="teachingPair"><div><span>${sourceLabel}</span><strong>${cluedText(sourceText(ex),ex.direction==="pt"?"en":"pt",ex)}</strong></div><div class="teachArrow">↓</div><div><span>${targetLabel}</span><strong>${cluedText(targetText(ex),ex.direction==="pt"?"pt":"en",ex)}</strong></div></div><div class="clueGuide">Tap highlighted parts to see how the sentence breaks down.</div><div class="clueBubble" id="clueBubble" hidden></div>${noAudio?"":`<button class="btn sm" id="teachSpeak" style="align-self:center;margin-top:13px">🔊 Hear it</button>`}<div class="teachNote">You will answer this now, then see it again later without the teaching card.</div><div class="checkBar"><div class="feedbackMsg"></div><button class="btn primary" id="practiceNewItem">Practice this</button></div>`;
-  wireClues(card);
-  if($("teachSpeak"))$("teachSpeak").addEventListener("click",()=>speak(targetText(ex),targetLang(ex)));
-  $("practiceNewItem").addEventListener("click",()=>{activeSession.introduced[ex.item.key]=true;activeSession.teachCount++;renderExercise(true);});
-}
-function renderExercise(skipTeach=false){
-  if(!activeSession)return;
-  if(activeSession.position>=activeSession.exercises.length){finishSession();return;}
-  activeSession.locked=false;activeSession.selected=null;activeSession.bank=[];activeSession.matched=0;activeSession.hintUsed=false;activeSession.justTaught=!!skipTeach;
-  const ex=activeSession.exercises[activeSession.position];
-  $("sessionProgress").style.width=`${Math.round((activeSession.position/activeSession.exercises.length)*100)}%`;$("sessionHearts").textContent=`❤️ ${activeSession.hearts}`;
-  const card=$("exerciseCard");
-  if(!skipTeach&&shouldTeachExercise(ex)){renderTeachingCard(card,ex);return;}
-  if(ex.type==="choice") renderChoice(card,ex,false);
-  else if(ex.type==="listen") renderChoice(card,ex,true);
-  else if(ex.type==="type") renderType(card,ex);
-  else if(ex.type==="bank") renderBank(card,ex);
-  else if(ex.type==="match") renderMatch(card,ex);
-}
-function baseCheckBar(label="Check"){ return `<div class="checkBar"><div class="feedbackMsg" id="feedbackMsg"></div><button class="btn primary" id="checkAnswer">${label}</button></div>`; }
-function renderChoice(card,ex,listening){
-  const prompt=listening?"What does this mean?":`Translate into ${ex.direction==="pt"?"Portuguese":"English"}`;
-  card.innerHTML=`<div class="exerciseType">${listening?"Listening":"Multiple choice"}</div><div class="exercisePrompt">${prompt}</div>${listening?`<button class="speakerBig" id="listenBtn">🔊</button><button class="btn sm" id="cantListenBtn" style="align-self:center;margin-top:-8px;margin-bottom:14px">I can’t listen right now</button>`:cluePrompt(ex)}<div class="choiceGrid">${ex.choices.map(c=>`<button class="choice" data-choice="${esc(c)}">${esc(c)}</button>`).join("")}</div>${baseCheckBar()}`;
-  if(listening){
-    $("listenBtn").addEventListener("click",()=>speak(targetText(ex),targetLang(ex)));
-    $("cantListenBtn").addEventListener("click",()=>{setNoAudio(true);renderExercise();});
-    setTimeout(()=>{if(!noAudio)speak(targetText(ex),targetLang(ex));},250);
-  }else wireClues(card);
-  card.querySelectorAll(".choice").forEach(btn=>btn.addEventListener("click",()=>{if(activeSession.locked)return;activeSession.selected=btn.dataset.choice;card.querySelectorAll(".choice").forEach(b=>b.classList.toggle("selected",b===btn));}));
-  $("checkAnswer").addEventListener("click",()=>{if(!activeSession.selected){toast("Choose an answer first");return;}const expected=listening?sourceText(ex):targetText(ex);gradeCurrent(normalize(activeSession.selected)===normalize(expected),ex,activeSession.selected,expected);});
-}
-function renderType(card,ex){
-  card.innerHTML=`<div class="exerciseType">Write the answer</div><div class="exercisePrompt">Translate into ${ex.direction==="pt"?"Portuguese":"English"}</div>${cluePrompt(ex)}<input class="input typeAnswer" id="typedAnswer" autocomplete="off" autocapitalize="sentences" placeholder="Type your answer…" /><div class="exerciseSub" style="margin-top:9px;margin-bottom:0;text-align:center">Accents and punctuation are optional.</div>${baseCheckBar()}`;
-  wireClues(card);
-  const input=$("typedAnswer");input.focus();input.addEventListener("keydown",e=>{if(e.key==="Enter")$("checkAnswer").click();});
-  $("checkAnswer").addEventListener("click",()=>{const answer=input.value.trim();if(!answer){toast("Type an answer first");return;}gradeCurrent(isCloseAnswer(answer,targetText(ex)),ex,answer);});
-}
-function isCloseAnswer(given,expected){ const a=normalize(given),b=normalize(expected); if(a===b)return true; const variants=String(expected).split(/\s*\/\s*|\s*;\s*/).map(normalize); return variants.includes(a); }
-function renderBank(card,ex){
-  const words=shuffle(targetText(ex).replace(/[.,!?]/g,"").split(/\s+/).filter(Boolean));
-  card.innerHTML=`<div class="exerciseType">Build the sentence</div><div class="exercisePrompt">Translate this sentence</div>${cluePrompt(ex,"font-size:34px")}<div class="wordBank" id="answerBank"><span class="bankPlaceholder">Build your answer here</span></div><div class="bankWords">${words.map((w,i)=>`<button class="bankWord" data-i="${i}" data-word="${esc(w)}">${esc(w)}</button>`).join("")}</div>${baseCheckBar()}`;
-  wireClues(card);
-  const redraw=()=>{$("answerBank").innerHTML=activeSession.bank.length?activeSession.bank.map((x,i)=>`<button class="answerWord" data-remove="${i}">${esc(x.word)}</button>`).join(""):`<span class="bankPlaceholder">Build your answer here</span>`;card.querySelectorAll("[data-remove]").forEach(b=>b.addEventListener("click",()=>{const [removed]=activeSession.bank.splice(Number(b.dataset.remove),1);card.querySelector(`[data-i="${removed.i}"]`).disabled=false;redraw();}));};
-  card.querySelectorAll(".bankWord").forEach(btn=>btn.addEventListener("click",()=>{activeSession.bank.push({word:btn.dataset.word,i:Number(btn.dataset.i)});btn.disabled=true;redraw();}));
-  $("checkAnswer").addEventListener("click",()=>{if(!activeSession.bank.length){toast("Build the sentence first");return;}const answer=activeSession.bank.map(x=>x.word).join(" ");gradeCurrent(normalize(answer)===normalize(targetText(ex)),ex,answer);});
-}
-function renderMatch(card,ex){
-  const pairs=ex.items.map((item,i)=>({i,item})); const left=shuffle(pairs.map(p=>({side:"left",i:p.i,text:p.item.en}))), right=shuffle(pairs.map(p=>({side:"right",i:p.i,text:p.item.pt})));
-  card.innerHTML=`<div class="exerciseType">Matching</div><div class="exercisePrompt">Match each pair</div><div class="matchGrid"><div>${left.map(x=>`<button class="matchItem" style="width:100%;margin-bottom:9px" data-side="${x.side}" data-pair="${x.i}">${esc(x.text)}</button>`).join("")}</div><div>${right.map(x=>`<button class="matchItem" style="width:100%;margin-bottom:9px" data-side="${x.side}" data-pair="${x.i}">${esc(x.text)}</button>`).join("")}</div></div>${baseCheckBar("Continue")}`;
-  let selected=null;
-  card.querySelectorAll(".matchItem").forEach(btn=>btn.addEventListener("click",()=>{
-    if(btn.classList.contains("matched")||activeSession.locked)return;
-    if(!selected){selected=btn;btn.classList.add("selected");return;}
-    if(selected.dataset.side===btn.dataset.side){selected.classList.remove("selected");selected=btn;btn.classList.add("selected");return;}
-    if(selected.dataset.pair===btn.dataset.pair){selected.classList.remove("selected");selected.classList.add("matched");btn.classList.add("matched");activeSession.matched++;selected=null;if(activeSession.matched===ex.items.length){$("feedbackMsg").textContent="Perfect matches!";$("feedbackMsg").className="feedbackMsg good";}}
-    else{const first=selected;selected=null;first.classList.remove("selected");first.classList.add("bad");btn.classList.add("bad");setTimeout(()=>{first.classList.remove("bad");btn.classList.remove("bad");},260);}
-  }));
-  $("checkAnswer").addEventListener("click",()=>{if(activeSession.matched<ex.items.length){toast("Match all of the pairs first");return;}if(activeSession.locked)return;activeSession.locked=true;completeExercise(true,ex);});
-}
-function gradeCurrent(correct,ex,given,expectedOverride){
-  if(activeSession.locked)return;activeSession.locked=true;
-  const card=$("exerciseCard"),msg=$("feedbackMsg"),btn=$("checkAnswer");
-  card.querySelectorAll("button.choice,.bankWord,.answerWord,.clueWord,.fullClueBtn").forEach(b=>b.disabled=true);
-  const expected=expectedOverride||targetText(ex),assisted=!!(activeSession.hintUsed||activeSession.justTaught);
-  if(correct){
-    if(assisted){
-      msg.textContent=activeSession.justTaught?"Correct! We’ll bring it back later without the teaching card. +5 XP":"Correct with a clue. It will return later so it sticks. +5 XP";
-      msg.className="feedbackMsg good";btn.textContent="Continue";highlightChoice(expected,true);recordCorrect(ex,true);
-      if(!ex.assistedRetry)activeSession.exercises.push({...ex,retry:true,assistedRetry:true});
-    }else{
-      msg.textContent="Correct from memory! +10 XP";msg.className="feedbackMsg good";btn.textContent="Continue";highlightChoice(expected,true);recordCorrect(ex,false);
+function setupActions() {
+  on("copyRoomBtn", "click", async () => {
+    try {
+      await navigator.clipboard.writeText(location.href);
+      toast("Partner invite copied 🔗");
+    } catch (_) {
+      toast(location.href);
     }
-  }else{
-    msg.innerHTML=`Not quite. Correct answer: <strong>${esc(expected)}</strong>`;msg.className="feedbackMsg bad";btn.textContent="Continue";highlightChoice(expected,false);recordWrong(ex,given);if(!ex.retry)activeSession.exercises.push({...ex,retry:true});
+  });
+  on("nameInput", "input", event => {
+    if (event.target.readOnly) return;
+    displayName = event.target.value.slice(0, 24) || "someone";
+    localStorage.setItem("lc_name", displayName);
+    updateMyProgress({ name: displayName });
+  });
+  on("goalSelect", "change", event => {
+    currentGoal = event.target.value;
+    updateMyProgress({ goal: currentGoal });
+    renderEverything();
+  });
+  on("noAudioToggle", "change", event => {
+    updateMyProgress({ "settings/noAudio": !!event.target.checked });
+    toast(event.target.checked ? "Audio exercises are off 🔇" : "Audio exercises are on 🔊");
+  });
+  on("closeSession", "click", closeSession);
+  on("smartPracticeBtn", "click", () => startPractice("weak"));
+  on("randomPracticeBtn", "click", () => startPractice("mixed"));
+  on("practiceMistakesBtn", "click", () => startPractice("mistakes"));
+  on("refillHeartsBtn", "click", () => startPractice("hearts"));
+  on("sendSuggestion", "click", sendSuggestion);
+  on("addPhrase", "click", addCustomPhrase);
+  on("bookSearch", "input", renderPhrasebook);
+}
+function populateLessonSelects() {
+  const options = LESSONS.map(lesson => `<option value="${esc(lesson.id)}">${lesson.emoji} ${esc(lesson.title)}</option>`).join("");
+  if ($("suggestLesson")) $("suggestLesson").innerHTML = options;
+  if ($("bookLesson")) $("bookLesson").innerHTML = options;
+}
+
+function renderEverything() {
+  renderStats();
+  renderPath();
+  renderLessonOverview();
+  renderWeakWords();
+  renderMistakes();
+  renderPartner();
+  renderPhrasebook();
+}
+function renderStats() {
+  const items = allUnlockedItems();
+  const masteryTotal = items.reduce((sum, item) => sum + masteryFor(item), 0);
+  const mastery = items.length ? Math.round((masteryTotal / (items.length * 5)) * 100) : 0;
+  $("streakStat").textContent = Number(mine().streak || 0);
+  $("xpStat").textContent = `${Number(mine().xp || 0)} XP`;
+  $("heartsStat").textContent = `${hearts()} / ${MAX_HEARTS}`;
+  $("masteryStat").textContent = `${mastery}%`;
+}
+function renderPath() {
+  const box = $("pathList");
+  if (!box) return;
+  box.innerHTML = "";
+  LESSONS.forEach((lesson, index) => {
+    const progress = lessonProgress(lesson.id);
+    const unlocked = isLessonUnlocked(index);
+    const done = !!progress.completed;
+    const current = index === currentLessonIndex;
+    const due = unlocked && allLessonItems(lesson).some(item => masteryFor(item) > 0 && dueForReview(item));
+    const wrap = document.createElement("div");
+    wrap.className = "pathNodeWrap";
+    const button = document.createElement("button");
+    button.className = `pathNode ${done ? "done " : ""}${current ? "current " : ""}${due && done && !current ? "review " : ""}${!unlocked ? "locked" : ""}`;
+    button.disabled = !unlocked;
+    button.textContent = !unlocked ? "🔒" : due && done && !current ? "↻" : done ? "✓" : lesson.emoji;
+    button.title = due ? `${lesson.title} — review due` : lesson.title;
+    button.addEventListener("click", () => selectLesson(index));
+    const stars = Number(progress.stars || 0);
+    const customCount = allLessonItems(lesson).filter(item => item.custom).length;
+    const info = document.createElement("div");
+    info.className = "pathInfo";
+    info.innerHTML = `<strong>${index + 1}. ${esc(lesson.title)}</strong><span>${!unlocked ? "Complete the lesson above" : due && done ? "Review is due" : done ? `Best: ${Number(progress.bestScore || 0)}% · <span class="stars">${"★".repeat(stars)}${"☆".repeat(3 - stars)}</span>` : `New lesson${customCount ? ` · ${customCount} custom` : ""}`}</span>`;
+    wrap.append(button, info);
+    box.appendChild(wrap);
+  });
+}
+function selectLesson(index) {
+  if (!isLessonUnlocked(index)) {
+    toast("Complete the previous lesson first 🔒");
+    return;
   }
-  btn.onclick=()=>completeExercise(correct,ex);
+  currentLessonIndex = index;
+  updateMyProgress({ currentLesson: LESSONS[index].id });
+  renderPath();
+  renderLessonOverview();
 }
-function highlightChoice(answer,correct){ $("exerciseCard").querySelectorAll(".choice").forEach(b=>{if(normalize(b.dataset.choice)===normalize(answer))b.classList.add("correct");else if(b.classList.contains("selected")&&!correct)b.classList.add("wrong");}); }
-function recordCorrect(ex,assisted=false){ activeSession.correct++;activeSession.xp+=assisted?5:10;if(assisted)activeSession.assistedCorrect++;else activeSession.independentCorrect++;if(ex.item&&!assisted){const strength=clamp(masteryFor(ex.item)+1,0,5);set(ref(db,rootPath(`progress/${identityKey()}/mastery/${ex.item.key}`)),strength);remove(ref(db,rootPath(`progress/${identityKey()}/mistakes/${ex.item.key}`))).catch(()=>{});} }
-function recordWrong(ex,given){
-  activeSession.wrong++;activeSession.hearts=Math.max(0,activeSession.hearts-1);$("sessionHearts").textContent=`❤️ ${activeSession.hearts}`;
-  if(ex.item){const old=(mine().mistakes||{})[ex.item.key]||{};set(ref(db,rootPath(`progress/${identityKey()}/mastery/${ex.item.key}`)),Math.max(0,masteryFor(ex.item)-1));set(ref(db,rootPath(`progress/${identityKey()}/mistakes/${ex.item.key}`)),{key:ex.item.key,en:ex.item.en,pt:ex.item.pt,lessonId:ex.item.lessonId,count:Number(old.count||0)+1,lastGiven:given||"",lastWrong:now()});}
-  updateMyProgress({hearts:activeSession.hearts});
+function selectFocusItems(lesson, count = FOCUS_ITEMS) {
+  const items = allLessonItems(lesson);
+  return [...items]
+    .map(item => ({
+      item,
+      rank: (dueForReview(item) ? -100 : 0) + masteryFor(item) * 12 + (item.custom ? -8 : 0) + Math.random() * 4
+    }))
+    .sort((a, b) => a.rank - b.rank)
+    .slice(0, Math.min(count, items.length))
+    .map(entry => entry.item);
 }
-function completeExercise(correct,ex){
-  if(!activeSession)return;
-  if(ex.type==="match"){activeSession.correct++;activeSession.xp+=5;}
-  if(activeSession.hearts<=0 && activeSession.kind==="lesson"){renderOutOfHearts();return;}
-  activeSession.position++;renderExercise();
+function renderLessonOverview() {
+  const box = $("lessonOverview");
+  if (!box) return;
+  const lesson = LESSONS[currentLessonIndex];
+  const progress = lessonProgress(lesson.id);
+  const unlocked = isLessonUnlocked(currentLessonIndex);
+  const score = Number(progress.bestScore || 0);
+  const done = !!progress.completed;
+  const items = allLessonItems(lesson);
+  const focus = selectFocusItems(lesson);
+  const dueCount = items.filter(item => masteryFor(item) > 0 && dueForReview(item)).length;
+  const customCount = items.filter(item => item.custom).length;
+  const languageLabel = currentGoal === "en" ? "Portuguese → English" : currentGoal === "both" ? "Both directions" : "English → Portuguese";
+  box.innerHTML = `
+    <div class="lessonBanner"><div class="lessonEmoji">${lesson.emoji}</div><div><h2>${currentLessonIndex + 1}. ${esc(lesson.title)}</h2><p>${esc(lesson.goal)}</p><div class="lessonMeta"><span class="tag">${items.length} course items</span><span class="tag">${languageLabel}</span><span class="tag">${dueCount ? `${dueCount} due for review` : "3-item focus"}</span>${customCount ? `<span class="tag">${customCount} personal phrase${customCount === 1 ? "" : "s"}</span>` : ""}</div></div></div>
+    <div class="progressTrack"><div class="progressFill" style="width:${done ? 100 : score}%"></div></div><div class="progressText"><span>${done ? "Lesson complete" : "Best lesson score"}</span><span>${done ? `${Number(progress.stars || 1)} star${Number(progress.stars || 1) === 1 ? "" : "s"}` : `${score}%`}</span></div>
+    <div class="activeLessonCallout"><strong>Next session</strong><span>You will learn and practice only ${focus.length} focus items, moving from clues and recognition to sentence building and unaided recall.</span></div>
+    <div class="lessonActions"><button class="btn primary" id="startLessonBtn" ${unlocked ? "" : "disabled"}>${done ? (dueCount ? "Review lesson" : "Practice again") : "Start lesson"}</button>${noAudio() ? "" : `<button class="btn blue" id="previewAudioBtn">🔊 Hear focus words</button>`}</div>
+    <h3 style="margin:0 0 4px">Your next focus</h3><div class="wordPreview">${focus.map(item => `<span class="wordChip">${esc(item.en)} · <b>${esc(item.pt)}</b>${item.custom ? " ✨" : ""}</span>`).join("")}</div>
+    <div class="skillGrid"><div class="skill"><strong>1. Learn</strong><p>New material is shown with word-by-word clues before it is scored.</p></div><div class="skill"><strong>2. Recognize</strong><p>Select the right meaning among believable alternatives.</p></div><div class="skill"><strong>3. Build</strong><p>Put the target sentence together in the correct order.</p></div><div class="skill"><strong>4. Recall</strong><p>Type it without clues to prove it stuck.</p></div></div>
+    <div class="tip"><strong>Language note:</strong> ${esc(lesson.tip)}</div>`;
+  on("startLessonBtn", "click", () => startLesson(currentLessonIndex));
+  on("previewAudioBtn", "click", () => speakSequence(focus));
 }
-function renderOutOfHearts(){
-  $("exerciseCard").innerHTML=`<div class="resultCard" style="display:flex;flex-direction:column;min-height:410px"><div class="resultEmoji">💔</div><h2>You’re out of hearts</h2><p class="muted">Your mistakes were saved. Do a short practice session to refill your hearts, then try the lesson again.</p><button class="btn primary" id="goPractice" style="margin-top:20px">Practice to refill</button></div>`;
-  $("goPractice").addEventListener("click",()=>{activeSession=null;$("sessionView").hidden=true;$("normalView").hidden=false;$("courseHeader").hidden=false;$("roomBar").hidden=false;switchTab("practice");renderEverything();});
+async function speakSequence(items) {
+  for (const item of items) {
+    const dir = directionFor(0);
+    const text = dir === "pt" ? primaryAnswer(item.pt) : primaryAnswer(item.en);
+    await speakAndWait(text, dir === "pt" ? "pt-BR" : "en-US");
+    await new Promise(resolve => setTimeout(resolve, 180));
+  }
 }
-async function finishSession(){
-  const s=activeSession,total=s.exercises.length,answered=s.independentCorrect+s.assistedCorrect+s.wrong,accuracy=Math.round(((s.independentCorrect+(s.assistedCorrect*.5))/Math.max(1,answered))*100),xpEarned=s.xp+(accuracy===100?20:accuracy>=80?10:0);
-  const me=mine(),newXp=Number(me.xp||0)+xpEarned; const today=todayKey(),last=me.lastPracticeDate||""; let streak=Number(me.streak||0); if(last!==today)streak=last===yesterdayKey()?streak+1:1;
-  const values={xp:newXp,streak,lastPracticeDate:today,hearts:s.kind==="practice"&&s.mode==="hearts"?MAX_HEARTS:s.hearts,lastSessionAccuracy:accuracy};
-  if(s.kind==="lesson"){
-    const lesson=LESSONS[s.lessonIndex],old=lessonProgress(lesson.id),passed=accuracy>=70,stars=accuracy>=95?3:accuracy>=82?2:passed?1:0;
-    values[`lessons/${lesson.id}/attempts`]=Number(old.attempts||0)+1; values[`lessons/${lesson.id}/bestScore`]=Math.max(Number(old.bestScore||0),accuracy);values[`lessons/${lesson.id}/stars`]=Math.max(Number(old.stars||0),stars);values[`lessons/${lesson.id}/lastAttempt`]=now();
-    if(passed||old.completed){values[`lessons/${lesson.id}/completed`]=true;values[`lessons/${lesson.id}/completedAt`]=old.completedAt||now();}
-    if(passed){const next=LESSONS[s.lessonIndex+1];if(next)values.currentLesson=next.id;}
+
+function choicePool(item, direction, lesson, answerSide = "target") {
+  const useTarget = answerSide === "target";
+  const answer = useTarget
+    ? primaryAnswer(direction === "pt" ? item.pt : item.en)
+    : primaryAnswer(direction === "pt" ? item.en : item.pt);
+  const values = allLessonItems(lesson).map(candidate => useTarget
+    ? primaryAnswer(direction === "pt" ? candidate.pt : candidate.en)
+    : primaryAnswer(direction === "pt" ? candidate.en : candidate.pt));
+  const candidates = shuffle(values.filter(value => normalize(value) !== normalize(answer)));
+  return shuffle([answer, ...candidates.slice(0, 3)]);
+}
+function makeExercise(item, type, direction, lesson, extra = {}) {
+  let finalType = type;
+  const target = primaryAnswer(direction === "pt" ? item.pt : item.en);
+  if (finalType === "listen" && noAudio()) finalType = "choice";
+  if (finalType === "bank" && target.split(/\s+/).length < 2) finalType = "cloze";
+  return {
+    type: finalType,
+    item,
+    direction,
+    lessonId: lesson.id,
+    scoreId: extra.scoreId || `${item.key}_${type}_${Math.random().toString(36).slice(2, 7)}`,
+    retryCount: extra.retryCount || 0,
+    assisted: false,
+    ...extra
+  };
+}
+function buildLessonExercises(lesson) {
+  const focus = selectFocusItems(lesson);
+  const exercises = [];
+  focus.forEach((item, index) => {
+    const direction = directionFor(index);
+    if (!isSeen(item) || masteryFor(item) === 0) exercises.push(makeExercise(item, "teach", direction, lesson));
+  });
+  focus.forEach((item, index) => exercises.push(makeExercise(item, "choice", directionFor(index), lesson)));
+  if (focus.length >= 2) exercises.push({
+    type: "match",
+    items: focus,
+    direction: directionFor(0),
+    scoreId: `match_${lesson.id}_${Date.now()}`,
+    retryCount: 0,
+    assisted: false
+  });
+  focus.forEach((item, index) => {
+    const direction = directionFor(index);
+    const type = item.isPhrase ? (index % 2 ? "cloze" : "bank") : (index % 2 ? "type" : "cloze");
+    exercises.push(makeExercise(item, type, direction, lesson));
+  });
+  focus.slice(0, 2).forEach((item, index) => exercises.push(makeExercise(item, "type", directionFor(index + 1), lesson, { finalRecall: true })));
+  if (!noAudio() && focus.length) exercises.splice(Math.min(4, exercises.length), 0, makeExercise(focus[0], "listen", directionFor(0), lesson));
+  return exercises.slice(0, MAX_SESSION_EXERCISES);
+}
+function practiceSource(mode) {
+  const all = allUnlockedItems();
+  const mistakes = Object.values(mine().mistakes || {}).filter(Boolean).map(value => ({ ...value, isPhrase: primaryAnswer(value.en).includes(" ") || primaryAnswer(value.pt).includes(" ") }));
+  if (mode === "mistakes") return mistakes;
+  if (mode === "weak" || mode === "hearts") {
+    return [...all].sort((a, b) => {
+      const dueA = dueForReview(a) ? -50 : 0;
+      const dueB = dueForReview(b) ? -50 : 0;
+      return (dueA + masteryFor(a) * 10) - (dueB + masteryFor(b) * 10);
+    });
+  }
+  return shuffle(all);
+}
+function buildPracticeExercises(mode) {
+  const source = practiceSource(mode).slice(0, 6);
+  if (!source.length) return [];
+  const exercises = [];
+  source.forEach((item, index) => {
+    const lesson = lessonById(item.lessonId) || LESSONS[0];
+    if ((!isSeen(item) || masteryFor(item) === 0) && index < 2) exercises.push(makeExercise(item, "teach", directionFor(index), lesson));
+    const types = ["choice", "cloze", "type", "bank", "choice", "type"];
+    exercises.push(makeExercise(item, types[index % types.length], directionFor(index), lesson));
+  });
+  if (source.length >= 3) exercises.splice(Math.min(5, exercises.length), 0, {
+    type: "match",
+    items: source.slice(0, 4),
+    direction: directionFor(0),
+    scoreId: `practice_match_${Date.now()}`,
+    retryCount: 0,
+    assisted: false
+  });
+  return exercises.slice(0, MAX_SESSION_EXERCISES);
+}
+function createSession(kind, mode, exercises, lessonIndex = null) {
+  activeSession = {
+    kind,
+    mode,
+    lessonIndex,
+    exercises,
+    position: 0,
+    hearts: hearts(),
+    xp: 0,
+    wrong: 0,
+    assistedCorrect: 0,
+    locked: false,
+    selected: null,
+    bank: [],
+    scores: {},
+    masteryCache: { ...(mine().mastery || {}) }
+  };
+}
+function startLesson(index) {
+  if (!isLessonUnlocked(index)) return toast("Complete the previous lesson first");
+  if (hearts() <= 0) {
+    toast("Practice to refill your hearts first ❤️");
+    switchTab("practice");
+    return;
+  }
+  createSession("lesson", "lesson", buildLessonExercises(LESSONS[index]), index);
+  showSession();
+  renderExercise();
+}
+function startPractice(mode) {
+  const exercises = buildPracticeExercises(mode);
+  if (!exercises.length) return toast("Start a lesson first so there is something to practice");
+  createSession("practice", mode, exercises);
+  showSession();
+  renderExercise();
+}
+function showSession() {
+  $("normalView").hidden = true;
+  $("courseHeader").hidden = true;
+  $("roomBar").hidden = true;
+  $("sessionView").hidden = false;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function closeSession() {
+  if (!activeSession) return;
+  const started = activeSession.position > 0;
+  if (started && !confirm("Leave this session? Your unfinished attempt will not be scored.")) return;
+  activeSession = null;
+  $("sessionView").hidden = true;
+  $("normalView").hidden = false;
+  $("courseHeader").hidden = false;
+  $("roomBar").hidden = false;
+  renderEverything();
+}
+function baseCheckBar(label = "Check") {
+  return `<div class="checkBar"><div class="feedbackMsg" id="feedbackMsg"></div><button class="btn primary" id="checkAnswer">${label}</button></div>`;
+}
+function renderExercise() {
+  if (!activeSession) return;
+  if (activeSession.position >= activeSession.exercises.length) return finishSession();
+  activeSession.locked = false;
+  activeSession.selected = null;
+  activeSession.bank = [];
+  const ex = activeSession.exercises[activeSession.position];
+  ex.assisted = false;
+  $("sessionProgress").style.width = `${Math.round((activeSession.position / activeSession.exercises.length) * 100)}%`;
+  $("sessionHearts").textContent = `❤️ ${activeSession.hearts}`;
+  const card = $("exerciseCard");
+  if (ex.type === "teach") renderTeach(card, ex);
+  else if (ex.type === "choice") renderChoice(card, ex);
+  else if (ex.type === "listen") renderListening(card, ex);
+  else if (ex.type === "type") renderType(card, ex);
+  else if (ex.type === "bank") renderBank(card, ex);
+  else if (ex.type === "cloze") renderCloze(card, ex);
+  else if (ex.type === "match") renderMatch(card, ex);
+}
+function renderTeach(card, ex) {
+  card.innerHTML = `<div class="exerciseType">Learn before you answer</div><div class="exercisePrompt">Study this ${ex.item.isPhrase ? "phrase" : "word"}</div>
+    <div class="teachingPair"><div><span>${ex.direction === "pt" ? "English" : "Português"}</span><strong>${esc(primaryAnswer(sourceText(ex)))}</strong></div><div class="teachArrow">↓</div><div><span>${ex.direction === "pt" ? "Português" : "English"}</span><strong>${esc(primaryAnswer(targetText(ex)))}</strong></div></div>
+    ${noAudio() ? "" : `<button class="speakerBig" id="teachSpeak" type="button">🔊</button>`}
+    <div class="teachNote">This screen does not award mastery. The next questions will make you recognize, build, and recall it.</div>${baseCheckBar("Practice it")}`;
+  on("teachSpeak", "click", () => speak(primaryAnswer(targetText(ex)), targetLang(ex)));
+  on("checkAnswer", "click", async () => {
+    if (activeSession.locked) return;
+    activeSession.locked = true;
+    await set(ref(db, rootPath(`progress/${identityKey()}/seen/${ex.item.key}`)), true);
+    activeSession.position++;
+    renderExercise();
+  });
+}
+function renderChoice(card, ex) {
+  const lesson = lessonById(ex.lessonId) || LESSONS[0];
+  const choices = choicePool(ex.item, ex.direction, lesson, "target");
+  card.innerHTML = `<div class="exerciseType">Choose the meaning</div><div class="exercisePrompt">Translate into ${ex.direction === "pt" ? "Portuguese" : "English"}</div>${clueBlock(ex)}
+    <div class="choiceGrid">${choices.map(choice => `<button class="choice" type="button" data-choice="${esc(choice)}">${esc(choice)}</button>`).join("")}</div>${baseCheckBar()}`;
+  wireClues(ex);
+  wireChoices();
+  on("checkAnswer", "click", () => {
+    if (!activeSession.selected) return toast("Choose an answer first");
+    gradeCurrent(answerMatches(activeSession.selected, targetText(ex)), ex, activeSession.selected);
+  });
+}
+function renderListening(card, ex) {
+  const lesson = lessonById(ex.lessonId) || LESSONS[0];
+  const choices = choicePool(ex.item, ex.direction, lesson, "source");
+  card.innerHTML = `<div class="exerciseType">Listening</div><div class="exercisePrompt">What does this mean?</div><button class="speakerBig" id="listenBtn" type="button">🔊</button>
+    <button class="hintBtn" id="cantListenBtn" type="button">I can’t listen right now</button>
+    <div class="choiceGrid">${choices.map(choice => `<button class="choice" type="button" data-choice="${esc(choice)}">${esc(choice)}</button>`).join("")}</div>${baseCheckBar()}`;
+  const play = () => speak(primaryAnswer(targetText(ex)), targetLang(ex));
+  on("listenBtn", "click", play);
+  setTimeout(play, 250);
+  on("cantListenBtn", "click", async () => {
+    await updateMyProgress({ "settings/noAudio": true });
+    ex.type = "choice";
+    renderExercise();
+    toast("Audio exercises are now disabled 🔇");
+  });
+  wireChoices();
+  on("checkAnswer", "click", () => {
+    if (!activeSession.selected) return toast("Choose an answer first");
+    gradeCurrent(answerMatches(activeSession.selected, sourceText(ex)), ex, activeSession.selected, sourceText(ex));
+  });
+}
+function renderType(card, ex) {
+  card.innerHTML = `<div class="exerciseType">Type the translation</div><div class="exercisePrompt">Translate into ${ex.direction === "pt" ? "Portuguese" : "English"}</div>${clueBlock(ex)}
+    <input class="input typeAnswer" id="typedAnswer" autocomplete="off" autocapitalize="sentences" placeholder="Type your answer…" />
+    <div class="hintText">Accents, capitalization, and punctuation are optional.</div>${baseCheckBar()}`;
+  wireClues(ex);
+  const input = $("typedAnswer");
+  input.focus();
+  input.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      $("checkAnswer").click();
+    }
+  });
+  on("checkAnswer", "click", () => {
+    const answer = input.value.trim();
+    if (!answer) return toast("Type an answer first");
+    gradeCurrent(answerMatches(answer, targetText(ex)), ex, answer);
+  });
+}
+function wordsForBank(answer) {
+  return primaryAnswer(answer).replace(/([!?.,])/g, " $1 ").split(/\s+/).filter(Boolean);
+}
+function renderBank(card, ex) {
+  const targetWords = wordsForBank(targetText(ex));
+  const lesson = lessonById(ex.lessonId) || LESSONS[0];
+  const distractors = shuffle(allLessonItems(lesson).flatMap(item => wordsForBank(ex.direction === "pt" ? item.pt : item.en)))
+    .filter(word => !targetWords.some(target => normalize(target) === normalize(word)))
+    .slice(0, Math.min(3, Math.max(1, targetWords.length - 1)));
+  const bankWords = shuffle(targetWords.concat(distractors)).map((word, index) => ({ word, id: index }));
+  card.innerHTML = `<div class="exerciseType">Build the sentence</div><div class="exercisePrompt">Put this into ${ex.direction === "pt" ? "Portuguese" : "English"}</div>${clueBlock(ex)}
+    <div class="wordBank" id="answerBank"><span class="bankPlaceholder">Tap words below to build your answer</span></div>
+    <div class="bankWords">${bankWords.map(token => `<button class="bankWord" type="button" data-bank-id="${token.id}" data-word="${esc(token.word)}">${esc(token.word)}</button>`).join("")}</div>${baseCheckBar()}`;
+  wireClues(ex);
+  const redraw = () => {
+    const answerBank = $("answerBank");
+    answerBank.innerHTML = activeSession.bank.length
+      ? activeSession.bank.map((token, index) => `<button class="answerWord" type="button" data-remove="${index}">${esc(token.word)}</button>`).join("")
+      : `<span class="bankPlaceholder">Tap words below to build your answer</span>`;
+    answerBank.querySelectorAll("[data-remove]").forEach(button => button.addEventListener("click", () => {
+      const [removed] = activeSession.bank.splice(Number(button.dataset.remove), 1);
+      const original = card.querySelector(`[data-bank-id="${removed.id}"]`);
+      if (original) original.disabled = false;
+      redraw();
+    }));
+  };
+  card.querySelectorAll(".bankWord").forEach(button => button.addEventListener("click", () => {
+    activeSession.bank.push({ word: button.dataset.word, id: Number(button.dataset.bankId) });
+    button.disabled = true;
+    redraw();
+  }));
+  on("checkAnswer", "click", () => {
+    if (!activeSession.bank.length) return toast("Build the sentence first");
+    const answer = activeSession.bank.map(token => token.word).join(" ").replace(/\s+([!?.,])/g, "$1");
+    gradeCurrent(answerMatches(answer, targetText(ex)), ex, answer);
+  });
+}
+function renderCloze(card, ex) {
+  const target = primaryAnswer(targetText(ex));
+  const words = target.split(/\s+/).filter(Boolean);
+  const blankIndex = words.length > 2 ? Math.floor(words.length / 2) : Math.max(0, words.length - 1);
+  const answer = words[blankIndex];
+  const shown = words.map((word, index) => index === blankIndex ? "_____" : word).join(" ");
+  const lesson = lessonById(ex.lessonId) || LESSONS[0];
+  const distractors = shuffle(allLessonItems(lesson).flatMap(item => primaryAnswer(ex.direction === "pt" ? item.pt : item.en).split(/\s+/)))
+    .filter(word => normalize(word) !== normalize(answer))
+    .slice(0, 3);
+  const choices = shuffle([answer, ...distractors]);
+  card.innerHTML = `<div class="exerciseType">Complete the sentence</div><div class="exercisePrompt">Choose the missing word</div>
+    <div class="clozeSource">${clueSentenceHtml(primaryAnswer(sourceText(ex)), sourceLang(ex))}</div><div class="clueGuide">Tap a <span>highlighted word</span> for a clue.</div><button class="fullClueBtn" id="fullClueBtn" type="button">Show the whole phrase meaning</button><div id="clueBubble" hidden></div>
+    <div class="clozeSentence">${esc(shown)}</div><div class="choiceGrid">${choices.map(choice => `<button class="choice" type="button" data-choice="${esc(choice)}">${esc(choice)}</button>`).join("")}</div>${baseCheckBar()}`;
+  wireClues(ex);
+  wireChoices();
+  on("checkAnswer", "click", () => {
+    if (!activeSession.selected) return toast("Choose a word first");
+    gradeCurrent(normalize(activeSession.selected) === normalize(answer), ex, activeSession.selected, answer);
+  });
+}
+function renderMatch(card, ex) {
+  ex.matchErrors = 0;
+  ex.matched = 0;
+  const pairs = ex.items.map((item, index) => ({
+    id: index,
+    left: primaryAnswer(ex.direction === "en" ? item.pt : item.en),
+    right: primaryAnswer(ex.direction === "en" ? item.en : item.pt)
+  }));
+  const left = shuffle(pairs.map(pair => ({ pair: pair.id, text: pair.left, side: "left" })));
+  const right = shuffle(pairs.map(pair => ({ pair: pair.id, text: pair.right, side: "right" })));
+  card.innerHTML = `<div class="exerciseType">Match the pairs</div><div class="exercisePrompt">Connect each meaning</div><div class="matchGrid">${left.concat(right).map(item => `<button class="matchItem" type="button" data-pair="${item.pair}" data-side="${item.side}">${esc(item.text)}</button>`).join("")}</div>${baseCheckBar("Finish")}`;
+  let selected = null;
+  card.querySelectorAll(".matchItem").forEach(button => button.addEventListener("click", () => {
+    if (button.classList.contains("matched") || activeSession.locked) return;
+    if (!selected) {
+      selected = button;
+      button.classList.add("selected");
+      return;
+    }
+    if (selected === button) {
+      selected.classList.remove("selected");
+      selected = null;
+      return;
+    }
+    if (selected.dataset.side === button.dataset.side) {
+      selected.classList.remove("selected");
+      selected = button;
+      button.classList.add("selected");
+      return;
+    }
+    if (selected.dataset.pair === button.dataset.pair) {
+      selected.classList.remove("selected");
+      selected.classList.add("matched");
+      button.classList.add("matched");
+      selected = null;
+      ex.matched++;
+      if (ex.matched === pairs.length) {
+        $("feedbackMsg").textContent = ex.matchErrors ? "All matched. A few needed another try." : "Perfect matches!";
+        $("feedbackMsg").className = "feedbackMsg good";
+      }
+    } else {
+      ex.matchErrors++;
+      const first = selected;
+      selected = null;
+      first.classList.remove("selected");
+      first.classList.add("bad");
+      button.classList.add("bad");
+      setTimeout(() => {
+        first.classList.remove("bad");
+        button.classList.remove("bad");
+      }, 300);
+    }
+  }));
+  on("checkAnswer", "click", () => {
+    if (ex.matched < pairs.length) return toast("Match every pair first");
+    if (activeSession.locked) return;
+    activeSession.locked = true;
+    const score = ex.matchErrors === 0 ? 1 : ex.matchErrors <= 2 ? 0.75 : 0.5;
+    setScore(ex, score);
+    activeSession.xp += score === 1 ? 10 : 6;
+    $("checkAnswer").textContent = "Continue";
+    $("checkAnswer").onclick = () => advanceExercise();
+  });
+}
+function wireChoices() {
+  $("exerciseCard").querySelectorAll(".choice").forEach(button => button.addEventListener("click", () => {
+    if (activeSession.locked) return;
+    activeSession.selected = button.dataset.choice;
+    $("exerciseCard").querySelectorAll(".choice").forEach(choice => choice.classList.toggle("selected", choice === button));
+  }));
+}
+function setScore(ex, value) {
+  const previous = Number(activeSession.scores[ex.scoreId] || 0);
+  activeSession.scores[ex.scoreId] = Math.max(previous, value);
+}
+function typedDifference(given, expected) {
+  const givenWords = normalize(given).split(" ").filter(Boolean);
+  const expectedWords = normalize(primaryAnswer(expected)).split(" ").filter(Boolean);
+  const missing = expectedWords.filter(word => !givenWords.includes(word));
+  const extra = givenWords.filter(word => !expectedWords.includes(word));
+  const parts = [];
+  if (missing.length) parts.push(`Missing: ${missing.join(", ")}`);
+  if (extra.length) parts.push(`Extra: ${extra.join(", ")}`);
+  return parts.join(" · ");
+}
+function phraseBreakdown(ex) {
+  const target = primaryAnswer(targetText(ex));
+  const lang = targetLang(ex);
+  const bits = target.split(/\s+/).map(word => {
+    const clue = clueForWord(word.replace(/[^\p{L}\p{N}]/gu, ""), lang);
+    return clue ? `<b>${esc(word)}</b> = ${esc(clue)}` : `<b>${esc(word)}</b>`;
+  });
+  return bits.join(" · ");
+}
+function gradeCurrent(correct, ex, given, expectedOverride) {
+  if (activeSession.locked) return;
+  activeSession.locked = true;
+  const expected = expectedOverride || targetText(ex);
+  const card = $("exerciseCard");
+  card.querySelectorAll("button.choice,.bankWord,.answerWord,.clueWord,.fullClueBtn").forEach(button => button.disabled = true);
+  const message = $("feedbackMsg");
+  const checkButton = $("checkAnswer");
+  if (correct) {
+    const assisted = !!ex.assisted;
+    const score = assisted ? 0.5 : (ex.retryCount ? 0.75 : 1);
+    setScore(ex, score);
+    recordCorrect(ex, assisted);
+    message.innerHTML = assisted
+      ? `Correct with a clue. <span class="feedbackTranslation">${esc(primaryAnswer(targetText(ex)))} = ${esc(primaryAnswer(sourceText(ex)))}</span>`
+      : `Correct! <span class="feedbackTranslation">${esc(primaryAnswer(targetText(ex)))} = ${esc(primaryAnswer(sourceText(ex)))}</span>`;
+    message.className = "feedbackMsg good";
+    highlightChoice(expected, true);
+    if (assisted && ex.retryCount < 1) queueRetry(ex, true);
+  } else {
+    setScore(ex, 0);
+    recordWrong(ex, given);
+    const difference = ex.type === "type" || ex.type === "bank" ? typedDifference(given, expected) : "";
+    message.innerHTML = `Not quite. Correct answer: <strong>${esc(primaryAnswer(expected))}</strong>${difference ? `<br><span class="feedbackTranslation">${esc(difference)}</span>` : ""}<br><span class="feedbackTranslation">${phraseBreakdown(ex)}</span>`;
+    message.className = "feedbackMsg bad";
+    highlightChoice(expected, false);
+    if (ex.retryCount < 2) queueRetry(ex, false);
+  }
+  checkButton.textContent = "Continue";
+  checkButton.onclick = () => advanceExercise();
+}
+function highlightChoice(expected, correct) {
+  $("exerciseCard").querySelectorAll(".choice").forEach(button => {
+    if (answerMatches(button.dataset.choice, expected)) button.classList.add("correct");
+    else if (button.classList.contains("selected") && !correct) button.classList.add("wrong");
+  });
+}
+function queueRetry(ex, assisted) {
+  const lesson = lessonById(ex.lessonId) || LESSONS[0];
+  const retryTypes = ex.item.isPhrase ? ["cloze", "bank", "type"] : ["choice", "type", "cloze"];
+  let retryType = retryTypes[(ex.retryCount + (assisted ? 1 : 0)) % retryTypes.length];
+  if (retryType === "bank" && primaryAnswer(targetText(ex)).split(/\s+/).length < 2) retryType = "type";
+  const retry = makeExercise(ex.item, retryType, ex.direction, lesson, {
+    scoreId: ex.scoreId,
+    retryCount: ex.retryCount + 1,
+    retryOf: ex.type,
+    finalRecall: true
+  });
+  activeSession.exercises.push(retry);
+}
+function nextReviewDue(strength) {
+  const days = REVIEW_INTERVALS[clamp(strength, 0, REVIEW_INTERVALS.length - 1)];
+  return now() + days * 24 * 60 * 60 * 1000;
+}
+function recordCorrect(ex, assisted) {
+  if (!ex.item) return;
+  const current = masteryFor(ex.item);
+  const strength = assisted ? current : clamp(current + 1, 0, 5);
+  activeSession.masteryCache[ex.item.key] = strength;
+  if (assisted) activeSession.assistedCorrect++;
+  activeSession.xp += assisted ? 5 : ex.retryCount ? 7 : 10;
+  const updates = {};
+  updates[`mastery/${ex.item.key}`] = strength;
+  updates[`review/${ex.item.key}`] = {
+    strength,
+    dueAt: assisted ? now() : nextReviewDue(strength),
+    lastSeen: now(),
+    lastResult: assisted ? "assisted" : "correct",
+    lastType: ex.type
+  };
+  updates[`seen/${ex.item.key}`] = true;
+  updateMyProgress(updates);
+  if (!assisted) remove(ref(db, rootPath(`progress/${identityKey()}/mistakes/${ex.item.key}`))).catch(() => {});
+}
+function recordWrong(ex, given) {
+  activeSession.wrong++;
+  activeSession.hearts = Math.max(0, activeSession.hearts - 1);
+  $("sessionHearts").textContent = `❤️ ${activeSession.hearts}`;
+  if (ex.item) {
+    const current = masteryFor(ex.item);
+    const strength = Math.max(0, current - 1);
+    activeSession.masteryCache[ex.item.key] = strength;
+    const old = (mine().mistakes || {})[ex.item.key] || {};
+    const updates = {};
+    updates[`mastery/${ex.item.key}`] = strength;
+    updates[`review/${ex.item.key}`] = { strength, dueAt: now(), lastSeen: now(), lastResult: "wrong", lastType: ex.type };
+    updates[`mistakes/${ex.item.key}`] = {
+      key: ex.item.key,
+      en: ex.item.en,
+      pt: ex.item.pt,
+      lessonId: ex.item.lessonId,
+      count: Number(old.count || 0) + 1,
+      lastGiven: given || "",
+      lastWrong: now()
+    };
+    updates.hearts = activeSession.hearts;
+    updateMyProgress(updates);
+  } else updateMyProgress({ hearts: activeSession.hearts });
+}
+function advanceExercise() {
+  if (!activeSession) return;
+  if (activeSession.hearts <= 0 && activeSession.kind === "lesson") return renderOutOfHearts();
+  activeSession.position++;
+  renderExercise();
+}
+function renderOutOfHearts() {
+  $("exerciseCard").innerHTML = `<div class="resultCard" style="display:flex;flex-direction:column;min-height:410px"><div class="resultEmoji">💔</div><h2>You’re out of hearts</h2><p class="muted">Your mistakes and due reviews were saved. A short practice session will refill your hearts.</p><button class="btn primary" id="goPractice" style="margin-top:20px">Practice to refill</button></div>`;
+  on("goPractice", "click", () => {
+    activeSession = null;
+    $("sessionView").hidden = true;
+    $("normalView").hidden = false;
+    $("courseHeader").hidden = false;
+    $("roomBar").hidden = false;
+    switchTab("practice");
+    renderEverything();
+  });
+}
+async function finishSession() {
+  const session = activeSession;
+  const scoreValues = Object.values(session.scores);
+  const accuracy = scoreValues.length ? Math.round((scoreValues.reduce((sum, value) => sum + value, 0) / scoreValues.length) * 100) : 100;
+  const xpEarned = session.xp + (accuracy === 100 ? 20 : accuracy >= 80 ? 10 : 0);
+  const me = mine();
+  const today = todayKey();
+  const last = me.lastPracticeDate || "";
+  let streak = Number(me.streak || 0);
+  if (last !== today) streak = last === yesterdayKey() ? streak + 1 : 1;
+  const values = {
+    xp: Number(me.xp || 0) + xpEarned,
+    streak,
+    lastPracticeDate: today,
+    hearts: session.kind === "practice" && session.mode === "hearts" ? MAX_HEARTS : session.hearts,
+    lastSessionAccuracy: accuracy
+  };
+  let passed = true;
+  if (session.kind === "lesson") {
+    const lesson = LESSONS[session.lessonIndex];
+    const old = lessonProgress(lesson.id);
+    passed = accuracy >= 70;
+    const stars = accuracy >= 95 ? 3 : accuracy >= 82 ? 2 : passed ? 1 : 0;
+    values[`lessons/${lesson.id}/attempts`] = Number(old.attempts || 0) + 1;
+    values[`lessons/${lesson.id}/bestScore`] = Math.max(Number(old.bestScore || 0), accuracy);
+    values[`lessons/${lesson.id}/stars`] = Math.max(Number(old.stars || 0), stars);
+    values[`lessons/${lesson.id}/lastAttempt`] = now();
+    if (passed || old.completed) {
+      values[`lessons/${lesson.id}/completed`] = true;
+      values[`lessons/${lesson.id}/completedAt`] = old.completedAt || now();
+    }
+    if (passed) {
+      const next = LESSONS[session.lessonIndex + 1];
+      if (next) values.currentLesson = next.id;
+    }
   }
   await updateMyProgress(values);
-  const passed=s.kind==="practice"||accuracy>=70;
-  $("sessionProgress").style.width="100%";
-  $("exerciseCard").innerHTML=`<div class="resultCard" style="display:flex;flex-direction:column;min-height:430px"><div class="resultEmoji">${passed?accuracy>=90?"🏆":"🎉":"📚"}</div><h2>${s.kind==="practice"?"Practice complete!":passed?"Lesson complete!":"Almost there"}</h2><p class="muted">${s.kind==="lesson"&&!passed?"You need 70% to unlock the next lesson. Your mistakes are ready for review.":"Your score gives full credit only for answers recalled without clues. Clue-assisted answers count as practice and return later."}</p><div class="resultStats"><div class="resultStat"><strong>${accuracy}%</strong><span>accuracy</span></div><div class="resultStat"><strong>+${xpEarned}</strong><span>XP earned</span></div><div class="resultStat"><strong>${s.wrong}</strong><span>mistakes saved</span></div></div><button class="btn primary" id="finishDone">${s.kind==="lesson"&&!passed?"Review and try again":"Continue"}</button></div>`;
-  $("finishDone").addEventListener("click",()=>{activeSession=null;$("sessionView").hidden=true;$("normalView").hidden=false;$("courseHeader").hidden=false;$("roomBar").hidden=false;if(s.kind==="lesson"&&!passed)switchTab("mistakes");renderEverything();});
+  $("sessionProgress").style.width = "100%";
+  $("exerciseCard").innerHTML = `<div class="resultCard" style="display:flex;flex-direction:column;min-height:430px"><div class="resultEmoji">${passed ? accuracy >= 90 ? "🏆" : "🎉" : "📚"}</div><h2>${session.kind === "practice" ? "Practice complete!" : passed ? "Lesson complete!" : "Almost there"}</h2><p class="muted">${session.kind === "lesson" && !passed ? "You need 70% to unlock the next lesson. Clue-assisted answers received partial credit, and missed items are due for review now." : `${session.assistedCorrect ? `${session.assistedCorrect} answer${session.assistedCorrect === 1 ? " used" : "s used"} clues and will return sooner. ` : ""}Your review schedule has been updated from what you actually recalled.`}</p><div class="resultStats"><div class="resultStat"><strong>${accuracy}%</strong><span>learning score</span></div><div class="resultStat"><strong>+${xpEarned}</strong><span>XP earned</span></div><div class="resultStat"><strong>${session.wrong}</strong><span>mistakes saved</span></div></div><button class="btn primary" id="finishDone">${session.kind === "lesson" && !passed ? "Review mistakes" : "Continue"}</button></div>`;
+  on("finishDone", "click", () => {
+    activeSession = null;
+    $("sessionView").hidden = true;
+    $("normalView").hidden = false;
+    $("courseHeader").hidden = false;
+    $("roomBar").hidden = false;
+    if (session.kind === "lesson" && !passed) switchTab("mistakes");
+    renderEverything();
+  });
 }
 
-function renderWeakWords(){
-  const box=$("weakWordsList");if(!box)return;const unlocked=LESSONS.filter((_,i)=>isLessonUnlocked(i)).flatMap(allLessonItems).sort((a,b)=>masteryFor(a)-masteryFor(b)).slice(0,8);
-  if(!unlocked.length){box.innerHTML=`<div class="empty">Start your first lesson to build a review list.</div>`;return;}
-  box.innerHTML=unlocked.map(item=>{const m=masteryFor(item);return `<div class="reviewRow"><span>🧠</span><div class="grow"><strong>${esc(currentGoal==="en"?item.pt:item.en)}</strong><div class="muted">${esc(currentGoal==="en"?item.en:item.pt)}</div></div><div class="masteryDots">${[1,2,3,4,5].map(n=>`<span class="${n<=m?"on":""}"></span>`).join("")}</div></div>`;}).join("");
-}
-function renderMistakes(){
-  const box=$("mistakeList");if(!box)return;const rows=Object.values(mine().mistakes||{}).filter(Boolean).sort((a,b)=>(b.lastWrong||0)-(a.lastWrong||0));
-  if(!rows.length){box.innerHTML=`<div class="empty">No saved mistakes. That either means you’re brand new or suspiciously brilliant. 🌟</div>`;return;}
-  box.innerHTML=rows.map(m=>`<div class="mistakeRow"><div><strong>${esc(m.en)}</strong><small>${esc(lessonById(m.lessonId)?.title||"Course review")}</small></div><div class="pt">${esc(m.pt)}<small>missed ${Number(m.count||1)} time${Number(m.count||1)===1?"":"s"}</small></div><button class="btn sm danger" data-forget="${esc(m.key)}">Remove</button></div>`).join("");
-  box.querySelectorAll("[data-forget]").forEach(b=>b.addEventListener("click",()=>remove(ref(db,rootPath(`progress/${identityKey()}/mistakes/${b.dataset.forget}`)))));
-}
-function renderPartner(){
-  const progressBox=$("partnerProgressList"),target=$("suggestTarget");
-  const partners=Object.entries(progressData).filter(([key,v])=>key!==identityKey()&&v&&v.name);
-  if(target){
-    const old=target.value;
-    target.innerHTML=partners.length?partners.map(([key,v])=>`<option value="${esc(key)}">${esc(v.name)}</option>`).join(""):`<option value="">No partner has opened the course yet</option>`;
-    if(partners.some(([key])=>key===old)) target.value=old;
-    target.disabled=!partners.length;
+function renderWeakWords() {
+  const box = $("weakWordsList");
+  if (!box) return;
+  const items = [...allUnlockedItems()].sort((a, b) => {
+    const dueA = dueForReview(a) ? -50 : 0;
+    const dueB = dueForReview(b) ? -50 : 0;
+    return (dueA + masteryFor(a) * 10) - (dueB + masteryFor(b) * 10);
+  }).slice(0, 8);
+  if (!items.length) {
+    box.innerHTML = `<div class="empty">Start your first lesson to build a review list.</div>`;
+    return;
   }
-  if(progressBox){
-    progressBox.innerHTML=partners.length?partners.map(([key,v])=>{
-      const done=Object.values(v.lessons||{}).filter(x=>x===true||(x&&x.completed)).length;
-      const lesson=lessonById(v.currentLesson)||LESSONS[Math.min(done,LESSONS.length-1)];
-      return `<div class="partnerCard"><div class="partnerHead"><span style="font-size:26px">💞</span><div class="grow"><strong>${esc(v.name)}</strong><div class="muted">${goalLabel(v.goal)} · currently on ${esc(lesson.title)}</div></div></div><div class="partnerMetrics"><div class="partnerMetric"><strong>${done}/${LESSONS.length}</strong><span>lessons</span></div><div class="partnerMetric"><strong>${Number(v.xp||0)}</strong><span>XP</span></div><div class="partnerMetric"><strong>${Number(v.streak||0)}</strong><span>day streak</span></div></div></div>`;
-    }).join(""):`<div class="empty">Your partner’s progress will appear after they open this course with their own account or device.</div>`;
+  box.innerHTML = items.map(item => {
+    const mastery = masteryFor(item);
+    const due = mastery > 0 && dueForReview(item);
+    return `<div class="reviewRow"><span>${due ? "⏰" : "🧠"}</span><div class="grow"><strong>${esc(currentGoal === "en" ? item.pt : item.en)}${item.custom ? " ✨" : ""}</strong><div class="muted">${esc(currentGoal === "en" ? item.en : item.pt)} · ${due ? "review due" : mastery ? "building memory" : "not learned yet"}</div></div><div class="masteryDots">${[1,2,3,4,5].map(level => `<span class="${level <= mastery ? "on" : ""}"></span>`).join("")}</div></div>`;
+  }).join("");
+}
+function renderMistakes() {
+  const box = $("mistakeList");
+  if (!box) return;
+  const rows = Object.values(mine().mistakes || {}).filter(Boolean).sort((a, b) => (b.lastWrong || 0) - (a.lastWrong || 0));
+  if (!rows.length) {
+    box.innerHTML = `<div class="empty">No saved mistakes yet. New or suspiciously brilliant. 🌟</div>`;
+    return;
+  }
+  box.innerHTML = rows.map(item => `<div class="mistakeRow"><div><strong>${esc(item.en)}</strong><small>${esc(lessonById(item.lessonId)?.title || "Course review")}</small></div><div class="pt">${esc(item.pt)}<small>Your last answer: ${esc(item.lastGiven || "—")} · missed ${Number(item.count || 1)} time${Number(item.count || 1) === 1 ? "" : "s"}</small></div><button class="btn sm danger" data-forget="${esc(item.key)}">Remove</button></div>`).join("");
+  box.querySelectorAll("[data-forget]").forEach(button => button.addEventListener("click", () => remove(ref(db, rootPath(`progress/${identityKey()}/mistakes/${button.dataset.forget}`)))));
+}
+
+function partnerEntries() {
+  return Object.entries(progressData).filter(([key, value]) => key !== identityKey() && value && value.name);
+}
+function renderPartner() {
+  const box = $("partnerProgressList");
+  if (!box) return;
+  const partners = partnerEntries();
+  box.innerHTML = partners.length ? partners.map(([key, value]) => {
+    const completed = Object.values(value.lessons || {}).filter(item => item === true || (item && item.completed)).length;
+    const current = lessonById(value.currentLesson);
+    return `<div class="partnerCard"><div class="partnerCardHead"><span>💞</span><div><strong>${esc(value.name)}</strong><small>${goalLabel(value.goal)}</small></div></div><div class="partnerMetrics"><div><strong>${completed}/${LESSONS.length}</strong><span>lessons</span></div><div><strong>${Number(value.xp || 0)}</strong><span>XP</span></div><div><strong>${Number(value.streak || 0)}</strong><span>day streak</span></div></div><div class="muted">Current lesson: ${current ? `${current.emoji} ${esc(current.title)}` : "Not started"}</div></div>`;
+  }).join("") : `<div class="empty">Invite your partner with the class link. Your courses stay separate once they join.</div>`;
+
+  const target = $("suggestTarget");
+  if (target) {
+    const previous = target.value;
+    target.innerHTML = partners.length ? partners.map(([key, value]) => `<option value="${esc(key)}">${esc(value.name)}</option>`).join("") : `<option value="">No partner available</option>`;
+    if (partners.some(([key]) => key === previous)) target.value = previous;
+    $("sendSuggestion").disabled = !partners.length;
   }
   renderSuggestions();
 }
-function goalLabel(goal){return goal==="en"?"learning English":goal==="both"?"practicing both":"learning Portuguese";}
-async function sendSuggestion(){
-  const to=$("suggestTarget").value,en=$("suggestEn").value.trim(),pt=$("suggestPt").value.trim(),lessonId=$("suggestLesson").value,note=$("suggestNote").value.trim();
-  if(!to){toast("Your partner needs to open the course first");return;}
-  if(!en||!pt){toast("Add both the English and Portuguese");return;}
-  const target=progressData[to]||{};const item=push(ref(db,rootPath("suggestions")));
-  await set(item,{from:identityKey(),fromName:displayName||"someone",to,toName:target.name||"partner",en,pt,lessonId,note,status:"pending",t:now()});
-  $("suggestEn").value="";$("suggestPt").value="";$("suggestNote").value="";toast("Phrase sent to your partner 💞");
+async function sendSuggestion() {
+  const toId = $("suggestTarget").value;
+  const en = $("suggestEn").value.trim();
+  const pt = $("suggestPt").value.trim();
+  const note = $("suggestNote").value.trim();
+  const lessonId = $("suggestLesson").value;
+  if (!toId) return toast("Choose a partner first");
+  if (!en || !pt) return toast("Add both English and Portuguese");
+  const suggestionRef = push(ref(db, rootPath("suggestions")));
+  await set(suggestionRef, {
+    fromId: identityKey(),
+    fromName: displayName || "someone",
+    toId,
+    toName: progressData[toId]?.name || "partner",
+    en,
+    pt,
+    note,
+    lessonId,
+    status: "pending",
+    t: now()
+  });
+  $("suggestEn").value = "";
+  $("suggestPt").value = "";
+  $("suggestNote").value = "";
+  toast("Phrase suggestion sent 💞");
 }
-function suggestionCard(id,v,incoming){
-  const lesson=lessonById(v.lessonId)||LESSONS[0],status=v.status||"pending";
-  return `<div class="suggestionCard"><div style="display:flex;justify-content:space-between;gap:10px"><strong>${incoming?`From ${esc(v.fromName||"your partner")}`:`To ${esc(v.toName||"your partner")}`}</strong><span class="statusTag">${esc(status)}</span></div><div class="suggestionPair"><div>${esc(v.en)}</div><div class="pt">${esc(v.pt)}</div></div>${v.note?`<div class="suggestionMeta">${esc(v.note)}</div>`:""}<div class="suggestionMeta">Lesson ${LESSONS.indexOf(lesson)+1}: ${esc(lesson.title)}</div>${incoming&&status==="pending"?`<div class="suggestionActions"><button class="btn primary sm" data-accept-suggestion="${esc(id)}">Add to my lesson</button><button class="btn danger sm" data-dismiss-suggestion="${esc(id)}">Dismiss</button></div>`:""}</div>`;
+function renderSuggestions() {
+  const incomingBox = $("incomingSuggestions");
+  const sentBox = $("sentSuggestions");
+  if (!incomingBox || !sentBox) return;
+  const rows = Object.entries(suggestionsData).filter(([, value]) => value);
+  const incoming = rows.filter(([, value]) => value.toId === identityKey()).sort((a, b) => (b[1].t || 0) - (a[1].t || 0));
+  const sent = rows.filter(([, value]) => value.fromId === identityKey()).sort((a, b) => (b[1].t || 0) - (a[1].t || 0));
+  incomingBox.innerHTML = incoming.length ? incoming.map(([id, item]) => suggestionHtml(id, item, true)).join("") : `<div class="empty">No phrase suggestions for you yet.</div>`;
+  sentBox.innerHTML = sent.length ? sent.map(([id, item]) => suggestionHtml(id, item, false)).join("") : `<div class="empty">You have not suggested any phrases yet.</div>`;
+  incomingBox.querySelectorAll("[data-accept-suggestion]").forEach(button => button.addEventListener("click", () => acceptSuggestion(button.dataset.acceptSuggestion)));
+  incomingBox.querySelectorAll("[data-dismiss-suggestion]").forEach(button => button.addEventListener("click", () => respondSuggestion(button.dataset.dismissSuggestion, "dismissed")));
+  sentBox.querySelectorAll("[data-delete-suggestion]").forEach(button => button.addEventListener("click", () => remove(ref(db, rootPath(`suggestions/${button.dataset.deleteSuggestion}`)))));
 }
-function renderSuggestions(){
-  const incomingBox=$("incomingSuggestions"),sentBox=$("sentSuggestions"); if(!incomingBox||!sentBox)return;
-  const rows=Object.entries(suggestionData).filter(([,v])=>v).sort((a,b)=>(b[1].t||0)-(a[1].t||0));
-  const incoming=rows.filter(([,v])=>v.to===identityKey()),sent=rows.filter(([,v])=>v.from===identityKey());
-  incomingBox.innerHTML=incoming.length?incoming.map(([id,v])=>suggestionCard(id,v,true)).join(""):`<div class="empty">No phrase suggestions for you yet.</div>`;
-  sentBox.innerHTML=sent.length?sent.map(([id,v])=>suggestionCard(id,v,false)).join(""):`<div class="empty">You haven’t suggested any phrases yet.</div>`;
-  incomingBox.querySelectorAll("[data-accept-suggestion]").forEach(b=>b.addEventListener("click",()=>acceptSuggestion(b.dataset.acceptSuggestion)));
-  incomingBox.querySelectorAll("[data-dismiss-suggestion]").forEach(b=>b.addEventListener("click",()=>update(ref(db,rootPath(`suggestions/${b.dataset.dismissSuggestion}`)),{status:"dismissed",respondedAt:now()})));
+function suggestionHtml(id, item, incoming) {
+  const lesson = lessonById(item.lessonId);
+  const status = item.status || "pending";
+  return `<div class="suggestionCard"><div class="suggestionHead"><strong>${incoming ? `From ${esc(item.fromName || "partner")}` : `To ${esc(item.toName || "partner")}`}</strong><span class="statusPill ${esc(status)}">${esc(status)}</span></div><div class="suggestionPair"><span>${esc(item.en)}</span><span>${esc(item.pt)}</span></div><div class="muted">${lesson ? `${lesson.emoji} ${esc(lesson.title)}` : "Course phrase"}${item.note ? ` · ${esc(item.note)}` : ""}</div>${incoming && status === "pending" ? `<div class="suggestionActions"><button class="btn primary sm" data-accept-suggestion="${esc(id)}">Add to my lesson</button><button class="btn danger sm" data-dismiss-suggestion="${esc(id)}">Dismiss</button></div>` : !incoming ? `<div class="suggestionActions"><button class="btn sm danger" data-delete-suggestion="${esc(id)}">Delete</button></div>` : ""}</div>`;
 }
-async function acceptSuggestion(id){
-  const v=suggestionData[id];if(!v||v.to!==identityKey())return;
-  await set(ref(db,rootPath(`progress/${identityKey()}/customPhrases/${id}`)),{en:v.en,pt:v.pt,note:v.note||"",lessonId:v.lessonId||LESSONS[0].id,fromName:v.fromName||"partner",addedAt:now()});
-  await update(ref(db,rootPath(`suggestions/${id}`)),{status:"accepted",respondedAt:now()});
-  toast("Added to your lesson ✨");renderEverything();
+async function acceptSuggestion(id) {
+  const item = suggestionsData[id];
+  if (!item || item.toId !== identityKey()) return;
+  const phraseRef = push(ref(db, rootPath(`progress/${identityKey()}/customPhrases`)));
+  await set(phraseRef, {
+    en: item.en,
+    pt: item.pt,
+    note: item.note || `Suggested by ${item.fromName || "partner"}`,
+    lessonId: item.lessonId || LESSONS[0].id,
+    addedBy: item.fromId,
+    addedName: item.fromName || "partner",
+    fromSuggestion: id,
+    t: now()
+  });
+  await respondSuggestion(id, "accepted");
+  toast("Added to your lesson ✨");
+}
+function respondSuggestion(id, status) {
+  return update(ref(db, rootPath(`suggestions/${id}`)), { status, respondedAt: now() });
 }
 
-function speak(text,lang){
-  if(!("speechSynthesis" in window)){toast("Speech playback isn’t supported in this browser");return;}
-  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=lang;u.rate=.84;const voices=speechSynthesis.getVoices();const exact=voices.find(v=>v.lang.toLowerCase()===lang.toLowerCase())||voices.find(v=>v.lang.toLowerCase().startsWith(lang.slice(0,2).toLowerCase()));if(exact)u.voice=exact;speechSynthesis.speak(u);
+async function addCustomPhrase() {
+  const en = $("bookEn").value.trim();
+  const pt = $("bookPt").value.trim();
+  const note = $("bookNote").value.trim();
+  const lessonId = $("bookLesson").value;
+  if (!en || !pt) return toast("Add both English and Portuguese");
+  const phraseRef = push(ref(db, rootPath(`progress/${identityKey()}/customPhrases`)));
+  await set(phraseRef, { en, pt, note, lessonId, addedBy: identityKey(), addedName: displayName || "you", t: now() });
+  $("bookEn").value = "";
+  $("bookPt").value = "";
+  $("bookNote").value = "";
+  toast("Added to your lesson ✨");
 }
-function speakAndWait(text,lang){return new Promise(resolve=>{if(!("speechSynthesis" in window)){resolve();return;}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=lang;u.rate=.84;u.onend=resolve;u.onerror=resolve;speechSynthesis.speak(u);});}
-function speakerButton(text,lang){return `<button class="speak" data-say="${esc(text)}" data-lang="${lang}" title="Hear pronunciation">🔊</button>`;}
+function renderPhrasebook() {
+  const box = $("phrasebookList");
+  if (!box) return;
+  const query = normalize($("bookSearch")?.value || "");
+  const rows = customPhraseRows().filter(item => !query || normalize(`${item.en} ${item.pt} ${item.note || ""}`).includes(query)).sort((a, b) => (b.t || 0) - (a.t || 0));
+  if (!rows.length) {
+    box.innerHTML = `<div class="empty">${query ? "Nothing matches that search." : "No personal lesson phrases yet. Add one yourself or accept one from your partner."}</div>`;
+    return;
+  }
+  box.innerHTML = rows.map(item => {
+    const lesson = lessonById(item.lessonId);
+    return `<div class="bookRow"><div><strong>${esc(item.en)}</strong>${noAudio() ? "" : ` <button class="speak" data-say="${esc(item.en)}" data-lang="en-US">🔊</button>`}</div><div class="bookPt">${esc(item.pt)}${noAudio() ? "" : ` <button class="speak" data-say="${esc(item.pt)}" data-lang="pt-BR">🔊</button>`}</div><div class="bookNote">${lesson ? `${lesson.emoji} ${esc(lesson.title)}` : "Course"}${item.note ? `<br>${esc(item.note)}` : ""}</div><button class="btn sm danger" data-delete-phrase="${esc(item.id)}">Delete</button></div>`;
+  }).join("");
+  box.querySelectorAll("[data-say]").forEach(button => button.addEventListener("click", () => speak(button.dataset.say, button.dataset.lang)));
+  box.querySelectorAll("[data-delete-phrase]").forEach(button => button.addEventListener("click", () => remove(ref(db, rootPath(`progress/${identityKey()}/customPhrases/${button.dataset.deletePhrase}`)))));
+}
 
-function addPhrase(){
-  const en=$("bookEn").value.trim(),pt=$("bookPt").value.trim(),note=$("bookNote").value.trim(),lessonId=$("bookLesson").value;
-  if(!en||!pt){toast("Add both English and Portuguese");return;}
-  const item=push(ref(db,rootPath(`progress/${identityKey()}/customPhrases`)));
-  set(item,{en,pt,note,lessonId,fromName:displayName||"you",addedAt:now()});
-  $("bookEn").value="";$("bookPt").value="";$("bookNote").value="";toast("Added to your lesson ✨");
+function speak(text, lang) {
+  if (noAudio()) return toast("Audio is disabled in your course settings");
+  if (!("speechSynthesis" in window)) return toast("Speech playback is not supported in this browser");
+  speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = lang;
+  utterance.rate = 0.84;
+  const voices = speechSynthesis.getVoices();
+  const exact = voices.find(voice => voice.lang.toLowerCase() === lang.toLowerCase()) || voices.find(voice => voice.lang.toLowerCase().startsWith(lang.slice(0, 2).toLowerCase()));
+  if (exact) utterance.voice = exact;
+  speechSynthesis.speak(utterance);
 }
-function renderPhrasebook(){
-  const box=$("phrasebookList");if(!box)return;const q=($("bookSearch")?.value||"").trim().toLowerCase();
-  const rows=Object.entries(mine().customPhrases||{}).filter(([,v])=>v&&(!q||`${v.en} ${v.pt} ${v.note||""} ${lessonById(v.lessonId)?.title||""}`.toLowerCase().includes(q))).sort((a,b)=>(b[1].addedAt||0)-(a[1].addedAt||0));
-  if(!rows.length){box.innerHTML=`<div class="empty">${q?"Nothing matches that search.":"You have no custom phrases yet. Add one yourself or accept one from your partner."}</div>`;return;}
-  box.innerHTML=rows.map(([id,v])=>{const lesson=lessonById(v.lessonId)||LESSONS[0];return `<div class="bookRow"><div><strong>${esc(v.en)}</strong> ${noAudio?"":speakerButton(v.en,"en-US")}</div><div class="bookPt">${esc(v.pt)} ${noAudio?"":speakerButton(v.pt,"pt-BR")}</div><div class="bookNote">Lesson ${LESSONS.indexOf(lesson)+1}: ${esc(lesson.title)}${v.note?` · ${esc(v.note)}`:""}</div><button class="btn sm danger" data-delete-custom="${esc(id)}">Remove</button></div>`;}).join("");
-  box.querySelectorAll("[data-say]").forEach(b=>b.addEventListener("click",()=>speak(b.dataset.say,b.dataset.lang)));
-  box.querySelectorAll("[data-delete-custom]").forEach(b=>b.addEventListener("click",()=>remove(ref(db,rootPath(`progress/${identityKey()}/customPhrases/${b.dataset.deleteCustom}`)))));
+function speakAndWait(text, lang) {
+  return new Promise(resolve => {
+    if (noAudio() || !("speechSynthesis" in window)) return resolve();
+    speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = lang;
+    utterance.rate = 0.84;
+    utterance.onend = resolve;
+    utterance.onerror = resolve;
+    speechSynthesis.speak(utterance);
+  });
 }
 
-window.addEventListener("DOMContentLoaded",waitForRooms);
+window.addEventListener("DOMContentLoaded", waitForRooms);
