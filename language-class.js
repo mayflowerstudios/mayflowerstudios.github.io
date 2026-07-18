@@ -103,11 +103,14 @@ const params=new URLSearchParams(location.search);const presetRoom=cleanRoom(par
 const app=getApps().length?getApp():initializeApp(firebaseConfig);const db=getDatabase(app);
 let ROOM=null,roomEntered=false,currentLessonId=ALL_LESSONS[0].id,currentTab="learn",connected=false,activeSession=null,currentWorksheet=null,migrationStarted=false;
 let progressData={},presenceData={},homeworkData={},suggestionsData={};
+let availableVoices=[];
 let displayName=localStorage.getItem("lc_name")||"";let myId=localStorage.getItem("lc_device_id");if(!myId){myId="lc"+Math.random().toString(36).slice(2,10);localStorage.setItem("lc_device_id",myId);}
 const identityKey=()=>window.MFAuth&&MFAuth.uid?MFAuth.uid:myId;
 const rootPath=sub=>`together/${ROOM}/language${sub?"/"+sub:""}`;const roomPath=sub=>`together/${ROOM}/${sub}`;
 const mine=()=>progressData[identityKey()]||{};const currentLesson=()=>lessonById(currentLessonId)||ALL_LESSONS[0];const currentUnit=()=>seedForLesson(currentLesson());
 const audioEnabled=()=>mine().audioEnabled!==false;
+const selectedVoiceId=lang=>{const id=lang.toLowerCase().startsWith("pt")?"voicePtSelect":"voiceEnSelect";const live=$(id)?.value;if(live)return live;return lang.toLowerCase().startsWith("pt")?(mine().voicePortuguese||"auto"):(mine().voiceEnglish||"auto");};
+const speechRate=()=>{const live=$("speechRate")?.value;return Math.max(.65,Math.min(1.15,Number(live||mine().speechRate||.85)));};
 const customPhrases=()=>Object.entries(mine().customPhrases||{}).filter(([,v])=>v).map(([id,v])=>({...v,id,custom:true,key:v.key||`custom_${id}`}));
 const lessonItems=l=>{const u=seedForLesson(l);let pairs=[];if(l.kind==="vocab")pairs=u.vocab;if(l.kind==="grammar")pairs=u.vocab.slice(0,4).concat(u.phrases.slice(0,4));if(l.kind==="sentences")pairs=u.phrases;if(l.kind==="reading")pairs=u.vocab.slice(2,6).concat(u.phrases.slice(0,3));if(l.kind==="mission")pairs=u.phrases.concat(u.vocab.slice(0,3));const base=pairs.map(([en,pt],i)=>({en,pt,lessonId:l.id,unitId:l.unitId,key:`${l.unitId}_${slug(en)}`,isPhrase:en.split(/\s+/).length>2,index:i}));return base.concat(customPhrases().filter(p=>p.lessonId===l.id||p.unitId===l.unitId).map(p=>({...p,lessonId:l.id,unitId:l.unitId})));};
 const allCourseItems=()=>{const map=new Map();ALL_LESSONS.forEach(l=>lessonItems(l).forEach(i=>map.set(i.key,i)));return [...map.values()];};
@@ -123,12 +126,12 @@ function waitForRooms(tries=0){if(window.MFRooms&&MFRooms.whenReady){MFRooms.whe
 async function gateAndEnter(room){if(!room){location.href="/together.html";return;}try{const info=await MFRooms.get(room);if(!info){bounce("missing",room);return;}if(info.type!=="learn"){location.href=MFRooms.urlFor(info);return;}const access=await MFRooms.canEnter(info);if(!access.ok){bounce(access.reason,room);return;}try{await MFRooms.touch(room);}catch(_){}enterRoom(room);}catch(err){console.error(err);bounce("missing",room);}}
 function bounce(reason,room){location.href=`/together.html?denied=${encodeURIComponent(reason||"missing")}&room=${encodeURIComponent(room||"")}`;}
 function trackIdentity(){let tries=0;const iv=setInterval(()=>{if(!window.MFAuth){if(++tries>150)clearInterval(iv);return;}clearInterval(iv);if(!MFAuth.isConfigured())return;MFAuth.onChange(user=>{const input=$("nameInput");if(user&&MFAuth.name()){displayName=MFAuth.name();input.value=displayName;input.readOnly=true;}else{input.value=displayName;input.readOnly=false;}if(ROOM)writePresence();});},100);}trackIdentity();
-function enterRoom(room){if(roomEntered)return;roomEntered=true;ROOM=room;$("gateView").hidden=true;$("roomView").hidden=false;$("roomBar").hidden=false;$("nameInput").value=displayName;const u=new URL(location.href);u.searchParams.set("room",room);history.replaceState(null,"",u);populateSelects();setupTabs();setupPresence();setupState();setupActions();renderEverything();}
+function enterRoom(room){if(roomEntered)return;roomEntered=true;ROOM=room;$("gateView").hidden=true;$("roomView").hidden=false;$("roomBar").hidden=false;$("nameInput").value=displayName;const u=new URL(location.href);u.searchParams.set("room",room);history.replaceState(null,"",u);populateSelects();setupTabs();setupPresence();setupState();setupActions();setupVoiceSystem();renderEverything();}
 function setupTabs(){$("tabs").querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>{currentTab=tab.dataset.tab;$("tabs").querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t===tab));document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",p.dataset.panel===currentTab));writePresence();}));}
 function paintConnection(){$("connDot").className="dot "+(connected?"on":"off");const ids=new Set(Object.entries(presenceData).filter(([,v])=>v&&now()-(v.t||0)<70000).map(([id,v])=>v.idk||id));$("connText").textContent=connected?(ids.size>1?`Connected · ${ids.size} learners`:`Connected`):"Offline";}
 function writePresence(){if(!ROOM)return;const p=ref(db,roomPath(`presence/${myId}`));set(p,{name:displayName||"someone",idk:identityKey(),tab:currentTab,lessonId:currentLessonId,joined:serverTimestamp(),t:now()});onDisconnect(p).remove();}
 function setupPresence(){writePresence();setInterval(writePresence,20000);onValue(ref(db,".info/connected"),s=>{connected=s.val()===true;paintConnection();if(connected)writePresence();});onValue(ref(db,roomPath("presence")),s=>{const raw=s.val()||{},fresh={};Object.entries(raw).forEach(([id,v])=>{if(id===myId||now()-((v&&v.t)||0)<70000)fresh[id]=v;else remove(ref(db,roomPath(`presence/${id}`))).catch(()=>{});});presenceData=fresh;paintConnection();});}
-function setupState(){onValue(ref(db,rootPath("progress")),s=>{progressData=s.val()||{};const me=mine();migrateLegacyProgress(me);if(me.currentLesson&&lessonById(me.currentLesson))currentLessonId=me.currentLesson;$("goalSelect").value=me.goal||"pt";$("audioToggle").checked=me.audioEnabled!==false;renderEverything();});onValue(ref(db,rootPath("homework")),s=>{homeworkData=s.val()||{};renderHomework();});onValue(ref(db,rootPath("suggestions")),s=>{suggestionsData=s.val()||{};renderPartner();});get(ref(db,rootPath(`progress/${identityKey()}`))).then(s=>{if(!s.exists())updateMy({version:9,goal:"pt",audioEnabled:true,currentLesson:ALL_LESSONS[0].id,createdAt:now()});});}
+function setupState(){onValue(ref(db,rootPath("progress")),s=>{progressData=s.val()||{};const me=mine();migrateLegacyProgress(me);if(me.currentLesson&&lessonById(me.currentLesson))currentLessonId=me.currentLesson;$("goalSelect").value=me.goal||"pt";$("audioToggle").checked=me.audioEnabled!==false;applyVoiceSettingsUI();renderEverything();});onValue(ref(db,rootPath("homework")),s=>{homeworkData=s.val()||{};renderHomework();});onValue(ref(db,rootPath("suggestions")),s=>{suggestionsData=s.val()||{};renderPartner();});get(ref(db,rootPath(`progress/${identityKey()}`))).then(s=>{if(!s.exists())updateMy({version:9,goal:"pt",audioEnabled:true,voicePortuguese:"auto",voiceEnglish:"auto",speechRate:.85,currentLesson:ALL_LESSONS[0].id,createdAt:now()});});}
 function migrateLegacyProgress(me){if(migrationStarted||!me||me.version===9)return;migrationStarted=true;const map={greetings:"foundations-1",affection:"feelings-1",checkins:"daily-1",feelings:"feelings-2",food:"homefood-1",routines:"daily-3",timeplans:"plans-1",games:"hobbies-1",travel:"travel-1",realconvo:"conversation-1"};const values={version:9};Object.entries(map).forEach(([oldId,newId])=>{const old=(me.lessons||{})[oldId];if(old===true||(old&&old.completed)){values[`lessons/${newId}/completed`]=true;values[`lessons/${newId}/completedAt`]=old.completedAt||now();}});updateMy(values).catch(()=>{});}
 function lessonOptionGroups(){return COURSE.map(u=>`<optgroup label="${esc(u.emoji)} Unit ${u.index+1}: ${esc(u.title)}">${u.lessons.map(l=>`<option value="lesson:${l.id}">${l.index+1}. ${esc(l.title)}</option>`).join("")}</optgroup>`).join("");}
 function populateSelects(){const lessonOptions=lessonOptionGroups();const unitOptions=COURSE.map(u=>`<option value="unit:${u.id}">${u.emoji} Unit ${u.index+1}: ${esc(u.title)}</option>`).join("");$("quizScopeSelect").innerHTML=`<option value="lesson:${currentLessonId}">Selected lesson</option>${unitOptions}<option value="course:all">Entire course</option>`;$("worksheetScopeSelect").innerHTML=`${lessonOptions}<optgroup label="Whole units">${unitOptions}</optgroup><option value="course:all">Entire course</option>`;["noteLesson","suggestLesson","bookLesson"].forEach(id=>{$(id).innerHTML=lessonOptions;$(id).value=`lesson:${currentLessonId}`;});}
@@ -136,6 +139,9 @@ function setupActions(){
  $("copyRoomBtn").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(location.href);toast("Course link copied 🔗");}catch(_){toast(location.href);}});
  $("nameInput").addEventListener("input",e=>{if(e.target.readOnly)return;displayName=e.target.value.slice(0,24)||"someone";localStorage.setItem("lc_name",displayName);writePresence();updateMy({name:displayName});});
  $("goalSelect").addEventListener("change",e=>updateMy({goal:e.target.value}));$("audioToggle").addEventListener("change",e=>updateMy({audioEnabled:e.target.checked}));
+ $("voicePtSelect").addEventListener("change",e=>updateMy({voicePortuguese:e.target.value}));$("voiceEnSelect").addEventListener("change",e=>updateMy({voiceEnglish:e.target.value}));
+ $("speechRate").addEventListener("input",e=>paintSpeechRate(Number(e.target.value)));$("speechRate").addEventListener("change",e=>updateMy({speechRate:Number(e.target.value)}));
+ $("testPtVoice").addEventListener("click",()=>speak("Olá! Como você está hoje?", "pt-BR", true));$("testEnVoice").addEventListener("click",()=>speak("Hello! How are you today?", "en-US", true));
  $("closeSession").addEventListener("click",closeSession);$("placementBtn").addEventListener("click",startPlacement);$("smartPracticeBtn").addEventListener("click",()=>startReview("smart"));$("recallPracticeBtn").addEventListener("click",()=>startReview("recall"));$("practiceMistakesBtn").addEventListener("click",()=>startReview("mistakes"));
  $("startQuizBtn").addEventListener("click",()=>startQuiz($("quizScopeSelect").value,$("quizTypeSelect").value,12));$("courseQuizBtn").addEventListener("click",()=>startQuiz("course:all","mixed",20));
  $("generateWorksheetBtn").addEventListener("click",generateWorksheet);$("printWorksheetBtn").addEventListener("click",()=>window.print());$("assignLessonHomework").addEventListener("click",assignLessonHomework);$("createHomework").addEventListener("click",createHomework);
@@ -249,7 +255,41 @@ async function acceptSuggestion(id){const s=suggestionsData[id];if(!s)return;con
 function addPhrase(){const en=$("bookEn").value.trim(),pt=$("bookPt").value.trim();if(!en||!pt){toast("Add both English and Portuguese");return;}const lessonId=$("bookLesson").value.replace("lesson:","");const key=push(ref(db,rootPath(`progress/${identityKey()}/customPhrases`)));set(key,{en,pt,note:$("bookNote").value.trim(),lessonId,unitId:lessonById(lessonId)?.unitId||currentLesson().unitId,key:`custom_${key.key}`,t:now()});$("bookEn").value="";$("bookPt").value="";$("bookNote").value="";toast("Added to your course 💬");}
 function renderPhrasebook(){const q=($("bookSearch")?.value||"").trim().toLowerCase();const rows=Object.entries(mine().customPhrases||{}).filter(([,v])=>v&&(!q||`${v.en} ${v.pt} ${v.note||""}`.toLowerCase().includes(q))).sort((a,b)=>(b[1].t||0)-(a[1].t||0));$("phrasebookList").innerHTML=rows.length?rows.map(([id,p])=>`<div class="bookRow"><div><strong>${esc(p.en)}</strong> ${speakerButton(p.en,"en-US")}</div><div class="bookPt">${esc(p.pt)} ${speakerButton(p.pt,"pt-BR")}</div><div class="bookNote">${esc(p.note||lessonById(p.lessonId)?.title||"Personal course phrase")}</div><button class="btn sm danger" data-delete-phrase="${id}">Delete</button></div>`).join(""):`<div class="empty">Add phrases you truly want to use. Accepted partner suggestions appear here too.</div>`;$("phrasebookList").querySelectorAll("[data-say]").forEach(b=>b.addEventListener("click",()=>speak(b.dataset.say,b.dataset.lang)));$("phrasebookList").querySelectorAll("[data-delete-phrase]").forEach(b=>b.addEventListener("click",()=>remove(ref(db,rootPath(`progress/${identityKey()}/customPhrases/${b.dataset.deletePhrase}`)))));}
 
-function speak(text,lang){if(!audioEnabled()){toast("Audio exercises are turned off");return;}if(!("speechSynthesis" in window)){toast("Speech playback is not supported in this browser");return;}speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=lang;u.rate=.84;const voices=speechSynthesis.getVoices();const exact=voices.find(v=>v.lang.toLowerCase()===lang.toLowerCase())||voices.find(v=>v.lang.toLowerCase().startsWith(lang.slice(0,2).toLowerCase()));if(exact)u.voice=exact;speechSynthesis.speak(u);}
+function voiceMatchScore(voice,lang){
+ const wanted=lang.toLowerCase(),actual=(voice.lang||"").toLowerCase(),name=(voice.name||"").toLowerCase();
+ if(actual!==wanted&&!actual.startsWith(wanted.slice(0,2)))return-10000;
+ let score=actual===wanted?100:55;
+ if(/natural|neural/.test(name))score+=90;if(/premium|enhanced/.test(name))score+=70;if(/online/.test(name))score+=45;
+ if(/google/.test(name))score+=35;if(/microsoft/.test(name))score+=30;if(/siri|apple/.test(name))score+=28;
+ if(voice.default)score+=8;if(/espeak|festival|compact/.test(name))score-=45;
+ return score;
+}
+function sortedVoicesFor(lang){return availableVoices.filter(v=>voiceMatchScore(v,lang)>-10000).sort((a,b)=>voiceMatchScore(b,lang)-voiceMatchScore(a,lang)||a.name.localeCompare(b.name));}
+function bestVoice(lang){
+ const selected=selectedVoiceId(lang);if(selected!=="auto"){const exact=availableVoices.find(v=>v.voiceURI===selected||v.name===selected);if(exact)return exact;}
+ return sortedVoicesFor(lang)[0]||null;
+}
+function voiceOptionLabel(v,index){const quality=/natural|neural|premium|enhanced|online/i.test(v.name)?"★ ":index===0?"★ ":"";const source=v.localService?"device":"online";return`${quality}${v.name} — ${v.lang} · ${source}`;}
+function fillVoiceSelect(id,lang,value){
+ const select=$(id);if(!select)return;const voices=sortedVoicesFor(lang);select.innerHTML="";select.add(new Option("Automatic — best available","auto"));voices.forEach((v,i)=>select.add(new Option(voiceOptionLabel(v,i),v.voiceURI)));
+ select.value=[...select.options].some(o=>o.value===value)?value:"auto";
+}
+function paintSpeechRate(value){const label=$("speechRateLabel");if(!label)return;label.textContent=value<=.72?"Very slow":value<=.82?"Slow":value<=.92?"Natural":value<=1.02?"Quick":"Fast";}
+function applyVoiceSettingsUI(){
+ const rate=speechRate();if($("speechRate"))$("speechRate").value=String(rate);paintSpeechRate(rate);
+ fillVoiceSelect("voicePtSelect","pt-BR",mine().voicePortuguese||"auto");fillVoiceSelect("voiceEnSelect","en-US",mine().voiceEnglish||"auto");
+ const pt=bestVoice("pt-BR"),en=bestVoice("en-US");if($("voiceQualityNote"))$("voiceQualityNote").textContent=availableVoices.length?`Automatic currently uses ${pt?pt.name:"your browser default"} for Portuguese and ${en?en.name:"your browser default"} for English.`:"Loading the voices available on this device…";
+}
+function setupVoiceSystem(){
+ if(!("speechSynthesis" in window)){if($("voiceSettings"))$("voiceSettings").hidden=true;return;}
+ const refresh=()=>{availableVoices=speechSynthesis.getVoices()||[];applyVoiceSettingsUI();};refresh();
+ if(typeof speechSynthesis.addEventListener==="function")speechSynthesis.addEventListener("voiceschanged",refresh);else speechSynthesis.onvoiceschanged=refresh;
+ setTimeout(refresh,250);setTimeout(refresh,1000);
+}
+function speak(text,lang,force=false){
+ if(!force&&!audioEnabled()){toast("Audio exercises are turned off");return;}if(!("speechSynthesis" in window)){toast("Speech playback is not supported in this browser");return;}
+ speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);const voice=bestVoice(lang);if(voice){u.voice=voice;u.lang=voice.lang||lang;}else u.lang=lang;u.rate=speechRate();u.pitch=1;u.volume=1;speechSynthesis.speak(u);
+}
 function speakerButton(text,lang){return`<button class="btn sm" data-say="${esc(text)}" data-lang="${lang}" title="Hear pronunciation">🔊</button>`;}
 
 window.addEventListener("DOMContentLoaded",waitForRooms);
