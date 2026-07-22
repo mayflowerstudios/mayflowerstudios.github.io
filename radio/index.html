@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mayflower Radio • Mayflower Studios</title>
+  <meta name="description" content="Mayflower Radio — run your own internet radio station from your Windows PC. Add music from YouTube or Spotify links, hit play, and share one URL that works in 3DXChat rooms, VLC, browsers, anywhere." />
+  <meta property="og:title" content="Mayflower Radio • Mayflower Studios" />
+  <meta property="og:description" content="Your own internet radio station — add music from YouTube or Spotify links, press play, share one URL. Free Windows app, sets itself up." />
+  <meta property="og:url" content="https://mayflowerstudios.net/radio/" />
+  <link rel="canonical" href="https://mayflowerstudios.net/radio/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://mayflowerstudios.net/radio/logo.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=2" />
+  <link rel="apple-touch-icon" href="/assets/icons/favicon.png?v=2" />
+  <link rel="stylesheet" href="/style.css?v=34" />
+
+  <style>
+    /* ───────────── Radio-only flourishes (structure comes from style.css) ───────────── */
+    .radio-hero { display: grid; grid-template-columns: 1fr auto; gap: 28px; align-items: center; }
+    @media (max-width: 760px) { .radio-hero { grid-template-columns: 1fr; } .radio-hero .hero-logo { order: -1; justify-self: center; } }
+    .radio-hero .hero-logo {
+      width: 250px; max-width: 60vw; filter: drop-shadow(0 18px 40px rgba(0,0,0,.45));
+      animation: logoFloat 7s var(--ease) infinite alternate;
+    }
+    @keyframes logoFloat { from { transform: translateY(0) rotate(-1deg); } to { transform: translateY(-12px) rotate(1.5deg); } }
+
+    .dl-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .dl-meta .pill {
+      font-size: 12px; color: var(--text-3); padding: 4px 12px; border-radius: 999px;
+      border: 1px solid var(--border); background: rgba(255,255,255,.03);
+    }
+    .dl-meta .pill strong { color: var(--text-2); font-weight: 600; }
+
+    .feat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
+    @media (max-width: 560px) { .feat-grid { grid-template-columns: 1fr; } }
+    .feat-card {
+      display: flex; flex-direction: column; gap: 12px; padding: 26px 24px;
+      transition: transform 240ms var(--ease), border-color 240ms var(--ease);
+    }
+    .feat-card:hover { transform: translateY(-5px); }
+    .feat-card .f-icon {
+      font-size: 26px; line-height: 1; width: 52px; height: 52px;
+      display: grid; place-items: center; border-radius: 15px;
+      background: rgba(255,255,255,.04); border: 1px solid var(--border);
+      transition: transform 240ms var(--ease);
+    }
+    .feat-card:hover .f-icon { transform: scale(1.08) rotate(-4deg); }
+    .feat-card h3 { font-size: 19px; }
+    .feat-card p { font-size: 14px; color: var(--text-2); line-height: 1.7; }
+
+    .steps { counter-reset: step; display: flex; flex-direction: column; gap: 12px; }
+    .step-row { display: flex; gap: 16px; padding: 18px 20px; align-items: flex-start; }
+    .step-row .s-num {
+      counter-increment: step; flex-shrink: 0;
+      width: 34px; height: 34px; border-radius: 50%;
+      display: grid; place-items: center; font-weight: 700; font-size: 15px;
+      color: var(--rose); border: 1px solid rgba(249,168,212,.35); background: rgba(249,168,212,.08);
+    }
+    .step-row .s-num::before { content: counter(step); }
+    .step-row h3 { font-size: 16.5px; margin-bottom: 4px; }
+    .step-row p { font-size: 14px; color: var(--text-2); line-height: 1.7; }
+    .step-row em { color: var(--rose); font-style: normal; font-weight: 600; }
+
+    .radio-note { padding: 24px 26px; }
+    .radio-note p { font-size: 14px; color: var(--text-2); line-height: 1.8; margin-bottom: 10px; }
+    .radio-note p:last-child { margin-bottom: 0; }
+  </style>
+</head>
+<body data-nav="radio">
+
+  <div class="site-page">
+    <div id="site-nav"></div>
+
+    <main class="content">
+
+      <!-- ══ HERO ══ -->
+      <section class="page-hero reveal">
+        <div class="radio-hero">
+          <div>
+            <p class="page-kicker">✦ Free Windows app</p>
+            <h1 class="page-title">Mayflower Radio</h1>
+            <p class="page-sub">
+              Your own internet radio station. Paste YouTube or Spotify links to build a music
+              library, press play, and share one URL that anyone can listen to — in 3DXChat rooms,
+              VLC, a browser, anywhere internet radio works. It sets itself up, opens your router
+              port for you, and keeps itself updated.
+            </p>
+            <div class="page-actions">
+              <a href="/radio/MayflowerRadio.exe" class="btn-pri" download>⬇️ Download for Windows</a>
+              <a href="/" class="btn-ghost">🏡 Back home</a>
+            </div>
+            <div class="dl-meta">
+              <span class="pill">Version <strong id="ver">…</strong></span>
+              <span class="pill">Windows 10/11 · 64-bit</span>
+              <span class="pill">~64 MB · free</span>
+            </div>
+          </div>
+          <img class="hero-logo" src="/radio/logo.png" alt="Mayflower Radio logo" />
+        </div>
+      </section>
+
+      <!-- ══ FEATURES ══ -->
+      <section class="sec reveal">
+        <div class="sec-head">
+          <div class="sec-kicker">🌿 What it does</div>
+          <h2 class="sec-title">A whole radio station in one window</h2>
+        </div>
+        <div class="feat-grid reveal stagger">
+          <div class="card card-accent-top feat-card">
+            <div class="card-shine"></div>
+            <div class="f-icon">🎵</div>
+            <h3>Music from links</h3>
+            <p>Paste a YouTube video or playlist, or a Spotify song, album, or playlist — the app
+               builds your library for you. Drag &amp; drop your own MP3s too.</p>
+          </div>
+          <div class="card card-accent-top feat-card">
+            <div class="card-shine"></div>
+            <div class="f-icon">🎚️</div>
+            <h3>Real DJ controls</h3>
+            <p>Shuffle, repeat, pause, seek, and an up-next queue. Listeners hear one continuous,
+               gapless stream — with the current song title showing in players.</p>
+          </div>
+          <div class="card card-accent-top feat-card">
+            <div class="card-shine"></div>
+            <div class="f-icon">🛜</div>
+            <h3>Sets itself up</h3>
+            <p>First run downloads everything it needs and asks your router to open the port
+               automatically. A status pill tells you the moment the world can hear you.</p>
+          </div>
+          <div class="card card-accent-top feat-card">
+            <div class="card-shine"></div>
+            <div class="f-icon">✨</div>
+            <h3>Stays fresh</h3>
+            <p>When there's a new version, an update button appears — one click and the app
+               updates itself. No reinstalling, ever.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ GETTING STARTED ══ -->
+      <section class="sec reveal">
+        <div class="sec-head">
+          <div class="sec-kicker">🚀 Getting started</div>
+          <h2 class="sec-title">Three minutes to on-air</h2>
+        </div>
+        <div class="steps reveal stagger">
+          <div class="card step-row">
+            <div class="s-num"></div>
+            <div>
+              <h3>Download and run</h3>
+              <p>Windows may show a SmartScreen warning because the app is from a small studio —
+                 click <em>More info → Run anyway</em>. First-time setup runs by itself and takes a
+                 few minutes.</p>
+            </div>
+          </div>
+          <div class="card step-row">
+            <div class="s-num"></div>
+            <div>
+              <h3>Allow the firewall popup</h3>
+              <p>When the radio server starts the first time, Windows asks about <em>icecast.exe</em> —
+                 click <em>Allow</em> so listeners can reach you.</p>
+            </div>
+          </div>
+          <div class="card step-row">
+            <div class="s-num"></div>
+            <div>
+              <h3>Add music and go live</h3>
+              <p>Paste a link, press Play, and copy your radio URL from the top of the app into
+                 wherever you want it heard. When the Internet pill is green, everyone can listen.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ NOTE ══ -->
+      <section class="sec reveal">
+        <div class="card radio-note">
+          <p>
+            The radio runs from your PC — keep the app open while you're broadcasting, and the
+            stream stops when you close it. If your router doesn't support automatic port opening
+            (UPnP), the app shows exactly what to set up instead.
+          </p>
+          <p>
+            Please be thoughtful about what you broadcast and to whom — you're responsible for
+            your own station. 🌸
+          </p>
+        </div>
+      </section>
+
+    </main><!-- /content -->
+
+    <div id="site-footer"></div>
+  </div><!-- /site-page -->
+
+  <script src="/shared.js?v=33"></script>
+  <script>
+    fetch('/radio/version.json?t=' + Date.now())
+      .then(r => r.json())
+      .then(v => { document.getElementById('ver').textContent = v.version; })
+      .catch(() => { document.getElementById('ver').textContent = '1.x'; });
+  </script>
+</body>
+</html>
