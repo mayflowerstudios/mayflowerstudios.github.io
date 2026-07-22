@@ -70,6 +70,10 @@ function toUrl(relPath) {
   // Root index.html becomes site root
   if (relPath === "index.html") return `${SITE}/`;
 
+  // A subfolder's index.html becomes the folder URL (matches canonical tags)
+  if (relPath.endsWith("/index.html"))
+    return `${SITE}/${relPath.slice(0, -"index.html".length)}`;
+
   // Any other html file becomes /file.html (or /subdir/file.html)
   return `${SITE}/${relPath}`;
 }
