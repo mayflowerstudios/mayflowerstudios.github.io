@@ -94,6 +94,22 @@
     }
     .make-card .btn-pri { align-self: flex-start; margin-top: 4px; }
 
+    /* Compact new-release strip */
+    .release-strip { display: flex; align-items: center; gap: 20px; padding: 20px 24px; }
+    .rs-logo {
+      width: 68px; height: 68px; border-radius: 18px; flex-shrink: 0;
+      border: 1px solid var(--border); background: rgba(255,255,255,.04);
+    }
+    .rs-body { min-width: 0; }
+    .rs-kicker { font-size: 12px; color: var(--rose); letter-spacing: .4px; margin-bottom: 3px; }
+    .rs-title { font-size: 22px; margin-bottom: 4px; }
+    .rs-text { font-size: 13.5px; color: var(--text-2); line-height: 1.65; }
+    .rs-btn { flex-shrink: 0; margin-left: auto; }
+    @media (max-width: 680px) {
+      .release-strip { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .rs-btn { margin-left: 0; }
+    }
+
     /* Projects — mods & bots showcase */
     .proj-band { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
     @media (max-width: 820px) { .proj-band { grid-template-columns: 1fr; } }
@@ -232,29 +248,23 @@
       </section>
 
       <!-- ══ FEATURED RELEASE ══ -->
-      <section id="idle-rpg" class="sec reveal">
-        <div class="sec-head">
-          <div class="sec-kicker">🌙 New release</div>
-          <h2 class="sec-title">Mayflower Idle RPG</h2>
-          <p class="sec-sub">A Windows desktop fantasy chronicle that runs on its own: create a hero, watch their life unfold, then come back later to a summary of what happened while you were away — with optional automatic public leaderboard records.</p>
-        </div>
-        <article class="card card-accent-top make-card" style="min-height:0;">
+      <section id="new-release" class="sec reveal">
+        <article class="card card-accent-top release-strip">
           <div class="card-shine"></div>
-          <div class="make-icon" aria-hidden="true">📖</div>
-          <h3>First Chronicle v1.0.0</h3>
-          <p>Idle storytelling, living atlas generation, heirs and children, offline progress, live Firebase leaderboards, save backups, crash logs, and JSON event mods — all wrapped in the same soft Mayflower style.</p>
-          <div class="make-tags">
-            <span class="make-tag">desktop RPG</span>
-            <span class="make-tag">offline progress</span>
-            <span class="make-tag">JSON mods</span>
-            <span class="make-tag">leaderboards</span>
-            <span class="make-tag">Windows</span>
+          <img class="rs-logo" src="/assets/icons/mayflowerradio.png" alt="Mayflower Radio logo" loading="lazy">
+          <div class="rs-body">
+            <div class="rs-kicker">📻 New release · <span id="rver">v1.x</span></div>
+            <h2 class="rs-title">Mayflower Radio</h2>
+            <p class="rs-text">Your own internet radio station — build a library from YouTube or Spotify links,
+               press play, and share one URL anyone can listen to. Sets itself up, updates itself.</p>
           </div>
-          <div class="page-actions" style="margin-top:8px;">
-            <a href="/mayflower-idle-rpg.html" class="btn-pri sm">View the game</a>
-          </div>
+          <a href="/radio/" class="btn-pri sm rs-btn">Get the radio →</a>
         </article>
       </section>
+      <script>
+        fetch('/radio/version.json?t=' + Date.now()).then(r => r.json())
+          .then(v => { document.getElementById('rver').textContent = 'v' + v.version; }).catch(() => {});
+      </script>
 
       <!-- ══ THINGS I MAKE ══ -->
       <section id="make" class="sec reveal">
