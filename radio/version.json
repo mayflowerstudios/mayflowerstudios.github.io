@@ -1,1 +1,1 @@
-{ "version": "1.6.3", "url": "https://mayflowerstudios.net/radio/MayflowerRadio.exe", "notes": "Fixed the New Playlist dialog sizing and added a Cancel button." }
+{ "version": "1.6.4", "url": "https://mayflowerstudios.net/radio/MayflowerRadio.exe", "notes": "Move, queue and remove now act on every selected song, not just one." }
