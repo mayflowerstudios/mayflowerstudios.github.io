@@ -1,1 +1,1 @@
-{ "version": "1.6.4", "url": "https://mayflowerstudios.net/radio/MayflowerRadio.exe", "notes": "Move, queue and remove now act on every selected song, not just one." }
+{ "version": "1.6.5", "url": "https://mayflowerstudios.net/radio/MayflowerRadio.exe", "notes": "Added Remove from playlist, and made Delete clearly separate." }
