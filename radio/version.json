@@ -1,1 +1,1 @@
-{ "version": "1.8.0", "url": "https://mayflowerstudios.net/radio/MayflowerRadio.exe", "notes": "Tray icon, keep-awake, tidy song titles, volume levelling, play counts, duplicate finder, m3u import/export, folder import, self-updating downloader and a connection doctor." }
+{ "version": "1.9.0", "url": "https://mayflowerstudios.net/radio/MayflowerRadio.exe", "notes": "Imports now create a playlist automatically, plus private-playlist support via pasted lists and exported playlist files." }
