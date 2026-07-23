@@ -33,7 +33,26 @@
       transition: transform 220ms var(--ease), border-color 220ms var(--ease);
     }
     .stationCard:hover { transform: translateY(-4px); }
+    .stationCard.isLive { border-color: rgba(110,231,183,.34); }
+    .stationCard .sHead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .stationCard .sName { font-size: 19px; font-weight: 600; }
+    .liveTag {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px;
+      padding: 3px 10px; border-radius: 999px; color: var(--emerald);
+      border: 1px solid rgba(110,231,183,.3); background: rgba(110,231,183,.1);
+    }
+    .liveDot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--emerald);
+      box-shadow: 0 0 0 0 rgba(110,231,183,.55); animation: liveP 2.4s var(--ease) infinite;
+    }
+    @keyframes liveP {
+      70%  { box-shadow: 0 0 0 7px rgba(110,231,183,0); }
+      100% { box-shadow: 0 0 0 0 rgba(110,231,183,0); }
+    }
+    .stationCard .sNow {
+      font-size: 13px; color: var(--emerald); overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap;
+    }
     .stationCard .sBy { font-size: 12.5px; color: var(--text-3); }
     .stationCard .sAbout { font-size: 14px; color: var(--text-2); line-height: 1.65; flex: 1; }
     .stationCard .sGo {
@@ -142,15 +161,35 @@
       } catch (_) { return null; }
     }
 
+    // A station counts as on the air if its app checked in recently.
+    var LIVE_WINDOW_MS = 4 * 60 * 1000;
+
     function card(s) {
       var url = safeUrl(s.url);
       if (!url) return "";
-      return '<a class="card card-accent-top stationCard" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' +
+      var live = s.lastSeen && (Date.now() - s.lastSeen) < LIVE_WINDOW_MS;
+      var badge = live
+        ? '<span class="liveTag"><span class="liveDot"></span>On air</span>'
+        : "";
+      var np = (live && s.nowPlaying)
+        ? '<div class="sNow">♪ ' + esc(s.nowPlaying) + "</div>" : "";
+      var who = s.by ? '<div class="sBy">by ' + esc(s.by) + "</div>" : "";
+      return '<a class="card card-accent-top stationCard' + (live ? " isLive" : "") + '" href="' + esc(url) +
+             '" target="_blank" rel="noopener noreferrer">' +
              '<div class="card-shine"></div>' +
-             '<div class="sName">' + esc(s.name || "Untitled station") + "</div>" +
-             (s.by ? '<div class="sBy">by ' + esc(s.by) + "</div>" : "") +
+             '<div class="sHead"><span class="sName">' + esc(s.name || "Untitled station") + "</span>" + badge + "</div>" +
+             who +
              '<div class="sAbout">' + esc(s.about || "") + "</div>" +
+             np +
              '<span class="sGo">Open station ↗</span></a>';
+    }
+
+    // Newest-first by liveness, then name.
+    function sortStations(a, b) {
+      var la = a.lastSeen && (Date.now() - a.lastSeen) < LIVE_WINDOW_MS ? 1 : 0;
+      var lb = b.lastSeen && (Date.now() - b.lastSeen) < LIVE_WINDOW_MS ? 1 : 0;
+      if (la !== lb) return lb - la;
+      return String(a.name || "").localeCompare(String(b.name || ""));
     }
 
     function empty() {
@@ -163,15 +202,43 @@
         "</div>";
     }
 
-    fetch("/radio/stations.json?t=" + Date.now())
-      .then(function (r) { return r.json(); })
-      .then(function (j) {
-        var items = (j && j.stations) || [];
+    // Two sources: stations listed by hand in stations.json, and stations that
+    // opted in from inside the app (which also tell us when they're on air).
+    var DB = "https://watchtogether-95d7d-default-rtdb.firebaseio.com";
+
+    function loadStations() {
+      var manual = fetch("/radio/stations.json?t=" + Date.now())
+        .then(function (r) { return r.json(); })
+        .then(function (j) { return (j && j.stations) || []; })
+        .catch(function () { return []; });
+
+      var live = fetch(DB + "/stations.json?t=" + Date.now())
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) {
+          if (!j || typeof j !== "object") return [];
+          return Object.keys(j).map(function (k) { return j[k]; })
+                       .filter(function (s) { return s && s.url; });
+        })
+        .catch(function () { return []; });
+
+      Promise.all([manual, live]).then(function (res) {
+        var all = res[0].concat(res[1]);
+        // Same address listed twice? Prefer the entry that knows it's live.
+        var seen = {};
+        all.forEach(function (s) {
+          var key = String(s.url || "").replace(/\/+$/, "");
+          if (!key) return;
+          if (!seen[key] || (s.lastSeen || 0) > (seen[key].lastSeen || 0)) seen[key] = s;
+        });
+        var items = Object.keys(seen).map(function (k) { return seen[k]; }).sort(sortStations);
         var html = items.map(card).join("");
         if (!html) { empty(); return; }
         listEl.innerHTML = '<div class="stationGrid">' + html + "</div>";
-      })
-      .catch(empty);
+      }).catch(empty);
+    }
+
+    loadStations();
+    setInterval(loadStations, 60000);
 
     // Paste-an-address box
     var addr = document.getElementById("addr");
