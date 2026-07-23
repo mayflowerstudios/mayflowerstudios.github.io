@@ -1,0 +1,15 @@
+{
+  "_readme": [
+    "Stations listed on https://mayflowerstudios.net/radio/stations.html",
+    "Add an entry for each station you want listed, then commit and push.",
+    "",
+    "  name    - what the station is called",
+    "  by      - who runs it (optional)",
+    "  about   - one line describing it (optional)",
+    "  url     - the station's address, e.g. http://12.34.56.78:8000/",
+    "",
+    "NOTE: a station address contains the host's home IP address, and this",
+    "page is public. Only list a station if its owner is happy with that."
+  ],
+  "stations": []
+}

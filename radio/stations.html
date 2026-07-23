@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stations • Mayflower Radio</title>
+  <meta name="description" content="Internet radio stations running on Mayflower Radio — tune in to a station, or start your own from your Windows PC." />
+  <meta property="og:title" content="Stations • Mayflower Radio" />
+  <meta property="og:description" content="Tune in to a Mayflower Radio station, or start your own." />
+  <meta property="og:url" content="https://mayflowerstudios.net/radio/stations.html" />
+  <link rel="canonical" href="https://mayflowerstudios.net/radio/stations.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://mayflowerstudios.net/assets/og/radio.png?v=2" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=2" />
+  <link rel="stylesheet" href="/style.css?v=34" />
+
+  <style>
+    .tuneCard { padding: 24px 26px; margin-bottom: 20px; }
+    .tuneRow { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+    .tuneRow input {
+      flex: 1; min-width: 240px; padding: 11px 14px; border-radius: var(--r-sm);
+      border: 1px solid var(--border-2); background: rgba(255,255,255,.04);
+      color: var(--text); font-size: 14px; font-family: inherit;
+    }
+    .tuneRow input:focus { outline: none; border-color: rgba(249,168,212,.45); }
+
+    .stationGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    @media (max-width: 560px) { .stationGrid { grid-template-columns: 1fr; } }
+    .stationCard {
+      display: flex; flex-direction: column; gap: 10px; padding: 22px 22px 20px;
+      text-decoration: none; color: inherit;
+      transition: transform 220ms var(--ease), border-color 220ms var(--ease);
+    }
+    .stationCard:hover { transform: translateY(-4px); }
+    .stationCard .sName { font-size: 19px; font-weight: 600; }
+    .stationCard .sBy { font-size: 12.5px; color: var(--text-3); }
+    .stationCard .sAbout { font-size: 14px; color: var(--text-2); line-height: 1.65; flex: 1; }
+    .stationCard .sGo {
+      font-size: 13px; color: var(--rose); display: inline-flex; align-items: center; gap: 6px;
+      opacity: .9; transition: transform 160ms var(--ease);
+    }
+    .stationCard:hover .sGo { transform: translateX(2px); }
+
+    .noneYet { padding: 30px 26px; text-align: center; }
+    .noneYet .big { font-size: 34px; line-height: 1; margin-bottom: 10px; }
+    .noneYet p { color: var(--text-2); font-size: 14.5px; line-height: 1.75; margin: 0 auto; max-width: 480px; }
+
+    .noteCard { padding: 22px 26px; }
+    .noteCard p { font-size: 14px; color: var(--text-2); line-height: 1.8; margin-bottom: 10px; }
+    .noteCard p:last-child { margin-bottom: 0; }
+    .noteCard code {
+      font-family: var(--font-m); font-size: 13px; padding: 2px 7px; border-radius: 6px;
+      background: rgba(0,0,0,.3); border: 1px solid var(--border-2);
+    }
+  </style>
+</head>
+<body data-nav="radio">
+
+  <div class="site-page">
+    <div id="site-nav"></div>
+
+    <main class="content">
+
+      <!-- ══ HERO ══ -->
+      <section class="page-hero reveal">
+        <p class="page-kicker">📻 On the air</p>
+        <h1 class="page-title">Stations</h1>
+        <p class="page-sub">
+          Stations broadcasting with Mayflower Radio. Open one to listen right in your browser —
+          you'll see what's playing, what's coming up, and what's just been on.
+        </p>
+        <div class="page-actions">
+          <a href="/radio/" class="btn-pri">📻 Start your own station</a>
+          <a href="/" class="btn-ghost">🏡 Back home</a>
+        </div>
+      </section>
+
+      <!-- ══ TUNE IN TO ANY ADDRESS ══ -->
+      <section class="sec reveal">
+        <div class="card tuneCard">
+          <h3 style="font-size:18px;margin-bottom:4px;">Have a station address?</h3>
+          <p style="color:var(--text-2);font-size:14px;">
+            Paste it below to tune in. It usually looks like <code>http://12.34.56.78:8000</code>.
+          </p>
+          <div class="tuneRow">
+            <input id="addr" type="text" placeholder="http://…:8000" autocomplete="off" spellcheck="false" />
+            <button class="btn-pri" id="goBtn">Tune in →</button>
+          </div>
+          <p id="tuneMsg" style="color:var(--text-3);font-size:13px;margin-top:10px;"></p>
+        </div>
+      </section>
+
+      <!-- ══ STATION LIST ══ -->
+      <section class="sec reveal">
+        <div class="sec-head">
+          <div class="sec-kicker">🌿 Listed stations</div>
+          <h2 class="sec-title">Tune in</h2>
+        </div>
+        <div id="stationList"></div>
+      </section>
+
+      <!-- ══ NOTE ══ -->
+      <section class="sec reveal">
+        <div class="card noteCard">
+          <p>
+            Stations run from their owner's own computer, so one is only listenable while that
+            person has Mayflower Radio open. If a station won't load, it's most likely just off
+            the air for now.
+          </p>
+          <p>
+            Want to be listed here? <a href="/contact.html">Send me your station address</a> and
+            I'll add it. Worth knowing: a station address includes the host's home IP, so only
+            list one if you're happy for it to be public.
+          </p>
+        </div>
+      </section>
+
+    </main><!-- /content -->
+
+    <div id="site-footer"></div>
+  </div><!-- /site-page -->
+
+  <script src="/shared.js?v=33"></script>
+  <script>
+  (function () {
+    "use strict";
+    var listEl = document.getElementById("stationList");
+
+    function esc(s) {
+      return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+      });
+    }
+
+    // Only ever produce a plain http(s) link — never anything scriptable.
+    function safeUrl(u) {
+      try {
+        var p = new URL(String(u));
+        if (p.protocol !== "http:" && p.protocol !== "https:") return null;
+        return p.href;
+      } catch (_) { return null; }
+    }
+
+    function card(s) {
+      var url = safeUrl(s.url);
+      if (!url) return "";
+      return '<a class="card card-accent-top stationCard" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' +
+             '<div class="card-shine"></div>' +
+             '<div class="sName">' + esc(s.name || "Untitled station") + "</div>" +
+             (s.by ? '<div class="sBy">by ' + esc(s.by) + "</div>" : "") +
+             '<div class="sAbout">' + esc(s.about || "") + "</div>" +
+             '<span class="sGo">Open station ↗</span></a>';
+    }
+
+    function empty() {
+      listEl.innerHTML =
+        '<div class="card noneYet">' +
+          '<div class="big">📻</div>' +
+          "<p>No stations are listed yet. If you're running one, " +
+          '<a href="/contact.html">let me know</a> and it can appear here — ' +
+          'or grab <a href="/radio/">Mayflower Radio</a> and start your own in a few minutes.</p>' +
+        "</div>";
+    }
+
+    fetch("/radio/stations.json?t=" + Date.now())
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        var items = (j && j.stations) || [];
+        var html = items.map(card).join("");
+        if (!html) { empty(); return; }
+        listEl.innerHTML = '<div class="stationGrid">' + html + "</div>";
+      })
+      .catch(empty);
+
+    // Paste-an-address box
+    var addr = document.getElementById("addr");
+    var msg = document.getElementById("tuneMsg");
+    function tune() {
+      var v = addr.value.trim();
+      if (!v) { msg.textContent = "Type a station address first."; return; }
+      if (!/^https?:\/\//i.test(v)) v = "http://" + v;
+      var url = safeUrl(v);
+      if (!url) { msg.textContent = "That doesn't look like a station address."; return; }
+      msg.textContent = "Opening " + url + " …";
+      window.open(url, "_blank", "noopener");
+    }
+    document.getElementById("goBtn").addEventListener("click", tune);
+    addr.addEventListener("keydown", function (e) { if (e.key === "Enter") tune(); });
+  })();
+  </script>
+</body>
+</html>
