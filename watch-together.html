@@ -580,6 +580,8 @@
               <span class="qTools">
                 <button class="miniGhost" id="shuffleBtn" title="Shuffle the queue">🔀 Shuffle</button>
                 <button class="miniGhost" id="repeatBtn" title="Repeat mode">🔁 Repeat: Off</button>
+                <button class="miniGhost" id="neverStopBtn"
+                        title="Keep playing forever — loops when the queue runs out, and doesn't stop when people leave">♾️ Never stop: Off</button>
                 <button class="miniGhost" id="queueSaveBtn" title="Save this queue as a playlist">💾 Save</button>
               </span>
             </h2>
@@ -776,6 +778,7 @@
     const queueSaveBtn = $("queueSaveBtn");
     const shuffleBtn = $("shuffleBtn");
     const repeatBtn = $("repeatBtn");
+    const neverStopBtn = $("neverStopBtn");
     const historyList = $("historyList");
     const historyEmpty = $("historyEmpty");
     const historySaveBtn = $("historySaveBtn");
@@ -2607,6 +2610,7 @@
     let playlistsCache = {};
     let historyRef = null, historyCache = {};
     let repeatRef = null, repeatMode = "off";   // "off" | "one" | "all"
+    let neverStopRef = null, neverStop = false; // keep the room playing forever
 
     // ---- identity & display name ----
     // When signed in via the website account, the ACCOUNT is the source of
@@ -2874,6 +2878,13 @@
         onValue(repeatRef, (snap) => {
           repeatMode = snap.val() || "off";
           updateRepeatBtn();
+        });
+
+        // --- never-stop mode (shared, so the room keeps going for everyone) ---
+        neverStopRef = ref(db, `watch/${ROOM}/neverStop`);
+        onValue(neverStopRef, (snap) => {
+          neverStop = snap.val() === true;
+          updateNeverStopBtn();
         });
 
       } catch (err) {
@@ -3506,18 +3517,58 @@
     repeatBtn.addEventListener("click", cycleRepeat);
     updateRepeatBtn();
 
+    // ---- Never stop ----
+    // Keeps the room playing indefinitely: when the queue empties it loops
+    // whatever is on, and a watchdog restarts playback if it ever falls idle —
+    // whether or not anyone else is in the room.
+    function updateNeverStopBtn() {
+      neverStopBtn.textContent = "♾️ Never stop: " + (neverStop ? "On" : "Off");
+      neverStopBtn.classList.toggle("active", neverStop);
+    }
+    function toggleNeverStop() {
+      const next = !neverStop;
+      if (FIREBASE_READY && neverStopRef) set(neverStopRef, next);
+      else { neverStop = next; updateNeverStopBtn(); }   // local fallback
+    }
+    neverStopBtn.addEventListener("click", toggleNeverStop);
+    updateNeverStopBtn();
+
+    // Watchdog: if never-stop is on and nothing is playing, get it going again.
+    // Deliberately gentle — it only acts when the player is genuinely idle, so
+    // it can't fight a deliberate pause.
+    setInterval(() => {
+      if (!neverStop || !currentKind || !currentSrc) return;
+      if (applyingRemote || advancing) return;
+      try {
+        let idle = false;
+        if (currentKind === "yt" && player && player.getPlayerState) {
+          // 0 = ended, 5 = cued/never started
+          const st = player.getPlayerState();
+          idle = (st === 0 || st === 5);
+        } else if (currentKind === "file") {
+          idle = fileVid.ended;
+        }
+        if (idle) advanceQueue(currentSrc);
+      } catch (_) {}
+    }, 15000);
+
     // Auto-advance when the current item ends. Honors repeat mode, and uses a
     // short-lived shared "claim" so both screens' end events don't double-skip.
     // `endedSrc` is the source that just finished; we track it so a duplicate
     // ENDED for the same video (YouTube re-fires this on load) can't advance twice.
     let advancing = false;
     let lastAdvancedFrom = null;
+    let lastAdvancedAt = 0;
     async function advanceQueue(endedSrc) {
       if (advancing) return;
-      // Idempotency: never advance twice off the same finished source.
-      if (endedSrc != null && endedSrc === lastAdvancedFrom) return;
+      // Idempotency: YouTube re-fires ENDED for the same video, so ignore a
+      // repeat within a few seconds. It must be time-limited, not "this source
+      // ever finished before" — otherwise repeat-one (and repeat-all with a
+      // single video) replay exactly once and then stop dead.
+      if (endedSrc != null && endedSrc === lastAdvancedFrom &&
+          (Date.now() - lastAdvancedAt) < 3000) return;
       advancing = true;
-      if (endedSrc != null) lastAdvancedFrom = endedSrc;
+      if (endedSrc != null) { lastAdvancedFrom = endedSrc; lastAdvancedAt = Date.now(); }
       try {
         // Repeat-one: just replay what's playing, ignore the queue.
         if (repeatMode === "one" && currentKind && currentSrc) {
@@ -3529,8 +3580,9 @@
 
         // Nothing queued.
         if (!entries.length) {
-          // Repeat-all with an empty queue but a current item -> just loop it.
-          if (repeatMode === "all" && currentKind && currentSrc) replayCurrent();
+          // Repeat-all, or never-stop, with an empty queue but something on:
+          // just loop it rather than falling silent.
+          if ((repeatMode === "all" || neverStop) && currentKind && currentSrc) replayCurrent();
           return;
         }
 
@@ -3577,6 +3629,7 @@
           // The whole queue was just duplicates of what finished.
           if (!chosen) {
             if (claimRef) { try { remove(claimRef); } catch (_) {} }
+            if (neverStop && currentKind && currentSrc) replayCurrent();
             return;
           }
         }
