@@ -1,1 +1,1 @@
-{ "version": "1.9.0", "url": "https://mayflowerstudios.net/radio/MayflowerRadio.exe", "notes": "Imports now create a playlist automatically, plus private-playlist support via pasted lists and exported playlist files." }
+{ "version": "1.9.1", "url": "https://mayflowerstudios.net/radio/MayflowerRadio.exe", "notes": "Switching playlists while an import is downloading no longer misfiles the remaining songs." }
