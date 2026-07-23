@@ -1037,6 +1037,7 @@
           return;
         }
         if (applyingRemote) return;
+        if (ttPlayState === 2 && shouldResistPause()) { resumePlayback(); return; }
         if (ttPlayState === 1) broadcast("playing");
         else if (ttPlayState === 2) broadcast("paused");
         return;
@@ -1077,6 +1078,12 @@
         return;
       }
       if (applyingRemote) return;
+      // Never-stop: a pause nobody asked for means the device interfered.
+      // Resume instead of telling the whole room to stop.
+      if (e.data === YT.PlayerState.PAUSED && shouldResistPause()) {
+        resumePlayback();
+        return;
+      }
       if (e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.PAUSED) {
         broadcast(e.data === YT.PlayerState.PLAYING ? "playing" : "paused");
       }
@@ -1117,6 +1124,12 @@
     // native <video> -> broadcast on play/pause/seek (anyone can control)
     function fileEvent() {
       if (applyingRemote || currentKind !== "file") return;
+      // Same as above: an unasked-for pause gets undone rather than shared.
+      // (A pause fired by the video ending is left alone — that's the queue's job.)
+      if (fileVid.paused && !fileVid.ended && shouldResistPause()) {
+        resumePlayback();
+        return;
+      }
       broadcast(fileVid.paused ? "paused" : "playing");
     }
     fileVid.addEventListener("play",  () => { syncWakeLock(); fileEvent(); });
@@ -1193,6 +1206,37 @@
     let wakeLock = null;
     const wakeLockSupported = ("wakeLock" in navigator);
 
+    // Mirrors the shared never-stop flag. Declared up here so the wake-lock
+    // code can read it safely — never-stop implies keeping the screen awake,
+    // since a locked phone is the most common thing that pauses playback.
+    let neverStopActive = false;
+
+    // A pause only counts as intentional if it came from the room's own
+    // controls a moment ago. Anything else — the phone locking, the tab going
+    // to the background, a call arriving — is the device interfering, and
+    // never-stop quietly undoes it instead of stopping the whole room.
+    let deliberateActionAt = 0;
+    let becameVisibleAt = Date.now();
+    const wasDeliberate = () => (Date.now() - deliberateActionAt) < 2000;
+    function markDeliberate() { deliberateActionAt = Date.now(); }
+
+    // Only fight pauses that the device caused. A pause while the page is
+    // hidden — or in the moments right after it comes back — is a screen lock,
+    // a backgrounded tab, or a call. A pause while you're plainly watching is
+    // yours to make, including YouTube's own pause button.
+    function shouldResistPause() {
+      if (!neverStopActive || wasDeliberate()) return false;
+      return document.visibilityState !== "visible" ||
+             (Date.now() - becameVisibleAt) < 5000;
+    }
+    function resumePlayback() {
+      try {
+        if (currentKind === "file") fileVid.play().catch(()=>{});
+        else if (currentKind === "yt" && player) player.playVideo();
+        else if (currentKind === "tiktok") ttPlay();
+      } catch (_) {}
+    }
+
     // Off by default — keeping the screen lit is the single biggest battery
     // drain on a phone, so it's opt-in and remembered per device.
     let keepAwake = false;
@@ -1213,7 +1257,7 @@
 
     async function syncWakeLock() {
       if (!wakeLockSupported) return;
-      const wantLock = keepAwake && isPlayingNow() && document.visibilityState === "visible";
+      const wantLock = (keepAwake || neverStopActive) && isPlayingNow() && document.visibilityState === "visible";
       try {
         if (wantLock && !wakeLock) {
           wakeLock = await navigator.wakeLock.request("screen");
@@ -1262,6 +1306,7 @@
         // back in the foreground: re-sync to wherever the room is now, rather
         // than pushing our stale (paused-by-OS) position onto everyone else
         pageHidden = false;
+        becameVisibleAt = Date.now();
         // Re-stamp presence right away. A backgrounded phone's heartbeat gets
         // throttled by the OS, so its timestamp may be minutes old; refreshing
         // on return keeps it comfortably fresh for everyone else's view.
@@ -3190,6 +3235,7 @@
       } catch (_) {}
     }
     function togglePlayPause() {
+      markDeliberate();   // this one's on purpose — never-stop must not undo it
       try {
         if (currentKind === "file") {
           if (fileVid.paused) fileVid.play().catch(()=>{}); else fileVid.pause();
@@ -3524,6 +3570,10 @@
     function updateNeverStopBtn() {
       neverStopBtn.textContent = "♾️ Never stop: " + (neverStop ? "On" : "Off");
       neverStopBtn.classList.toggle("active", neverStop);
+      // Keep the early-declared mirror in step, and hold the screen awake
+      // while it's on — a sleeping phone is the usual culprit.
+      neverStopActive = neverStop;
+      syncWakeLock();
     }
     function toggleNeverStop() {
       const next = !neverStop;
