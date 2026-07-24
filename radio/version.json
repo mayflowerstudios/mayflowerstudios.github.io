@@ -1,1 +1,1 @@
-{ "version": "1.14.0", "url": "https://mayflowerstudios.net/radio/MayflowerRadio.exe", "notes": "Optional station IDs between songs, tune-in files for VLC and radio apps, a listening-stats window, tidier tabbed settings, and Up Next now shows what is really coming." }
+{ "version": "1.14.1", "url": "https://mayflowerstudios.net/radio/MayflowerRadio.exe", "notes": "Remembers the playlist you were playing, so auto-start picks it back up." }
