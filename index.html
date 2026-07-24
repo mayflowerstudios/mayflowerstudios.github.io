@@ -94,21 +94,42 @@
     }
     .make-card .btn-pri { align-self: flex-start; margin-top: 4px; }
 
-    /* Compact new-release strip */
-    .release-strip { display: flex; align-items: center; gap: 20px; padding: 20px 24px; }
-    .rs-logo {
-      width: 68px; height: 68px; border-radius: 18px; flex-shrink: 0;
-      border: 1px solid var(--border); background: rgba(255,255,255,.04);
+    /* Featured radio section */
+    .radio-feature {
+      display: grid; grid-template-columns: 220px 1fr; gap: 30px; align-items: center;
+      padding: 34px 34px;
     }
-    .rs-body { min-width: 0; }
-    .rs-kicker { font-size: 12px; color: var(--rose); letter-spacing: .4px; margin-bottom: 3px; }
-    .rs-title { font-size: 22px; margin-bottom: 4px; }
-    .rs-text { font-size: 13.5px; color: var(--text-2); line-height: 1.65; }
-    .rs-btn { flex-shrink: 0; margin-left: auto; }
-    @media (max-width: 680px) {
-      .release-strip { flex-direction: column; align-items: flex-start; gap: 14px; }
-      .rs-btn { margin-left: 0; }
+    @media (max-width: 760px) {
+      .radio-feature { grid-template-columns: 1fr; gap: 22px; text-align: center; padding: 28px 24px; }
     }
+    .rf-art { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .rf-art img {
+      width: 168px; height: 168px; max-width: 60vw;
+      filter: drop-shadow(0 16px 34px rgba(0,0,0,.45));
+      animation: rfFloat 7s var(--ease) infinite alternate;
+    }
+    @keyframes rfFloat { from { transform: translateY(0) rotate(-1.5deg); } to { transform: translateY(-10px) rotate(1.5deg); } }
+    .rf-onair {
+      display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--emerald);
+      padding: 4px 12px; border-radius: 999px;
+      border: 1px solid rgba(110,231,183,.28); background: rgba(110,231,183,.08);
+    }
+    .rf-onair .dot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--emerald);
+      box-shadow: 0 0 0 0 rgba(110,231,183,.5); animation: livePulse 2.4s var(--ease) infinite;
+    }
+    .rf-kicker { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--rose); letter-spacing: .4px; margin-bottom: 8px; }
+    .rf-kicker .ver { color: var(--text-3); }
+    .rf-title { font-size: clamp(30px, 5vw, 42px); line-height: 1.05; margin-bottom: 12px; letter-spacing: -.5px; }
+    .rf-text { font-size: 15px; color: var(--text-2); line-height: 1.75; margin-bottom: 16px; max-width: 60ch; }
+    .rf-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 20px; }
+    @media (max-width: 760px) { .rf-tags, .rf-text { justify-content: center; margin-left: auto; margin-right: auto; } .rf-tags { justify-content: center; } }
+    .rf-tag {
+      font-size: 12px; color: var(--text-3); padding: 4px 11px; border-radius: 999px;
+      border: 1px solid var(--border); background: rgba(255,255,255,.03);
+    }
+    .rf-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    @media (max-width: 760px) { .rf-actions { justify-content: center; } }
 
     /* Projects — mods & bots showcase */
     .proj-band { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
@@ -247,23 +268,58 @@
         </div>
       </section>
 
-      <!-- ══ FEATURED RELEASE ══ -->
-      <section id="new-release" class="sec reveal">
-        <article class="card card-accent-top release-strip">
+      <!-- ══ FEATURED: MAYFLOWER RADIO ══ -->
+      <section id="radio" class="sec reveal">
+        <article class="card card-accent-top radio-feature">
           <div class="card-shine"></div>
-          <img class="rs-logo" src="/assets/icons/mayflowerradio.png" alt="Mayflower Radio logo" loading="lazy">
-          <div class="rs-body">
-            <div class="rs-kicker">📻 New release · <span id="rver">v1.x</span></div>
-            <h2 class="rs-title">Mayflower Radio</h2>
-            <p class="rs-text">Your own internet radio station — build a library from YouTube or Spotify links,
-               press play, and share one URL anyone can listen to. Sets itself up, updates itself.</p>
+          <div class="rf-art">
+            <img src="/radio/weblogo.png" alt="Mayflower Radio logo" loading="lazy"
+                 onerror="this.onerror=null;this.src='/assets/icons/mayflowerradio.png'">
+            <span class="rf-onair" id="rfOnair" hidden><span class="dot"></span><span id="rfOnairText">on air now</span></span>
           </div>
-          <a href="/radio/" class="btn-pri sm rs-btn">Get the radio →</a>
+          <div>
+            <div class="rf-kicker">📻 Free Windows app <span class="ver">· <span id="rver">v1.x</span></span></div>
+            <h2 class="rf-title">Mayflower Radio</h2>
+            <p class="rf-text">
+              Run your own internet radio station from your PC. Build a library from YouTube,
+              Spotify or Apple Music links, press play, and share one URL that anyone can listen to —
+              in a browser, in VLC, in a game room, anywhere. It sets itself up, opens your router
+              port for you, and quietly keeps itself up to date.
+            </p>
+            <div class="rf-tags">
+              <span class="rf-tag">🎵 YouTube · Spotify · Apple Music</span>
+              <span class="rf-tag">🎚️ real DJ controls</span>
+              <span class="rf-tag">🛜 sets itself up</span>
+              <span class="rf-tag">✨ self-updating</span>
+            </div>
+            <div class="rf-actions">
+              <a href="/radio/MayflowerRadio.exe" class="btn-pri" download>⬇️ Download for Windows</a>
+              <a href="/radio/stations.html" class="btn-ghost">📻 Stations on air</a>
+              <a href="/radio/" class="btn-ghost">Learn more →</a>
+            </div>
+          </div>
         </article>
       </section>
       <script>
+        // Live version badge
         fetch('/radio/version.json?t=' + Date.now()).then(r => r.json())
           .then(v => { document.getElementById('rver').textContent = 'v' + v.version; }).catch(() => {});
+        // "On air now" if any station is live in the last few minutes
+        fetch('https://watchtogether-95d7d-default-rtdb.firebaseio.com/stations.json?t=' + Date.now())
+          .then(r => r.ok ? r.json() : null)
+          .then(j => {
+            if (!j) return;
+            var now = Date.now(), live = 0;
+            Object.keys(j).forEach(function (k) {
+              var s = j[k];
+              if (s && s.lastSeen && (now - s.lastSeen) < 4 * 60 * 1000) live++;
+            });
+            if (live > 0) {
+              document.getElementById('rfOnairText').textContent =
+                live === 1 ? '1 station on air now' : live + ' stations on air now';
+              document.getElementById('rfOnair').hidden = false;
+            }
+          }).catch(function () {});
       </script>
 
       <!-- ══ THINGS I MAKE ══ -->
@@ -275,6 +331,19 @@
         </div>
 
         <div class="make-grid reveal stagger">
+          <article class="card card-accent-top make-card">
+            <div class="card-shine"></div>
+            <div class="make-icon" aria-hidden="true">📻</div>
+            <h3>Mayflower Radio</h3>
+            <p>Run your own internet radio station from your PC. Add music from YouTube, Spotify or Apple Music links, press play, and share one URL anyone can listen to — with its own live now-playing page.</p>
+            <div class="make-tags">
+              <span class="make-tag">internet radio</span>
+              <span class="make-tag">Windows app</span>
+              <span class="make-tag">self-updating</span>
+            </div>
+            <a href="/radio/" class="btn-pri sm">Get the radio</a>
+          </article>
+
           <article class="card card-accent-top make-card">
             <div class="card-shine"></div>
             <div class="make-icon" aria-hidden="true">🌙</div>

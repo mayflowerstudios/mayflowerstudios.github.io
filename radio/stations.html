@@ -53,6 +53,17 @@
       font-size: 13px; color: var(--emerald); overflow: hidden;
       text-overflow: ellipsis; white-space: nowrap;
     }
+    .stationCard .sMeta { font-size: 12px; color: var(--text-3); }
+    .liveCount {
+      display: inline-flex; align-items: center; gap: 8px; margin-top: 16px;
+      font-size: 13px; color: var(--emerald); padding: 6px 14px; border-radius: 999px;
+      border: 1px solid rgba(110,231,183,.28); background: rgba(110,231,183,.08); align-self: flex-start;
+    }
+    .liveCount .dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--emerald);
+      box-shadow: 0 0 0 0 rgba(110,231,183,.5); animation: livePulse 2.4s var(--ease, ease) infinite;
+    }
+    @keyframes livePulse { 70%{box-shadow:0 0 0 8px rgba(110,231,183,0)} 100%{box-shadow:0 0 0 0 rgba(110,231,183,0)} }
     .stationCard .sBy { font-size: 12.5px; color: var(--text-3); }
     .stationCard .sAbout { font-size: 14px; color: var(--text-2); line-height: 1.65; flex: 1; }
     .stationCard .sGo {
@@ -93,6 +104,7 @@
           <a href="/radio/" class="btn-pri">📻 Start your own station</a>
           <a href="/" class="btn-ghost">🏡 Back home</a>
         </div>
+        <p id="liveCount" class="liveCount" hidden></p>
       </section>
 
       <!-- ══ TUNE IN TO ANY ADDRESS ══ -->
@@ -181,14 +193,27 @@
       var np = (live && s.nowPlaying)
         ? '<div class="sNow">♪ ' + esc(s.nowPlaying) + "</div>" : "";
       var who = s.by ? '<div class="sBy">by ' + esc(s.by) + "</div>" : "";
+      var meta = (live && typeof s.listeners === "number" && s.listeners > 0)
+        ? '<div class="sMeta">👥 ' + s.listeners + (s.listeners === 1 ? " listening" : " listening") + "</div>" : "";
       return '<a class="card card-accent-top stationCard' + (live ? " isLive" : "") + '" href="' + esc(url) +
              '" target="_blank" rel="noopener noreferrer">' +
              '<div class="card-shine"></div>' +
              '<div class="sHead"><span class="sName">' + esc(s.name || "Untitled station") + "</span>" + badge + "</div>" +
              who +
              '<div class="sAbout">' + esc(s.about || "") + "</div>" +
-             np +
+             np + meta +
              '<span class="sGo">Open station ↗</span></a>';
+    }
+
+    function updateLiveCount(items) {
+      var el = document.getElementById("liveCount");
+      var live = items.filter(function (s) { return s.lastSeen && (Date.now() - s.lastSeen) < LIVE_WINDOW_MS; }).length;
+      if (live > 0) {
+        el.innerHTML = '<span class="dot"></span>' + (live === 1 ? "1 station on air right now" : live + " stations on air right now");
+        el.hidden = false;
+      } else {
+        el.hidden = true;
+      }
     }
 
     // Newest-first by liveness, then name.
@@ -238,6 +263,7 @@
           if (!seen[key] || (s.lastSeen || 0) > (seen[key].lastSeen || 0)) seen[key] = s;
         });
         var items = Object.keys(seen).map(function (k) { return seen[k]; }).sort(sortStations);
+        updateLiveCount(items);
         var html = items.map(card).join("");
         if (!html) { empty(); return; }
         listEl.innerHTML = '<div class="stationGrid">' + html + "</div>";
