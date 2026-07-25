@@ -182,6 +182,9 @@
 
     // A station counts as on the air if its app checked in recently.
     var LIVE_WINDOW_MS = 4 * 60 * 1000;
+    // Auto-listed stations drop off the page once they haven't been on the air
+    // for a day, so renamed or abandoned entries don't linger forever.
+    var MAX_LIST_AGE_MS = 24 * 60 * 60 * 1000;
 
     function card(s) {
       var url = safeUrl(s.url);
@@ -262,7 +265,13 @@
           if (!key) return;
           if (!seen[key] || (s.lastSeen || 0) > (seen[key].lastSeen || 0)) seen[key] = s;
         });
-        var items = Object.keys(seen).map(function (k) { return seen[k]; }).sort(sortStations);
+        var items = Object.keys(seen).map(function (k) { return seen[k]; })
+          .filter(function (s) {
+            // Hand-listed stations (no check-in time) always show. Auto-listed
+            // ones drop once they've been silent for over a day.
+            return !s.lastSeen || (Date.now() - s.lastSeen) < MAX_LIST_AGE_MS;
+          })
+          .sort(sortStations);
         updateLiveCount(items);
         var html = items.map(card).join("");
         if (!html) { empty(); return; }
