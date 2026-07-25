@@ -926,8 +926,22 @@
     const ttEl = $("ttplayer");
 
     function showPlayer(kind) {
-      // Leaving TikTok? Stop its audio — the hidden iframe keeps playing otherwise.
-      if (currentKind === "tiktok" && kind !== "tiktok") { try { ttPost("pause"); } catch (_) {} }
+      // Stop the OUTGOING player's audio before switching. A hidden YouTube
+      // iframe, TikTok iframe, or <video> element keeps playing sound otherwise,
+      // so starting a new source (or a live stream) would play on top of the
+      // one that was playing before.
+      if (currentKind && currentKind !== kind) {
+        if (currentKind === "tiktok") {
+          try { ttPost("pause"); } catch (_) {}
+        } else if (currentKind === "yt") {
+          try { if (player && player.pauseVideo) player.pauseVideo(); } catch (_) {}
+        } else if ((currentKind === "file" || currentKind === "screen") &&
+                   kind !== "file" && kind !== "screen") {
+          // file and screen share the same <video>, so only stop it when we're
+          // leaving both behind — not when switching between them.
+          try { fileVid.pause(); } catch (_) {}
+        }
+      }
       currentKind = kind;
       ytEl.style.display    = kind === "yt"   ? "block" : "none";
       // both "file" and "screen" render through the native <video> element
