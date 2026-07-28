@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mayflower Radio — free internet radio station app for Windows</title>
-  <meta name="description" content="Mayflower Radio is a free Windows app to run your own internet radio station. Add music from YouTube, Spotify or Apple Music links, press play, and share one URL anyone can listen to — in a browser, VLC, game rooms, anywhere. Sets itself up and updates itself." />
-  <meta name="keywords" content="internet radio, free radio station software, Icecast, home radio station, stream music, Windows radio app, YouTube to radio, Spotify to radio" />
+  <meta name="description" content="Mayflower Radio is a free Windows app to run your own internet radio station. Build a library from YouTube, Spotify or Apple Music links, press play, and share one URL anyone can listen to — in a browser, VLC, a phone, or a game room. Sets itself up, updates itself, and keeps listeners connected while it does." />
+  <meta name="keywords" content="internet radio, free radio station software, Icecast, home radio station, stream music, Windows radio app, YouTube to radio, Spotify to radio, shoutcast alternative" />
   <meta property="og:title" content="Mayflower Radio — your own internet radio station" />
   <meta property="og:description" content="A free Windows app to run your own internet radio station. Add music from YouTube, Spotify or Apple Music, press play, share one URL. Sets itself up, updates itself." />
   <meta property="og:url" content="https://mayflowerstudios.net/radio/" />
@@ -32,6 +32,14 @@
     "downloadUrl": "https://mayflowerstudios.net/radio/MayflowerRadio.exe",
     "image": "https://mayflowerstudios.net/radio/weblogo.png",
     "softwareVersion": "1.17.22",
+    "fileSize": "75MB",
+    "featureList": [
+      "Build a music library from YouTube, Spotify or Apple Music links",
+      "Run as many stations at once as your connection can carry",
+      "A live now-playing page for listeners, with song likes",
+      "Shuffle weighted by recency, play count and listener likes",
+      "Automatic router port forwarding and self-updating"
+    ],
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
     "author": { "@type": "Organization", "name": "Mayflower Studios", "url": "https://mayflowerstudios.net/" }
   }
@@ -40,12 +48,28 @@
   <style>
     /* ───────────── Radio-only flourishes (structure comes from style.css) ───────────── */
     .radio-hero { display: grid; grid-template-columns: 1fr auto; gap: 28px; align-items: center; }
-    @media (max-width: 760px) { .radio-hero { grid-template-columns: 1fr; } .radio-hero .hero-logo { order: -1; justify-self: center; } }
+    @media (max-width: 760px) { .radio-hero { grid-template-columns: 1fr; } .radio-hero .hero-art { order: -1; justify-self: center; } }
+    .hero-art { display: flex; flex-direction: column; align-items: center; gap: 14px; }
     .radio-hero .hero-logo {
       width: 250px; max-width: 60vw; filter: drop-shadow(0 18px 40px rgba(0,0,0,.45));
       animation: logoFloat 7s var(--ease) infinite alternate;
     }
     @keyframes logoFloat { from { transform: translateY(0) rotate(-1deg); } to { transform: translateY(-12px) rotate(1.5deg); } }
+
+    .onair {
+      display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--emerald);
+      padding: 5px 13px; border-radius: 999px;
+      border: 1px solid rgba(110,231,183,.28); background: rgba(110,231,183,.08);
+    }
+    .onair .dot {
+      width: 7px; height: 7px; border-radius: 50%; background: var(--emerald);
+      box-shadow: 0 0 0 0 rgba(110,231,183,.5); animation: livePulse 2.4s var(--ease) infinite;
+    }
+    @keyframes livePulse {
+      0%   { box-shadow: 0 0 0 0 rgba(110,231,183,.55); }
+      70%  { box-shadow: 0 0 0 7px rgba(110,231,183,0); }
+      100% { box-shadow: 0 0 0 0 rgba(110,231,183,0); }
+    }
 
     .dl-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
     .dl-meta .pill {
@@ -54,7 +78,17 @@
     }
     .dl-meta .pill strong { color: var(--text-2); font-weight: 600; }
 
-    .feat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
+    /* What's new strip */
+    .whatsnew {
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+      padding: 18px 22px; margin-top: 4px;
+    }
+    .whatsnew .wn-body { flex: 1; min-width: 240px; }
+    .whatsnew h3 { font-size: 16px; margin-bottom: 4px; }
+    .whatsnew p { font-size: 13.5px; color: var(--text-2); line-height: 1.65; margin: 0; }
+
+    /* Feature cards */
+    .feat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 18px; }
     @media (max-width: 560px) { .feat-grid { grid-template-columns: 1fr; } }
     .feat-card {
       display: flex; flex-direction: column; gap: 12px; padding: 26px 24px;
@@ -71,8 +105,9 @@
     .feat-card h3 { font-size: 19px; }
     .feat-card p { font-size: 14px; color: var(--text-2); line-height: 1.7; }
 
+    /* Numbered how-to steps */
     .steps { counter-reset: step; display: flex; flex-direction: column; gap: 12px; }
-    .step-row { display: flex; gap: 16px; padding: 18px 20px; align-items: flex-start; }
+    .step-row { display: flex; gap: 16px; padding: 20px 22px; align-items: flex-start; }
     .step-row .s-num {
       counter-increment: step; flex-shrink: 0;
       width: 34px; height: 34px; border-radius: 50%;
@@ -80,13 +115,63 @@
       color: var(--rose); border: 1px solid rgba(249,168,212,.35); background: rgba(249,168,212,.08);
     }
     .step-row .s-num::before { content: counter(step); }
-    .step-row h3 { font-size: 16.5px; margin-bottom: 4px; }
-    .step-row p { font-size: 14px; color: var(--text-2); line-height: 1.7; }
+    .step-row .s-body { min-width: 0; }
+    .step-row h3 { font-size: 16.5px; margin-bottom: 5px; }
+    .step-row p { font-size: 14px; color: var(--text-2); line-height: 1.7; margin-bottom: 8px; }
+    .step-row p:last-child { margin-bottom: 0; }
     .step-row em { color: var(--rose); font-style: normal; font-weight: 600; }
+    .step-row ul { margin: 8px 0 0; padding-left: 18px; }
+    .step-row li { font-size: 13.5px; color: var(--text-2); line-height: 1.7; margin-bottom: 4px; }
+    .step-row li b { color: var(--text); font-weight: 600; }
+
+    /* Listen-anywhere tiles */
+    .listen-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .listen-tile { padding: 18px 20px; display: flex; gap: 13px; align-items: flex-start; }
+    .listen-tile .lt-ic { font-size: 20px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+    .listen-tile strong { display: block; font-family: var(--font-b); font-size: 14px; margin-bottom: 3px; }
+    .listen-tile span { font-size: 12.5px; color: var(--text-3); line-height: 1.6; }
+
+    /* FAQ — native accordion, no JS */
+    .faq { display: flex; flex-direction: column; gap: 10px; }
+    .faq details {
+      border: 1px solid var(--border); border-radius: var(--r-md);
+      background: rgba(255,255,255,.03); overflow: hidden;
+      transition: border-color 180ms var(--ease);
+    }
+    .faq details[open] { border-color: var(--border-2); }
+    .faq summary {
+      cursor: pointer; padding: 15px 20px; font-size: 14.5px; font-weight: 600;
+      list-style: none; display: flex; align-items: center; gap: 10px;
+    }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary::before {
+      content: "+"; color: var(--rose); font-size: 17px; line-height: 1;
+      width: 16px; flex-shrink: 0; transition: transform 200ms var(--ease);
+    }
+    .faq details[open] summary::before { content: "−"; }
+    .faq summary:hover { color: var(--rose); }
+    .faq .faq-body { padding: 0 20px 17px 46px; }
+    .faq .faq-body p { font-size: 13.5px; color: var(--text-2); line-height: 1.75; margin-bottom: 9px; }
+    .faq .faq-body p:last-child { margin-bottom: 0; }
+    .faq .faq-body em { color: var(--rose); font-style: normal; font-weight: 600; }
 
     .radio-note { padding: 24px 26px; }
     .radio-note p { font-size: 14px; color: var(--text-2); line-height: 1.8; margin-bottom: 10px; }
     .radio-note p:last-child { margin-bottom: 0; }
+
+    .reveal.stagger > * { opacity: 0; transform: translateY(16px); transition: opacity .55s var(--ease), transform .55s var(--ease); }
+    .reveal.stagger.visible > * { opacity: 1; transform: none; }
+    .reveal.stagger.visible > *:nth-child(2) { transition-delay: .06s; }
+    .reveal.stagger.visible > *:nth-child(3) { transition-delay: .12s; }
+    .reveal.stagger.visible > *:nth-child(4) { transition-delay: .18s; }
+    .reveal.stagger.visible > *:nth-child(5) { transition-delay: .24s; }
+    .reveal.stagger.visible > *:nth-child(6) { transition-delay: .30s; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .radio-hero .hero-logo, .onair .dot { animation: none !important; }
+      .reveal.stagger > * { transition: none !important; }
+      .feat-card:hover { transform: none; }
+    }
   </style>
 </head>
 <body data-nav="radio">
@@ -103,25 +188,47 @@
             <p class="page-kicker">✦ Free Windows app</p>
             <h1 class="page-title">Mayflower Radio</h1>
             <p class="page-sub">
-              Your own internet radio station. Paste YouTube, Spotify or Apple Music links to build
-              a music library, press play, and share one URL that anyone can listen to — in game rooms,
-              VLC, a browser, anywhere internet radio works. It sets itself up, opens your router
-              port for you, and keeps itself updated.
+              Your own internet radio station, running from your PC. Paste YouTube, Spotify or
+              Apple Music links to build a music library, press play, and share one address that
+              anyone can listen to — in a browser, in VLC, on a phone, in a game room, anywhere
+              internet radio works. It sets itself up, opens your router port for you, and keeps
+              itself updated.
             </p>
             <div class="page-actions">
               <a href="/radio/MayflowerRadio.exe" class="btn-pri" download>⬇️ Download for Windows</a>
+              <a href="#how" class="btn-ghost">📖 How it works</a>
               <a href="/radio/stations.html" class="btn-ghost">📻 Stations on air</a>
-              <a href="/radio/changelog.html" class="btn-ghost">📋 What's new</a>
               <a href="https://ko-fi.com/mayflowerstudiosteam" class="btn-ghost" target="_blank" rel="noopener">☕ Pay what you want</a>
             </div>
             <div class="dl-meta">
               <span class="pill">Version <strong id="ver">…</strong></span>
               <span class="pill">Windows 10/11 · 64-bit</span>
+              <span class="pill">~75 MB · no installer</span>
               <span class="pill">Free — tips welcome 💚</span>
             </div>
           </div>
-          <img class="hero-logo" src="/radio/logo.png" alt="Mayflower Radio logo" />
+          <div class="hero-art">
+            <img class="hero-logo" src="/radio/logo.png" alt="Mayflower Radio logo" />
+            <span class="onair" id="onair" hidden><span class="dot"></span><span id="onairText">on air now</span></span>
+          </div>
         </div>
+      </section>
+
+      <!-- ══ WHAT'S NEW ══ -->
+      <section class="sec reveal">
+        <article class="card card-accent-top whatsnew">
+          <div class="card-shine"></div>
+          <div class="wn-body">
+            <h3>🌸 New in <span id="wnVer">the latest version</span></h3>
+            <p>
+              Shuffle is a proper mix now — weighted by how long since a song last played, how often
+              it's played, and what listeners have tapped the heart on. Updating no longer disconnects
+              anyone. And when a song turns out to be the wrong recording, right-click it and swap it
+              for a better upload.
+            </p>
+          </div>
+          <a href="/radio/changelog.html" class="btn-ghost">See everything that's new →</a>
+        </article>
       </section>
 
       <!-- ══ FEATURES ══ -->
@@ -129,85 +236,291 @@
         <div class="sec-head">
           <div class="sec-kicker">🌿 What it does</div>
           <h2 class="sec-title">A whole radio station in one window</h2>
+          <p class="sec-sub">No installer, no account, no monthly anything. One file that sets itself up the first time you run it.</p>
         </div>
         <div class="feat-grid reveal stagger">
+
           <div class="card card-accent-top feat-card">
             <div class="card-shine"></div>
             <div class="f-icon">🎵</div>
-            <h3>Music from links</h3>
-            <p>Paste a YouTube video or playlist, or a Spotify or Apple Music song, album, or
-               playlist — the app builds your library for you. Drag &amp; drop your own MP3s too.</p>
+            <h3>Music from anywhere</h3>
+            <p>Paste a YouTube video or playlist, or a Spotify or Apple Music song, album or playlist —
+               the app finds and downloads them for you. Drag in your own MP3s, import a whole folder,
+               or bring an <code>.m3u</code> across from another player.</p>
           </div>
+
+          <div class="card card-accent-top feat-card">
+            <div class="card-shine"></div>
+            <div class="f-icon">🔀</div>
+            <h3>A mix that stays fresh</h3>
+            <p>Shuffle weighs each song by how long since it last aired, how often it's played compared
+               with the rest of your library, and how many listeners liked it — and never plays two songs
+               by the same artist back to back.</p>
+          </div>
+
+          <div class="card card-accent-top feat-card">
+            <div class="card-shine"></div>
+            <div class="f-icon">📻</div>
+            <h3>As many stations as you like</h3>
+            <p>Run several at once, each with its own name, playlist, jingles, listener page and stats.
+               The switcher shows what's playing and who's listening on each, and the app works out how
+               many listeners your connection can actually carry between them.</p>
+          </div>
+
+          <div class="card card-accent-top feat-card">
+            <div class="card-shine"></div>
+            <div class="f-icon">✨</div>
+            <h3>A page for your listeners</h3>
+            <p>Every station gets its own web page: what's playing with artwork, what's up next, what's
+               just been on, a live listener count, and a heart people can tap on songs they love. One
+               tap copies the link to share it.</p>
+          </div>
+
           <div class="card card-accent-top feat-card">
             <div class="card-shine"></div>
             <div class="f-icon">🎚️</div>
             <h3>Real DJ controls</h3>
-            <p>Shuffle, repeat, pause, seek, and an up-next queue. Listeners hear one continuous,
-               gapless stream — with the current song title showing in players.</p>
+            <p>Shuffle, repeat, pause, seek, skip, search, and an up-next queue you can reorder.
+               Optional station IDs and jingles drop in between songs. Listeners hear one continuous,
+               gapless stream with the song title showing in their player.</p>
           </div>
+
           <div class="card card-accent-top feat-card">
             <div class="card-shine"></div>
             <div class="f-icon">🛜</div>
             <h3>Sets itself up</h3>
-            <p>First run downloads everything it needs and asks your router to open the port
-               automatically. A status pill tells you the moment the world can hear you.</p>
+            <p>First run downloads what it needs and asks your router to open the port automatically.
+               A status pill tells you the moment the world can hear you, and a built-in check explains
+               it plainly when something's in the way.</p>
           </div>
-          <div class="card card-accent-top feat-card">
-            <div class="card-shine"></div>
-            <div class="f-icon">✨</div>
-            <h3>A page for listeners</h3>
-            <p>Your station gets its own web page — people can listen right in the browser and see
-               what's playing, what's next, and what's just been on. It updates itself, too.</p>
-          </div>
+
         </div>
       </section>
 
-      <!-- ══ GETTING STARTED ══ -->
+      <!-- ══ HOW TO USE IT ══ -->
+      <section class="sec reveal" id="how">
+        <div class="sec-head">
+          <div class="sec-kicker">🚀 How to use it</div>
+          <h2 class="sec-title">Three minutes to on-air</h2>
+          <p class="sec-sub">The first four steps are all you need. The rest is there when you want it.</p>
+        </div>
+
+        <div class="steps reveal stagger">
+
+          <div class="card step-row">
+            <div class="s-num"></div>
+            <div class="s-body">
+              <h3>Download and run it</h3>
+              <p>There's no installer — it's a single file. Put it wherever you like it to live;
+                 it makes its music and settings folders alongside itself.</p>
+              <p>Windows may show a blue <em>SmartScreen</em> warning, because the app comes from a
+                 small studio without an expensive code-signing certificate. Click
+                 <em>More info → Run anyway</em>. First-time setup then runs by itself and takes a
+                 few minutes while it fetches the audio engine and radio server.</p>
+            </div>
+          </div>
+
+          <div class="card step-row">
+            <div class="s-num"></div>
+            <div class="s-body">
+              <h3>Allow the firewall prompt</h3>
+              <p>The first time the radio server starts, Windows asks about <em>icecast.exe</em>.
+                 Click <em>Allow</em> — that's what lets listeners outside your PC reach you. If you
+                 miss it, the Internet pill stays amber and the app tells you how to put it right.</p>
+            </div>
+          </div>
+
+          <div class="card step-row">
+            <div class="s-num"></div>
+            <div class="s-body">
+              <h3>Add some music</h3>
+              <p>There's more than one way, and you can mix them freely:</p>
+              <ul>
+                <li><b>Paste a link</b> — a YouTube video or playlist, or a Spotify / Apple Music
+                    song, album or playlist. Everything is downloaded, tidied up and volume-levelled
+                    so nobody has to ride the volume knob.</li>
+                <li><b>Drag in your own files</b> — drop MP3s straight onto the window, or use
+                    <em>Tools → Add a folder of music</em>.</li>
+                <li><b>Bring a playlist across</b> — import an <code>.m3u</code>, or paste a plain
+                    list of songs and let the app go and find each one.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card step-row">
+            <div class="s-num"></div>
+            <div class="s-body">
+              <h3>Press play and share your link</h3>
+              <p>Hit play and you're broadcasting. Copy your station address from the top of the
+                 window and put it wherever you want it heard. When the Internet pill is green,
+                 anyone with that link can listen.</p>
+              <p>Give the link out as-is and people land on your station's own page, with the player,
+                 artwork and now-playing built in.</p>
+            </div>
+          </div>
+
+          <div class="card step-row">
+            <div class="s-num"></div>
+            <div class="s-body">
+              <h3>Organise it into playlists</h3>
+              <p>Playlists are just folders of songs, so you can drag things between them. Importing
+                 a playlist creates a matching one automatically.</p>
+              <p>You can also <b>link a playlist to Spotify or Apple Music</b>: add a song there and it
+                 turns up here on the next sync, without you doing anything. Turn on exact-mirror if
+                 you want songs removed here too when they leave the online playlist.</p>
+            </div>
+          </div>
+
+          <div class="card step-row">
+            <div class="s-num"></div>
+            <div class="s-body">
+              <h3>Make it yours</h3>
+              <p>All of this is optional, and lives under <em>Tools → Settings</em>:</p>
+              <ul>
+                <li><b>Name and describe</b> your stations, and add a tip link that shows on the
+                    listener page.</li>
+                <li><b>Station IDs and jingles</b> between songs — off by default.</li>
+                <li><b>Audio quality</b> — 128, 192 or 320 kbps, balanced against how many listeners
+                    your upload can carry.</li>
+                <li><b>Start with Windows</b> and go on air automatically, with a tray icon and a
+                    keep-awake so the PC doesn't sleep mid-broadcast.</li>
+                <li><b>List publicly</b> on the stations page — off unless you turn it on, and removed
+                    again the moment you turn it off.</li>
+              </ul>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ══ WHERE PEOPLE LISTEN ══ -->
       <section class="sec reveal">
         <div class="sec-head">
-          <div class="sec-kicker">🚀 Getting started</div>
-          <h2 class="sec-title">Three minutes to on-air</h2>
+          <div class="sec-kicker">🎧 For your listeners</div>
+          <h2 class="sec-title">One link, heard almost anywhere</h2>
+          <p class="sec-sub">Your station is ordinary internet radio, so most things that play audio can tune in.</p>
         </div>
-        <div class="steps reveal stagger">
-          <div class="card step-row">
-            <div class="s-num"></div>
-            <div>
-              <h3>Download and run</h3>
-              <p>Windows may show a SmartScreen warning because the app is from a small studio —
-                 click <em>More info → Run anyway</em>. First-time setup runs by itself and takes a
-                 few minutes.</p>
-            </div>
-          </div>
-          <div class="card step-row">
-            <div class="s-num"></div>
-            <div>
-              <h3>Allow the firewall popup</h3>
-              <p>When the radio server starts the first time, Windows asks about <em>icecast.exe</em> —
-                 click <em>Allow</em> so listeners can reach you.</p>
-            </div>
-          </div>
-          <div class="card step-row">
-            <div class="s-num"></div>
-            <div>
-              <h3>Add music and go live</h3>
-              <p>Paste a link, press Play, and copy your radio URL from the top of the app into
-                 wherever you want it heard. When the Internet pill is green, everyone can listen.</p>
-            </div>
-          </div>
+        <div class="listen-grid reveal stagger">
+          <div class="card listen-tile"><span class="lt-ic">🌐</span><div><strong>In a browser</strong><span>Your station's page has a player built in — nothing to install.</span></div></div>
+          <div class="card listen-tile"><span class="lt-ic">🎬</span><div><strong>VLC &amp; desktop players</strong><span>Open the tune-in file, or just paste the address as a network stream.</span></div></div>
+          <div class="card listen-tile"><span class="lt-ic">📱</span><div><strong>Phone radio apps</strong><span>Anything that takes a custom station URL will play it.</span></div></div>
+          <div class="card listen-tile"><span class="lt-ic">🎮</span><div><strong>Game rooms</strong><span>Any world or room that accepts a radio URL — paste and go.</span></div></div>
         </div>
       </section>
 
-      <!-- ══ NOTE ══ -->
+      <!-- ══ FAQ ══ -->
+      <section class="sec reveal">
+        <div class="sec-head">
+          <div class="sec-kicker">💬 Good to know</div>
+          <h2 class="sec-title">Questions people actually ask</h2>
+        </div>
+
+        <div class="faq reveal stagger">
+
+          <details>
+            <summary>Windows says it isn't safe. Is something wrong?</summary>
+            <div class="faq-body">
+              <p>No. SmartScreen warns about any program it hasn't seen many people run yet, and a
+                 certificate that would silence it costs hundreds a year — not something a one-person
+                 studio giving software away can justify.</p>
+              <p>Click <em>More info → Run anyway</em>. If you'd rather check first, the file is served
+                 straight from this site over HTTPS and you're welcome to run it past your antivirus.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Does my PC have to stay on?</summary>
+            <div class="faq-body">
+              <p>Yes — the station runs from your computer, so the stream stops when you close the app
+                 or shut down. Leave it running and it'll keep itself awake so Windows doesn't sleep
+                 mid-broadcast.</p>
+              <p>You can minimise it to the tray and forget about it; it'll carry on quite happily.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Nobody can hear me. What now?</summary>
+            <div class="faq-body">
+              <p>Watch the <em>Internet</em> pill at the top. Green means the outside world can reach
+                 you. If it isn't, the app has a built-in check that tests your address from outside
+                 and tells you in plain words what's blocking it.</p>
+              <p>The usual culprits are the Windows firewall prompt being dismissed, or a router that
+                 doesn't do automatic port forwarding — in which case the app shows you exactly what
+                 to set up by hand.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>How many people can listen at once?</summary>
+            <div class="faq-body">
+              <p>That depends on your upload speed and the audio quality you've chosen. The app measures
+                 your connection and tells you roughly how many listeners it can carry — and it accounts
+                 for all your stations sharing the one connection.</p>
+              <p>If you want more headroom, drop the quality a notch. 128 kbps still sounds perfectly
+                 good and carries well over half as many listeners again as 192.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Will updating interrupt my broadcast?</summary>
+            <div class="faq-body">
+              <p>Barely. The radio server keeps running while the app restarts itself, so listeners hold
+                 their connection and hear a few seconds of quiet rather than being dropped. The app
+                 will also offer to wait until the current song finishes, so the gap lands between
+                 tracks.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>A song downloaded as the wrong version. Can I fix it?</summary>
+            <div class="faq-body">
+              <p>Yes. Right-click it and choose <em>Find another version</em>. You'll get a handful of
+                 other uploads with a 30-second clip of each, so you can hear which one is right before
+                 committing.</p>
+              <p>The one you pick replaces the old file but keeps its name, so its play count and its
+                 place in your playlists carry over.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Is my music uploaded anywhere?</summary>
+            <div class="faq-body">
+              <p>No. Your music stays in a folder on your PC and is streamed straight from there to
+                 whoever is listening. Nothing is uploaded to this site or anywhere else.</p>
+              <p>The only thing that ever leaves your machine is your station's listing, and only if you
+                 switch that on yourself.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>If I list my station publicly, what's shared?</summary>
+            <div class="faq-body">
+              <p>Its name, description, what's playing, a listener count — and its address. Worth
+                 knowing: a station address contains your home IP, so listing makes that visible to
+                 anyone who visits the stations page.</p>
+              <p>It's off unless you turn it on, and taking it off removes the entry again straight away.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>Is it really free?</summary>
+            <div class="faq-body">
+              <p>Completely. No account, no trial, no locked features, no ads. If it's brought you a
+                 nice evening and you'd like to throw something in the jar, there's a
+                 <a href="https://ko-fi.com/mayflowerstudiosteam" target="_blank" rel="noopener">Ko-fi</a>
+                 — but it changes nothing about the app.</p>
+            </div>
+          </details>
+
+        </div>
+      </section>
+
+      <!-- ══ NOTE / CREDITS ══ -->
       <section class="sec reveal">
         <div class="card radio-note">
           <p>
-            The radio runs from your PC — keep the app open while you're broadcasting, and the
-            stream stops when you close it. If your router doesn't support automatic port opening
-            (UPnP), the app shows exactly what to set up instead.
-          </p>
-          <p>
-            Please be thoughtful about what you broadcast and to whom — you're responsible for
-            your own station. 🌸
+            Please be thoughtful about what you broadcast and to whom — you're responsible for your
+            own station, and for playing fair with the music you put on it. 🌸
           </p>
           <p>
             Mayflower Radio stands on wonderful free, open-source software:
@@ -219,6 +532,10 @@
             <a href="https://github.com/alanmcgovern/Mono.Nat" target="_blank" rel="noopener">Mono.Nat</a>.
             Thank you to everyone who builds these. 💚
           </p>
+          <p>
+            Got an idea, or found something broken? <a href="/contact.html">Tell me</a> — it's a
+            one-person studio and every message gets read.
+          </p>
         </div>
       </section>
 
@@ -229,10 +546,36 @@
 
   <script src="/shared.js?v=33"></script>
   <script>
+    // Live version badge
     fetch('/radio/version.json?t=' + Date.now())
-      .then(r => r.json())
-      .then(v => { document.getElementById('ver').textContent = v.version; })
-      .catch(() => { document.getElementById('ver').textContent = '1.x'; });
+      .then(function (r) { return r.json(); })
+      .then(function (v) {
+        document.getElementById('ver').textContent = v.version;
+        document.getElementById('wnVer').textContent = 'v' + v.version;
+      })
+      .catch(function () { document.getElementById('ver').textContent = '1.x'; });
+
+    // "On air now" when any station has checked in recently
+    fetch('https://watchtogether-95d7d-default-rtdb.firebaseio.com/stations.json?t=' + Date.now())
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j) return;
+        var now = Date.now(), live = 0, listeners = 0;
+        Object.keys(j).forEach(function (k) {
+          var s = j[k];
+          if (s && s.lastSeen && (now - s.lastSeen) < 4 * 60 * 1000) {
+            live++;
+            if (typeof s.listeners === 'number') listeners += s.listeners;
+          }
+        });
+        if (live > 0) {
+          var t = live === 1 ? '1 station on air now' : live + ' stations on air now';
+          if (listeners > 0) t += ' · ' + listeners + ' listening';
+          document.getElementById('onairText').textContent = t;
+          document.getElementById('onair').hidden = false;
+        }
+      })
+      .catch(function () {});
   </script>
 </body>
 </html>
