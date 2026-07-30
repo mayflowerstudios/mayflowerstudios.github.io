@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Farm Challenge for Farming Simulator 25 • Mayflower Studios</title>
+  <link rel="stylesheet" href="/style.css?v=34" />
+  <meta name="description" content="Create custom Farming Simulator 25 challenge runs with configurable goals, milestones, deadlines, restrictions, live progress, and per-save history." />
+  <meta property="og:title" content="Farm Challenge for Farming Simulator 25 • Mayflower Studios" />
+  <meta property="og:description" content="Build custom FS25 challenge runs directly in the in-game menu, then track every goal and milestone while you play." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://mayflowerstudios.net/farm-challenge.html" />
+  <meta property="og:image" content="https://mayflowerstudios.net/assets/og/projects.png?v=2" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Farm Challenge for Farming Simulator 25" />
+  <meta name="twitter:description" content="Custom goals, milestones, restrictions, progress tracking, and challenge history for FS25." />
+  <meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/projects.png?v=2" />
+  <link rel="canonical" href="https://mayflowerstudios.net/farm-challenge.html" />
+  <style>
+    .feature, .howto { display: flex; flex-direction: column; gap: 6px; }
+    .feature .badge {
+      align-self: flex-start; font-size: 10.5px; padding: 2px 9px; border-radius: 999px;
+      background: rgba(196,181,253,.18); border: 1px solid rgba(196,181,253,.3);
+    }
+    .codebox-pre {
+      white-space: pre-wrap; font-family: var(--font-m); font-size: 12.5px;
+      background: rgba(0,0,0,.32); border: 1px solid var(--border-2);
+      border-radius: var(--r-sm); padding: 12px 14px; overflow-x: auto; line-height: 1.5;
+    }
+    .backLink { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; opacity: .75; text-decoration: none; color: inherit; margin-bottom: 4px; }
+    .backLink:hover { opacity: 1; }
+    .modIdentity { display:flex; align-items:center; gap:14px; }
+    .modIdentity img { width:64px; height:64px; border-radius:14px; border:1px solid var(--border-2); }
+    .compat { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+    .compat span { font-size:12px; padding:5px 10px; border-radius:999px; border:1px solid var(--border-2); background:var(--glass); }
+  </style>
+</head>
+<body data-nav="projects">
+  <div class="wrap">
+    <div id="site-nav"></div>
+
+    <main>
+      <a class="backLink" href="/projects.html">← All projects</a>
+
+      <section class="hero">
+        <div>
+          <p class="kicker">Farming Simulator 25 Mod</p>
+          <div class="modIdentity">
+            <img src="/assets/icons/farmchallenge.png" alt="Farm Challenge mod icon" />
+            <h1>🚜 Farm Challenge</h1>
+          </div>
+          <p class="muted">Create a complete farming challenge directly from the in-game menu, then race your goals, milestones, and deadlines while the mod tracks the run for you.</p>
+          <div class="compat">
+            <span>FS25</span>
+            <span>Version 1.0.0.2</span>
+            <span>Single-player</span>
+            <span>English interface</span>
+          </div>
+          <div class="ctaRow">
+            <a class="btn primary" href="/downloads/FS25_FarmChallenge.zip" download>📦 Download Farm Challenge</a>
+            <a class="btn ghost" href="#install">📥 Installation</a>
+            <a class="btn ghost" href="/projects.html">⬅ Back to Projects</a>
+          </div>
+        </div>
+        <div class="tileGrid">
+          <div class="tile"><h3>🎯 Custom Goals</h3><p>Choose net worth, fields owned, or money earned as the main target for your run.</p></div>
+          <div class="tile"><h3>🏁 Three Milestones</h3><p>Add up to three independently configured targets, each with its own deadline.</p></div>
+          <div class="tile"><h3>🚫 Enforced Rules</h3><p>Raise the stakes with restrictions such as no hired workers, leasing, loans, or fast travel.</p></div>
+          <div class="tile"><h3>📊 Live Progress</h3><p>Track the challenge through the Escape menu or the toggleable on-screen HUD.</p></div>
+        </div>
+      </section>
+
+      <div class="sectionTitle"><h2>📝 About the Mod</h2><span>Build the run you want</span></div>
+      <section class="card">
+        <p class="desc"><strong>Farm Challenge</strong> turns Farming Simulator 25 into a structured challenge game without making you leave the save or manage goals on a separate spreadsheet.</p>
+        <p class="desc">Choose your starting money, starting loan, time limit, economy difficulty, final goal, and up to three milestones. Existing money, assets, and owned fields still count, while the setup menu prevents you from choosing targets that would already be completed when the run begins. Starting cash is also excluded from earned-income progress.</p>
+        <p class="desc">Every active run has a full win, failure, or abandon lifecycle. Completed runs are saved to a history attached to that savegame, and the Randomize button can roll an entire surprise challenge when you do not feel like building one manually.</p>
+      </section>
+
+      <div class="sectionTitle"><h2>⭐ Features</h2><span>Everything included</span></div>
+      <section class="grid2">
+        <div class="card feature">
+          <span class="badge">Goals</span>
+          <h3>🎯 Three Goal Types</h3>
+          <p class="muted">Build the challenge around the kind of progress you care about.</p>
+          <ul class="muted small" style="margin:4px 0 0;padding-left:18px;">
+            <li>Grow your farm’s net worth</li>
+            <li>Own a chosen number of fields</li>
+            <li>Earn a chosen amount of money</li>
+          </ul>
+        </div>
+        <div class="card feature">
+          <span class="badge">Progression</span>
+          <h3>🏁 Configurable Milestones</h3>
+          <p class="muted">Use up to three milestones to create a full progression path instead of one distant finish line.</p>
+          <ul class="muted small" style="margin:4px 0 0;padding-left:18px;">
+            <li>Independent metric and target</li>
+            <li>Individual deadline for each milestone</li>
+            <li>Live progress bars in the menu</li>
+          </ul>
+        </div>
+        <div class="card feature">
+          <span class="badge">Rules</span>
+          <h3>🚫 Six Restrictions</h3>
+          <p class="muted">Turn normal conveniences off and make each decision matter more.</p>
+          <ul class="muted small" style="margin:4px 0 0;padding-left:18px;">
+            <li>No hired workers or contract machines</li>
+            <li>No leasing, fast travel, or new loans</li>
+            <li>No GPS or steering assist</li>
+          </ul>
+        </div>
+        <div class="card feature">
+          <span class="badge">Tracking</span>
+          <h3>📚 Per-Save Run History</h3>
+          <p class="muted">Challenges belong to the savegame where they were created and remain easy to review later.</p>
+          <ul class="muted small" style="margin:4px 0 0;padding-left:18px;">
+            <li>Win, fail, or abandon summaries</li>
+            <li>Challenge state persists across restarts</li>
+            <li>Randomized challenge generation</li>
+          </ul>
+        </div>
+      </section>
+
+      <div class="sectionTitle"><h2>📘 How It Works</h2><span>From setup to finish</span></div>
+      <section class="grid2">
+        <div class="card howto"><h3>1) Open Farm Challenge</h3><p class="muted">Open the Farm Challenge page from the Farming Simulator 25 Escape menu.</p></div>
+        <div class="card howto"><h3>2) Build or Randomize a Run</h3><p class="muted">Set the economy, deadline, goal, milestones, and restrictions—or let the Randomize button choose everything.</p></div>
+        <div class="card howto"><h3>3) Track It Live</h3><p class="muted">Follow the progress bars in the menu or press <strong>Left Shift + J</strong> to toggle the HUD. The binding can be changed in the game controls.</p></div>
+        <div class="card howto"><h3>4) Complete the Challenge</h3><p class="muted">Reach the final goal before time expires. The result and completion summary are saved in the run history.</p></div>
+      </section>
+
+      <div class="sectionTitle" id="install"><h2>📥 Install</h2><span>Keep the ZIP intact</span></div>
+      <section class="card">
+        <div class="callout">
+          <strong>Farming Simulator 25 single-player mod</strong>
+          <p class="muted small" style="margin:6px 0 0;">The current release declares multiplayer support as disabled.</p>
+        </div>
+        <pre class="codebox-pre" style="margin-top:12px;">1) Download FS25_FarmChallenge.zip
+2) Do not extract the ZIP
+3) Place it in:
+   Documents\My Games\FarmingSimulator2025\mods
+4) Enable “Farm Challenge” when loading your save
+5) Open the Escape menu and choose the Farm Challenge page</pre>
+        <div class="ctaRow">
+          <a class="btn primary" href="/downloads/FS25_FarmChallenge.zip" download>📦 Download Version 1.0.0.2</a>
+        </div>
+      </section>
+    </main>
+
+    <div id="site-footer"></div>
+  </div>
+
+  <script src="/shared.js?v=33"></script>
+  <script src="/fireflies.js"></script>
+</body>
+</html>
