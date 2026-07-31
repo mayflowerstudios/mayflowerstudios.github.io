@@ -297,6 +297,11 @@
       background:#34d399; box-shadow:0 0 8px rgba(52,211,153,.7);
     }
     .whoName{ opacity:.92; }
+    .whoState{ font-size:11px; opacity:.58; margin-left:1px; }
+    .whoItem.away{ background:rgba(255,255,255,.035); }
+    .whoItem.away .whoDot{
+      background:#fbbf24; box-shadow:0 0 8px rgba(251,191,36,.48);
+    }
 
     /* queue */
     .queuePanel{ display:flex; flex-direction:column; }
@@ -1314,6 +1319,9 @@
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "hidden") {
         pageHidden = true;
+        // Mark the person as away before browser timer/network throttling begins.
+        // Their name remains in the room instead of vanishing overnight.
+        writeMyPresence("away");
         cancelDriftCorrection();  // kill any in-flight rate nudge; the OS has paused us
         syncWakeLock();   // release the screen lock; nothing to broadcast
       } else {
@@ -1323,8 +1331,8 @@
         becameVisibleAt = Date.now();
         // Re-stamp presence right away. A backgrounded phone's heartbeat gets
         // throttled by the OS, so its timestamp may be minutes old; refreshing
-        // on return keeps it comfortably fresh for everyone else's view.
-        try { if (myPresRef) set(myPresRef, { name: myName, idk: identityId(), t: Date.now() }); } catch (_) {}
+        // on return also switches us from away/sleeping back to online.
+        writeMyPresence("online");
         syncWakeLock();
         resyncToRoom();
       }
@@ -2558,55 +2566,77 @@
       hostName.textContent = isMe ? "You" : name;
     }
 
-    // How long a presence entry can go without a heartbeat before we treat it
-    // as a crashed/abandoned session. This is deliberately long: the real signal
-    // that someone left is Firebase's onDisconnect removing their node the moment
-    // their connection drops (tab closed, network lost). A live entry only stops
-    // heartbeating when the OS throttles a backgrounded/locked phone — and that
-    // person is still very much "on the page". So the TTL is only a fallback for
-    // genuine crashes (where onDisconnect somehow didn't fire), set high enough
-    // that a phone sitting in someone's pocket keeps its name visible.
-    const PRESENCE_TTL = 24 * 60 * 60 * 1000;   // 24 hours — crash fallback only
+    // Browser/OS background throttling can temporarily close Firebase's socket.
+    // Instead of treating that exactly like leaving, onDisconnect marks the
+    // session as sleeping. We keep that name visible overnight, but prune an
+    // abandoned sleeping session after 18 hours. Live/legacy entries get a wider
+    // 24-hour crash fallback.
+    const PRESENCE_AWAY_GRACE = 18 * 60 * 60 * 1000;
+    const PRESENCE_TTL = 24 * 60 * 60 * 1000;
+    const PRESENCE_ACTIVE_WINDOW = 90 * 1000;
+
+    function isAwayPresence(v, now = Date.now()) {
+      v = v || {};
+      const state = v.state || "online";
+      const t = Number(v.t) || 0;
+      return state === "away" || state === "sleeping" || state === "offline" ||
+             (!!t && (now - t) > PRESENCE_ACTIVE_WINDOW);
+    }
+
+    function presencePriority(v, now) {
+      const state = (v && v.state) || "online";
+      const t = Number(v && v.t) || 0;
+      const age = t ? now - t : Number.MAX_SAFE_INTEGER;
+      if ((state === "online" || state === "away") && age < PRESENCE_ACTIVE_WINDOW) return 3;
+      if (state === "sleeping" || state === "offline") return 2;
+      return 1;
+    }
+
     function renderPresence(val) {
       val = val || {};
       const now = Date.now();
-      // Drop only truly stale entries (see PRESENCE_TTL above). A connected
-      // device's node is removed by onDisconnect when it actually leaves, so
-      // anything still present here is either heartbeating or a backgrounded
-      // tab that's still connected — keep it either way.
       const fresh = {};
       for (const id of Object.keys(val)) {
-        const t = (val[id] && val[id].t) || 0;
-        if (id === clientId || (now - t) < PRESENCE_TTL) {
-          fresh[id] = val[id];
+        const v = val[id] || {};
+        const t = Number(v.t) || 0;
+        const age = t ? now - t : Number.MAX_SAFE_INTEGER;
+        const sleeping = v.state === "sleeping" || v.state === "offline";
+        const keepFor = sleeping ? PRESENCE_AWAY_GRACE : PRESENCE_TTL;
+        if (id === clientId || age < keepFor) {
+          fresh[id] = v;
         } else {
-          // best-effort cleanup of the stale node so it doesn't linger
+          // Best-effort cleanup of a genuinely abandoned session.
           try { remove(ref(db, `watch/${ROOM}/presence/${id}`)); } catch (_) {}
         }
       }
       val = fresh;
       const ids = Object.keys(val);
       // Collapse multiple sessions of the SAME person (e.g. two computers, or a
-      // phone + laptop) into one. Entries carry an identity key (idk = account
-      // uid when signed in, else the per-device id); we keep the freshest entry
-      // per identity. Older entries without an idk fall back to their own id so
-      // they still each count once.
-      const byIdentity = new Map();   // idk -> { id, val, t }
+      // phone + laptop) into one. Prefer a recently active session over a newly
+      // sleeping duplicate, then use the freshest timestamp.
+      const byIdentity = new Map();   // idk -> { id, val, t, priority }
       for (const id of ids) {
         const v = val[id] || {};
         const key = v.idk || id;
-        const t = v.t || 0;
+        const t = Number(v.t) || 0;
+        const priority = presencePriority(v, now);
         const cur = byIdentity.get(key);
-        if (!cur || t > cur.t) byIdentity.set(key, { id, val: v, t });
+        if (!cur || priority > cur.priority || (priority === cur.priority && t > cur.t)) {
+          byIdentity.set(key, { id, val: v, t, priority });
+        }
       }
       const n = byIdentity.size;
+      const awayCount = Array.from(byIdentity.values()).filter(({ val: v }) => isAwayPresence(v, now)).length;
       lastPresenceCount = n;
-      // Track who's actually here, so stale "waiting" entries from clients that
-      // already left can be ignored (and cleaned up). This still tracks every
-      // live clientId (for screen-share peers), not the deduped identities.
+      // Track clients whose Firebase session is still live enough for real-time
+      // features. Sleeping/offline grace entries stay visible by name, but should
+      // not be treated as WebRTC peers or active buffering partners.
       const prevPresent = new Set(presentClientIds);
       presentClientIds.clear();
-      ids.forEach(id => presentClientIds.add(id));
+      ids.forEach(id => {
+        const state = (val[id] && val[id].state) || "online";
+        if (state !== "sleeping" && state !== "offline") presentClientIds.add(id);
+      });
       // Forget cached names for clients that are truly gone, so the map stays
       // bounded and a departed person's name can't be revived by a stale write.
       for (const id of lastKnownNames.keys()) {
@@ -2626,7 +2656,7 @@
       // A partner who just left should immediately stop showing as "waiting".
       // "Someone else" = an entry whose identity differs from mine (so your own
       // second device doesn't count as a partner).
-      const someoneElseHere = ids.some(id => {
+      const someoneElseHere = Array.from(presentClientIds).some(id => {
         const v = val[id] || {};
         return (v.idk ? v.idk !== identityId() : id !== clientId);
       });
@@ -2635,7 +2665,8 @@
         updateWaitingOverlay();
       }
       if (n <= 1) setConn("on", "Connected · waiting for others");
-      else setConn("on", `Connected · ${n} here`);
+      else if (awayCount) setConn("on", `Connected · ${n - awayCount} active · ${awayCount} away`);
+      else setConn("on", `Connected · ${n} active`);
 
       // sort: you first, then by join time — built from the deduped identities
       const myKey = identityId();
@@ -2644,19 +2675,22 @@
         if (nm) lastKnownNames.set(id, nm);
         else nm = lastKnownNames.get(id) || "Guest";
         const mine = (v.idk ? v.idk === myKey : id === clientId);
-        return { id, name: nm, t, me: mine };
-      }).sort((a, b) => (b.me - a.me) || (a.t - b.t));
+        return { id, name: nm, t, me: mine, away: isAwayPresence(v, now) };
+      }).sort((a, b) => (b.me - a.me) || (a.away - b.away) || (a.t - b.t));
 
       presenceList.innerHTML = "";
       for (const p of people) {
         const row = document.createElement("div");
-        row.className = "whoItem";
+        row.className = "whoItem" + (p.away ? " away" : "");
         row.innerHTML =
           `<span class="whoDot"></span>` +
-          `<span class="whoName">${escapeHtml(p.name)}${p.me ? " (you)" : ""}</span>`;
+          `<span class="whoName">${escapeHtml(p.name)}${p.me ? " (you)" : ""}</span>` +
+          (p.away ? `<span class="whoState">away</span>` : "");
         presenceList.appendChild(row);
       }
-      presenceCount.textContent = n === 1 ? "1 here" : n + " here";
+      presenceCount.textContent = awayCount
+        ? `${n} in room · ${awayCount} away`
+        : (n === 1 ? "1 active" : `${n} active`);
     }
 
     // ---- presence + state listeners ----
@@ -2685,6 +2719,38 @@
 
     function identityId() { return authUid || myId; }
 
+    function presencePayload(state) {
+      return {
+        name: myName || "Guest",
+        idk: identityId(),
+        state: state || (pageHidden ? "away" : "online"),
+        t: serverTimestamp()
+      };
+    }
+
+    function writeMyPresence(state) {
+      if (!myPresRef) return;
+      try {
+        set(myPresRef, presencePayload(state)).catch((err) => {
+          console.warn("presence refresh failed:", err && err.code, err);
+        });
+      } catch (_) {}
+    }
+
+    function armPresenceDisconnect(target = myPresRef) {
+      if (!target) return;
+      try {
+        // A minimized/locked browser can lose its Firebase socket even though the
+        // person never left the page. Preserve them as away instead of deleting.
+        onDisconnect(target).set({
+          name: myName || "Guest",
+          idk: identityId(),
+          state: "sleeping",
+          t: serverTimestamp()
+        });
+      } catch (_) {}
+    }
+
     // Re-apply the effective name to the UI + broadcast it to the room.
     function applyName(newName, { lock }) {
       myName = (newName || "Guest").slice(0, 24);
@@ -2693,7 +2759,8 @@
       nameInput.title = lock ? "Using your account name — change it on your account page" : "";
       nameInput.placeholder = lock ? "" : "your name";
       // push to everyone
-      if (myPresRef) set(myPresRef, { name: myName, idk: identityId(), t: Date.now() });
+      writeMyPresence();
+      armPresenceDisconnect();
       if (lastHostId === clientId && currentKind) {
         try { broadcast(isPlayingNow() ? "playing" : "paused"); } catch (_) {}
       }
@@ -2736,7 +2803,8 @@
       if (authUid) return;   // locked when signed in
       saveName();
       // reflect the new name in the presence list for everyone
-      if (myPresRef) set(myPresRef, { name: myName, idk: identityId(), t: Date.now() });
+      writeMyPresence();
+      armPresenceDisconnect();
       // if we're currently the host, refresh the broadcast so partner sees the new name
       if (lastHostId === clientId && currentKind) broadcast(isPlayingNow() ? "playing" : "paused");
     });
@@ -2813,20 +2881,24 @@
         const presRef = ref(db, `watch/${ROOM}/presence/${clientId}`);
         myPresRef = presRef;
 
-        set(presRef, { name: myName || "Guest", idk: identityId(), t: Date.now() })
+        set(presRef, presencePayload())
           .catch((err) => {
             console.error("presence write rejected:", err && err.code, err);
             setConn("off", "Can't join (permission)");
           });
-        onDisconnect(presRef).remove();
+        armPresenceDisconnect(presRef);
 
         // Last-one-out safety: if we're truly closing/navigating away, clean up the
-        // upload. Do NOT remove presence on pagehide: phones can fire pagehide when
-        // the screen locks or the browser is backgrounded, which made sleeping
-        // partners disappear even though they were still on the page. Firebase
-        // onDisconnect is the source of truth for presence removal.
+        // upload and request immediate presence removal. Do NOT do this on pagehide:
+        // phones can fire pagehide when the screen locks or the browser backgrounds.
+        // Ordinary socket loss uses the sleeping/away grace record instead.
         const unloadCleanup = () => {
           try {
+            // A real close/navigation should remove us immediately. If this command
+            // reaches Firebase before the socket drops, it replaces the sleeping
+            // fallback; remove() is also attempted for browsers that allow it.
+            onDisconnect(presRef).remove();
+            remove(presRef);
             if (isBroadcasting) stopBroadcast(true);
             if (!currentUpload) return;
             const others = presenceRef && lastPresenceCount > 1;
@@ -2836,7 +2908,10 @@
         window.addEventListener("beforeunload", unloadCleanup);
 
         onValue(ref(db, ".info/connected"), (snap) => {
-          if (snap.val() === true) { set(presRef, { name: myName, idk: identityId(), t: Date.now() }); onDisconnect(presRef).remove(); }
+          if (snap.val() === true) {
+            writeMyPresence(pageHidden ? "away" : "online");
+            armPresenceDisconnect(presRef);
+          }
         });
 
         presenceRef = ref(db, `watch/${ROOM}/presence`);
@@ -2959,8 +3034,8 @@
     setInterval(() => {
       // Refresh our presence timestamp FIRST, before any early-out. A phone with
       // the screen locked or the tab backgrounded is still "in the room"; the
-      // long PRESENCE_TTL plus Firebase onDisconnect keeps sleeping partners visible.
-      try { if (myPresRef) set(myPresRef, { name: myName, idk: identityId(), t: Date.now() }); } catch (_) {}
+      // the grace record written by Firebase onDisconnect keeps sleeping partners visible.
+      writeMyPresence(pageHidden ? "away" : "online");
       if (pageHidden) return;
       if (lastHostId === clientId && currentKind) {
         try { if (isPlayingNow()) broadcast("playing"); } catch(_){}
