@@ -484,6 +484,7 @@
       { href: '/together.html', label: 'Together', key: 'together' },
       { href: '/sakari.html',   label: 'Stories',  key: 'stories'  },
       { href: '/projects.html', label: 'Projects', key: 'projects' },
+      { href: '/radio/',        label: 'Radio',    key: 'radio'    },
       { href: '/contact.html',  label: 'Contact',  key: 'contact'  },
     ];
     const linksHtml = links.map(l =>

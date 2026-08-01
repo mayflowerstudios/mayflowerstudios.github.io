@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Station • Mayflower Radio</title>
+  <meta name="description" content="A Mayflower Radio station — see what's playing, request a song, and if it's yours, drive it from here." />
+  <meta property="og:title" content="Station • Mayflower Radio" />
+  <meta property="og:description" content="See what's playing on a Mayflower Radio station, request a song, and drive your own station from anywhere." />
+  <meta property="og:url" content="https://mayflowerstudios.net/radio/station.html" />
+  <link rel="canonical" href="https://mayflowerstudios.net/radio/station.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://mayflowerstudios.net/assets/og/radio.png?v=2" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=2" />
+  <link rel="stylesheet" href="/style.css?v=34" />
+
+  <style>
+    /* The site's own .sec and .btn-pri are display:flex, which beats the
+       browser's [hidden] rule — without this the owner's controls render for
+       everyone who opens the page. Everything on here that's meant to appear
+       only for the owner or an approved friend is hidden by that attribute, so
+       this line is load-bearing. */
+    [hidden] { display: none !important; }
+
+    .stCard { padding: 24px 26px; margin-bottom: 20px; }
+    .stCard h3 { font-size: 18px; margin-bottom: 10px; }
+
+    .npRow { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    .npKicker { font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+    .npTitle { font-size: 22px; font-weight: 600; line-height: 1.35; }
+    .npBar { height: 5px; border-radius: 999px; background: rgba(255,255,255,.09); margin-top: 14px; overflow: hidden; }
+    .npFill { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, var(--rose), #c4b5fd); transition: width 900ms linear; }
+    .npTimes { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-3); margin-top: 6px; }
+
+    .liveTag { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px;
+      padding: 3px 10px; border-radius: 999px; color: var(--emerald);
+      border: 1px solid rgba(110,231,183,.3); background: rgba(110,231,183,.1); }
+    .liveDot { width: 7px; height: 7px; border-radius: 50%; background: var(--emerald); }
+    .offTag { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px;
+      padding: 3px 10px; border-radius: 999px; color: var(--text-3); border: 1px solid var(--border-2); }
+
+    .ctrlRow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+    .ctrlBtn { padding: 10px 16px; border-radius: var(--r-sm); border: 1px solid var(--border-2);
+      background: rgba(255,255,255,.05); color: var(--text); font-size: 14px; font-family: inherit;
+      cursor: pointer; transition: border-color 160ms var(--ease), background 160ms var(--ease); }
+    .ctrlBtn:hover:not(:disabled) { border-color: rgba(249,168,212,.45); background: rgba(255,255,255,.09); }
+    .ctrlBtn:disabled { opacity: .45; cursor: default; }
+    .ctrlBtn.danger { color: #fca5a5; border-color: rgba(252,165,165,.28); }
+
+    .lineList { list-style: none; padding: 0; margin: 0; }
+    .lineList li { display: flex; justify-content: space-between; gap: 14px; padding: 8px 0;
+      border-bottom: 1px solid var(--border-2); font-size: 14px; color: var(--text-2); }
+    .lineList li:last-child { border-bottom: none; }
+    .lineMeta { color: var(--text-3); font-size: 12.5px; white-space: nowrap; }
+    .empty { color: var(--text-3); font-size: 13.5px; padding: 6px 0; }
+
+    .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 720px) { .cols { grid-template-columns: 1fr; } }
+
+    .idBox { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+    .idVal { font-family: var(--font-m); font-size: 13px; padding: 8px 12px; border-radius: 6px;
+      background: rgba(0,0,0,.3); border: 1px solid var(--border-2); word-break: break-all; flex: 1; min-width: 220px; }
+
+    .askRow { display: flex; justify-content: space-between; align-items: center; gap: 12px;
+      padding: 10px 0; border-bottom: 1px solid var(--border-2); font-size: 14px; }
+    .askRow:last-child { border-bottom: none; }
+
+    .searchRow { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+    .searchRow input { flex: 1; min-width: 220px; padding: 11px 14px; border-radius: var(--r-sm);
+      border: 1px solid var(--border-2); background: rgba(255,255,255,.04);
+      color: var(--text); font-size: 14px; font-family: inherit; }
+    .searchRow input:focus { outline: none; border-color: rgba(249,168,212,.45); }
+
+    .msg { font-size: 13.5px; color: var(--text-2); margin-top: 10px; min-height: 1.2em; }
+    .msg.bad { color: #fca5a5; }
+    .msg.good { color: var(--emerald); }
+  </style>
+</head>
+<body data-nav="radio">
+
+  <div class="site-page">
+    <div id="site-nav"></div>
+
+    <main class="content">
+
+      <!-- ══ HERO ══ -->
+      <section class="page-hero reveal">
+        <p class="page-kicker">📻 Station</p>
+        <h1 class="page-title" id="stName">Loading…</h1>
+        <p class="page-sub" id="stAbout"></p>
+        <div class="page-actions">
+          <a href="#" class="btn-pri" id="listenBtn" hidden>▶ Listen</a>
+          <a href="/radio/stations.html" class="btn-ghost">📻 All stations</a>
+        </div>
+        <p id="statusTag" style="margin-top:14px;"></p>
+      </section>
+
+      <!-- ══ NOW PLAYING ══ -->
+      <section class="sec reveal">
+        <div class="card stCard" id="nowCard">
+          <div class="npRow">
+            <span class="npKicker" id="npKicker">Now playing</span>
+          </div>
+          <div class="npTitle" id="npTitle">—</div>
+          <div class="npBar"><div class="npFill" id="npFill"></div></div>
+          <div class="npTimes"><span id="npElapsed">0:00</span><span id="npDuration">0:00</span></div>
+        </div>
+      </section>
+
+      <!-- ══ CONTROLS (owner + approved friends only) ══ -->
+      <section class="sec reveal" id="controlsSec" hidden>
+        <div class="card stCard">
+          <h3>Controls</h3>
+          <p style="color:var(--text-2);font-size:14px;margin-bottom:12px;" id="ctrlWho"></p>
+          <div class="ctrlRow">
+            <button class="ctrlBtn" id="cPrev">⏮ Back</button>
+            <button class="ctrlBtn" id="cPause">⏸ Pause</button>
+            <button class="ctrlBtn" id="cSkip">⏭ Skip</button>
+            <button class="ctrlBtn danger" id="cStop" hidden>⏹ Take off air</button>
+            <button class="ctrlBtn" id="cStart" hidden>▶ Put back on air</button>
+          </div>
+
+          <div class="searchRow">
+            <input id="songBox" type="text" placeholder="Play a song next — type its exact title" />
+            <button class="ctrlBtn" id="cPlayNext">Play next</button>
+          </div>
+          <p class="msg" id="ctrlMsg"></p>
+        </div>
+      </section>
+
+      <!-- ══ UP NEXT / RECENTLY PLAYED ══ -->
+      <section class="sec reveal">
+        <div class="cols">
+          <div class="card stCard">
+            <h3>Up next</h3>
+            <ol class="lineList" id="upNext"><li class="empty">Nothing queued yet.</li></ol>
+          </div>
+          <div class="card stCard">
+            <h3>Recently played</h3>
+            <ul class="lineList" id="history"><li class="empty">Nothing yet.</li></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ MOST LOVED ══ -->
+      <section class="sec reveal">
+        <div class="card stCard">
+          <h3>❤ Top 5 most loved on this station</h3>
+          <ul class="lineList" id="loved"><li class="empty">No likes yet.</li></ul>
+        </div>
+      </section>
+
+      <!-- ══ REQUEST QUEUE ══ -->
+      <section class="sec reveal" id="reqSec" hidden>
+        <div class="card stCard">
+          <h3>Requests waiting</h3>
+          <ul class="lineList" id="reqList"><li class="empty">Nobody has asked for anything.</li></ul>
+        </div>
+      </section>
+
+      <!-- ══ SIGN IN / ACCOUNT ══ -->
+      <section class="sec reveal">
+        <div class="card stCard" id="acctCard">
+          <h3 id="acctHead">Sign in</h3>
+          <p style="color:var(--text-2);font-size:14px;line-height:1.75;" id="acctBlurb">
+            Sign in to ask the owner for controls — or, if this station is yours, to drive it from here.
+          </p>
+          <div class="ctrlRow" id="signedOutRow">
+            <button class="ctrlBtn" id="gBtn">Continue with Google</button>
+            <a class="ctrlBtn" href="/account.html" style="text-decoration:none;">Use email instead</a>
+          </div>
+
+          <div id="signedInRow" hidden>
+            <p style="color:var(--text-2);font-size:14px;">
+              Signed in as <b id="whoName">you</b>.
+            </p>
+            <p style="color:var(--text-3);font-size:13px;margin-top:12px;">
+              Your account ID — paste this into Mayflower Radio, under Settings → Stations,
+              to link a station you own to this account:
+            </p>
+            <div class="idBox">
+              <span class="idVal" id="myUid">—</span>
+              <button class="ctrlBtn" id="copyUid">📋 Copy</button>
+            </div>
+            <div class="ctrlRow" style="margin-top:14px;">
+              <button class="ctrlBtn" id="askBtn" hidden>🙋 Ask the owner for controls</button>
+              <button class="ctrlBtn" id="signOutBtn">Sign out</button>
+            </div>
+            <p class="msg" id="acctMsg"></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ OWNER: FRIENDS ══ -->
+      <section class="sec reveal" id="friendsSec" hidden>
+        <div class="card stCard">
+          <h3>Who can control this station</h3>
+          <p style="color:var(--text-2);font-size:14px;line-height:1.75;">
+            You, always. Anyone you approve below gets skip, pause and “play this next” —
+            but never the power to take the station off air.
+          </p>
+
+          <h3 style="margin-top:20px;font-size:15px;">Waiting to be approved</h3>
+          <div id="askList"><p class="empty">Nobody's asked.</p></div>
+
+          <h3 style="margin-top:20px;font-size:15px;">Approved</h3>
+          <div id="friendList"><p class="empty">Just you so far.</p></div>
+
+          <div class="ctrlRow" style="margin-top:18px;">
+            <button class="ctrlBtn danger" id="unlinkBtn">Unlink this station from my account</button>
+          </div>
+          <p class="msg" id="friendMsg"></p>
+        </div>
+      </section>
+
+    </main>
+
+    <div id="site-footer"></div>
+  </div>
+
+  <script src="/auth.js?v=34"></script>
+  <script src="/shared.js?v=34"></script>
+  <script>
+  (function(){
+    var $ = function(id){ return document.getElementById(id); };
+    var DB = "https://watchtogether-95d7d-default-rtdb.firebaseio.com";
+
+    var sid = new URLSearchParams(location.search).get("id") || "";
+    var owner = null;          // uid this station is linked to
+    var me = null;             // signed-in user
+    var amOwner = false, amFriend = false;
+    var home = null;           // { page, stream } — only readable by owner/friends
+    var listing = null;        // public directory entry, if the station is listed
+    var now = null;            // /radioNow snapshot
+    var localBase = 0, localAt = 0;   // smooth the progress bar between polls
+
+    if (!sid) {
+      $("stName").textContent = "No station chosen";
+      $("stAbout").textContent = "Open a station from the stations page.";
+      return;
+    }
+
+    // ── plumbing ────────────────────────────────────────────────────────
+    function get(path){
+      return fetch(DB + "/" + path + ".json?t=" + Date.now(), { cache: "no-store" })
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .catch(function(){ return null; });
+    }
+    // Signed-in read/write. Firebase takes the ID token on the query string,
+    // which is what lets its rules tell who is asking.
+    function authed(path, opts){
+      if (!me) return Promise.resolve(null);
+      return me.getIdToken().then(function(tok){
+        return fetch(DB + "/" + path + ".json?auth=" + encodeURIComponent(tok) + "&t=" + Date.now(),
+                     opts || { cache: "no-store" });
+      }).then(function(r){ return r && r.ok ? r.json() : null; })
+        .catch(function(){ return null; });
+    }
+    function esc(s){ return encodeURIComponent(s); }
+    function mmss(s){
+      s = Math.max(0, Math.floor(s || 0));
+      return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2);
+    }
+    function fill(el, items, render){
+      el.innerHTML = "";
+      if (!items.length){ var li = document.createElement("li"); li.className = "empty";
+        li.textContent = el.dataset.empty || "Nothing yet."; el.appendChild(li); return; }
+      items.forEach(function(it){ el.appendChild(render(it)); });
+    }
+    function row(text, meta){
+      var li = document.createElement("li");
+      var a = document.createElement("span"); a.textContent = text; li.appendChild(a);
+      if (meta){ var b = document.createElement("span"); b.className = "lineMeta"; b.textContent = meta; li.appendChild(b); }
+      return li;
+    }
+
+    // ── station identity ────────────────────────────────────────────────
+    function loadStation(){
+      return Promise.all([ get("stations/" + esc(sid)), get("radioOwner/" + esc(sid)) ])
+        .then(function(res){
+          listing = res[0];
+          owner = res[1] && res[1].uid ? res[1].uid : null;
+          if (listing){
+            $("stName").textContent = listing.name || "A Mayflower Radio station";
+            $("stAbout").textContent = listing.about || "";
+          } else {
+            // Unlisted, or not running. loadNow() fills the name in if the
+            // station is publishing; until then don't sit on "Loading…".
+            $("stName").textContent = "A Mayflower Radio station";
+            $("stAbout").textContent =
+              "This station isn't in the public directory. If it's yours, sign in below.";
+          }
+          applyRole();
+        });
+    }
+
+    // ── now playing ─────────────────────────────────────────────────────
+    function loadNow(){
+      return get("radioNow/" + esc(sid)).then(function(n){
+        now = n;
+        if (!n){
+          // No remote-control feed. A station can still be plainly on air —
+          // the public directory knows — so fall back to that rather than
+          // telling someone a live station is off.
+          var seen = listing && listing.lastSeen && (Date.now() - listing.lastSeen) < 5 * 60 * 1000;
+          if (seen){
+            $("statusTag").innerHTML = '<span class="liveTag"><span class="liveDot"></span>On air</span>';
+            $("npKicker").textContent = "Now playing";
+            $("npTitle").textContent = listing.nowPlaying || "—";
+          } else {
+            $("statusTag").innerHTML = '<span class="offTag">Off air</span>';
+            $("npTitle").textContent = "—";
+          }
+          return;
+        }
+        if (!listing && n.station) $("stName").textContent = n.station;
+
+        var live = !!n.playing;
+        $("statusTag").innerHTML = live
+          ? '<span class="liveTag"><span class="liveDot"></span>On air' +
+            (n.listeners ? " · " + n.listeners + (n.listeners === 1 ? " listening" : " listening") : "") + '</span>'
+          : '<span class="offTag">Off air</span>';
+
+        $("npKicker").textContent = n.paused ? "Paused" : (live ? "Now playing" : "Last played");
+        $("npTitle").textContent = n.title || "—";
+        localBase = n.elapsed || 0;
+        localAt = Date.now();
+        paint();
+
+        var un = (n.upNext || []).map(String);
+        var hi = (n.history || []).map(String);
+        $("upNext").dataset.empty = "Nothing queued yet.";
+        $("history").dataset.empty = "Nothing yet.";
+        fill($("upNext"), un, function(t){ return row(t); });
+        fill($("history"), hi, function(t){ return row(t); });
+
+        if ($("cPause")) $("cPause").textContent = n.paused ? "▶ Resume" : "⏸ Pause";
+        if (amOwner){
+          $("cStop").hidden = !live;
+          $("cStart").hidden = live;
+        }
+      });
+    }
+
+    // Move the bar between polls so it doesn't sit still for ten seconds.
+    function paint(){
+      if (!now || !now.duration){ $("npFill").style.width = "0"; $("npElapsed").textContent = "0:00";
+        $("npDuration").textContent = "0:00"; return; }
+      var el = localBase + (now.paused || !now.playing ? 0 : (Date.now() - localAt) / 1000);
+      el = Math.min(el, now.duration);
+      $("npFill").style.width = (el / now.duration * 100).toFixed(1) + "%";
+      $("npElapsed").textContent = mmss(el);
+      $("npDuration").textContent = mmss(now.duration);
+    }
+
+    // ── likes + requests ────────────────────────────────────────────────
+    function loadLoved(){
+      return get("likes/" + esc(sid)).then(function(j){
+        var arr = [];
+        if (j && typeof j === "object")
+          Object.keys(j).forEach(function(k){
+            var v = j[k]; if (v && v.count > 0) arr.push({ title: v.title || k, count: v.count });
+          });
+        arr.sort(function(a,b){ return b.count - a.count; });
+        $("loved").dataset.empty = "No likes yet.";
+        fill($("loved"), arr.slice(0, 5), function(t){ return row(t.title, "❤ " + t.count); });
+      });
+    }
+
+    function loadRequests(){
+      if (!(amOwner || amFriend)) { $("reqSec").hidden = true; return Promise.resolve(); }
+      return get("requests/" + esc(sid)).then(function(j){
+        var arr = [];
+        if (j && typeof j === "object")
+          Object.keys(j).forEach(function(k){
+            var v = j[k]; if (v && v.title) arr.push({ id: k, title: v.title, at: v.at || 0 });
+          });
+        arr.sort(function(a,b){ return a.at - b.at; });
+        $("reqSec").hidden = false;
+        var el = $("reqList");
+        el.innerHTML = "";
+        if (!arr.length){ el.innerHTML = '<li class="empty">Nobody has asked for anything.</li>'; return; }
+        arr.forEach(function(r){
+          var li = document.createElement("li");
+          var t = document.createElement("span"); t.textContent = r.title; li.appendChild(t);
+          var b = document.createElement("button");
+          b.className = "ctrlBtn"; b.style.padding = "4px 10px"; b.style.fontSize = "12.5px";
+          b.textContent = "Drop";
+          b.onclick = function(){
+            b.disabled = true;
+            fetch(DB + "/requests/" + esc(sid) + "/" + esc(r.id) + ".json", { method: "DELETE" })
+              .then(loadRequests).catch(function(){ b.disabled = false; });
+          };
+          li.appendChild(b);
+          el.appendChild(li);
+        });
+      });
+    }
+
+    // ── who am I to this station ────────────────────────────────────────
+    function applyRole(){
+      var signedIn = !!me;
+      $("signedOutRow").hidden = signedIn;
+      $("signedInRow").hidden = !signedIn;
+      $("acctHead").textContent = signedIn ? "Your account" : "Sign in";
+
+      if (signedIn){
+        $("whoName").textContent = (window.MFAuth && MFAuth.name()) || me.email || "you";
+        $("myUid").textContent = me.uid;
+      }
+
+      amOwner = !!(signedIn && owner && owner === me.uid);
+      $("controlsSec").hidden = !(amOwner || amFriend);
+      $("friendsSec").hidden = !amOwner;
+      $("askBtn").hidden = !(signedIn && !amOwner && !amFriend && owner);
+
+      $("ctrlWho").textContent = amOwner
+        ? "This station is linked to your account."
+        : "The owner has approved you to help drive this station.";
+
+      $("cStop").hidden = !amOwner;
+      $("cStart").hidden = !amOwner;
+
+      if (!owner && signedIn){
+        $("acctMsg").textContent =
+          "This station isn't linked to an account yet. Copy your account ID above and paste it into "
+          + "Mayflower Radio under Settings → Stations to claim it.";
+      }
+
+      updateListen();
+      if (amOwner) loadFriends();
+      loadRequests();
+    }
+
+    // The Listen button. A public listing carries the address already; for an
+    // unlisted station only the owner and their friends can read it, which is
+    // deliberate — it contains the owner's home address.
+    function updateListen(){
+      var url = (listing && listing.url) || (home && home.page) || null;
+      var btn = $("listenBtn");
+      if (!url){ btn.hidden = true; return; }
+      btn.href = url;
+      btn.target = "_blank";
+      btn.rel = "noopener";
+      btn.hidden = false;
+    }
+
+    function loadHome(){
+      if (!me) return Promise.resolve();
+      return authed("radioHome/" + esc(sid)).then(function(h){
+        if (h && h.page){ home = h; updateListen(); }
+      });
+    }
+
+    // A friend only knows they're approved by successfully reading their own
+    // entry — the list itself is the owner's to see.
+    function checkFriend(){
+      if (!me) { amFriend = false; return Promise.resolve(); }
+      return authed("radioFriends/" + esc(sid) + "/" + esc(me.uid)).then(function(f){
+        amFriend = !!f;
+      });
+    }
+
+    // ── owner: approvals ────────────────────────────────────────────────
+    function loadFriends(){
+      Promise.all([ authed("radioAsk/" + esc(sid)), authed("radioFriends/" + esc(sid)) ])
+        .then(function(res){
+          var asks = res[0] || {}, friends = res[1] || {};
+
+          var ae = $("askList"); ae.innerHTML = "";
+          var keys = Object.keys(asks);
+          if (!keys.length) ae.innerHTML = '<p class="empty">Nobody\'s asked.</p>';
+          keys.forEach(function(uid){
+            var a = asks[uid] || {};
+            var d = document.createElement("div"); d.className = "askRow";
+            var s = document.createElement("span"); s.textContent = (a.name || "Someone") + (a.email ? " · " + a.email : "");
+            d.appendChild(s);
+            var wrap = document.createElement("span");
+            var ok = document.createElement("button");
+            ok.className = "ctrlBtn"; ok.style.padding = "4px 10px"; ok.style.fontSize = "12.5px";
+            ok.textContent = "Approve";
+            ok.onclick = function(){ approve(uid, a); };
+            var no = document.createElement("button");
+            no.className = "ctrlBtn danger"; no.style.padding = "4px 10px";
+            no.style.fontSize = "12.5px"; no.style.marginLeft = "6px";
+            no.textContent = "Ignore";
+            no.onclick = function(){ writeAuthed("radioAsk/" + esc(sid) + "/" + esc(uid), null, "DELETE").then(loadFriends); };
+            wrap.appendChild(ok); wrap.appendChild(no);
+            d.appendChild(wrap);
+            ae.appendChild(d);
+          });
+
+          var fe = $("friendList"); fe.innerHTML = "";
+          var fk = Object.keys(friends);
+          if (!fk.length) fe.innerHTML = '<p class="empty">Just you so far.</p>';
+          fk.forEach(function(uid){
+            var f = friends[uid] || {};
+            var d = document.createElement("div"); d.className = "askRow";
+            var s = document.createElement("span"); s.textContent = (f.name || "Someone") + (f.email ? " · " + f.email : "");
+            d.appendChild(s);
+            var no = document.createElement("button");
+            no.className = "ctrlBtn danger"; no.style.padding = "4px 10px"; no.style.fontSize = "12.5px";
+            no.textContent = "Remove";
+            no.onclick = function(){ writeAuthed("radioFriends/" + esc(sid) + "/" + esc(uid), null, "DELETE").then(loadFriends); };
+            d.appendChild(no);
+            fe.appendChild(d);
+          });
+        });
+    }
+
+    function approve(uid, a){
+      writeAuthed("radioFriends/" + esc(sid) + "/" + esc(uid),
+        { name: a.name || "", email: a.email || "", at: Date.now() }, "PUT")
+        .then(function(){ return writeAuthed("radioAsk/" + esc(sid) + "/" + esc(uid), null, "DELETE"); })
+        .then(loadFriends);
+    }
+
+    function writeAuthed(path, body, method){
+      if (!me) return Promise.resolve(null);
+      return me.getIdToken().then(function(tok){
+        var opts = { method: method || "PUT" };
+        if (body !== null && body !== undefined){
+          opts.headers = { "Content-Type": "application/json" };
+          opts.body = JSON.stringify(body);
+        }
+        return fetch(DB + "/" + path + ".json?auth=" + encodeURIComponent(tok), opts);
+      }).catch(function(){ return null; });
+    }
+
+    // ── commands ────────────────────────────────────────────────────────
+    function send(cmd, arg){
+      if (!me){ return; }
+      var msg = $("ctrlMsg");
+      msg.className = "msg"; msg.textContent = "Sending…";
+      me.getIdToken().then(function(tok){
+        return fetch(DB + "/radioControl/" + esc(sid) + ".json?auth=" + encodeURIComponent(tok), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            cmd: cmd, arg: arg || "",
+            by: me.uid,
+            byName: (window.MFAuth && MFAuth.name()) || "Someone",
+            at: Date.now(),
+          }),
+        });
+      }).then(function(r){
+        if (r && r.ok){
+          msg.className = "msg good";
+          msg.textContent = "Sent — the station picks it up within a few seconds.";
+          setTimeout(function(){ loadNow(); }, 3500);
+        } else {
+          msg.className = "msg bad";
+          msg.textContent = r && (r.status === 401 || r.status === 403)
+            ? "The station turned that down. Owner-only commands can't be sent by approved friends."
+            : "Couldn't send that just now.";
+        }
+      }).catch(function(){
+        msg.className = "msg bad"; msg.textContent = "Couldn't reach the station.";
+      });
+    }
+
+    $("cPrev").onclick  = function(){ send("prev"); };
+    $("cSkip").onclick  = function(){ send("skip"); };
+    $("cPause").onclick = function(){ send(now && now.paused ? "resume" : "pause"); };
+    $("cStop").onclick  = function(){ send("stop"); };
+    $("cStart").onclick = function(){ send("start"); };
+    $("cPlayNext").onclick = function(){
+      var t = $("songBox").value.trim();
+      if (!t) return;
+      send("playnext", t);
+      $("songBox").value = "";
+    };
+    $("songBox").addEventListener("keydown", function(e){ if (e.key === "Enter") $("cPlayNext").click(); });
+
+    // ── account ─────────────────────────────────────────────────────────
+    $("gBtn").onclick = function(){
+      if (!window.MFAuth || !MFAuth.isConfigured()) return;
+      MFAuth.signInGoogle().catch(function(e){
+        $("acctMsg").className = "msg bad";
+        $("acctMsg").textContent = "Couldn't sign in: " + (e && e.message ? e.message : "try again");
+      });
+    };
+    $("signOutBtn").onclick = function(){ if (window.MFAuth) MFAuth.signOut(); };
+    $("copyUid").onclick = function(){
+      try {
+        navigator.clipboard.writeText(me ? me.uid : "");
+        $("acctMsg").className = "msg good";
+        $("acctMsg").textContent = "Copied. Paste it into Mayflower Radio → Settings → Stations.";
+      } catch(_){}
+    };
+    $("askBtn").onclick = function(){
+      writeAuthed("radioAsk/" + esc(sid) + "/" + esc(me.uid), {
+        name: (window.MFAuth && MFAuth.name()) || "", email: me.email || "", at: Date.now(),
+      }, "PUT").then(function(){
+        $("acctMsg").className = "msg good";
+        $("acctMsg").textContent = "Asked. The owner sees it on this page next time they open it.";
+      });
+    };
+    $("unlinkBtn").onclick = function(){
+      if (!confirm("Unlink this station from your account?\n\nIts controls disappear for everyone until it's linked again from the app.")) return;
+      writeAuthed("radioOwner/" + esc(sid), null, "DELETE").then(function(){
+        $("friendMsg").className = "msg good";
+        $("friendMsg").textContent = "Unlinked.";
+        owner = null; applyRole();
+      });
+    };
+
+    // ── go ──────────────────────────────────────────────────────────────
+    function onUser(user){
+      me = user || null;
+      Promise.resolve()
+        .then(checkFriend)
+        .then(loadHome)
+        .then(applyRole);
+    }
+
+    loadStation().then(loadNow).then(loadLoved);
+
+    if (window.MFAuth) MFAuth.onChange(onUser);
+    else applyRole();
+
+    setInterval(loadNow, 5000);
+    setInterval(loadLoved, 30000);
+    setInterval(function(){ if (amOwner || amFriend) loadRequests(); }, 15000);
+    setInterval(paint, 500);
+  })();
+  </script>
+</body>
+</html>

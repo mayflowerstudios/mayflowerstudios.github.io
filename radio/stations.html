@@ -159,7 +159,7 @@
     <div id="site-footer"></div>
   </div><!-- /site-page -->
 
-  <script src="/shared.js?v=33"></script>
+  <script src="/shared.js?v=34"></script>
   <script>
   (function () {
     "use strict";
@@ -198,14 +198,20 @@
       var who = s.by ? '<div class="sBy">by ' + esc(s.by) + "</div>" : "";
       var meta = (live && typeof s.listeners === "number" && s.listeners > 0)
         ? '<div class="sMeta">👥 ' + s.listeners + (s.listeners === 1 ? " listening" : " listening") + "</div>" : "";
-      return '<a class="card card-accent-top stationCard' + (live ? " isLive" : "") + '" href="' + esc(url) +
-             '" target="_blank" rel="noopener noreferrer">' +
+      // A station that checked in from the app has an id, so it gets a page
+      // here — with what's playing, the loved list, and its owner's controls.
+      // Hand-listed ones have no id and still link straight to the station.
+      var onSite = !!s.id;
+      var href = onSite ? "/radio/station.html?id=" + encodeURIComponent(s.id) : url;
+      var out = onSite ? "" : ' target="_blank" rel="noopener noreferrer"';
+      return '<a class="card card-accent-top stationCard' + (live ? " isLive" : "") + '" href="' + esc(href) +
+             '"' + out + ">" +
              '<div class="card-shine"></div>' +
              '<div class="sHead"><span class="sName">' + esc(s.name || "Untitled station") + "</span>" + badge + "</div>" +
              who +
              '<div class="sAbout">' + esc(s.about || "") + "</div>" +
              np + meta +
-             '<span class="sGo">Open station ↗</span></a>';
+             '<span class="sGo">' + (onSite ? "Open station →" : "Open station ↗") + "</span></a>";
     }
 
     function updateLiveCount(items) {
@@ -251,7 +257,11 @@
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (j) {
           if (!j || typeof j !== "object") return [];
-          return Object.keys(j).map(function (k) { return j[k]; })
+          // Keep the key: it's the station id, which is what the station's own
+          // page on this site is addressed by.
+          return Object.keys(j).map(function (k) {
+                         var s = j[k]; if (s) s.id = k; return s;
+                       })
                        .filter(function (s) { return s && s.url; });
         })
         .catch(function () { return []; });
