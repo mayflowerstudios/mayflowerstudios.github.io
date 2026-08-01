@@ -736,12 +736,31 @@
         }
       }
     },
+    "radioCrew": {
+      "$stationId": {
+        ".read": "auth != null && auth.uid === root.child('radioOwner').child($stationId).child('uid').val()",
+        ".write": "auth != null && root.child('radioOwner').child($stationId).child('uid').exists() && auth.uid === root.child('radioOwner').child($stationId).child('uid').val()",
+        "$friendUid": {
+          ".read": "auth != null && auth.uid === $friendUid",
+          ".validate": "!newData.exists() || newData.hasChild('t')",
+          "t": {
+            ".validate": "newData.isNumber()"
+          },
+          "name": {
+            ".validate": "newData.isString() && newData.val().length <= 32"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    },
     "radioControl": {
       ".read": true,
       "$stationId": {
         ".write": "$stationId.matches(/^[a-f0-9]{8,32}$/) && !newData.exists()",
         "$commandId": {
-          ".write": "$stationId.matches(/^[a-f0-9]{8,32}$/) && (!newData.exists() || (auth != null && newData.child('by').val() === auth.uid && root.child('radioOwner').child($stationId).child('uid').exists() && (auth.uid === root.child('radioOwner').child($stationId).child('uid').val() || (root.child('friends').child(root.child('radioOwner').child($stationId).child('uid').val()).child(auth.uid).exists() && newData.child('cmd').val() !== 'stop' && newData.child('cmd').val() !== 'start'))))",
+          ".write": "$stationId.matches(/^[a-f0-9]{8,32}$/) && (!newData.exists() || (auth != null && newData.child('by').val() === auth.uid && root.child('radioOwner').child($stationId).child('uid').exists() && (auth.uid === root.child('radioOwner').child($stationId).child('uid').val() || (root.child('radioCrew').child($stationId).child(auth.uid).exists() && newData.child('cmd').val() !== 'stop' && newData.child('cmd').val() !== 'start'))))",
           ".validate": "!newData.exists() || (newData.hasChildren(['cmd','by','at']) && newData.child('at').val() <= now + 60000 && newData.child('at').val() >= now - 300000)",
           "cmd": {
             ".validate": "newData.isString() && newData.val().matches(/^(skip|pause|resume|prev|playnext|stop|start)$/)"

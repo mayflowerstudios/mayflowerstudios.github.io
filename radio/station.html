@@ -197,13 +197,13 @@
         <div class="card stCard">
           <h3>Who can control this station</h3>
           <p style="color:var(--text-2);font-size:14px;line-height:1.75;">
-            You, always — plus your friends here on Mayflower Studios. They get skip, pause and
-            “play this next”, but never the power to take the station off air. It's the same
-            friends list as everywhere else on the site, so adding or removing someone there
-            changes this at the same moment.
+            You, always. Tick any of your friends below to let them help — they get skip, pause and
+            “play this next”, but never the power to take the station off air. Nobody gets the
+            controls just for being your friend; only the ones you tick.
           </p>
-          <div class="ctrlRow" style="margin-top:16px;">
-            <a class="ctrlBtn" href="/account.html" style="text-decoration:none;">👥 Manage friends</a>
+          <div id="crewList" style="margin-top:16px;"><p class="empty">Loading your friends…</p></div>
+          <div class="ctrlRow" style="margin-top:18px;">
+            <a class="ctrlBtn" href="/account.html" style="text-decoration:none;">👥 Add a friend</a>
             <button class="ctrlBtn danger" id="unlinkBtn">Unlink this station from my account</button>
           </div>
           <p class="msg" id="friendMsg"></p>
@@ -417,7 +417,7 @@
 
       $("ctrlWho").textContent = amOwner
         ? "This station is linked to your account."
-        : "You're friends with whoever runs this station, so you can help drive it.";
+        : "Whoever runs this station has picked you to help drive it.";
 
       $("cStop").hidden = !amOwner;
       $("cStart").hidden = !amOwner;
@@ -430,6 +430,7 @@
 
       updateListen();
       loadRequests();
+      loadCrew();
     }
 
     // The Listen button. A public listing carries the address already; for an
@@ -452,16 +453,86 @@
       });
     }
 
-    // Friendship is the site's own — the same list account.html manages. No
-    // separate radio list to approve into, and unfriending someone takes their
-    // controls away at the same moment.
+    // Being the owner's friend isn't enough — they have to have ticked you for
+    // this station. You can read your own entry and nothing else, so this is
+    // how you find out, and the list itself stays the owner's to see.
     function checkFriend(){
       amFriend = false;
       if (!me || !owner || owner === me.uid) return Promise.resolve();
-      if (!window.MFAuth || !MFAuth.areFriends) return Promise.resolve();
-      return MFAuth.areFriends(owner)
-        .then(function(yes){ amFriend = !!yes; })
+      return authed("radioCrew/" + esc(sid) + "/" + esc(me.uid))
+        .then(function(c){ amFriend = !!c; })
         .catch(function(){ amFriend = false; });
+    }
+
+    // ── owner: who's allowed ────────────────────────────────────────────
+    // Your friends are the list to choose from; ticking one is what actually
+    // grants control. Kept apart from friendship on purpose — a friend list
+    // anyone can add themselves to is fine for chat, not for a station.
+    function loadCrew(){
+      if (!amOwner) return;
+      var el = $("crewList");
+      Promise.all([ authed("friends/" + esc(me.uid)), authed("radioCrew/" + esc(sid)) ])
+        .then(function(res){
+          var friends = res[0] || {}, crew = res[1] || {};
+          var uids = Object.keys(friends);
+          if (!uids.length){
+            el.innerHTML = '<p class="empty">No friends yet — add someone on your account page first.</p>';
+            return;
+          }
+          // Names come from the profiles the rest of the site already uses.
+          return Promise.all(uids.map(function(uid){
+            return authed("users/" + esc(uid)).then(function(p){
+              return { uid: uid, name: (p && (p.displayName || p.username)) || "Someone",
+                       username: (p && p.username) || "" };
+            });
+          })).then(function(people){
+            people.sort(function(a, b){ return a.name.localeCompare(b.name); });
+            el.innerHTML = "";
+            people.forEach(function(p){
+              var row = document.createElement("label");
+              row.className = "askRow";
+              row.style.cursor = "pointer";
+
+              var who = document.createElement("span");
+              who.textContent = p.name + (p.username ? " · @" + p.username : "");
+              row.appendChild(who);
+
+              var box = document.createElement("input");
+              box.type = "checkbox";
+              box.checked = !!crew[p.uid];
+              box.style.width = "18px";
+              box.style.height = "18px";
+              box.onchange = function(){
+                box.disabled = true;
+                var on = box.checked;
+                writeAuthed("radioCrew/" + esc(sid) + "/" + esc(p.uid),
+                  on ? { t: Date.now(), name: p.name.slice(0, 32) } : null,
+                  on ? "PUT" : "DELETE")
+                  .then(function(r){
+                    box.disabled = false;
+                    // writeAuthed resolves with the response (and null if it
+                    // never got that far), so a refusal has to be read off it
+                    // rather than caught.
+                    if (r && r.ok){
+                      $("friendMsg").className = "msg good";
+                      $("friendMsg").textContent = on
+                        ? p.name + " can help drive this station now."
+                        : p.name + " can't drive it any more.";
+                    } else {
+                      box.checked = !on;
+                      $("friendMsg").className = "msg bad";
+                      $("friendMsg").textContent = "Couldn't save that — the \"radioCrew\" rule may be missing.";
+                    }
+                  });
+              };
+              row.appendChild(box);
+              el.appendChild(row);
+            });
+          });
+        })
+        .catch(function(){
+          el.innerHTML = '<p class="empty">Couldn\'t load your friends just now.</p>';
+        });
     }
 
     function writeAuthed(path, body, method){
