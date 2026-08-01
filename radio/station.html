@@ -184,7 +184,7 @@
               <button class="ctrlBtn" id="copyUid">📋 Copy</button>
             </div>
             <div class="ctrlRow" style="margin-top:14px;">
-              <button class="ctrlBtn" id="askBtn" hidden>🙋 Ask the owner for controls</button>
+              <a class="ctrlBtn" id="askBtn" href="/account.html" hidden style="text-decoration:none;">🙋 Add the owner as a friend</a>
               <button class="ctrlBtn" id="signOutBtn">Sign out</button>
             </div>
             <p class="msg" id="acctMsg"></p>
@@ -192,22 +192,18 @@
         </div>
       </section>
 
-      <!-- ══ OWNER: FRIENDS ══ -->
+      <!-- ══ OWNER ══ -->
       <section class="sec reveal" id="friendsSec" hidden>
         <div class="card stCard">
           <h3>Who can control this station</h3>
           <p style="color:var(--text-2);font-size:14px;line-height:1.75;">
-            You, always. Anyone you approve below gets skip, pause and “play this next” —
-            but never the power to take the station off air.
+            You, always — plus your friends here on Mayflower Studios. They get skip, pause and
+            “play this next”, but never the power to take the station off air. It's the same
+            friends list as everywhere else on the site, so adding or removing someone there
+            changes this at the same moment.
           </p>
-
-          <h3 style="margin-top:20px;font-size:15px;">Waiting to be approved</h3>
-          <div id="askList"><p class="empty">Nobody's asked.</p></div>
-
-          <h3 style="margin-top:20px;font-size:15px;">Approved</h3>
-          <div id="friendList"><p class="empty">Just you so far.</p></div>
-
-          <div class="ctrlRow" style="margin-top:18px;">
+          <div class="ctrlRow" style="margin-top:16px;">
+            <a class="ctrlBtn" href="/account.html" style="text-decoration:none;">👥 Manage friends</a>
             <button class="ctrlBtn danger" id="unlinkBtn">Unlink this station from my account</button>
           </div>
           <p class="msg" id="friendMsg"></p>
@@ -258,9 +254,13 @@
         .catch(function(){ return null; });
     }
     function esc(s){ return encodeURIComponent(s); }
+    // m:ss under an hour, h:mm:ss over it — long mixes and full albums are
+    // common on a station, and "126:04" reads as a mistake even though it adds up.
     function mmss(s){
       s = Math.max(0, Math.floor(s || 0));
-      return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2);
+      var h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60);
+      var ss = ("0" + (s % 60)).slice(-2);
+      return h > 0 ? h + ":" + ("0" + m).slice(-2) + ":" + ss : m + ":" + ss;
     }
     function fill(el, items, render){
       el.innerHTML = "";
@@ -417,7 +417,7 @@
 
       $("ctrlWho").textContent = amOwner
         ? "This station is linked to your account."
-        : "The owner has approved you to help drive this station.";
+        : "You're friends with whoever runs this station, so you can help drive it.";
 
       $("cStop").hidden = !amOwner;
       $("cStart").hidden = !amOwner;
@@ -429,7 +429,6 @@
       }
 
       updateListen();
-      if (amOwner) loadFriends();
       loadRequests();
     }
 
@@ -453,67 +452,16 @@
       });
     }
 
-    // A friend only knows they're approved by successfully reading their own
-    // entry — the list itself is the owner's to see.
+    // Friendship is the site's own — the same list account.html manages. No
+    // separate radio list to approve into, and unfriending someone takes their
+    // controls away at the same moment.
     function checkFriend(){
-      if (!me) { amFriend = false; return Promise.resolve(); }
-      return authed("radioFriends/" + esc(sid) + "/" + esc(me.uid)).then(function(f){
-        amFriend = !!f;
-      });
-    }
-
-    // ── owner: approvals ────────────────────────────────────────────────
-    function loadFriends(){
-      Promise.all([ authed("radioAsk/" + esc(sid)), authed("radioFriends/" + esc(sid)) ])
-        .then(function(res){
-          var asks = res[0] || {}, friends = res[1] || {};
-
-          var ae = $("askList"); ae.innerHTML = "";
-          var keys = Object.keys(asks);
-          if (!keys.length) ae.innerHTML = '<p class="empty">Nobody\'s asked.</p>';
-          keys.forEach(function(uid){
-            var a = asks[uid] || {};
-            var d = document.createElement("div"); d.className = "askRow";
-            var s = document.createElement("span"); s.textContent = (a.name || "Someone") + (a.email ? " · " + a.email : "");
-            d.appendChild(s);
-            var wrap = document.createElement("span");
-            var ok = document.createElement("button");
-            ok.className = "ctrlBtn"; ok.style.padding = "4px 10px"; ok.style.fontSize = "12.5px";
-            ok.textContent = "Approve";
-            ok.onclick = function(){ approve(uid, a); };
-            var no = document.createElement("button");
-            no.className = "ctrlBtn danger"; no.style.padding = "4px 10px";
-            no.style.fontSize = "12.5px"; no.style.marginLeft = "6px";
-            no.textContent = "Ignore";
-            no.onclick = function(){ writeAuthed("radioAsk/" + esc(sid) + "/" + esc(uid), null, "DELETE").then(loadFriends); };
-            wrap.appendChild(ok); wrap.appendChild(no);
-            d.appendChild(wrap);
-            ae.appendChild(d);
-          });
-
-          var fe = $("friendList"); fe.innerHTML = "";
-          var fk = Object.keys(friends);
-          if (!fk.length) fe.innerHTML = '<p class="empty">Just you so far.</p>';
-          fk.forEach(function(uid){
-            var f = friends[uid] || {};
-            var d = document.createElement("div"); d.className = "askRow";
-            var s = document.createElement("span"); s.textContent = (f.name || "Someone") + (f.email ? " · " + f.email : "");
-            d.appendChild(s);
-            var no = document.createElement("button");
-            no.className = "ctrlBtn danger"; no.style.padding = "4px 10px"; no.style.fontSize = "12.5px";
-            no.textContent = "Remove";
-            no.onclick = function(){ writeAuthed("radioFriends/" + esc(sid) + "/" + esc(uid), null, "DELETE").then(loadFriends); };
-            d.appendChild(no);
-            fe.appendChild(d);
-          });
-        });
-    }
-
-    function approve(uid, a){
-      writeAuthed("radioFriends/" + esc(sid) + "/" + esc(uid),
-        { name: a.name || "", email: a.email || "", at: Date.now() }, "PUT")
-        .then(function(){ return writeAuthed("radioAsk/" + esc(sid) + "/" + esc(uid), null, "DELETE"); })
-        .then(loadFriends);
+      amFriend = false;
+      if (!me || !owner || owner === me.uid) return Promise.resolve();
+      if (!window.MFAuth || !MFAuth.areFriends) return Promise.resolve();
+      return MFAuth.areFriends(owner)
+        .then(function(yes){ amFriend = !!yes; })
+        .catch(function(){ amFriend = false; });
     }
 
     function writeAuthed(path, body, method){
@@ -588,14 +536,6 @@
         $("acctMsg").className = "msg good";
         $("acctMsg").textContent = "Copied. Paste it into Mayflower Radio → Settings → Stations.";
       } catch(_){}
-    };
-    $("askBtn").onclick = function(){
-      writeAuthed("radioAsk/" + esc(sid) + "/" + esc(me.uid), {
-        name: (window.MFAuth && MFAuth.name()) || "", email: me.email || "", at: Date.now(),
-      }, "PUT").then(function(){
-        $("acctMsg").className = "msg good";
-        $("acctMsg").textContent = "Asked. The owner sees it on this page next time they open it.";
-      });
     };
     $("unlinkBtn").onclick = function(){
       if (!confirm("Unlink this station from your account?\n\nIts controls disappear for everyone until it's linked again from the app.")) return;

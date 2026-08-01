@@ -21,26 +21,6 @@ anything". The app says so out loud rather than sitting there quietly.
       }
     },
 
-    "radioFriends": {
-      "$sid": {
-        ".read": "auth != null && auth.uid === root.child('radioOwner').child($sid).child('uid').val()",
-        "$uid": {
-          ".read": "auth != null && auth.uid === $uid",
-          ".write": "auth != null && auth.uid === root.child('radioOwner').child($sid).child('uid').val()"
-        }
-      }
-    },
-
-    "radioAsk": {
-      "$sid": {
-        ".read": "auth != null && auth.uid === root.child('radioOwner').child($sid).child('uid').val()",
-        "$uid": {
-          ".read": "auth != null && auth.uid === $uid",
-          ".write": "auth != null && (auth.uid === $uid || auth.uid === root.child('radioOwner').child($sid).child('uid').val())"
-        }
-      }
-    },
-
     "radioNow": {
       "$sid": {
         ".read": true,
@@ -59,7 +39,7 @@ anything". The app says so out loud rather than sitting there quietly.
       "$sid": {
         ".read": true,
         "$cmd": {
-          ".write": "!newData.exists() || (auth != null && newData.child('by').val() === auth.uid && (auth.uid === root.child('radioOwner').child($sid).child('uid').val() || (root.child('radioFriends').child($sid).child(auth.uid).exists() && newData.child('cmd').val() !== 'stop' && newData.child('cmd').val() !== 'start')))",
+          ".write": "!newData.exists() || (auth != null && newData.child('by').val() === auth.uid && (auth.uid === root.child('radioOwner').child($sid).child('uid').val() || (root.child('friends').child(root.child('radioOwner').child($sid).child('uid').val()).child(auth.uid).exists() && newData.child('cmd').val() !== 'stop' && newData.child('cmd').val() !== 'start')))",
           ".validate": "newData.hasChildren(['cmd','by','at']) && newData.child('cmd').isString() && newData.child('cmd').val().length < 20 && newData.child('arg').val().length < 300"
         }
       }
@@ -70,16 +50,14 @@ Why each one is shaped like that
 --------------------------------
 
 radioOwner — who a station belongs to. Writable while nobody owns it, which is
-how the app claims it when you paste your account ID in. After that only the
-signed-in owner can change or clear it, from the station page. That means a
-station can't be quietly taken over, and unlinking is always your call.
+how the app claims it the first time you sign in. After that only the signed-in
+owner can change or clear it. A station can't be quietly taken over.
 
-radioFriends — who you've approved. Only you can add or remove. A friend can
-read their own entry and nothing else, which is how the station page knows to
-show them the controls without handing anyone your list of friends' emails.
-
-radioAsk — someone asking you for controls. They can write their own entry and
-you can read the lot; nobody can read anyone else's.
+Friends — there is no radio-specific friends list. A station uses the site's
+existing one at /friends/<owner>/<visitor>, the same one account.html manages
+with requests and accepting. Your friends are your station's friends, there's
+only one list to keep straight, and unfriending someone takes their controls
+away in the same moment.
 
 radioNow — what's playing, for the page to show. Public on purpose, and it
 carries no address: the station id is enough to see a track list, and that's
