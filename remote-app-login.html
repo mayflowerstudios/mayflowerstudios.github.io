@@ -16,11 +16,11 @@
 <body>
   <main class="card">
     <div class="flower">🌸</div>
-    <h1>Sign in to Mayflower Remote</h1>
+    <h1 id="head">Sign in to Mayflower Remote</h1>
     <p class="sub">Use the same Google account you use on mayflowerstudios.net.</p>
     <button id="google">Continue with Google</button>
     <p class="status" id="status">Your encrypted sign-in will be sent to Mayflower Remote through Firebase.</p>
-    <p class="tiny">Keep Mayflower Remote open until it confirms the sign-in.</p>
+    <p class="tiny" id="tiny">Keep Mayflower Remote open until it confirms the sign-in.</p>
   </main>
 
 <script type="module">
@@ -46,12 +46,32 @@ const state = query.get("state") || fragment.get("state") || "";
 const keyText = query.get("key") || fragment.get("key") || "";
 const status = document.getElementById("status");
 const button = document.getElementById("google");
+
+// Mayflower Radio signs in through this same page and the same one-time
+// handoff. Only the wording changes — everything below is shared, so there's
+// one sign-in path to keep working rather than two.
+const APPS = {
+  radio: {
+    head: "Sign in to Mayflower Radio",
+    status: "Your encrypted sign-in will be sent to Mayflower Radio through Firebase.",
+    tiny: "Keep Mayflower Radio open until it confirms the sign-in.",
+  },
+};
+const which = APPS[(query.get("app") || "").toLowerCase()];
+if (which) {
+  document.getElementById("head").textContent = which.head;
+  document.getElementById("status").textContent = which.status;
+  document.getElementById("tiny").textContent = which.tiny;
+  document.title = which.head;
+}
+
 const valid = /^[a-f0-9]{64}$/.test(state) && /^[A-Za-z0-9_-]{40,48}$/.test(keyText);
 history.replaceState(null, "", location.pathname);
 
 if (!valid) {
   button.disabled = true;
-  status.textContent = "This sign-in link is invalid. Open Google sign-in again from Mayflower Remote.";
+  status.textContent = "This sign-in link is invalid. Open Google sign-in again from "
+    + (which ? "Mayflower Radio" : "Mayflower Remote") + ".";
 }
 
 const app = initializeApp(cfg);
@@ -105,7 +125,9 @@ button.addEventListener("click", async () => {
       expiresAt: now + 5 * 60 * 1000
     });
 
-    status.textContent = "Signed in! Return to Mayflower Remote — the app is finishing now.";
+    status.textContent = which
+      ? "Signed in! Return to Mayflower Radio — the app is finishing now."
+      : "Signed in! Return to Mayflower Remote — the app is finishing now.";
     button.textContent = "Sign-in sent ✓";
   } catch (err) {
     const code = err && err.code || "";
