@@ -164,7 +164,8 @@
         <div class="card stCard" id="acctCard">
           <h3 id="acctHead">Sign in</h3>
           <p style="color:var(--text-2);font-size:14px;line-height:1.75;" id="acctBlurb">
-            Sign in to ask the owner for controls — or, if this station is yours, to drive it from here.
+            Sign in with the same account you use in Mayflower Radio, and if this station is yours —
+            or its owner has picked you to help — the controls appear here.
           </p>
           <div class="ctrlRow" id="signedOutRow">
             <button class="ctrlBtn" id="gBtn">Continue with Google</button>
@@ -175,16 +176,7 @@
             <p style="color:var(--text-2);font-size:14px;">
               Signed in as <b id="whoName">you</b>.
             </p>
-            <p style="color:var(--text-3);font-size:13px;margin-top:12px;">
-              Your account ID — paste this into Mayflower Radio, under Settings → Stations,
-              to link a station you own to this account:
-            </p>
-            <div class="idBox">
-              <span class="idVal" id="myUid">—</span>
-              <button class="ctrlBtn" id="copyUid">📋 Copy</button>
-            </div>
             <div class="ctrlRow" style="margin-top:14px;">
-              <a class="ctrlBtn" id="askBtn" href="/account.html" hidden style="text-decoration:none;">🙋 Add the owner as a friend</a>
               <button class="ctrlBtn" id="signOutBtn">Sign out</button>
             </div>
             <p class="msg" id="acctMsg"></p>
@@ -405,15 +397,12 @@
       $("signedInRow").hidden = !signedIn;
       $("acctHead").textContent = signedIn ? "Your account" : "Sign in";
 
-      if (signedIn){
+      if (signedIn)
         $("whoName").textContent = (window.MFAuth && MFAuth.name()) || me.email || "you";
-        $("myUid").textContent = me.uid;
-      }
 
       amOwner = !!(signedIn && owner && owner === me.uid);
       $("controlsSec").hidden = !(amOwner || amFriend);
       $("friendsSec").hidden = !amOwner;
-      $("askBtn").hidden = !(signedIn && !amOwner && !amFriend && owner);
 
       $("ctrlWho").textContent = amOwner
         ? "This station is linked to your account."
@@ -601,13 +590,6 @@
       });
     };
     $("signOutBtn").onclick = function(){ if (window.MFAuth) MFAuth.signOut(); };
-    $("copyUid").onclick = function(){
-      try {
-        navigator.clipboard.writeText(me ? me.uid : "");
-        $("acctMsg").className = "msg good";
-        $("acctMsg").textContent = "Copied. Paste it into Mayflower Radio → Settings → Stations.";
-      } catch(_){}
-    };
     $("unlinkBtn").onclick = function(){
       if (!confirm("Unlink this station from your account?\n\nIts controls disappear for everyone until it's linked again from the app.")) return;
       writeAuthed("radioOwner/" + esc(sid), null, "DELETE").then(function(){
