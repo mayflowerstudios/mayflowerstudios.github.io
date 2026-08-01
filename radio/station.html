@@ -456,11 +456,16 @@
 
       $("playBtn").hidden = !https;
       $("volRow").hidden = !https;
-      $("listenBtn").hidden = !!https || !out;
 
-      if (!https && out){
+      // The link out stays available even when the stream plays here — it's the
+      // way through if playback won't start, and the station's own page has the
+      // like button and requests on it.
+      $("listenBtn").hidden = !out;
+      if (out){
         var btn = $("listenBtn");
         btn.href = out; btn.target = "_blank"; btn.rel = "noopener";
+        btn.className = https ? "btn-ghost" : "btn-pri";
+        btn.textContent = https ? "↗ Open the station's own page" : "▶ Listen";
       }
       // The stream moved (the tunnel restarts with a new address) — pick it up
       // without making anyone hunt for the play button again.
