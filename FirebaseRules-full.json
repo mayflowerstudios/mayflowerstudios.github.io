@@ -699,6 +699,12 @@
         "listeners": {
           ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000"
         },
+        "stream": {
+          ".validate": "newData.isString() && newData.val().length <= 200 && (newData.val().length == 0 || newData.val().beginsWith('https://'))"
+        },
+        "page": {
+          ".validate": "newData.isString() && newData.val().length <= 200 && (newData.val().length == 0 || newData.val().beginsWith('https://'))"
+        },
         "upNext": {
           "$i": {
             ".validate": "newData.isString() && newData.val().length <= 200"
