@@ -736,6 +736,24 @@
         }
       }
     },
+    "radioLibrary": {
+      ".read": true,
+      "$stationId": {
+        ".write": "$stationId.matches(/^[a-f0-9]{8,32}$/)",
+        ".validate": "!newData.exists() || newData.hasChild('at')",
+        "songs": {
+          "$i": {
+            ".validate": "newData.isString() && newData.val().length <= 200"
+          }
+        },
+        "at": {
+          ".validate": "newData.isNumber()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
     "radioCrew": {
       "$stationId": {
         ".read": "auth != null && auth.uid === root.child('radioOwner').child($stationId).child('uid').val()",

@@ -72,6 +72,16 @@
       color: var(--text); font-size: 14px; font-family: inherit; }
     .searchRow input:focus { outline: none; border-color: rgba(249,168,212,.45); }
 
+    .songHits { margin-top: 10px; max-height: 260px; overflow-y: auto; }
+    .songHit { display: flex; justify-content: space-between; align-items: center; gap: 12px;
+      width: 100%; text-align: left; padding: 9px 12px; border-radius: var(--r-sm);
+      border: 1px solid transparent; background: transparent; color: var(--text);
+      font: inherit; font-size: 14px; cursor: pointer; }
+    .songHit:hover { border-color: rgba(249,168,212,.35); background: rgba(255,255,255,.05); }
+    .songHit span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .songHit .go { color: var(--rose); font-size: 12.5px; white-space: nowrap; opacity: 0; }
+    .songHit:hover .go { opacity: 1; }
+
     .msg { font-size: 13.5px; color: var(--text-2); margin-top: 10px; min-height: 1.2em; }
     .msg.bad { color: #fca5a5; }
     .msg.good { color: var(--emerald); }
@@ -122,9 +132,9 @@
           </div>
 
           <div class="searchRow">
-            <input id="songBox" type="text" placeholder="Play a song next — type its exact title" />
-            <button class="ctrlBtn" id="cPlayNext">Play next</button>
+            <input id="songBox" type="text" placeholder="Play a song next — start typing to find it" autocomplete="off" />
           </div>
+          <div id="songHits" class="songHits"></div>
           <p class="msg" id="ctrlMsg"></p>
         </div>
       </section>
@@ -420,6 +430,7 @@
       updateListen();
       loadRequests();
       loadCrew();
+      loadLibrary();
     }
 
     // The Listen button. A public listing carries the address already; for an
@@ -573,13 +584,54 @@
     $("cPause").onclick = function(){ send(now && now.paused ? "resume" : "pause"); };
     $("cStop").onclick  = function(){ send("stop"); };
     $("cStart").onclick = function(){ send("start"); };
-    $("cPlayNext").onclick = function(){
-      var t = $("songBox").value.trim();
-      if (!t) return;
-      send("playnext", t);
-      $("songBox").value = "";
-    };
-    $("songBox").addEventListener("keydown", function(e){ if (e.key === "Enter") $("cPlayNext").click(); });
+    // ── the song picker ─────────────────────────────────────────────────
+    // The station publishes what it can play, so this is a list to choose
+    // from rather than a title you have to spell exactly right.
+    var library = null;
+
+    function loadLibrary(){
+      if (!(amOwner || amFriend) || library) return;
+      get("radioLibrary/" + esc(sid)).then(function(j){
+        library = (j && j.songs) || [];
+        showHits();
+      });
+    }
+
+    function showHits(){
+      var el = $("songHits"), q = $("songBox").value.trim().toLowerCase();
+      el.innerHTML = "";
+      if (!library){ return; }
+      if (!library.length){
+        el.innerHTML = '<p class="empty">This station hasn\'t sent its song list yet.</p>';
+        return;
+      }
+      if (!q) return;
+
+      var hits = [];
+      for (var i = 0; i < library.length && hits.length < 25; i++)
+        if (String(library[i]).toLowerCase().indexOf(q) !== -1) hits.push(library[i]);
+
+      if (!hits.length){
+        el.innerHTML = '<p class="empty">Nothing matching “' + q.replace(/[<>&]/g, "") + '”.</p>';
+        return;
+      }
+      hits.forEach(function(title){
+        var b = document.createElement("button");
+        b.className = "songHit";
+        var t = document.createElement("span"); t.textContent = title;
+        var g = document.createElement("span"); g.className = "go"; g.textContent = "play next →";
+        b.appendChild(t); b.appendChild(g);
+        b.onclick = function(){
+          send("playnext", title);
+          $("songBox").value = "";
+          showHits();
+        };
+        el.appendChild(b);
+      });
+    }
+
+    $("songBox").addEventListener("input", showHits);
+    $("songBox").addEventListener("focus", loadLibrary);
 
     // ── account ─────────────────────────────────────────────────────────
     $("gBtn").onclick = function(){
