@@ -1,9 +1,9 @@
 {
   "name": "Mayflower Craft Planner",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "codename": "Shared Book",
   "platform": "Windows",
-  "file": "/downloads/MayflowerCraftPlanner_v1.3.1.exe",
+  "file": "/downloads/MayflowerCraftPlanner_v1.3.2.exe",
   "size": "Single EXE",
-  "notes": "Deleting a recipe now sticks: it used to come straight back from the shared list. Shows what the crafting costs in eons, plans several items at once, and shares recipes on its own."
+  "notes": "Adding a recipe now clears the form for the next one, so typing a second recipe no longer replaces the first. The button says Add or Save depending on which it will do."
 }

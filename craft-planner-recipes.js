@@ -50,7 +50,7 @@
     const many = item.ways.length > 1
       ? `<span class="rCount">${item.ways.length} ways</span>` : "";
     return `<div class="rItem">
-      <h3>${esc(item.name)}${many}</h3>
+      <h3><span class="rName" title="${esc(item.name)}">${esc(item.name)}</span>${many}</h3>
       <ul class="rWays">${item.ways.map(wayHtml).join("")}</ul>
     </div>`;
   }
