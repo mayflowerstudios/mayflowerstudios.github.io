@@ -574,6 +574,30 @@
         }
       }
     },
+    "craftRecipes": {
+      ".read": true,
+      ".indexOn": ["output"],
+      "$recipeId": {
+        ".write": "$recipeId.matches(/^[a-f0-9]{32}$/) && newData.exists()",
+        ".validate": "newData.hasChildren(['output','makes','needs','at'])",
+        "output": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
+        },
+        "makes": {
+          ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 9999"
+        },
+        "needs": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 300"
+        },
+        "where": {
+          ".validate": "newData.isString() && newData.val().length <= 60"
+        },
+        "at": {
+          ".validate": "newData.isNumber() && newData.val() >= 1600000000000 && newData.val() <= now + 86400000"
+        },
+        "$other": { ".validate": false }
+      }
+    },
     "leaderboards": {
       "mayflowerIdleRPG": {
         "entries": {

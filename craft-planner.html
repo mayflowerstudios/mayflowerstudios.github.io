@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Craft Planner for Endless Online • Mayflower Studios</title>
+  <link rel="stylesheet" href="/style.css?v=34" />
+  <meta name="description" content="Work out every raw material behind an Endless Online craft. Keeps all the alternative recipes for an item, takes off what you already have, and shares one recipe book with everyone using it." />
+  <meta property="og:title" content="Craft Planner for Endless Online • Mayflower Studios" />
+  <meta property="og:description" content="Pick an item, say how many, and get the ore. Alternative recipes, leftovers, and a recipe book everyone adds to." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://mayflowerstudios.net/craft-planner.html" />
+  <meta property="og:image" content="https://mayflowerstudios.net/assets/og/projects.png?v=2" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Craft Planner for Endless Online" />
+  <meta name="twitter:description" content="Every raw material behind a craft, with alternative recipes and a shared recipe book." />
+  <meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/projects.png?v=2" />
+  <link rel="canonical" href="https://mayflowerstudios.net/craft-planner.html" />
+  <style>
+    .feature, .howto { display: flex; flex-direction: column; gap: 6px; }
+    .feature .badge {
+      align-self: flex-start; font-size: 10.5px; padding: 2px 9px; border-radius: 999px;
+      background: rgba(196,181,253,.18); border: 1px solid rgba(196,181,253,.3);
+    }
+    .codebox-pre {
+      white-space: pre-wrap; font-family: var(--font-m); font-size: 12.5px;
+      background: rgba(0,0,0,.32); border: 1px solid var(--border-2);
+      border-radius: var(--r-sm); padding: 12px 14px; overflow-x: auto; line-height: 1.5;
+    }
+    .backLink { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; opacity: .75; text-decoration: none; color: inherit; margin-bottom: 4px; }
+    .backLink:hover { opacity: 1; }
+    .modIdentity { display:flex; align-items:center; gap:14px; }
+    .modIdentity img { width:64px; height:64px; border-radius:14px; border:1px solid var(--border-2); }
+    .compat { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+    .compat span { font-size:12px; padding:5px 10px; border-radius:999px; border:1px solid var(--border-2); background:var(--glass); }
+
+    /* the shared recipe list */
+    .recipeBar { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; margin-bottom:14px; }
+    #recipeSearch {
+      flex:1 1 240px; min-width:200px; font-family:var(--font-b); font-size:14px; color:var(--text);
+      background:rgba(0,0,0,.28); border:1px solid var(--border-2); border-radius:var(--r-sm); padding:10px 13px;
+    }
+    #recipeSearch:focus { outline:none; border-color:var(--rose); }
+    #recipeStatus { font-size:12.5px; color:var(--text-3); font-family:var(--font-m); }
+    #recipeList { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:12px; }
+    .rItem { background:var(--glass-2); border:1px solid var(--border); border-radius:var(--r-sm); padding:12px 14px; }
+    .rItem h3 { margin:0 0 8px; font-size:15px; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+    .rCount { font-size:10.5px; padding:2px 8px; border-radius:999px; color:var(--violet);
+              background:rgba(196,181,253,.16); border:1px solid rgba(196,181,253,.28); }
+    .rWays { margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:6px; }
+    .rWays li { font-size:13px; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+    .rNeeds { font-family:var(--font-m); font-size:12.5px; color:var(--text-2); }
+    .rMakes, .rWhere { font-size:11px; color:var(--text-3); }
+  </style>
+</head>
+<body data-nav="projects">
+  <div class="wrap">
+    <div id="site-nav"></div>
+
+    <main>
+      <a class="backLink" href="/projects.html">← All projects</a>
+
+      <section class="hero">
+        <div>
+          <p class="kicker">Endless Online Tool</p>
+          <div class="modIdentity">
+            <img src="/assets/icons/craftplanner.png" alt="Craft Planner icon" />
+            <h1>⚒️ Craft Planner</h1>
+          </div>
+          <p class="muted">Pick an item, say how many you want, and see every raw material it takes — through as many crafting steps as it needs.</p>
+          <div class="compat">
+            <span>Windows</span>
+            <span>Version 1.1.0</span>
+            <span>Single EXE, nothing to install</span>
+            <span>English &amp; Português</span>
+            <span>1373 item names</span>
+          </div>
+          <div class="ctaRow">
+            <a class="btn primary" href="/downloads/MayflowerCraftPlanner_v1.1.0.exe" download>⬇ Download Craft Planner</a>
+            <a class="btn ghost" href="#recipes">📖 The shared recipes</a>
+            <a class="btn ghost" href="/projects.html">⬅ Back to Projects</a>
+          </div>
+        </div>
+        <div class="tileGrid">
+          <div class="tile"><h3>⛏️ Down to the ore</h3><p>A sword that needs two iron bars comes back as eight iron ore, however deep the chain goes.</p></div>
+          <div class="tile"><h3>🧵 Every alternative</h3><p>String from webs, jute, cotton or silk — keep all four and switch between them in one click.</p></div>
+          <div class="tile"><h3>🏦 What you already have</h3><p>Tell it what is in the bank and it takes that off the list before it asks you to go mining.</p></div>
+          <div class="tile"><h3>🌍 One shared book</h3><p>Recipes anyone shares arrive in everyone else's copy the next time they open it.</p></div>
+        </div>
+      </section>
+
+      <div class="sectionTitle"><h2>📝 What it does</h2><span>The whole chain, added up</span></div>
+      <section class="card">
+        <p class="desc"><strong>Craft Planner</strong> answers one question properly: what do I actually need to go and get. Choose the item, choose how many, and it follows every recipe down to the things nothing else makes, then adds them all up.</p>
+        <p class="desc">Adding up matters more than it sounds. When two branches of a craft both want the same ingredient, and the recipe for it makes more than one at a time, rounding each branch on its own asks you for more than you need. Everything is totalled across the whole tree first and only then turned into whole crafts, so the numbers are the smallest ones that really work — and the spare that comes out at the end is listed too.</p>
+        <p class="desc">Item names are read from your own Endless Online folder, so they stay right after a game update. A copy is built into the app for anyone who has the game somewhere unusual.</p>
+        <p class="desc">The recipes themselves are not in the game files — the server sends them when you open a craft NPC — so they are typed in. That is why they are shared: once one person writes a recipe down, nobody else has to.</p>
+      </section>
+
+      <div class="sectionTitle"><h2>⭐ Features</h2><span>Everything included</span></div>
+      <section class="grid2">
+        <div class="card feature">
+          <span class="badge">Planning</span>
+          <h3>⛏️ Raw materials, not the next step</h3>
+          <p class="muted">The answer is the shopping list, with the crafting order underneath it.</p>
+          <ul class="muted small" style="margin:4px 0 0;padding-left:18px;">
+            <li>Follows every recipe to the bottom</li>
+            <li>Crafts listed deepest first</li>
+            <li>A breakdown tree beside it</li>
+            <li>Copy the list to paste into chat</li>
+          </ul>
+        </div>
+        <div class="card feature">
+          <span class="badge">Alternatives</span>
+          <h3>🧵 More than one way</h3>
+          <p class="muted">An item can be made several ways, and each is kept.</p>
+          <ul class="muted small" style="margin:4px 0 0;padding-left:18px;">
+            <li>Switch on the craft step itself</li>
+            <li>Your choice is remembered</li>
+            <li>The whole plan follows it</li>
+          </ul>
+        </div>
+        <div class="card feature">
+          <span class="badge">Bank</span>
+          <h3>🏦 What you already have</h3>
+          <p class="muted">Half-finished materials count toward the total.</p>
+          <ul class="muted small" style="margin:4px 0 0;padding-left:18px;">
+            <li>Anything in the bank is taken off</li>
+            <li>Crafts you no longer need disappear</li>
+            <li>Switch it off to see the full cost</li>
+          </ul>
+        </div>
+        <div class="card feature">
+          <span class="badge">Shared</span>
+          <h3>🌍 One recipe book</h3>
+          <p class="muted">Recipes are shared, so the list gets better on its own.</p>
+          <ul class="muted small" style="margin:4px 0 0;padding-left:18px;">
+            <li>New ones arrive when you open the app</li>
+            <li>Share yours with one button</li>
+            <li>Identical recipes never double up</li>
+            <li>Turn it off and stay local</li>
+          </ul>
+        </div>
+        <div class="card feature">
+          <span class="badge">Typing</span>
+          <h3>⌨️ Fast to fill in</h3>
+          <p class="muted">Item names complete as you type, or paste a whole batch at once.</p>
+          <ul class="muted small" style="margin:4px 0 0;padding-left:18px;">
+            <li><span style="font-family:var(--font-m)">Bread x3 = 2 Flour, 1 Water</span></li>
+            <li>Save the book to a file, or open one</li>
+            <li>Note which NPC does the crafting</li>
+          </ul>
+        </div>
+        <div class="card feature">
+          <span class="badge">Upkeep</span>
+          <h3>🔄 Keeps itself current</h3>
+          <p class="muted">No reinstalling to get the next version.</p>
+          <ul class="muted small" style="margin:4px 0 0;padding-left:18px;">
+            <li>Tells you when a new one is out</li>
+            <li>Updates itself in one click</li>
+            <li>Item names refresh from the game</li>
+          </ul>
+        </div>
+      </section>
+
+      <div class="sectionTitle" id="recipes"><h2>📖 The shared recipes</h2><span>Live from the app</span></div>
+      <section class="card">
+        <div class="recipeBar">
+          <input id="recipeSearch" type="search" placeholder="Search an item or an ingredient" aria-label="Search recipes" />
+          <span id="recipeStatus">Loading…</span>
+        </div>
+        <div id="recipeList"><p class="muted">Loading…</p></div>
+      </section>
+
+      <div class="sectionTitle" id="install"><h2>📥 Getting started</h2><span>One file, no installer</span></div>
+      <section class="card">
+        <div class="callout">
+          <strong>Nothing to install</strong>
+          <p class="muted small" style="margin:6px 0 0;">One Windows file that runs on its own — no .NET, no setup, no extra files beside it. Put it wherever you like.</p>
+        </div>
+        <pre class="codebox-pre" style="margin-top:12px;">1) Download MayflowerCraftPlanner_v1.1.0.exe
+2) Put it somewhere you can find it again
+3) Open it and pick an item on the left
+4) No recipe yet? It offers to add one
+
+Recipes you have are kept in
+  %AppData%\MayflowerCraftPlanner\recipes.json</pre>
+        <div class="ctaRow">
+          <a class="btn primary" href="/downloads/MayflowerCraftPlanner_v1.1.0.exe" download>⬇ Download Version 1.1.0</a>
+        </div>
+      </section>
+    </main>
+
+    <div id="site-footer"></div>
+  </div>
+
+  <script src="/shared.js?v=34"></script>
+  <script src="/fireflies.js"></script>
+  <script src="/craft-planner-recipes.js"></script>
+</body>
+</html>

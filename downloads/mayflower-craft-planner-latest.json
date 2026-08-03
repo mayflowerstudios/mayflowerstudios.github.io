@@ -1,0 +1,9 @@
+{
+  "name": "Mayflower Craft Planner",
+  "version": "1.1.0",
+  "codename": "Shared Book",
+  "platform": "Windows",
+  "file": "/downloads/MayflowerCraftPlanner_v1.1.0.exe",
+  "size": "Single EXE",
+  "notes": "Works out the raw materials behind any Endless Online craft, keeps every alternative recipe, and shares the recipe book with everyone else using it."
+}
