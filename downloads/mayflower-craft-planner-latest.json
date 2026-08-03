@@ -1,9 +1,9 @@
 {
   "name": "Mayflower Craft Planner",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "codename": "Shared Book",
   "platform": "Windows",
-  "file": "/downloads/MayflowerCraftPlanner_v1.4.0.exe",
+  "file": "/downloads/MayflowerCraftPlanner_v1.5.0.exe",
   "size": "Single EXE",
-  "notes": "Deleting a recipe now takes it off the shared list as well, so the website and everyone else lose it too. New icon, and a changelog on the website."
+  "notes": "The game's own item pictures throughout, npc and place names picked from the game's lists rather than typed, and clicking anything on the shopping list tells you where it comes from."
 }
