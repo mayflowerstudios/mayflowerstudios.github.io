@@ -1,9 +1,9 @@
 {
   "name": "Mayflower Craft Planner",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "codename": "Shared Book",
   "platform": "Windows",
-  "file": "/downloads/MayflowerCraftPlanner_v1.5.0.exe",
+  "file": "/downloads/MayflowerCraftPlanner_v1.6.0.exe",
   "size": "Single EXE",
-  "notes": "The game's own item pictures throughout, npc and place names picked from the game's lists rather than typed, and clicking anything on the shopping list tells you where it comes from."
+  "notes": "Where to get it now answers that question: say where a material comes from and everyone else gets it. Places and npcs you type are remembered and offered from then on."
 }

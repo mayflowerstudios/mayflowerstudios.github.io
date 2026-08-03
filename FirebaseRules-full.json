@@ -601,6 +601,23 @@
         "$other": { ".validate": false }
       }
     },
+    "craftSources": {
+      ".read": true,
+      "$sourceId": {
+        ".write": "$sourceId.matches(/^[a-f0-9]{32}$/)",
+        ".validate": "newData.hasChildren(['item','from','at'])",
+        "item": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
+        },
+        "from": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 120"
+        },
+        "at": {
+          ".validate": "newData.isNumber() && newData.val() >= 1600000000000 && newData.val() <= now + 86400000"
+        },
+        "$other": { ".validate": false }
+      }
+    },
     "leaderboards": {
       "mayflowerIdleRPG": {
         "entries": {
