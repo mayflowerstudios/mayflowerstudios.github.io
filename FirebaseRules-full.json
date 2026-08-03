@@ -592,6 +592,9 @@
         "where": {
           ".validate": "newData.isString() && newData.val().length <= 60"
         },
+        "cost": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000000"
+        },
         "at": {
           ".validate": "newData.isNumber() && newData.val() >= 1600000000000 && newData.val() <= now + 86400000"
         },

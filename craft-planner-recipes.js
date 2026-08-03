@@ -32,6 +32,7 @@
       byName.get(key).ways.push({
         needs: needs,
         makes: Number(e.makes) > 1 ? Number(e.makes) : 1,
+        cost: Number(e.cost) > 0 ? Number(e.cost) : 0,
         where: typeof e.where === "string" ? e.where.trim() : ""
       });
     });
@@ -40,8 +41,9 @@
 
   function wayHtml(way) {
     const makes = way.makes > 1 ? `<span class="rMakes">makes ${way.makes}</span>` : "";
+    const cost = way.cost ? `<span class="rCost">${way.cost.toLocaleString()} eons</span>` : "";
     const where = way.where ? `<span class="rWhere">${esc(way.where)}</span>` : "";
-    return `<li><span class="rNeeds">${esc(way.needs)}</span>${makes}${where}</li>`;
+    return `<li><span class="rNeeds">${esc(way.needs)}</span>${cost}${makes}${where}</li>`;
   }
 
   function itemHtml(item) {

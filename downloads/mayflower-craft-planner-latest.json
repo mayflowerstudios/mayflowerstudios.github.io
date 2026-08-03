@@ -1,9 +1,9 @@
 {
   "name": "Mayflower Craft Planner",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "codename": "Shared Book",
   "platform": "Windows",
-  "file": "/downloads/MayflowerCraftPlanner_v1.2.0.exe",
+  "file": "/downloads/MayflowerCraftPlanner_v1.3.0.exe",
   "size": "Single EXE",
-  "notes": "Plan several items at once and share the totals. Recipes you write down go up to the shared book on their own, and everyone else's come down while you play."
+  "notes": "Adds what the crafting costs in eons, on each step and as a total. Plan several items at once, and recipes share themselves with everyone using the app."
 }
