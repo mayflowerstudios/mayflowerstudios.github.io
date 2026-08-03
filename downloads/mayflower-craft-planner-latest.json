@@ -1,9 +1,9 @@
 {
   "name": "Mayflower Craft Planner",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "codename": "Shared Book",
   "platform": "Windows",
-  "file": "/downloads/MayflowerCraftPlanner_v1.7.0.exe",
+  "file": "/downloads/MayflowerCraftPlanner_v1.7.1.exe",
   "size": "Single EXE",
-  "notes": "A Where to find tab for everything you do not craft. Chop a tree, kill a sheep, buy from a shop, with a price. One thing can come from several, and it is all shared."
+  "notes": "Deleting where something comes from now clears it from the shared list as well. Entries written by an older version were filed under a different key, so removing them missed."
 }
