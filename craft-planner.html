@@ -34,57 +34,73 @@
     .compat { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
     .compat span { font-size:12px; padding:5px 10px; border-radius:999px; border:1px solid var(--border-2); background:var(--glass); }
 
-    /* the shared recipe list */
-    .recipeBar { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; margin-bottom:14px; }
-    #recipeSearch {
+    /* the planner */
+    .planBar { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; margin-bottom:14px; }
+    #planSearch {
       flex:1 1 240px; min-width:200px; font-family:var(--font-b); font-size:14px; color:var(--text);
       background:rgba(0,0,0,.28); border:1px solid var(--border-2); border-radius:var(--r-sm); padding:10px 13px;
     }
-    #recipeSearch:focus { outline:none; border-color:var(--rose); }
-    #recipeStatus { font-size:12.5px; color:var(--text-3); font-family:var(--font-m); white-space:nowrap; }
+    #planSearch:focus { outline:none; border-color:var(--rose); }
+    #planStatus { font-size:12.5px; color:var(--text-3); font-family:var(--font-m); }
 
-    /* The list grows with the shared book, so it scrolls inside the card
-       instead of running off the bottom of the page. */
-    #recipeList {
-      display:grid; grid-template-columns:repeat(auto-fill,minmax(236px,1fr));
-      gap:10px; align-content:start;
-      max-height:min(58vh, 540px); overflow-y:auto; overscroll-behavior:contain;
-      padding:2px 10px 2px 2px;
+    .planGrid { display:grid; grid-template-columns:minmax(180px,240px) 1fr; gap:18px; align-items:start; }
+    @media (max-width:760px) { .planGrid { grid-template-columns:1fr; } }
+
+    #planList {
+      display:flex; flex-direction:column; gap:4px;
+      max-height:min(52vh,460px); overflow-y:auto; padding-right:6px;
       scrollbar-width:thin; scrollbar-color:rgba(249,168,212,.28) transparent;
     }
-    #recipeList::-webkit-scrollbar { width:11px; }
-    #recipeList::-webkit-scrollbar-track { background:transparent; }
-    #recipeList::-webkit-scrollbar-thumb {
+    #planList::-webkit-scrollbar { width:10px; }
+    #planList::-webkit-scrollbar-thumb {
       background:rgba(249,168,212,.24); border-radius:999px;
       border:3px solid transparent; background-clip:content-box;
     }
-    #recipeList::-webkit-scrollbar-thumb:hover { background:rgba(249,168,212,.45); background-clip:content-box; }
-    #recipeList > p { grid-column:1 / -1; margin:0; }
+    .pItem {
+      text-align:left; font:inherit; font-size:13.5px; color:var(--text); cursor:pointer;
+      background:var(--glass-2); border:1px solid var(--border); border-radius:var(--r-sm);
+      padding:8px 11px; transition:border-color .16s var(--ease), background .16s var(--ease);
+    }
+    .pItem:hover { border-color:var(--rose); background:rgba(255,255,255,.06); }
 
-    .rItem {
-      background:var(--glass-2); border:1px solid var(--border);
-      border-radius:var(--r-sm); padding:11px 12px;
-      transition:border-color .18s var(--ease), background .18s var(--ease);
+    .pWanted { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:16px; }
+    .pChip {
+      display:inline-flex; align-items:center; gap:7px; font-size:13.5px;
+      background:rgba(249,168,212,.10); border:1px solid var(--border-2);
+      border-radius:999px; padding:4px 6px 4px 4px;
     }
-    .rItem:hover { border-color:var(--border-2); background:rgba(255,255,255,.055); }
-    .rItem h3 {
-      margin:0 0 8px; font-size:14px; font-weight:600; letter-spacing:.01em;
-      display:flex; align-items:center; justify-content:space-between; gap:8px;
+    .pChip b { min-width:18px; text-align:center; color:var(--gold); }
+    .pChipName { font-weight:600; }
+    .pChip button, .pClear {
+      font:inherit; cursor:pointer; color:var(--text-2); background:transparent;
+      border:none; border-radius:999px; width:22px; height:22px; line-height:1;
     }
-    .rName { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .rCount {
-      flex:none; font-size:10px; padding:2px 7px; border-radius:999px; color:var(--violet);
-      background:rgba(196,181,253,.16); border:1px solid rgba(196,181,253,.28);
+    .pChip button:hover { background:rgba(255,255,255,.10); color:var(--text); }
+    .pClear { width:auto; padding:4px 12px; font-size:12.5px; border:1px solid var(--border-2); }
+    .pClear:hover { color:var(--text); border-color:var(--rose); }
+
+    .pHead {
+      display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+      margin:0 0 8px; font-size:11px; font-weight:600; letter-spacing:.08em;
+      text-transform:uppercase; color:var(--text-3);
     }
-    /* One tile per way of making it, so alternatives read as separate options. */
-    .rWays { margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:5px; }
-    .rWays li {
-      background:rgba(0,0,0,.24); border-radius:8px; padding:6px 9px;
-      display:flex; align-items:baseline; gap:7px; flex-wrap:wrap; line-height:1.45;
+    .pEons { color:var(--gold); font-size:13px; letter-spacing:0; text-transform:none; }
+    .pNeed, .pSteps { list-style:none; margin:0 0 18px; padding:0; display:flex; flex-direction:column; gap:6px; }
+    .pNeed li, .pSteps li {
+      display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; line-height:1.5;
+      background:rgba(0,0,0,.22); border-radius:9px; padding:8px 11px; font-size:13.5px;
     }
-    .rNeeds { font-family:var(--font-m); font-size:12px; color:var(--text-2); }
-    .rMakes, .rWhere { font-size:10.5px; color:var(--text-3); }
-    .rCost { font-size:10.5px; color:var(--gold); white-space:nowrap; }
+    .pNeed li b { color:var(--gold); min-width:34px; text-align:right; }
+    .pName { font-weight:600; }
+    .pFrom { flex:1 1 100%; font-size:11.5px; color:var(--text-3); font-family:var(--font-m); }
+    .pAside { font-size:11.5px; color:var(--text-3); margin-left:auto; }
+    .pWay {
+      font:inherit; font-size:12px; color:var(--text); margin-left:auto;
+      background:rgba(0,0,0,.35); border:1px solid var(--border-2);
+      border-radius:8px; padding:3px 7px; max-width:250px;
+    }
+    .pWarn { font-size:13px; color:var(--gold); margin:0 0 12px; }
+    .pLeft { margin:0; }
   </style>
 </head>
 <body data-nav="projects">
@@ -111,7 +127,7 @@
           </div>
           <div class="ctaRow">
             <a class="btn primary" href="/downloads/MayflowerCraftPlanner_v1.7.0.exe" download>⬇ Download Craft Planner</a>
-            <a class="btn ghost" href="#recipes">📖 The shared recipes</a>
+            <a class="btn ghost" href="#recipes">🧮 Plan a craft</a>
             <a class="btn ghost" href="/craft-planner-changelog.html">🧾 Changelog</a>
             <a class="btn ghost" href="/projects.html">⬅ Back to Projects</a>
           </div>
@@ -211,13 +227,23 @@
         </div>
       </section>
 
-      <div class="sectionTitle" id="recipes"><h2>📖 The shared recipes</h2><span>Live from the app</span></div>
+      <div class="sectionTitle" id="recipes"><h2>🧮 Plan a craft</h2><span>From everyone's recipes</span></div>
       <section class="card">
-        <div class="recipeBar">
-          <input id="recipeSearch" type="search" placeholder="Search an item or an ingredient" aria-label="Search recipes" />
-          <span id="recipeStatus">Loading…</span>
+        <div class="planBar">
+          <input id="planSearch" type="search" placeholder="Search something to make" aria-label="Search things you can make" />
+          <span id="planStatus">Loading…</span>
         </div>
-        <div id="recipeList"><p class="muted">Loading…</p></div>
+        <div class="planGrid">
+          <div id="planList"><p class="muted small">Loading…</p></div>
+          <div>
+            <div id="planWanted"></div>
+            <div id="planResult"><p class="muted">Pick something on the left to plan it.</p></div>
+          </div>
+        </div>
+        <p class="muted small" style="margin:16px 0 0;">
+          Everything here comes from the recipes people have shared through the app. To write one
+          down, or to say where a material comes from, use the app — this page only reads.
+        </p>
       </section>
 
       <div class="sectionTitle" id="install"><h2>📥 Getting started</h2><span>One file, no installer</span></div>
@@ -244,6 +270,6 @@ Recipes you have are kept in
 
   <script src="/shared.js?v=34"></script>
   <script src="/fireflies.js"></script>
-  <script src="/craft-planner-recipes.js"></script>
+  <script src="/craft-planner-web.js"></script>
 </body>
 </html>
