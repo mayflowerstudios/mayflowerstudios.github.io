@@ -578,7 +578,7 @@
       ".read": true,
       ".indexOn": ["output"],
       "$recipeId": {
-        ".write": "$recipeId.matches(/^[a-f0-9]{32}$/) && newData.exists()",
+        ".write": "$recipeId.matches(/^[a-f0-9]{32}$/)",
         ".validate": "newData.hasChildren(['output','makes','needs','at'])",
         "output": {
           ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"

@@ -1,9 +1,9 @@
 {
   "name": "Mayflower Craft Planner",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "codename": "Shared Book",
   "platform": "Windows",
-  "file": "/downloads/MayflowerCraftPlanner_v1.3.2.exe",
+  "file": "/downloads/MayflowerCraftPlanner_v1.4.0.exe",
   "size": "Single EXE",
-  "notes": "Adding a recipe now clears the form for the next one, so typing a second recipe no longer replaces the first. The button says Add or Save depending on which it will do."
+  "notes": "Deleting a recipe now takes it off the shared list as well, so the website and everyone else lose it too. New icon, and a changelog on the website."
 }

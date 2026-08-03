@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Changelog • Craft Planner</title>
+  <meta name="description" content="What's new in Mayflower Craft Planner — the release history of the free Endless Online crafting tool from Mayflower Studios." />
+  <meta property="og:title" content="Changelog • Craft Planner" />
+  <meta property="og:description" content="The release history of Mayflower Craft Planner." />
+  <meta property="og:url" content="https://mayflowerstudios.net/craft-planner-changelog.html" />
+  <link rel="canonical" href="https://mayflowerstudios.net/craft-planner-changelog.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://mayflowerstudios.net/assets/og/projects.png?v=2" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=2" />
+  <link rel="stylesheet" href="/style.css?v=34" />
+
+  <style>
+    .clWrap { display: flex; flex-direction: column; gap: 14px; }
+    .clRel {
+      display: grid; grid-template-columns: 132px 1fr; gap: 18px;
+      padding: 20px 22px;
+    }
+    @media (max-width: 620px) { .clRel { grid-template-columns: 1fr; gap: 8px; } }
+    .clVer { display: flex; flex-direction: column; gap: 6px; }
+    .clNum { font-size: 17px; font-weight: 700; letter-spacing: -.2px; }
+    .clTag {
+      align-self: flex-start; font-size: 11px; padding: 3px 10px; border-radius: 999px;
+      border: 1px solid rgba(110,231,183,.3); background: rgba(110,231,183,.1); color: var(--emerald);
+    }
+    .clTitle { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+    .clRel ul { margin: 0; padding-left: 18px; }
+    .clRel li { font-size: 14px; line-height: 1.7; color: var(--text-2); margin-bottom: 3px; }
+    .clRel li b { color: var(--text); font-weight: 600; }
+    .clNote { padding: 22px 24px; }
+    .clNote p { font-size: 14px; color: var(--text-2); line-height: 1.8; margin: 0; }
+  </style>
+</head>
+<body data-nav="projects">
+
+  <div class="site-page">
+    <div id="site-nav"></div>
+
+    <main class="content">
+
+      <section class="page-hero reveal">
+        <p class="page-kicker">⚒️ What's new</p>
+        <h1 class="page-title">Changelog</h1>
+        <p class="page-sub">
+          Every release of Craft Planner, newest first. The app updates itself — when there's a new
+          version, an update button appears at the top of it.
+        </p>
+        <div class="page-actions">
+          <a href="/downloads/MayflowerCraftPlanner_v1.4.0.exe" class="btn-pri" download>⬇️ Download</a>
+          <a href="/craft-planner.html" class="btn-ghost">← Back to Craft Planner</a>
+        </div>
+      </section>
+
+      <section class="sec reveal">
+        <div class="clWrap">
+
+          <article class="card clRel">
+            <div class="clVer"><span class="clNum">1.4.0</span><span class="clTag">Latest</span></div>
+            <div>
+              <div class="clTitle">Deleting a recipe removes it everywhere, and a new icon</div>
+              <ul>
+                <li><b>Deleting takes it off the shared list too.</b> Before, a deleted recipe only
+                    went from your own copy — the website kept showing it and everyone else kept
+                    getting it. Now it goes for good, and your copy still refuses it if another
+                    player shares the same one again.</li>
+                <li><b>A proper icon</b> — a mayflower sat in a pile of crafting tools, drawn for
+                    the app rather than assembled from shapes.</li>
+                <li><b>This page.</b></li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="card clRel">
+            <div class="clVer"><span class="clNum">1.3.2</span></div>
+            <div>
+              <div class="clTitle">Adding recipes back to back</div>
+              <ul>
+                <li><b>Adding a recipe clears the form for the next one.</b> It used to leave the
+                    recipe loaded, so typing a different one over the top replaced the first
+                    instead of adding a second.</li>
+                <li><b>The button says Add or Save</b> depending on which it will do, so it is clear
+                    before clicking. A recipe picked off the list still edits in place.</li>
+                <li><b>The recipe list on this website scrolls</b> instead of growing until it fills
+                    the page, with one tile per way of making a thing.</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="card clRel">
+            <div class="clVer"><span class="clNum">1.3.1</span></div>
+            <div>
+              <div class="clTitle">Deleting sticks</div>
+              <ul>
+                <li><b>A deleted recipe stays deleted.</b> It was removed from the book and then
+                    merged straight back in from the shared list the next time the app looked, so
+                    it seemed as though delete did nothing at all.</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="card clRel">
+            <div class="clVer"><span class="clNum">1.3.0</span></div>
+            <div>
+              <div class="clTitle">What the crafting costs</div>
+              <ul>
+                <li><b>Eons.</b> A recipe carries what the NPC charges, and the plan totals it —
+                    on each step and for the whole list. Charged per craft rather than per item
+                    made, and nothing is charged for what your bank already covers.</li>
+                <li>Typed recipes take it as <span style="font-family:var(--font-m)">$500</span>,
+                    beside the existing <span style="font-family:var(--font-m)">x3</span> and
+                    <span style="font-family:var(--font-m)">@ where</span>.</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="card clRel">
+            <div class="clVer"><span class="clNum">1.2.0</span></div>
+            <div>
+              <div class="clTitle">Several items at once, and no share button</div>
+              <ul>
+                <li><b>Plan more than one thing together.</b> They share one set of totals, so an
+                    ingredient two of them both need is counted once and crafted once.</li>
+                <li><b>Recipes share themselves.</b> Yours go up as you write them and everyone
+                    else's come down while you play, so there is nothing to press.</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="card clRel">
+            <div class="clVer"><span class="clNum">1.1.0</span></div>
+            <div>
+              <div class="clTitle">More than one way to make a thing</div>
+              <ul>
+                <li><b>An item can have several recipes</b> — String from webs, jute, cotton or
+                    silk. All of them are kept, and you switch between them on the craft step
+                    itself. Your choice is remembered and the whole plan follows it.</li>
+                <li><b>One shared recipe book</b> on this website, since the recipes are not in the
+                    game files and somebody has to type them in once.</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="card clRel">
+            <div class="clVer"><span class="clNum">1.0.0</span></div>
+            <div>
+              <div class="clTitle">The beginning</div>
+              <ul>
+                <li>Pick an item, say how many, and see every raw material behind it, however deep
+                    the crafting chain goes.</li>
+                <li>Totals are added up across the whole tree before being rounded into whole
+                    crafts, so a shared ingredient is never ordered twice.</li>
+                <li>Tell it what is in your bank and it comes off the list. Item names are read
+                    from your own Endless Online folder. English and Português.</li>
+              </ul>
+            </div>
+          </article>
+
+        </div>
+      </section>
+
+      <section class="sec reveal">
+        <div class="card clNote">
+          <p>Got an idea or found a bug? <a href="/contact.html">Let me know</a> — it's a one-person studio and every message is read. 🌸</p>
+        </div>
+      </section>
+
+    </main>
+
+    <div id="site-footer"></div>
+  </div>
+
+  <script src="/shared.js?v=34"></script>
+</body>
+</html>
