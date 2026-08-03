@@ -1,9 +1,9 @@
 {
   "name": "Mayflower Craft Planner",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "codename": "Shared Book",
   "platform": "Windows",
-  "file": "/downloads/MayflowerCraftPlanner_v1.6.0.exe",
+  "file": "/downloads/MayflowerCraftPlanner_v1.7.0.exe",
   "size": "Single EXE",
-  "notes": "Where to get it now answers that question: say where a material comes from and everyone else gets it. Places and npcs you type are remembered and offered from then on."
+  "notes": "A Where to find tab for everything you do not craft. Chop a tree, kill a sheep, buy from a shop, with a price. One thing can come from several, and it is all shared."
 }
