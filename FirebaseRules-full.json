@@ -576,7 +576,9 @@
     },
     "craftRecipes": {
       ".read": true,
-      ".indexOn": ["output"],
+      ".indexOn": [
+        "output"
+      ],
       "$recipeId": {
         ".write": "$recipeId.matches(/^[a-f0-9]{32}$/)",
         ".validate": "newData.hasChildren(['output','makes','needs','at'])",
@@ -598,7 +600,9 @@
         "at": {
           ".validate": "newData.isNumber() && newData.val() >= 1600000000000 && newData.val() <= now + 86400000"
         },
-        "$other": { ".validate": false }
+        "$other": {
+          ".validate": false
+        }
       }
     },
     "craftSources": {
@@ -609,13 +613,24 @@
         "item": {
           ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
         },
+        "kind": {
+          ".validate": "newData.isString() && newData.val().matches(/^(kill|chop|mine|fish|pick|buy)$/)"
+        },
         "from": {
-          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 120"
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
+        },
+        "where": {
+          ".validate": "newData.isString() && newData.val().length <= 60"
+        },
+        "cost": {
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000000000"
         },
         "at": {
           ".validate": "newData.isNumber() && newData.val() >= 1600000000000 && newData.val() <= now + 86400000"
         },
-        "$other": { ".validate": false }
+        "$other": {
+          ".validate": false
+        }
       }
     },
     "leaderboards": {
