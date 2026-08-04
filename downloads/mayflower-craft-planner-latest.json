@@ -1,9 +1,9 @@
 {
   "name": "Mayflower Craft Planner",
-  "version": "1.13.0",
-  "codename": "Where You Left Off",
+  "version": "1.14.0",
+  "codename": "Or Just Buy It",
   "platform": "Windows",
-  "file": "/downloads/MayflowerCraftPlanner_v1.13.0.exe",
+  "file": "/downloads/MayflowerCraftPlanner_v1.14.0.exe",
   "size": "Single EXE",
-  "notes": "Things you craft along the way have tick boxes too, not just the raw materials, so you can mark off a sewing kit once you have made one. And none of it is lost when you close the app — what you were planning and everything you had ticked is there again when you open it tomorrow."
+  "notes": "Anything somebody sells now offers buying it instead, with what the whole lot would cost. That works on things you would otherwise craft too — buy the bar and the ore it was made of drops off the list entirely — and a line underneath adds up what you are spending."
 }
