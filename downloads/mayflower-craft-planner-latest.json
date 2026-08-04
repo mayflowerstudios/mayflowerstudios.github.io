@@ -1,9 +1,9 @@
 {
   "name": "Mayflower Craft Planner",
-  "version": "1.9.0",
-  "codename": "Tick It Off",
+  "version": "1.10.0",
+  "codename": "Narrow It Down",
   "platform": "Windows",
-  "file": "/downloads/MayflowerCraftPlanner_v1.9.0.exe",
+  "file": "/downloads/MayflowerCraftPlanner_v1.10.0.exe",
   "size": "Single EXE",
-  "notes": "Everything you need now has a tick box, so you can mark things off as you go and get them. A ticked line goes faint with a line through it, and the ticks stay put when you change how many you are making. The list you pick items from shows their pictures too."
+  "notes": "The item list can be narrowed to weapons, armour, hats, materials and the rest, read from what the game files say each item is. There is also a tick box to put away the things you have already gathered."
 }
