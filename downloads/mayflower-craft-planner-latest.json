@@ -1,9 +1,9 @@
 {
   "name": "Mayflower Craft Planner",
-  "version": "1.12.0",
-  "codename": "Checked Over",
+  "version": "1.13.0",
+  "codename": "Where You Left Off",
   "platform": "Windows",
-  "file": "/downloads/MayflowerCraftPlanner_v1.12.0.exe",
+  "file": "/downloads/MayflowerCraftPlanner_v1.13.0.exe",
   "size": "Single EXE",
-  "notes": "Filling in a price or a place on somebody else's entry works again and takes effect for everyone right away. Each change carries what it replaced, so it can be put back, and new or changed entries are flagged for an admin to look over."
+  "notes": "Things you craft along the way have tick boxes too, not just the raw materials, so you can mark off a sewing kit once you have made one. And none of it is lost when you close the app — what you were planning and everything you had ticked is there again when you open it tomorrow."
 }
