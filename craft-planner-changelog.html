@@ -60,7 +60,26 @@
         <div class="clWrap">
 
           <article class="card clRel">
-            <div class="clVer"><span class="clNum">1.7.1</span><span class="clTag">Latest</span></div>
+            <div class="clVer"><span class="clNum">1.8.0</span><span class="clTag">Latest</span></div>
+            <div>
+              <div class="clTitle">Place names that are really places</div>
+              <ul>
+                <li><b>The place list now comes from the map files themselves.</b> Every map on
+                    disk says its own name in a fixed spot, so it is read rather than guessed at.
+                    Reading the map list instead meant working out by eye where one name stopped
+                    and the next began, and ten runs of filler bytes came out looking like names —
+                    "PþQþRþd" sat in the list next to Aeven Port. Those are gone. The same 359
+                    real places are still there.</li>
+                <li><b>You can still type anything.</b> The list is a shortcut, never a gate, and
+                    a place you type is remembered and shared exactly as before.</li>
+                <li>Reading the map list is still the fallback for anyone whose game folder has no
+                    maps in it, and it no longer lets the filler through either.</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="card clRel">
+            <div class="clVer"><span class="clNum">1.7.1</span></div>
             <div>
               <div class="clTitle">Removing where something comes from</div>
               <ul>
