@@ -314,7 +314,27 @@
     }
     .aiActs button:hover { color:var(--text); border-color:var(--rose); }
     .aiActs button.danger:hover { color:var(--rose-deep); border-color:var(--rose-deep); }
-    .aiFoot { font-size:12px; color:var(--text-3); margin:11px 0 0; }
+    .aiFoot { font-size:12px; color:var(--text-3); margin:11px 0 0; line-height:1.55; }
+    .aiBar input[type="text"] {
+      font:inherit; font-size:12.5px; color:var(--text); flex:1; min-width:120px;
+      background:rgba(0,0,0,.28); border:1px solid var(--border-2);
+      border-radius:10px; padding:6px 11px;
+    }
+    .aiBar input[type="text"]:focus { outline:none; border-color:var(--rose); }
+    .cbRow {
+      display:flex; gap:10px; align-items:center; justify-content:space-between;
+      border:1px solid var(--border); border-radius:11px; padding:9px 13px;
+      background:rgba(255,255,255,.03);
+    }
+    #cbList { display:grid; gap:8px; max-height:460px; overflow-y:auto; }
+    .cbText { display:flex; flex-direction:column; min-width:0; }
+    .cbName { font-size:13.5px; font-weight:600; }
+    .cbSays { font-size:12px; color:var(--text-3); margin-top:2px; word-break:break-word; }
+    .cbRow button {
+      font:inherit; font-size:11.5px; color:var(--text-2); cursor:pointer; flex:none;
+      background:transparent; border:1px solid var(--border-2); border-radius:999px; padding:4px 11px;
+    }
+    .cbRow button:hover { color:var(--rose-deep); border-color:var(--rose-deep); }
     .aiRank {
       font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; font-weight:700;
       padding:2px 8px; border-radius:999px; color:var(--gold);
@@ -749,6 +769,22 @@
             </div>
 
             <p class="aiFoot">Signed in as <b id="aiWho"></b> <span class="aiRank" id="aiRankTag"></span></p>
+          </div>
+
+          <div class="secLabel">Shared craft book</div>
+          <div class="acctFriendsCard">
+            <div class="aiBar">
+              <select id="cbWhat">
+                <option value="craftRecipes">Recipes</option>
+                <option value="craftSources">Where things come from</option>
+              </select>
+              <input id="cbFind" type="text" placeholder="find an item" autocomplete="off" />
+              <button type="button" id="cbRefresh">Refresh</button>
+              <span id="cbCount"></span>
+            </div>
+            <div id="cbList"></div>
+            <p class="aiFoot">Anyone can add to this list, and take back what they added.
+              Only you can remove somebody else's.</p>
           </div>
         </div>
 
@@ -1577,6 +1613,6 @@
     });
   })();
   </script>
-  <script src="/admin-inbox.js?v=2"></script>
+  <script src="/admin-inbox.js?v=3"></script>
 </body>
 </html>

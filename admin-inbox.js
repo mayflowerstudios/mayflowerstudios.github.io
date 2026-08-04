@@ -63,11 +63,89 @@
       el("aiAddBtn").addEventListener("click", addAdmin);
       el("aiAddName").addEventListener("keydown", e => { if (e.key === "Enter") addAdmin(); });
       el("aiAdminList").addEventListener("click", dropAdmin);
+      el("cbWhat").addEventListener("change", loadBook);
+      el("cbFind").addEventListener("input", drawBook);
+      el("cbRefresh").addEventListener("click", loadBook);
+      el("cbList").addEventListener("click", dropEntry);
     }
 
     el("aiRanks").hidden = !owner;
     load();
+    loadBook();
     if (owner) loadAdmins();
+  }
+
+  /* ------------------------------------------------- the shared craft book */
+
+  let book = [];
+
+  // Whichever of the two lists is being looked at.
+  const bookNode = () => el("cbWhat").value === "craftSources" ? "craftSources" : "craftRecipes";
+
+  async function loadBook() {
+    const list = el("cbList");
+    list.innerHTML = `<div class="acctEmpty">Loading…</div>`;
+    const node = bookNode();
+    try {
+      const data = await fetch(`${DB}/${node}.json`, { cache: "no-store" })
+        .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+      book = Object.entries(data || {}).map(([id, v]) => Object.assign({ id: id, node: node }, v))
+        .sort((a, b) => (b.at || 0) - (a.at || 0));
+      drawBook();
+    } catch (err) {
+      list.innerHTML = `<div class="acctEmpty">Could not load these. ${esc(err.message)}</div>`;
+    }
+  }
+
+  function bookLine(m) {
+    if (m.node === "craftSources") {
+      const doing = { kill: "Kill", chop: "Chop", mine: "Mine", fish: "Fish", pick: "Pick", buy: "Buy from" };
+      let s = `${doing[m.kind] || m.kind || "?"} ${m.from || "?"}`;
+      if (m.where) s += ` in ${m.where}`;
+      if (m.cost > 0) s += ` for ${Number(m.cost).toLocaleString()} eons`;
+      return s;
+    }
+    let s = `${m.makes > 1 ? m.makes + " from " : ""}${m.needs || "?"}`;
+    if (m.where) s += ` · at ${m.where}`;
+    if (m.cost > 0) s += ` · ${Number(m.cost).toLocaleString()} eons`;
+    return s;
+  }
+
+  function drawBook() {
+    const list = el("cbList");
+    const q = el("cbFind").value.trim().toLowerCase();
+    const name = m => String(m.node === "craftSources" ? m.item : m.output || "");
+    const rows = book.filter(m => !q || name(m).toLowerCase().includes(q)
+                                  || bookLine(m).toLowerCase().includes(q));
+    el("cbCount").textContent = book.length ? `${rows.length} of ${book.length}` : "";
+    if (!rows.length) {
+      list.innerHTML = `<div class="acctEmpty">${book.length ? "Nothing matching that." : "Nothing shared yet."}</div>`;
+      return;
+    }
+    list.innerHTML = rows.map(m => `
+      <div class="cbRow">
+        <span class="cbText">
+          <span class="cbName">${esc(name(m))}</span>
+          <span class="cbSays">${esc(bookLine(m))}</span>
+        </span>
+        <button type="button" data-drop-entry="${esc(m.id)}">Remove</button>
+      </div>`).join("");
+  }
+
+  async function dropEntry(e) {
+    const t = e.target.closest("[data-drop-entry]");
+    if (!t) return;
+    const id = t.dataset.dropEntry;
+    const row = book.find(m => m.id === id);
+    if (!row) return;
+    const label = row.node === "craftSources" ? row.item : row.output;
+    if (!confirm(`Take "${label}" off the shared list for everybody?`)) return;
+    try {
+      const r = await fetch(`${DB}/${row.node}/${id}.json?auth=${token}`, { method: "DELETE" });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      book = book.filter(m => m.id !== id);
+      drawBook();
+    } catch (err) { console.warn("craft book remove:", err); }
   }
 
   /* ------------------------------------------------------------- messages */

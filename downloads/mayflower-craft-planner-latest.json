@@ -1,9 +1,9 @@
 {
   "name": "Mayflower Craft Planner",
-  "version": "1.10.0",
-  "codename": "Narrow It Down",
+  "version": "1.11.0",
+  "codename": "Yours To Take Back",
   "platform": "Windows",
-  "file": "/downloads/MayflowerCraftPlanner_v1.10.0.exe",
+  "file": "/downloads/MayflowerCraftPlanner_v1.11.0.exe",
   "size": "Single EXE",
-  "notes": "The item list can be narrowed to weapons, armour, hats, materials and the rest, read from what the game files say each item is. There is also a tick box to put away the things you have already gathered."
+  "notes": "The shared list can no longer be rewritten. Every entry now knows who wrote it down, so you can take back what you added and nobody can change it to say something wrong or empty the list. Nothing to sign in to and nothing to type — it happens by itself."
 }
