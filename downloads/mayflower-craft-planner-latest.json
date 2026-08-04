@@ -1,9 +1,9 @@
 {
   "name": "Mayflower Craft Planner",
-  "version": "1.8.0",
-  "codename": "Real Places",
+  "version": "1.9.0",
+  "codename": "Tick It Off",
   "platform": "Windows",
-  "file": "/downloads/MayflowerCraftPlanner_v1.8.0.exe",
+  "file": "/downloads/MayflowerCraftPlanner_v1.9.0.exe",
   "size": "Single EXE",
-  "notes": "Place names now come from the map files themselves instead of being picked out of the map list by eye, so the handful of pieces of binary noise that used to sit in the list are gone. You can still type any place you like."
+  "notes": "Everything you need now has a tick box, so you can mark things off as you go and get them. A ticked line goes faint with a line through it, and the ticks stay put when you change how many you are making. The list you pick items from shows their pictures too."
 }
