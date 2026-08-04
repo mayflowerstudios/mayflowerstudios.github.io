@@ -901,18 +901,18 @@
       }
     },
     "admins": {
-      "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
+      "$handle": {
+        ".read": "auth != null && root.child('users').child(auth.uid).child('username').val() === $handle",
         ".write": false
       }
     },
     "feedback": {
-      ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      ".read": "auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('admins').child(root.child('users').child(auth.uid).child('username').val()).val() === true",
       ".indexOn": [
         "at"
       ],
       "$id": {
-        ".write": "(auth != null && root.child('admins').child(auth.uid).val() === true) || ($id.matches(/^[a-f0-9]{32}$/) && !data.exists() && newData.exists())",
+        ".write": "(auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('admins').child(root.child('users').child(auth.uid).child('username').val()).val() === true) || ($id.matches(/^[a-f0-9]{32}$/) && !data.exists() && newData.exists())",
         ".validate": "newData.hasChildren(['kind','about','message','at'])",
         "kind": {
           ".validate": "newData.isString() && newData.val().matches(/^(bug|idea|question|other)$/)"

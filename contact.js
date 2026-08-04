@@ -1,7 +1,6 @@
-/* Mayflower Studios — the contact form, and the admin view of what comes in.
-   Writing a message needs no account. Reading them needs to be an admin, which
-   is decided by /admins/<uid> in the database and can only be set in the
-   Firebase console — there is no way to make yourself one from here. */
+/* Mayflower Studios — the contact form.
+   Sending needs no account. What comes in is read from the admin section on the
+   profile page, not from here. */
 (function () {
   const DB = "https://watchtogether-95d7d-default-rtdb.firebaseio.com";
 
@@ -19,8 +18,6 @@
   const el = id => document.getElementById(id);
   const esc = v => String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;")
                                   .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-
-  /* ---------------------------------------------------------------- sending */
 
   function newKey() {
     const b = new Uint8Array(16);
@@ -93,111 +90,6 @@
     if (guess) el("cAbout").value = guess;
   }
 
-  /* ---------------------------------------------------------------- reading */
-
-  let token = null, mine = [];
-
-  const KIND_WORD = Object.fromEntries(KINDS.map(k => [k[0], k[1]]));
-  const when = t => {
-    const d = new Date(Number(t) || 0);
-    return isNaN(d) ? "" : d.toLocaleString();
-  };
-
-  async function loadAdmin(user) {
-    const box = el("cAdmin");
-    if (!user) { box.hidden = true; return; }
-    try { token = await user.getIdToken(); } catch { box.hidden = true; return; }
-
-    const isAdmin = await fetch(`${DB}/admins/${user.uid}.json?auth=${token}`)
-      .then(r => r.ok ? r.json() : null).catch(() => null);
-    if (isAdmin !== true) {
-      // Not an admin: show the account id so it can be added in the console.
-      el("cWhoami").hidden = false;
-      el("cUid").textContent = user.uid;
-      box.hidden = true;
-      return;
-    }
-    el("cWhoami").hidden = true;
-    box.hidden = false;
-    await refresh();
-  }
-
-  async function refresh() {
-    const list = el("cList");
-    list.innerHTML = `<p class="muted small">Loading…</p>`;
-    try {
-      const data = await fetch(`${DB}/feedback.json?auth=${token}`, { cache: "no-store" })
-        .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
-      mine = Object.entries(data || {}).map(([id, v]) => ({ id, ...v }))
-        .sort((a, b) => (b.at || 0) - (a.at || 0));
-      draw();
-    } catch (err) {
-      list.innerHTML = `<p class="muted small">Could not load. ${esc(err.message)}</p>`;
-    }
-  }
-
-  function draw() {
-    const list = el("cList");
-    const kind = el("cFilterKind").value, hide = el("cHideDone").checked;
-    const rows = mine.filter(m => (!kind || m.kind === kind) && (!hide || !m.done));
-    el("cCount").textContent = `${rows.length} of ${mine.length}`;
-    if (!rows.length) { list.innerHTML = `<p class="muted small">Nothing here.</p>`; return; }
-
-    list.innerHTML = rows.map(m => `
-      <article class="cItem${m.done ? " done" : ""}">
-        <header>
-          <span class="cTag">${esc(KIND_WORD[m.kind] || m.kind || "?")}</span>
-          <span class="cTag alt">${esc(m.about || "—")}</span>
-          <span class="cWhen">${esc(when(m.at))}</span>
-        </header>
-        ${m.subject ? `<h4>${esc(m.subject)}</h4>` : ""}
-        <p class="cBody">${esc(m.message || "")}</p>
-        <footer>
-          <span class="muted small">
-            ${m.name ? esc(m.name) : "Anonymous"}${m.reply ? " · " + esc(m.reply) : ""}${m.uid ? " · signed in" : ""}
-          </span>
-          <span class="cActs">
-            <button data-done="${esc(m.id)}">${m.done ? "Not done" : "Mark done"}</button>
-            <button data-del="${esc(m.id)}" class="danger">Delete</button>
-          </span>
-        </footer>
-      </article>`).join("");
-  }
-
-  async function act(e) {
-    const t = e.target.closest("[data-done],[data-del]");
-    if (!t) return;
-    const id = t.dataset.done || t.dataset.del;
-    const row = mine.find(m => m.id === id);
-    if (!row) return;
-    try {
-      if (t.dataset.del) {
-        if (!confirm("Delete this message for good?")) return;
-        await fetch(`${DB}/feedback/${id}.json?auth=${token}`, { method: "DELETE" });
-        mine = mine.filter(m => m.id !== id);
-      } else {
-        const now = !row.done;
-        await fetch(`${DB}/feedback/${id}.json?auth=${token}`, {
-          method: "PATCH", body: JSON.stringify({ done: now })
-        });
-        row.done = now;
-      }
-      draw();
-    } catch (err) { console.warn("contact action failed:", err); }
-  }
-
-  /* ---------------------------------------------------------------- start */
-
   fillDefaults();
   el("cForm").addEventListener("submit", send);
-  el("cList").addEventListener("click", act);
-  el("cFilterKind").addEventListener("change", draw);
-  el("cHideDone").addEventListener("change", draw);
-  el("cRefresh").addEventListener("click", refresh);
-  fill(el("cFilterKind"), [["", "Everything"], ...KINDS]);
-
-  if (window.MFAuth && MFAuth.onChange) MFAuth.onChange(user => loadAdmin(user));
-  else document.addEventListener("DOMContentLoaded", () => {
-    if (window.MFAuth && MFAuth.onChange) MFAuth.onChange(user => loadAdmin(user));
-  });
 })();

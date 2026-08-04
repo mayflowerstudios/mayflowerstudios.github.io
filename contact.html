@@ -67,37 +67,6 @@
     .cMsg { font-size:13.5px; color:var(--text-2); }
     .cMsg.ok { color:var(--emerald); }
     .cMsg.bad { color:var(--rose-deep); }
-
-    /* ───────────── what came in ───────────── */
-    .cBar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px; }
-    .cBar select, .cBar button {
-      font:inherit; font-size:13px; color:var(--text); cursor:pointer;
-      background:rgba(0,0,0,.28); border:1px solid var(--border-2);
-      border-radius:var(--r-sm); padding:7px 12px;
-    }
-    .cBar label { font-size:13px; color:var(--text-2); display:inline-flex; align-items:center; gap:7px; cursor:pointer; }
-    #cCount { font-size:12.5px; color:var(--text-3); font-family:var(--font-m); margin-left:auto; }
-    #cList { display:flex; flex-direction:column; gap:12px; }
-    .cItem { background:var(--glass-2); border:1px solid var(--border); border-radius:var(--r-sm); padding:14px 16px; }
-    .cItem.done { opacity:.5; }
-    .cItem header { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:8px; }
-    .cTag {
-      font-size:11px; padding:2px 9px; border-radius:999px; color:var(--rose);
-      background:rgba(249,168,212,.12); border:1px solid var(--border-2);
-    }
-    .cTag.alt { color:var(--violet); background:rgba(196,181,253,.14); border-color:rgba(196,181,253,.28); }
-    .cWhen { font-size:11.5px; color:var(--text-3); font-family:var(--font-m); margin-left:auto; }
-    .cItem h4 { margin:0 0 6px; font-size:15px; }
-    .cBody { margin:0 0 10px; font-size:14px; line-height:1.7; color:var(--text-2); white-space:pre-wrap; }
-    .cItem footer { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; }
-    .cActs { display:flex; gap:8px; }
-    .cActs button {
-      font:inherit; font-size:12px; color:var(--text-2); cursor:pointer;
-      background:transparent; border:1px solid var(--border-2); border-radius:999px; padding:4px 12px;
-    }
-    .cActs button:hover { color:var(--text); border-color:var(--rose); }
-    .cActs button.danger:hover { color:var(--rose-deep); border-color:var(--rose-deep); }
-    #cWhoami code { font-family:var(--font-m); font-size:12.5px; color:var(--gold); word-break:break-all; }
   </style>
 </head>
 <body data-nav="contact">
@@ -173,30 +142,6 @@
             <span class="cMsg" id="cFormMsg"></span>
           </div>
         </form>
-
-        <div class="card contact-note" id="cWhoami" hidden style="margin-top:14px;">
-          <p class="muted small" style="margin:0;">
-            Signed in. Your account id is <code id="cUid"></code> — add it under
-            <strong>admins</strong> in the Firebase console to read what comes in here.
-          </p>
-        </div>
-      </section>
-
-      <!-- ══ WHAT CAME IN — admins only ══ -->
-      <section class="sec reveal" id="cAdmin" hidden>
-        <div class="sec-head">
-          <div class="sec-kicker">📬 Admin</div>
-          <h2 class="sec-title">What came in</h2>
-        </div>
-        <div class="card" style="padding:22px 24px;">
-          <div class="cBar">
-            <select id="cFilterKind"></select>
-            <label><input type="checkbox" id="cHideDone" checked /> Hide done</label>
-            <button id="cRefresh">Refresh</button>
-            <span id="cCount"></span>
-          </div>
-          <div id="cList"></div>
-        </div>
       </section>
 
       <!-- ══ WAYS TO REACH ══ -->
@@ -247,6 +192,6 @@
 
   <script src="/shared.js?v=34"></script>
   <script src="/auth.js?v=34"></script>
-  <script src="/contact.js?v=1"></script>
+  <script src="/contact.js?v=2"></script>
 </body>
 </html>
