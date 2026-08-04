@@ -824,6 +824,14 @@ html[data-mf-translating] .wrap { transition: opacity 200ms var(--ease); }
 .mf-prof-body { padding: 50px 24px 24px; text-align: center; }
 .mf-prof-name { font-family: var(--font-d); font-size: 26px; line-height: 1.1; }
 .mf-prof-pron { font-family: var(--font-b); font-size: 12px; color: var(--text-3); margin-left: 4px; }
+/* owner / admin badge beside an @name */
+.mf-prof-rank {
+  display: inline-block; margin-left: 5px; padding: 2px 8px; border-radius: 999px;
+  font-family: var(--font-b); font-size: 10px; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: #c4b5fd; background: rgba(196,181,253,.13); border: 1px solid rgba(196,181,253,.32);
+}
+.mf-prof-rank.owner { color: #fbbf24; background: rgba(251,191,36,.12); border-color: rgba(251,191,36,.32); }
 .mf-prof-presence { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; color: var(--text-3); }
 .mf-prof-status { margin-top: 12px; font-family: var(--font-d); font-style: italic; font-size: 17px; color: var(--prof-accent); }
 .mf-prof-bio { margin-top: 12px; font-size: 14px; color: var(--text-2); line-height: 1.65; }
@@ -999,6 +1007,7 @@ html[data-mf-translating] .wrap { transition: opacity 200ms var(--ease); }
 .mf-prof-intro { min-width: 0; text-align: left; padding-bottom: 4px; }
 .mf-prof-name { font-size: clamp(30px, 4vw, 44px); }
 .mf-prof-handle { margin-top: 4px; color: var(--prof-accent); font-weight: 700; font-size: 15px; }
+.mf-prof-handle .mf-prof-rank { vertical-align: middle; }
 .mf-prof-pron { display: inline-flex; padding: 5px 9px; border-radius: 999px; background: rgba(255,255,255,.07); color: var(--text-2); vertical-align: middle; }
 .mf-prof-presence { margin-top: 8px; }
 .mf-prof-status { margin-top: 10px; font-size: 19px; }

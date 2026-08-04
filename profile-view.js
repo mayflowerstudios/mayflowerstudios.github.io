@@ -37,6 +37,22 @@
     return Object.entries(obj || {}).map(([id, v]) => ({ id, ...(v || {}) })).sort((a,b) => (b.t || 0) - (a.t || 0));
   }
 
+  /* Owner or admin, for the badge beside someone's @name. Anyone can check a
+     single name; only the owner can read the list or change it. */
+  async function rankOf(username) {
+    if (!username) return "";
+    const h = String(username).toLowerCase();
+    try {
+      const [owner, admin] = await Promise.all([
+        dbMods.get(dbMods.ref(db, "owner")),
+        dbMods.get(dbMods.ref(db, `admins/${h}`))
+      ]);
+      if (owner.exists() && String(owner.val()).toLowerCase() === h) return "Owner";
+      if (admin.val() === true) return "Admin";
+    } catch (_) {}
+    return "";
+  }
+
   function ensureDOM() {
     if (document.getElementById("mfProfOverlay")) return;
     const ov = document.createElement("div");
@@ -140,6 +156,7 @@
     } catch (_) {}
 
     const rel = MFAuth.getRelationship ? await MFAuth.getRelationship(uid) : null;
+    const rank = await rankOf(prof.username);
     const name = prof.displayName || "someone";
     const accent = (typeof prof.accent === "string" && /^#[0-9a-fA-F]{6}$/.test(prof.accent)) ? prof.accent : "#f9a8d4";
     const a = MFAuth.avatarFor(prof, name);
@@ -160,7 +177,7 @@
         <div class="mf-prof-avatar">${avatarHTML}</div>
         <div class="mf-prof-intro">
           <div class="mf-prof-name">${esc(name)} ${prof.pronouns ? `<span class="mf-prof-pron">${esc(prof.pronouns)}</span>` : ""}</div>
-          ${handle ? `<div class="mf-prof-handle">${esc(handle)}</div>` : ""}
+          ${handle ? `<div class="mf-prof-handle">${esc(handle)}${rank ? ` <span class="mf-prof-rank ${rank.toLowerCase()}">${rank}</span>` : ""}</div>` : ""}
           <div class="mf-prof-presence" id="mfProfPresence"><span class="mf-prof-dot"></span><span id="mfProfPresText">—</span></div>
           ${prof.status ? `<div class="mf-prof-status">“${esc(prof.status)}”</div>` : ""}
           ${prof.bio ? `<p class="mf-prof-bio">${esc(prof.bio)}</p>` : `<p class="mf-prof-bio dim">No bio yet.</p>`}

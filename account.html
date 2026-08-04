@@ -8,7 +8,7 @@
   <meta name="description" content="Sign in to your Mayflower Studios account." />
   <meta name="robots" content="noindex, follow" />
   <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=2" />
-  <link rel="stylesheet" href="/style.css?v=34" />
+  <link rel="stylesheet" href="/style.css?v=35" />
   <style>
     .acctWrap { max-width: 460px; margin: 0 auto; }
     /* when the profile is showing, allow a wider two-column canvas */
@@ -315,6 +315,43 @@
     .aiActs button:hover { color:var(--text); border-color:var(--rose); }
     .aiActs button.danger:hover { color:var(--rose-deep); border-color:var(--rose-deep); }
     .aiFoot { font-size:12px; color:var(--text-3); margin:11px 0 0; }
+    .aiRank {
+      font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; font-weight:700;
+      padding:2px 8px; border-radius:999px; color:var(--gold);
+      background:rgba(251,191,36,.12); border:1px solid rgba(251,191,36,.3);
+    }
+    .aiRank.admin { color:var(--violet); background:rgba(196,181,253,.13); border-color:rgba(196,181,253,.3); }
+
+    /* ── owner only: who else can see this ── */
+    #aiRanks { margin-top:15px; padding-top:14px; border-top:1px solid var(--border); }
+    #aiRanks h4 { margin:0 0 9px; font-size:12px; color:var(--text-3); letter-spacing:.16em; text-transform:uppercase; font-weight:600; }
+    #aiAdminList { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:10px; }
+    .aiChip {
+      display:inline-flex; align-items:center; gap:7px; font-size:12.5px; color:var(--text-2);
+      background:rgba(255,255,255,.04); border:1px solid var(--border-2);
+      border-radius:999px; padding:4px 6px 4px 12px;
+    }
+    .aiChip button {
+      font:inherit; font-size:13px; line-height:1; color:var(--text-3); cursor:pointer;
+      background:transparent; border:0; border-radius:999px; padding:2px 5px;
+    }
+    .aiChip button:hover { color:var(--rose-deep); }
+    .aiAddRow { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .aiAddRow input {
+      font:inherit; font-size:12.5px; color:var(--text); width:170px;
+      background:rgba(0,0,0,.28); border:1px solid var(--border-2);
+      border-radius:10px; padding:6px 11px;
+    }
+    .aiAddRow input:focus { outline:none; border-color:var(--rose); }
+    .aiAddRow button {
+      font:inherit; font-size:12.5px; color:var(--text); cursor:pointer;
+      background:rgba(0,0,0,.28); border:1px solid var(--border-2);
+      border-radius:10px; padding:6px 12px;
+    }
+    .aiAddRow button:hover { border-color:var(--rose); }
+    #aiRankMsg { font-size:12px; color:var(--text-3); }
+    #aiRankMsg.ok { color:var(--emerald); }
+    #aiRankMsg.bad { color:var(--rose-deep); }
 
     /* ── friends list ── */
     .acctFriendsCard {
@@ -699,7 +736,19 @@
               <span id="aiCount"></span>
             </div>
             <div id="aiList"></div>
-            <p class="aiFoot">Signed in as <b id="aiWho"></b> — admins are set in the Firebase console.</p>
+
+            <!-- owner only -->
+            <div id="aiRanks" hidden>
+              <h4>Who can see this</h4>
+              <div id="aiAdminList"></div>
+              <div class="aiAddRow">
+                <input id="aiAddName" type="text" maxlength="20" placeholder="username" autocomplete="off" />
+                <button type="button" id="aiAddBtn">Make admin</button>
+                <span id="aiRankMsg"></span>
+              </div>
+            </div>
+
+            <p class="aiFoot">Signed in as <b id="aiWho"></b> <span class="aiRank" id="aiRankTag"></span></p>
           </div>
         </div>
 
@@ -836,7 +885,7 @@
     <div id="site-footer"></div>
   </div>
 
-  <script src="/shared.js?v=34"></script>
+  <script src="/shared.js?v=35"></script>
   <script>
   (function () {
     const $ = (id) => document.getElementById(id);
@@ -1528,6 +1577,6 @@
     });
   })();
   </script>
-  <script src="/admin-inbox.js?v=1"></script>
+  <script src="/admin-inbox.js?v=2"></script>
 </body>
 </html>

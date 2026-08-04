@@ -900,19 +900,25 @@
         }
       }
     },
+    "owner": {
+      ".read": true,
+      ".write": false
+    },
     "admins": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('owner').val() === root.child('users').child(auth.uid).child('username').val()",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('owner').val() === root.child('users').child(auth.uid).child('username').val()",
       "$handle": {
-        ".read": "auth != null && root.child('users').child(auth.uid).child('username').val() === $handle",
-        ".write": false
+        ".read": true,
+        ".validate": "newData.isBoolean() && $handle.matches(/^[a-z0-9_]{1,20}$/)"
       }
     },
     "feedback": {
-      ".read": "auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('admins').child(root.child('users').child(auth.uid).child('username').val()).val() === true",
+      ".read": "auth != null && root.child('users').child(auth.uid).child('username').exists() && (root.child('owner').val() === root.child('users').child(auth.uid).child('username').val() || root.child('admins').child(root.child('users').child(auth.uid).child('username').val()).val() === true)",
       ".indexOn": [
         "at"
       ],
       "$id": {
-        ".write": "(auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('admins').child(root.child('users').child(auth.uid).child('username').val()).val() === true) || ($id.matches(/^[a-f0-9]{32}$/) && !data.exists() && newData.exists())",
+        ".write": "(auth != null && root.child('users').child(auth.uid).child('username').exists() && (root.child('owner').val() === root.child('users').child(auth.uid).child('username').val() || root.child('admins').child(root.child('users').child(auth.uid).child('username').val()).val() === true)) || ($id.matches(/^[a-f0-9]{32}$/) && !data.exists() && newData.exists())",
         ".validate": "newData.hasChildren(['kind','about','message','at'])",
         "kind": {
           ".validate": "newData.isString() && newData.val().matches(/^(bug|idea|question|other)$/)"

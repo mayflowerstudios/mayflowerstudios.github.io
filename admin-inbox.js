@@ -1,7 +1,9 @@
 /* Mayflower Studios — what came in through the contact form, on the profile page.
-   Who counts as an admin is a username ticked by hand under /admins in the
-   Firebase console. Nothing on the site can write there, so nobody can make
-   themselves one, and the section stays hidden for everyone else. */
+
+   Two ranks. The owner is one username at /owner, set by hand in the Firebase
+   console and writable by nothing, ever. Admins are usernames under /admins,
+   which only the owner can change — from the panel at the bottom of this
+   section. Admins read what comes in; they cannot make more admins. */
 (function () {
   const DB = "https://watchtogether-95d7d-default-rtdb.firebaseio.com";
 
@@ -16,17 +18,16 @@
     const d = new Date(Number(t) || 0);
     return isNaN(d.getTime()) ? "" : d.toLocaleString();
   };
+  const get = path => fetch(`${DB}/${path}.json?auth=${token}`, { cache: "no-store" })
+    .then(r => r.ok ? r.json() : null).catch(() => null);
 
-  let token = null, all = [], wired = false;
+  let token = null, me = "", owner = false, all = [], admins = [], wired = false;
 
   async function usernameOf(user) {
     const known = window.MFAuth && MFAuth.profile && MFAuth.profile.username;
     if (known) return String(known).toLowerCase();
-    try {
-      const r = await fetch(`${DB}/users/${user.uid}/username.json?auth=${token}`);
-      const v = r.ok ? await r.json() : null;
-      return v ? String(v).toLowerCase() : "";
-    } catch (_) { return ""; }
+    const v = await get(`users/${user.uid}/username`);
+    return v ? String(v).toLowerCase() : "";
   }
 
   async function start(user) {
@@ -37,24 +38,39 @@
 
     try { token = await user.getIdToken(); } catch (_) { return; }
 
-    const handle = await usernameOf(user);
-    if (!handle) return;
+    me = await usernameOf(user);
+    if (!me) return;
 
-    const yes = await fetch(`${DB}/admins/${encodeURIComponent(handle)}.json?auth=${token}`)
-      .then(r => r.ok ? r.json() : null).catch(() => null);
-    if (yes !== true) return;
+    const [whoOwns, amAdmin] = await Promise.all([
+      get("owner"),
+      get(`admins/${encodeURIComponent(me)}`)
+    ]);
+    owner = String(whoOwns || "").toLowerCase() === me;
+    if (!owner && amAdmin !== true) return;
 
     wrap.hidden = false;
-    el("aiWho").textContent = handle;
+    el("aiWho").textContent = me;
+    const tag = el("aiRankTag");
+    tag.textContent = owner ? "Owner" : "Admin";
+    tag.className = "aiRank" + (owner ? "" : " admin");
+
     if (!wired) {
       wired = true;
       el("aiFilter").addEventListener("change", draw);
       el("aiHideDone").addEventListener("change", draw);
       el("aiRefresh").addEventListener("click", load);
       el("aiList").addEventListener("click", act);
+      el("aiAddBtn").addEventListener("click", addAdmin);
+      el("aiAddName").addEventListener("keydown", e => { if (e.key === "Enter") addAdmin(); });
+      el("aiAdminList").addEventListener("click", dropAdmin);
     }
+
+    el("aiRanks").hidden = !owner;
     load();
+    if (owner) loadAdmins();
   }
+
+  /* ------------------------------------------------------------- messages */
 
   async function load() {
     const list = el("aiList");
@@ -121,6 +137,74 @@
       }
       draw();
     } catch (err) { console.warn("admin inbox:", err); }
+  }
+
+  /* ---------------------------------------------------------------- ranks */
+
+  function rankSay(text, kind) {
+    const n = el("aiRankMsg");
+    n.textContent = text || "";
+    n.className = kind || "";
+  }
+
+  async function loadAdmins() {
+    const data = await get("admins");
+    admins = Object.entries(data || {}).filter(([, v]) => v === true)
+      .map(([h]) => h).sort();
+    drawAdmins();
+  }
+
+  function drawAdmins() {
+    const box = el("aiAdminList");
+    const you = `<span class="aiChip">${esc(me)} <span class="aiRank">Owner</span></span>`;
+    box.innerHTML = you + admins.map(h => `
+      <span class="aiChip">${esc(h)}
+        <button type="button" data-drop="${esc(h)}" title="Take it away">✕</button>
+      </span>`).join("");
+  }
+
+  async function addAdmin() {
+    const box = el("aiAddName");
+    const handle = box.value.trim().toLowerCase().replace(/^@/, "");
+    if (!handle) return;
+    if (!/^[a-z0-9_]{1,20}$/.test(handle)) { rankSay("Usernames are letters, numbers and _ only.", "bad"); return; }
+    if (handle === me) { rankSay("You are the owner already.", "bad"); return; }
+    if (admins.includes(handle)) { rankSay(`@${handle} is already an admin.`, "bad"); return; }
+
+    rankSay("Checking…", "");
+    const uid = await get(`usernames/${encodeURIComponent(handle)}`);
+    if (!uid) { rankSay(`No account called @${handle}.`, "bad"); return; }
+
+    try {
+      const r = await fetch(`${DB}/admins/${encodeURIComponent(handle)}.json?auth=${token}`, {
+        method: "PUT", body: "true"
+      });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      admins = admins.concat(handle).sort();
+      box.value = "";
+      drawAdmins();
+      rankSay(`@${handle} can see these now.`, "ok");
+    } catch (err) {
+      rankSay("That did not save.", "bad");
+      console.warn("make admin:", err);
+    }
+  }
+
+  async function dropAdmin(e) {
+    const t = e.target.closest("[data-drop]");
+    if (!t) return;
+    const handle = t.dataset.drop;
+    if (!confirm(`Take admin away from @${handle}?`)) return;
+    try {
+      const r = await fetch(`${DB}/admins/${encodeURIComponent(handle)}.json?auth=${token}`, { method: "DELETE" });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      admins = admins.filter(h => h !== handle);
+      drawAdmins();
+      rankSay(`@${handle} can no longer see these.`, "ok");
+    } catch (err) {
+      rankSay("That did not save.", "bad");
+      console.warn("drop admin:", err);
+    }
   }
 
   function wire() {
