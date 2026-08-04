@@ -33,6 +33,10 @@
     .cbWas { font-size: 11.5px; color: var(--gold); margin-top: 3px; }
     .cbActs { display: flex; gap: 7px; flex: none; flex-wrap: wrap; justify-content: flex-end; }
     .cbActs button.danger:hover { color: var(--rose-deep); border-color: var(--rose-deep); }
+    .cbActs button[disabled] { opacity: .45; cursor: default; }
+    .cbMsg { font-size: 13px; margin: 12px 0 0; line-height: 1.55; }
+    .cbMsg.ok { color: var(--emerald); }
+    .cbMsg.bad { color: var(--rose-deep); }
     /* ── the contact form inbox, admins only ── */
     .aiBar { display:flex; flex-wrap:wrap; gap:9px; align-items:center; margin-bottom:13px; }
     .aiBar select, .aiBar button {
@@ -191,6 +195,7 @@
             <span id="cbCount"></span>
           </div>
           <div id="cbList"></div>
+          <p class="cbMsg" id="cbMsg"></p>
           <p class="aiFoot">Anything added or changed goes straight in and works for everybody
             right away. It shows up here as <b>new</b> or <b>changed</b> until you approve it.
             A change keeps what it said before, so <b>Put back</b> undoes it.</p>
@@ -206,6 +211,6 @@
 
   <script src="/shared.js?v=36"></script>
   <script src="/auth.js?v=36"></script>
-  <script src="/admin-inbox.js?v=4"></script>
+  <script src="/admin-inbox.js?v=5"></script>
 </body>
 </html>

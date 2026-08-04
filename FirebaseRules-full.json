@@ -580,8 +580,8 @@
         "output"
       ],
       "$recipeId": {
-        ".write": "(auth != null && root.child('users').child(auth.uid).child('username').exists() && (root.child('owner').val() === root.child('users').child(auth.uid).child('username').val() || root.child('admins').child(root.child('users').child(auth.uid).child('username').val()).val() === true)) || (auth != null && $recipeId.matches(/^[a-f0-9]{32}$/) && ((data.exists() && !newData.exists() && data.child('by').val() === auth.uid) || (!data.exists() && newData.exists() && newData.child('by').val() === auth.uid && !newData.hasChild('ok') && !newData.hasChild('was')) || (data.exists() && newData.exists() && newData.child('by').val() === auth.uid && !newData.hasChild('ok') && newData.child('output').val() === data.child('output').val() && newData.child('makes').val() === data.child('makes').val() && newData.child('needs').val() === data.child('needs').val() && newData.child('was').child('where').val() === data.child('where').val() && newData.child('was').child('cost').val() === data.child('cost').val())))",
-        ".validate": "newData.hasChildren(['output', 'makes', 'needs', 'at', 'by'])",
+        ".write": "(auth != null && root.child('users').child(auth.uid).child('username').exists() && ((root.child('owner').exists() && root.child('owner').val().toLowerCase() === root.child('users').child(auth.uid).child('username').val()) || root.child('admins').child(root.child('users').child(auth.uid).child('username').val()).val() === true)) || (auth != null && $recipeId.matches(/^[a-f0-9]{32}$/) && ((data.exists() && !newData.exists() && data.child('by').val() === auth.uid) || (!data.exists() && newData.exists() && newData.child('by').val() === auth.uid && !newData.hasChild('ok') && !newData.hasChild('was')) || (data.exists() && newData.exists() && newData.child('by').val() === auth.uid && !newData.hasChild('ok') && newData.child('output').val() === data.child('output').val() && newData.child('makes').val() === data.child('makes').val() && newData.child('needs').val() === data.child('needs').val() && newData.child('was').child('where').val() === data.child('where').val() && newData.child('was').child('cost').val() === data.child('cost').val())))",
+        ".validate": "newData.hasChildren(['output', 'makes', 'needs', 'at'])",
         "output": {
           ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
         },
@@ -628,8 +628,8 @@
     "craftSources": {
       ".read": true,
       "$sourceId": {
-        ".write": "(auth != null && root.child('users').child(auth.uid).child('username').exists() && (root.child('owner').val() === root.child('users').child(auth.uid).child('username').val() || root.child('admins').child(root.child('users').child(auth.uid).child('username').val()).val() === true)) || (auth != null && $sourceId.matches(/^[a-f0-9]{32}$/) && ((data.exists() && !newData.exists() && data.child('by').val() === auth.uid) || (!data.exists() && newData.exists() && newData.child('by').val() === auth.uid && !newData.hasChild('ok') && !newData.hasChild('was')) || (data.exists() && newData.exists() && newData.child('by').val() === auth.uid && !newData.hasChild('ok') && newData.child('item').val() === data.child('item').val() && newData.child('kind').val() === data.child('kind').val() && newData.child('from').val() === data.child('from').val() && newData.child('where').val() === data.child('where').val() && newData.child('was').child('where').val() === data.child('where').val() && newData.child('was').child('cost').val() === data.child('cost').val())))",
-        ".validate": "newData.hasChildren(['item', 'from', 'at', 'by'])",
+        ".write": "(auth != null && root.child('users').child(auth.uid).child('username').exists() && ((root.child('owner').exists() && root.child('owner').val().toLowerCase() === root.child('users').child(auth.uid).child('username').val()) || root.child('admins').child(root.child('users').child(auth.uid).child('username').val()).val() === true)) || (auth != null && $sourceId.matches(/^[a-f0-9]{32}$/) && ((data.exists() && !newData.exists() && data.child('by').val() === auth.uid) || (!data.exists() && newData.exists() && newData.child('by').val() === auth.uid && !newData.hasChild('ok') && !newData.hasChild('was')) || (data.exists() && newData.exists() && newData.child('by').val() === auth.uid && !newData.hasChild('ok') && newData.child('item').val() === data.child('item').val() && newData.child('kind').val() === data.child('kind').val() && newData.child('from').val() === data.child('from').val() && newData.child('where').val() === data.child('where').val() && newData.child('was').child('where').val() === data.child('where').val() && newData.child('was').child('cost').val() === data.child('cost').val())))",
+        ".validate": "newData.hasChildren(['item', 'from', 'at'])",
         "item": {
           ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
         },
@@ -945,20 +945,20 @@
       ".write": false
     },
     "admins": {
-      ".read": "auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('owner').val() === root.child('users').child(auth.uid).child('username').val()",
-      ".write": "auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('owner').val() === root.child('users').child(auth.uid).child('username').val()",
+      ".read": "auth != null && root.child('users').child(auth.uid).child('username').exists() && ((root.child('owner').exists() && root.child('owner').val().toLowerCase() === root.child('users').child(auth.uid).child('username').val()) || root.child('admins').child(root.child('users').child(auth.uid).child('username').val()).val() === true)",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('username').exists() && ((root.child('owner').exists() && root.child('owner').val().toLowerCase() === root.child('users').child(auth.uid).child('username').val()) || root.child('admins').child(root.child('users').child(auth.uid).child('username').val()).val() === true)",
       "$handle": {
         ".read": true,
         ".validate": "newData.isBoolean() && $handle.matches(/^[a-z0-9_]{1,20}$/)"
       }
     },
     "feedback": {
-      ".read": "auth != null && root.child('users').child(auth.uid).child('username').exists() && (root.child('owner').val() === root.child('users').child(auth.uid).child('username').val() || root.child('admins').child(root.child('users').child(auth.uid).child('username').val()).val() === true)",
+      ".read": "auth != null && root.child('users').child(auth.uid).child('username').exists() && ((root.child('owner').exists() && root.child('owner').val().toLowerCase() === root.child('users').child(auth.uid).child('username').val()) || root.child('admins').child(root.child('users').child(auth.uid).child('username').val()).val() === true)",
       ".indexOn": [
         "at"
       ],
       "$id": {
-        ".write": "(auth != null && root.child('users').child(auth.uid).child('username').exists() && (root.child('owner').val() === root.child('users').child(auth.uid).child('username').val() || root.child('admins').child(root.child('users').child(auth.uid).child('username').val()).val() === true)) || ($id.matches(/^[a-f0-9]{32}$/) && !data.exists() && newData.exists())",
+        ".write": "(auth != null && root.child('users').child(auth.uid).child('username').exists() && ((root.child('owner').exists() && root.child('owner').val().toLowerCase() === root.child('users').child(auth.uid).child('username').val()) || root.child('admins').child(root.child('users').child(auth.uid).child('username').val()).val() === true)) || ($id.matches(/^[a-f0-9]{32}$/) && !data.exists() && newData.exists())",
         ".validate": "newData.hasChildren(['kind','about','message','at'])",
         "kind": {
           ".validate": "newData.isString() && newData.val().matches(/^(bug|idea|question|other)$/)"

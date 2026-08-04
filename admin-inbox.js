@@ -23,6 +23,37 @@
 
   let token = null, me = "", owner = false, all = [], admins = [], wired = false;
 
+  // Firebase id tokens run out after an hour, and the page is meant to be
+  // left open. Asking for it again before each write costs nothing when it is
+  // still good, and is the difference between a button working and a button
+  // doing nothing at all.
+  let signedInUser = null;
+  async function fresh() {
+    if (!signedInUser) return token;
+    try { token = await signedInUser.getIdToken(); } catch (_) { }
+    return token;
+  }
+
+  // Anything that goes wrong has to say so. A button that quietly fails is
+  // worse than one that is not there.
+  function trouble(err, what) {
+    console.warn("admin:", what, err);
+    const say = el("cbMsg");
+    if (!say) return;
+    const code = String(err && err.message || err);
+    say.textContent = code.indexOf("401") >= 0 || code.indexOf("403") >= 0
+      ? `${what} was refused. The database rules may not be updated yet — see the craft book rules.`
+      : `${what} did not go through: ${code}`;
+    say.className = "cbMsg bad";
+  }
+
+  function fine(what) {
+    const say = el("cbMsg");
+    if (!say) return;
+    say.textContent = what;
+    say.className = "cbMsg ok";
+  }
+
   async function usernameOf(user) {
     const known = window.MFAuth && MFAuth.profile && MFAuth.profile.username;
     if (known) return String(known).toLowerCase();
@@ -47,6 +78,7 @@
     if (!wrap && !link) return;
     if (!user) { shut("Sign in on your profile first."); return; }
 
+    signedInUser = user;
     try { token = await user.getIdToken(); }
     catch (_) { shut("Could not check who you are."); return; }
 
@@ -183,10 +215,11 @@
   }
 
   async function send(row, patch) {
-    const r = await fetch(`${DB}/${row.node}/${row.id}.json?auth=${token}`, {
+    const tok = await fresh();
+    const r = await fetch(`${DB}/${row.node}/${row.id}.json?auth=${tok}`, {
       method: "PATCH", body: JSON.stringify(patch)
     });
-    if (!r.ok) throw new Error("HTTP " + r.status);
+    if (!r.ok) throw new Error("HTTP " + r.status + " " + (await r.text().catch(() => "")).slice(0, 160));
   }
 
   async function dropEntry(e) {
@@ -196,27 +229,35 @@
     const row = book.find(m => m.id === id);
     if (!row) return;
     const label = bookName(row);
+    t.disabled = true;
     try {
       if (t.dataset.ok) {
         // Checked, and no longer showing what it replaced.
         await send(row, { ok: true, was: null });
         row.ok = true; delete row.was;
+        fine(`“${label}” approved.`);
       } else if (t.dataset.revert) {
-        if (!confirm(`Put "${label}" back to what it said before?`)) return;
+        if (!confirm(`Put "${label}" back to what it said before?`)) { t.disabled = false; return; }
         const back = { cost: row.was.cost || 0, ok: true, was: null };
         if (row.node !== "craftSources") back.where = row.was.where || "";
         await send(row, back);
-        Object.assign(row, { ok: true }, back.where === undefined ? {} : { where: back.where },
-                      { cost: back.cost });
+        row.ok = true; row.cost = back.cost;
+        if (back.where !== undefined) row.where = back.where;
         delete row.was;
+        fine(`“${label}” put back to what it said before.`);
       } else {
-        if (!confirm(`Take "${label}" off the shared list for everybody?`)) return;
-        const r = await fetch(`${DB}/${row.node}/${id}.json?auth=${token}`, { method: "DELETE" });
-        if (!r.ok) throw new Error("HTTP " + r.status);
+        if (!confirm(`Take "${label}" off the shared list for everybody?`)) { t.disabled = false; return; }
+        const tok = await fresh();
+        const r = await fetch(`${DB}/${row.node}/${id}.json?auth=${tok}`, { method: "DELETE" });
+        if (!r.ok) throw new Error("HTTP " + r.status + " " + (await r.text().catch(() => "")).slice(0, 160));
         book = book.filter(m => m.id !== id);
+        fine(`“${label}” taken off the list.`);
       }
       drawBook();
-    } catch (err) { console.warn("craft book:", err); }
+    } catch (err) {
+      t.disabled = false;
+      trouble(err, t.dataset.ok ? "Approving" : t.dataset.revert ? "Putting it back" : "Removing");
+    }
   }
 
   /* ------------------------------------------------------------- messages */
