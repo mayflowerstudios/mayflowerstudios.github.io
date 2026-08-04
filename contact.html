@@ -14,7 +14,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=2" />
   <link rel="apple-touch-icon" href="/assets/icons/favicon.png?v=2" />
-  <link rel="stylesheet" href="/style.css?v=33" />
+  <link rel="stylesheet" href="/style.css?v=34" />
 
   <style>
     /* ───────────── Contact-only flourishes (structure comes from style.css) ───────────── */
@@ -47,6 +47,57 @@
     .contact-note p { font-size: 14.5px; color: var(--text-2); line-height: 1.85; margin-bottom: 12px; }
     .contact-note p:last-child { margin-bottom: 0; }
     .contact-note em { color: var(--rose); font-style: italic; }
+
+    /* ───────────── the form ───────────── */
+    .cForm { display:grid; gap:14px; padding:26px 28px; }
+    .cRow { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    @media (max-width:640px) { .cRow { grid-template-columns:1fr; } }
+    .cField { display:flex; flex-direction:column; gap:6px; }
+    .cField label { font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--text-3); }
+    .cField input, .cField select, .cField textarea {
+      font-family:var(--font-b); font-size:14.5px; color:var(--text);
+      background:rgba(0,0,0,.28); border:1px solid var(--border-2);
+      border-radius:var(--r-sm); padding:11px 13px; width:100%;
+    }
+    .cField textarea { min-height:150px; resize:vertical; line-height:1.6; }
+    .cField input:focus, .cField select:focus, .cField textarea:focus { outline:none; border-color:var(--rose); }
+    .cField .hint { font-size:12px; color:var(--text-3); text-transform:none; letter-spacing:0; }
+    .cHoney { position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
+    .cSubmit { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+    .cMsg { font-size:13.5px; color:var(--text-2); }
+    .cMsg.ok { color:var(--emerald); }
+    .cMsg.bad { color:var(--rose-deep); }
+
+    /* ───────────── what came in ───────────── */
+    .cBar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px; }
+    .cBar select, .cBar button {
+      font:inherit; font-size:13px; color:var(--text); cursor:pointer;
+      background:rgba(0,0,0,.28); border:1px solid var(--border-2);
+      border-radius:var(--r-sm); padding:7px 12px;
+    }
+    .cBar label { font-size:13px; color:var(--text-2); display:inline-flex; align-items:center; gap:7px; cursor:pointer; }
+    #cCount { font-size:12.5px; color:var(--text-3); font-family:var(--font-m); margin-left:auto; }
+    #cList { display:flex; flex-direction:column; gap:12px; }
+    .cItem { background:var(--glass-2); border:1px solid var(--border); border-radius:var(--r-sm); padding:14px 16px; }
+    .cItem.done { opacity:.5; }
+    .cItem header { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:8px; }
+    .cTag {
+      font-size:11px; padding:2px 9px; border-radius:999px; color:var(--rose);
+      background:rgba(249,168,212,.12); border:1px solid var(--border-2);
+    }
+    .cTag.alt { color:var(--violet); background:rgba(196,181,253,.14); border-color:rgba(196,181,253,.28); }
+    .cWhen { font-size:11.5px; color:var(--text-3); font-family:var(--font-m); margin-left:auto; }
+    .cItem h4 { margin:0 0 6px; font-size:15px; }
+    .cBody { margin:0 0 10px; font-size:14px; line-height:1.7; color:var(--text-2); white-space:pre-wrap; }
+    .cItem footer { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; }
+    .cActs { display:flex; gap:8px; }
+    .cActs button {
+      font:inherit; font-size:12px; color:var(--text-2); cursor:pointer;
+      background:transparent; border:1px solid var(--border-2); border-radius:999px; padding:4px 12px;
+    }
+    .cActs button:hover { color:var(--text); border-color:var(--rose); }
+    .cActs button.danger:hover { color:var(--rose-deep); border-color:var(--rose-deep); }
+    #cWhoami code { font-family:var(--font-m); font-size:12.5px; color:var(--gold); word-break:break-all; }
   </style>
 </head>
 <body data-nav="contact">
@@ -61,12 +112,90 @@
         <p class="page-kicker">✦ Say hello</p>
         <h1 class="page-title">Contact</h1>
         <p class="page-sub">
-          Got a question, found a bug, or just want to share a kind word? I'd love to hear from you.
-          It's a one-person studio, so replies might take a little while — but every message is read.
+          Found a bug, had an idea, or just want to say hello? Fill in the form below and it comes
+          straight to me. It's a one-person studio, so replies might take a little while, but every
+          message is read.
         </p>
         <div class="page-actions">
-          <a href="mailto:contact@mayflowerstudios.net" class="btn-pri">✉️ Send an email</a>
+          <a href="#say" class="btn-pri">✍️ Write a message</a>
           <a href="/" class="btn-ghost">🏡 Back home</a>
+        </div>
+      </section>
+
+      <!-- ══ THE FORM ══ -->
+      <section class="sec reveal" id="say">
+        <div class="sec-head">
+          <div class="sec-kicker">✍️ Say something</div>
+          <h2 class="sec-title">Bug, idea, or hello</h2>
+        </div>
+
+        <form class="card cForm" id="cForm" autocomplete="off">
+          <div class="cRow">
+            <div class="cField">
+              <label for="cKind">What is it</label>
+              <select id="cKind"></select>
+            </div>
+            <div class="cField">
+              <label for="cAbout">What is it about</label>
+              <select id="cAbout"></select>
+            </div>
+          </div>
+
+          <div class="cField">
+            <label for="cSubject">Subject <span class="hint">optional</span></label>
+            <input id="cSubject" type="text" maxlength="80" placeholder="A few words" />
+          </div>
+
+          <div class="cField">
+            <label for="cMessage">Message</label>
+            <textarea id="cMessage" maxlength="4000" required
+              placeholder="What happened, what you were doing, and what you expected instead. For an idea, just say it however it comes out."></textarea>
+          </div>
+
+          <div class="cRow">
+            <div class="cField">
+              <label for="cName">Your name <span class="hint">optional</span></label>
+              <input id="cName" type="text" maxlength="40" placeholder="What should I call you?" />
+            </div>
+            <div class="cField">
+              <label for="cReply">How to reach you <span class="hint">optional</span></label>
+              <input id="cReply" type="text" maxlength="120" placeholder="Email, Discord, anything" />
+            </div>
+          </div>
+
+          <div class="cHoney" aria-hidden="true">
+            <label for="cWebsite">Leave this empty</label>
+            <input id="cWebsite" type="text" tabindex="-1" autocomplete="off" />
+          </div>
+
+          <div class="cSubmit">
+            <button type="submit" class="btn-pri" id="cSend">Send it</button>
+            <span class="cMsg" id="cFormMsg"></span>
+          </div>
+        </form>
+
+        <div class="card contact-note" id="cWhoami" hidden style="margin-top:14px;">
+          <p class="muted small" style="margin:0;">
+            Signed in. Your account id is <code id="cUid"></code> — add it under
+            <strong>admins</strong> in the Firebase console to read what comes in here.
+          </p>
+        </div>
+      </section>
+
+      <!-- ══ WHAT CAME IN — admins only ══ -->
+      <section class="sec reveal" id="cAdmin" hidden>
+        <div class="sec-head">
+          <div class="sec-kicker">📬 Admin</div>
+          <h2 class="sec-title">What came in</h2>
+        </div>
+        <div class="card" style="padding:22px 24px;">
+          <div class="cBar">
+            <select id="cFilterKind"></select>
+            <label><input type="checkbox" id="cHideDone" checked /> Hide done</label>
+            <button id="cRefresh">Refresh</button>
+            <span id="cCount"></span>
+          </div>
+          <div id="cList"></div>
         </div>
       </section>
 
@@ -74,7 +203,7 @@
       <section class="sec reveal">
         <div class="sec-head">
           <div class="sec-kicker">🌿 Ways to reach me</div>
-          <h2 class="sec-title">Pick whatever's easiest</h2>
+          <h2 class="sec-title">Or the other ways</h2>
         </div>
 
         <div class="contact-grid reveal stagger">
@@ -82,7 +211,7 @@
             <div class="card-shine"></div>
             <div class="c-icon">✉️</div>
             <h3>Email</h3>
-            <p>The best way to reach me for anything — questions, bug reports, feedback, or collaboration. I'll get back to you when I can.</p>
+            <p>If you would rather write an email than use the form, this reaches me too.</p>
             <span class="c-go">contact@mayflowerstudios.net →</span>
           </a>
 
@@ -117,5 +246,7 @@
   </div><!-- /site-page -->
 
   <script src="/shared.js?v=34"></script>
+  <script src="/auth.js?v=34"></script>
+  <script src="/contact.js?v=1"></script>
 </body>
 </html>

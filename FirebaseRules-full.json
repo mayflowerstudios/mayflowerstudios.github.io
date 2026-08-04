@@ -899,6 +899,52 @@
           ".validate": false
         }
       }
+    },
+    "admins": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": false
+      }
+    },
+    "feedback": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      ".indexOn": [
+        "at"
+      ],
+      "$id": {
+        ".write": "(auth != null && root.child('admins').child(auth.uid).val() === true) || ($id.matches(/^[a-f0-9]{32}$/) && !data.exists() && newData.exists())",
+        ".validate": "newData.hasChildren(['kind','about','message','at'])",
+        "kind": {
+          ".validate": "newData.isString() && newData.val().matches(/^(bug|idea|question|other)$/)"
+        },
+        "about": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40"
+        },
+        "subject": {
+          ".validate": "newData.isString() && newData.val().length <= 80"
+        },
+        "message": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 4000"
+        },
+        "name": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "reply": {
+          ".validate": "newData.isString() && newData.val().length <= 120"
+        },
+        "uid": {
+          ".validate": "newData.isString() && newData.val().length <= 128"
+        },
+        "at": {
+          ".validate": "newData.isNumber() && newData.val() <= now + 60000 && newData.val() >= now - 60000"
+        },
+        "done": {
+          ".validate": "newData.isBoolean()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
     }
   }
 }
