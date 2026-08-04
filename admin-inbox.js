@@ -30,24 +30,40 @@
     return v ? String(v).toLowerCase() : "";
   }
 
+  // Two pages use this. The profile only wants the button; the admin page
+  // wants everything, and has to say something when you are not one.
+  function shut(why) {
+    const link = el("adminLink");
+    if (link) link.hidden = true;
+    const wrap = el("adminInbox");
+    if (wrap) wrap.hidden = true;
+    const gate = el("adminGate");
+    if (gate) gate.innerHTML = `<p class="muted" style="margin:0;">${why}</p>`;
+  }
+
   async function start(user) {
     const wrap = el("adminInbox");
-    if (!wrap) return;
-    wrap.hidden = true;
-    if (!user) return;
+    const link = el("adminLink");
+    if (!wrap && !link) return;
+    if (!user) { shut("Sign in on your profile first."); return; }
 
-    try { token = await user.getIdToken(); } catch (_) { return; }
+    try { token = await user.getIdToken(); }
+    catch (_) { shut("Could not check who you are."); return; }
 
     me = await usernameOf(user);
-    if (!me) return;
+    if (!me) { shut("Set a username on your profile first."); return; }
 
     const [whoOwns, amAdmin] = await Promise.all([
       get("owner"),
       get(`admins/${encodeURIComponent(me)}`)
     ]);
     owner = String(whoOwns || "").toLowerCase() === me;
-    if (!owner && amAdmin !== true) return;
+    if (!owner && amAdmin !== true) { shut("This page is for admins."); return; }
 
+    if (link) link.hidden = false;
+    if (!wrap) return;                 // on the profile, the button is all there is
+    const gate = el("adminGate");
+    if (gate) gate.hidden = true;
     wrap.hidden = false;
     el("aiWho").textContent = me;
     const tag = el("aiRankTag");
@@ -65,6 +81,7 @@
       el("aiAdminList").addEventListener("click", dropAdmin);
       el("cbWhat").addEventListener("change", loadBook);
       el("cbFind").addEventListener("input", drawBook);
+      el("cbOnlyNew").addEventListener("change", drawBook);
       el("cbRefresh").addEventListener("click", loadBook);
       el("cbList").addEventListener("click", dropEntry);
     }
@@ -111,41 +128,95 @@
     return s;
   }
 
+  const bookName = m => String(m.node === "craftSources" ? m.item : m.output || "");
+
+  // What it said before somebody changed it, if anybody has.
+  function wasLine(m) {
+    if (!m.was) return "";
+    const bits = [];
+    if (m.node !== "craftSources" && (m.was.where || "") !== (m.where || ""))
+      bits.push(`at ${m.was.where || "nowhere"}`);
+    if ((m.was.cost || 0) !== (m.cost || 0))
+      bits.push(`${Number(m.was.cost || 0).toLocaleString()} eons`);
+    return bits.length ? "was " + bits.join(" · ") : "";
+  }
+
   function drawBook() {
     const list = el("cbList");
     const q = el("cbFind").value.trim().toLowerCase();
-    const name = m => String(m.node === "craftSources" ? m.item : m.output || "");
-    const rows = book.filter(m => !q || name(m).toLowerCase().includes(q)
+    const onlyNew = el("cbOnlyNew").checked;
+    let rows = book.filter(m => !q || bookName(m).toLowerCase().includes(q)
                                   || bookLine(m).toLowerCase().includes(q));
-    el("cbCount").textContent = book.length ? `${rows.length} of ${book.length}` : "";
+    if (onlyNew) rows = rows.filter(m => m.ok !== true);
+    // Anything not looked at yet comes first, changes before brand new ones.
+    rows.sort((a, b) => (a.ok === true) - (b.ok === true)
+                     || (b.was ? 1 : 0) - (a.was ? 1 : 0)
+                     || (b.at || 0) - (a.at || 0));
+
+    const waiting = book.filter(m => m.ok !== true).length;
+    el("cbCount").textContent = book.length
+      ? `${rows.length} of ${book.length}${waiting ? ` · ${waiting} to look at` : ""}` : "";
     if (!rows.length) {
-      list.innerHTML = `<div class="acctEmpty">${book.length ? "Nothing matching that." : "Nothing shared yet."}</div>`;
+      list.innerHTML = `<div class="acctEmpty">${book.length
+        ? (onlyNew ? "Everything has been looked at." : "Nothing matching that.")
+        : "Nothing shared yet."}</div>`;
       return;
     }
-    list.innerHTML = rows.map(m => `
-      <div class="cbRow">
+    list.innerHTML = rows.map(m => {
+      const before = wasLine(m);
+      return `
+      <div class="cbRow${m.ok === true ? " isOk" : ""}">
         <span class="cbText">
-          <span class="cbName">${esc(name(m))}</span>
+          <span class="cbName">${esc(bookName(m))}${m.ok === true
+            ? ` <span class="cbTick" title="Checked">✓</span>`
+            : ` <span class="cbNew">${m.was ? "changed" : "new"}</span>`}</span>
           <span class="cbSays">${esc(bookLine(m))}</span>
+          ${before ? `<span class="cbWas">${esc(before)}</span>` : ""}
         </span>
-        <button type="button" data-drop-entry="${esc(m.id)}">Remove</button>
-      </div>`).join("");
+        <span class="cbActs">
+          ${m.ok === true ? "" : `<button type="button" data-ok="${esc(m.id)}">Approve</button>`}
+          ${m.was ? `<button type="button" data-revert="${esc(m.id)}">Put back</button>` : ""}
+          <button type="button" class="danger" data-drop-entry="${esc(m.id)}">Remove</button>
+        </span>
+      </div>`;
+    }).join("");
+  }
+
+  async function send(row, patch) {
+    const r = await fetch(`${DB}/${row.node}/${row.id}.json?auth=${token}`, {
+      method: "PATCH", body: JSON.stringify(patch)
+    });
+    if (!r.ok) throw new Error("HTTP " + r.status);
   }
 
   async function dropEntry(e) {
-    const t = e.target.closest("[data-drop-entry]");
+    const t = e.target.closest("[data-drop-entry],[data-ok],[data-revert]");
     if (!t) return;
-    const id = t.dataset.dropEntry;
+    const id = t.dataset.dropEntry || t.dataset.ok || t.dataset.revert;
     const row = book.find(m => m.id === id);
     if (!row) return;
-    const label = row.node === "craftSources" ? row.item : row.output;
-    if (!confirm(`Take "${label}" off the shared list for everybody?`)) return;
+    const label = bookName(row);
     try {
-      const r = await fetch(`${DB}/${row.node}/${id}.json?auth=${token}`, { method: "DELETE" });
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      book = book.filter(m => m.id !== id);
+      if (t.dataset.ok) {
+        // Checked, and no longer showing what it replaced.
+        await send(row, { ok: true, was: null });
+        row.ok = true; delete row.was;
+      } else if (t.dataset.revert) {
+        if (!confirm(`Put "${label}" back to what it said before?`)) return;
+        const back = { cost: row.was.cost || 0, ok: true, was: null };
+        if (row.node !== "craftSources") back.where = row.was.where || "";
+        await send(row, back);
+        Object.assign(row, { ok: true }, back.where === undefined ? {} : { where: back.where },
+                      { cost: back.cost });
+        delete row.was;
+      } else {
+        if (!confirm(`Take "${label}" off the shared list for everybody?`)) return;
+        const r = await fetch(`${DB}/${row.node}/${id}.json?auth=${token}`, { method: "DELETE" });
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        book = book.filter(m => m.id !== id);
+      }
       drawBook();
-    } catch (err) { console.warn("craft book remove:", err); }
+    } catch (err) { console.warn("craft book:", err); }
   }
 
   /* ------------------------------------------------------------- messages */

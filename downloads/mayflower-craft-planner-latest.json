@@ -1,9 +1,9 @@
 {
   "name": "Mayflower Craft Planner",
-  "version": "1.11.0",
-  "codename": "Yours To Take Back",
+  "version": "1.12.0",
+  "codename": "Checked Over",
   "platform": "Windows",
-  "file": "/downloads/MayflowerCraftPlanner_v1.11.0.exe",
+  "file": "/downloads/MayflowerCraftPlanner_v1.12.0.exe",
   "size": "Single EXE",
-  "notes": "The shared list can no longer be rewritten. Every entry now knows who wrote it down, so you can take back what you added and nobody can change it to say something wrong or empty the list. Nothing to sign in to and nothing to type — it happens by itself."
+  "notes": "Filling in a price or a place on somebody else's entry works again and takes effect for everyone right away. Each change carries what it replaced, so it can be put back, and new or changed entries are flagged for an admin to look over."
 }
