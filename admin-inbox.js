@@ -148,8 +148,11 @@
 
   function bookLine(m) {
     if (m.node === "craftSources") {
-      const doing = { kill: "Kill", chop: "Chop", mine: "Mine", fish: "Fish", pick: "Pick", buy: "Buy from" };
-      let s = `${doing[m.kind] || m.kind || "?"} ${m.from || "?"}`;
+      const doing = { kill: "Kill", chop: "Chop", mine: "Mine", fish: "Fish",
+                      pick: "Pick", buy: "Buy from", quest: "From the quest" };
+      let s = m.kind === "use" && m.uses
+        ? `Use ${m.uses} on ${m.from || "?"}`
+        : `${doing[m.kind] || m.kind || "?"} ${m.from || "?"}`;
       if (m.where) s += ` in ${m.where}`;
       if (m.cost > 0) s += ` for ${Number(m.cost).toLocaleString()} eons`;
       return s;

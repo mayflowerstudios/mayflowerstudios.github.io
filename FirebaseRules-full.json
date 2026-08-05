@@ -634,7 +634,7 @@
           ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
         },
         "kind": {
-          ".validate": "newData.isString() && newData.val().matches(/^(kill|chop|mine|fish|pick|buy)$/)"
+          ".validate": "newData.isString() && newData.val().matches(/^(kill|chop|mine|fish|pick|buy|quest|use)$/)"
         },
         "from": {
           ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
@@ -667,6 +667,9 @@
           "$other": {
             ".validate": false
           }
+        },
+        "uses": {
+          ".validate": "newData.isString() && newData.val().length <= 60"
         },
         "$other": {
           ".validate": false

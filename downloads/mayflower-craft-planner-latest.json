@@ -1,9 +1,9 @@
 {
   "name": "Mayflower Craft Planner",
-  "version": "1.15.0",
-  "codename": "Fill In The Gaps",
+  "version": "1.16.0",
+  "codename": "Use It On That",
   "platform": "Windows",
-  "file": "/downloads/MayflowerCraftPlanner_v1.15.0.exe",
+  "file": "/downloads/MayflowerCraftPlanner_v1.16.0.exe",
   "size": "Single EXE",
-  "notes": "A material nobody has placed now says so on the plan, and one click writes it down with the name already in. Where to find has a list of what is still missing, most wanted first, and a name no item in the game has says so as you type it. Crafts that can also be bought now say which is actually cheaper, worked out all the way down."
+  "notes": "Two more ways of getting something: from a quest, and by using one thing on another — an empty glass on a cow, an empty bucket at a well. A use-on says what it uses up, and the plan then asks for those, so four glasses of milk puts four empty glasses on your list."
 }
