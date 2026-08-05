@@ -1,9 +1,9 @@
 {
   "name": "Mayflower Craft Planner",
-  "version": "1.14.0",
+  "version": "1.14.1",
   "codename": "Or Just Buy It",
   "platform": "Windows",
-  "file": "/downloads/MayflowerCraftPlanner_v1.14.0.exe",
+  "file": "/downloads/MayflowerCraftPlanner_v1.14.1.exe",
   "size": "Single EXE",
-  "notes": "Anything somebody sells now offers buying it instead, with what the whole lot would cost. That works on things you would otherwise craft too — buy the bar and the ore it was made of drops off the list entirely — and a line underneath adds up what you are spending."
+  "notes": "Anything somebody sells now offers buying it instead, with what the whole lot would cost. That works on things you would otherwise craft too — buy the bar and the ore it was made of drops off the list entirely — and a line underneath adds up what you are spending. Something with no recipe at all now shows its shop price too, instead of only saying it has no recipe."
 }
