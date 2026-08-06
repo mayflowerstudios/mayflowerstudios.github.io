@@ -130,17 +130,19 @@
     #aiRankMsg.bad { color:var(--rose-deep); }
 
     /* ── full chat moderation center ── */
-    .amTop { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-bottom:14px; }
-    .amSetting { display:grid; gap:6px; padding:12px; border:1px solid var(--border); border-radius:12px; background:rgba(255,255,255,.025); }
-    .amSetting b { font-size:13px; }
-    .amSetting small { color:var(--text-3); line-height:1.4; }
-    .amSetting select { font:inherit; color:var(--text); background:rgba(0,0,0,.28); border:1px solid var(--border-2); border-radius:9px; padding:7px 9px; }
-    .amSwitch { display:flex; align-items:center; justify-content:space-between; gap:12px; }
-    .amSwitch input { width:18px; height:18px; accent-color:var(--rose); }
+    .amTop { display:grid; grid-template-columns:repeat(auto-fit,minmax(235px,1fr)); gap:12px; margin-bottom:14px; align-items:stretch; }
+    .amSetting { display:grid; gap:8px; min-height:92px; padding:14px; border:1px solid var(--border); border-radius:12px; background:rgba(255,255,255,.025); }
+    .amSettingCopy { min-width:0; }
+    .amSetting b, .amSetting small { display:block; }
+    .amSetting b { font-size:13px; line-height:1.3; margin-bottom:5px; }
+    .amSetting small { color:var(--text-3); line-height:1.45; }
+    .amSetting select { width:100%; margin-top:auto; font:inherit; color:var(--text); background:rgba(0,0,0,.28); border:1px solid var(--border-2); border-radius:9px; padding:8px 10px; }
+    .amSwitch { grid-template-columns:minmax(0,1fr) auto; align-items:center; column-gap:16px; }
+    .amSwitch input { flex:none; width:18px; height:18px; margin:0; padding:0; accent-color:var(--rose); }
     .amStatus { font-size:12px; color:var(--text-3); margin:0 0 14px; }
     .amStatus.ok { color:var(--emerald); }.amStatus.bad { color:var(--rose-deep); }
     .amLookup { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding-top:14px; border-top:1px solid var(--border); }
-    .amLookup input, .amLookup button, .amFilters select, .amFilters input, .amFilters button {
+    .amLookup input, .amLookup button, .amFilters select, .amFilters > input[type="text"], .amFilters button {
       font:inherit; font-size:12.5px; color:var(--text); background:rgba(0,0,0,.28); border:1px solid var(--border-2); border-radius:10px; padding:7px 10px;
     }
     .amLookup input { min-width:190px; flex:1; }.amLookup button,.amFilters button { cursor:pointer; }
@@ -155,7 +157,10 @@
     .amActions button:hover { color:var(--text); border-color:var(--rose); }.amActions button.danger { border-color:rgba(251,113,133,.32); }.amActions button.owner { border-color:rgba(251,191,36,.32); }
     .amHistory { display:grid; gap:7px; margin-top:10px; }.amHistoryItem { font-size:12px; color:var(--text-2); padding:9px 10px; border-radius:9px; background:rgba(255,255,255,.03); }
     .amHistoryItem small { color:var(--text-3); }.amFilters { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:14px 0 10px; }
-    .amFilters input { min-width:150px; flex:1; }.amFilters label { font-size:12px; color:var(--text-2); display:inline-flex; gap:6px; align-items:center; }
+    .amFilters > input[type="text"] { min-width:220px; flex:1 1 300px; }
+    .amFilterCheck { flex:0 0 auto; min-height:34px; padding:0 4px; font-size:12px; color:var(--text-2); display:inline-flex; gap:7px; align-items:center; white-space:nowrap; }
+    .amFilterCheck input[type="checkbox"] { flex:0 0 auto; min-width:0; width:16px; height:16px; margin:0; padding:0; accent-color:var(--rose); }
+    #amLogCount { margin-left:auto; color:var(--text-3); font-size:12px; white-space:nowrap; }
     .amLogList { display:grid; gap:9px; max-height:560px; overflow:auto; }.amLog { border:1px solid var(--border); border-radius:11px; padding:11px 12px; background:rgba(255,255,255,.025); }
     .amLog.restored { opacity:.55; }.amLogHead { display:flex; flex-wrap:wrap; gap:7px; align-items:center; margin-bottom:5px; }
     .amActionTag { font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--violet); border:1px solid rgba(196,181,253,.28); border-radius:999px; padding:2px 7px; }
@@ -163,7 +168,7 @@
     .amLogReason { color:var(--gold); margin-top:4px; }.amLogActs { display:flex; gap:7px; margin-top:8px; }
     .amLogActs button { font:inherit; font-size:11.5px; color:var(--text-2); cursor:pointer; background:transparent; border:1px solid var(--border-2); border-radius:999px; padding:4px 10px; }
     .amLogActs button:hover { border-color:var(--rose); color:var(--text); }
-    @media (max-width:760px){.amTop{grid-template-columns:1fr}.amActions{grid-template-columns:repeat(2,minmax(0,1fr));}}
+    @media (max-width:760px){.amTop{grid-template-columns:1fr}.amActions{grid-template-columns:repeat(2,minmax(0,1fr));}.amFilters>input[type="text"]{flex-basis:100%;order:2}.amFilterCheck{order:3}#amRefresh,#amPurge,#amLogCount{order:4}}
     @media (max-width:480px){.amActions{grid-template-columns:1fr}}
 
   </style>
@@ -225,20 +230,20 @@
         <div class="acctFriendsCard">
           <div class="amTop">
             <label class="amSetting amSwitch">
-              <span><b>Public chat lock</b><small>Regular users cannot post while locked.</small></span>
-              <input id="amLock" type="checkbox" />
+              <span class="amSettingCopy"><b>Public chat lock</b><small>Regular users cannot post while locked.</small></span>
+              <input id="amLock" type="checkbox" aria-label="Lock public chat" />
             </label>
             <label class="amSetting">
-              <b>Slow mode</b><small>Delay between regular-user messages.</small>
-              <select id="amSlow">
+              <span class="amSettingCopy"><b>Slow mode</b><small>Delay between regular-user messages.</small></span>
+              <select id="amSlow" aria-label="Public chat slow mode">
                 <option value="0">Off</option><option value="5">5 seconds</option><option value="10">10 seconds</option>
                 <option value="15">15 seconds</option><option value="30">30 seconds</option><option value="60">1 minute</option>
                 <option value="120">2 minutes</option><option value="300">5 minutes</option>
               </select>
             </label>
             <label class="amSetting amSwitch" id="amAdminsUnlockWrap" hidden>
-              <span><b>Admins may unlock</b><small>Owner-only policy for reopening chat.</small></span>
-              <input id="amAdminsUnlock" type="checkbox" />
+              <span class="amSettingCopy"><b>Admins may unlock</b><small>Owner-only policy for reopening chat.</small></span>
+              <input id="amAdminsUnlock" type="checkbox" aria-label="Allow admins to unlock public chat" />
             </label>
           </div>
           <p class="amStatus" id="amStatus">Loading moderation settings…</p>
@@ -256,7 +261,7 @@
               <option value="note">Notes</option><option value="promote">Role changes</option><option value="lock">Chat settings</option>
             </select>
             <input id="amLogSearch" type="text" placeholder="Search user, moderator, reason…" autocomplete="off" />
-            <label><input id="amHideRestored" type="checkbox" /> Hide restored</label>
+            <label class="amFilterCheck"><input id="amHideRestored" type="checkbox" /><span>Hide restored</span></label>
             <button id="amRefresh" type="button">Refresh</button>
             <button id="amPurge" type="button" hidden>Remove expired records</button>
             <span id="amLogCount"></span>
@@ -293,9 +298,9 @@
     <div id="site-footer"></div>
   </div><!-- /site-page -->
 
-  <script src="/shared.js?v=40"></script>
+  <script src="/shared.js?v=41"></script>
   <script src="/auth.js?v=40"></script>
   <script src="/admin-inbox.js?v=6"></script>
-  <script src="/admin-moderation.js?v=1"></script>
+  <script src="/admin-moderation.js?v=2"></script>
 </body>
 </html>

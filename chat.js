@@ -976,7 +976,11 @@
     if (log) log.innerHTML = "";
     msgRows = new Map();
     msgData = new Map();
-    const q = mods.query(node, mods.limitToLast(100));
+    // Public chat is ordered by the message timestamp so a restored message can
+    // return to the same chronological place it originally occupied.
+    const q = view === "global"
+      ? mods.query(node, mods.orderByChild("t"), mods.limitToLast(100))
+      : mods.query(node, mods.limitToLast(100));
     // Only render genuine messages — ignore any stray non-message children
     // (e.g. legacy typing data) so they never appear as garbled messages.
     const isMsg = (m) => m && typeof m === "object" && typeof m.uid === "string" && (typeof m.t === "number");
@@ -1002,6 +1006,24 @@
       mods.off(q, "child_changed", onChange);
       mods.off(q, "child_removed", onRemove);
     };
+  }
+
+  function compareMessages(aKey, a, bKey, b) {
+    const timeDiff = (Number(a && a.t) || 0) - (Number(b && b.t) || 0);
+    return timeDiff || String(aKey).localeCompare(String(bKey));
+  }
+
+  function reorderMessageRows(log) {
+    if (!log) return;
+    const ordered = [...msgData.entries()]
+      .filter(([key]) => msgRows.has(key))
+      .sort(([aKey,a],[bKey,b]) => compareMessages(aKey,a,bKey,b));
+    const fragment = document.createDocumentFragment();
+    ordered.forEach(([key]) => {
+      const row = msgRows.get(key);
+      if (row) fragment.appendChild(row);
+    });
+    log.appendChild(fragment);
   }
 
   // Build OR update the row for a message. Adding and editing share this one
@@ -1059,8 +1081,8 @@
     });
 
     if (!existing) {
-      log.appendChild(row);
       msgRows.set(key, row);
+      reorderMessageRows(log);
       // Scroll down for a new message only if you're already at the bottom, or
       // it's your own message — so reading older messages isn't interrupted.
       if (atBottom || mine) log.scrollTop = log.scrollHeight;
@@ -1070,6 +1092,7 @@
         translateBubble(b).then(() => { if (atBottom || mine) log.scrollTop = log.scrollHeight; });
       }
     } else {
+      reorderMessageRows(log);
       // An edit/delete landed — re-translate only this one bubble.
       if (translateOn && !media) {
         const b = row.querySelector(".mf-msg-text[data-text]");
@@ -1287,10 +1310,13 @@
     const lastRef = mods.ref(db, `chat/lastPost/${me}`);
     watch(lastRef, snap => { lastGlobalPostAt = Number(snap.val()) || 0; updateComposerState(); });
   }
-  async function canActOnUid(uid) {
+  async function canActOnUid(uid, knownRole) {
     if (!isModerator() || !uid || uid === me) return false;
+    // Owners can time out and otherwise moderate admins; admins can only act on
+    // regular users.
     if (myChatRole === "owner") return true;
-    return (await roleForUid(uid)) === "user";
+    const targetRole = knownRole || await roleForUid(uid);
+    return targetRole === "user";
   }
   async function addModerationLog(action, target, extra) {
     const key = mods.push(mods.ref(db, "moderationLog")).key;
@@ -1387,7 +1413,7 @@
         mods.get(mods.query(mods.ref(db, `moderationNotes/${uid}`), mods.limitToLast(10)))
       ]);
       const user = userSnap.val() || {}; const name=user.displayName||fallbackName||"someone"; const handle=cleanHandle(user.username);
-      const role = await roleForUid(uid); const allowed = await canActOnUid(uid); const r=restrictSnap.val()||{};
+      const role = await roleForUid(uid); const allowed = await canActOnUid(uid,role); const r=restrictSnap.val()||{};
       const warnings=[]; warningsSnap.forEach(ch=>warnings.push({id:ch.key,...(ch.val()||{})}));
       const notes=[]; notesSnap.forEach(ch=>notes.push({id:ch.key,...(ch.val()||{})}));
       const protectedText = allowed ? "" : `<div class="mf-mod-protected">🛡️ ${role === "owner" ? "The owner" : "Another admin"} is protected from admin actions.</div>`;

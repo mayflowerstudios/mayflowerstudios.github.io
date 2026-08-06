@@ -38,9 +38,13 @@
     }
     return "user";
   }
-  async function canAct(uid) {
-    if (role === "owner") return uid !== me;
-    return role === "admin" && uid !== me && (await roleForUid(uid)) === "user";
+  async function canAct(uid, knownRole) {
+    if (!uid || uid === me) return false;
+    // The owner may moderate every other account, including admins. Regular
+    // admins remain limited to non-admin users.
+    if (role === "owner") return true;
+    const targetRole = knownRole || await roleForUid(uid);
+    return role === "admin" && targetRole === "user";
   }
 
   async function addLog(action, target, extra) {
@@ -129,13 +133,20 @@
     if (!confirm(`Restore the deleted message from ${log.targetName || "this user"}?`)) return;
     button.disabled = true;
     try {
-      const now = Date.now(); const msgKey = mods.push(mods.ref(db, "chat/global")).key;
+      const now = Date.now();
+      const originalKey = String(log.messageId || "").trim();
+      const msgKey = originalKey || mods.push(mods.ref(db, "chat/global")).key;
+      const originalTime = Number(log.messageTime);
+      const messageTime = Number.isFinite(originalTime) && originalTime > 0 ? originalTime : now;
+      const messageRef = mods.ref(db, `chat/global/${msgKey}`);
+      const existing = await mods.get(messageRef);
+      if (existing.exists()) throw new Error("message key already exists");
       const updates = {};
-      updates[`chat/global/${msgKey}`] = { uid:log.targetUid, name:log.targetName || "someone", text:String(log.messageText || ""), t:now, restored:true, restoredFrom:id, restoredAt:now };
+      updates[`chat/global/${msgKey}`] = { uid:log.targetUid, name:log.targetName || "someone", text:String(log.messageText || ""), t:messageTime, restored:true, restoredFrom:id, restoredAt:now };
       updates[`moderationLog/${id}/restoredAt`] = now;
       updates[`moderationLog/${id}/restoredBy`] = myName || myHandle || "owner";
       await mods.update(mods.ref(db), updates);
-      log.restoredAt = now; log.restoredBy = myName || myHandle || "owner"; drawLogs(); say("Message restored to public chat.", "ok");
+      log.restoredAt = now; log.restoredBy = myName || myHandle || "owner"; drawLogs(); say("Message restored to its original place in public chat.", "ok");
     } catch (err) { console.warn("restore", err); button.disabled = false; say("The message could not be restored.", "bad"); }
   }
 
@@ -201,7 +212,7 @@
         mods.get(mods.query(mods.ref(db,`chatWarnings/${uid}`),mods.limitToLast(12))),
         mods.get(mods.query(mods.ref(db,`moderationNotes/${uid}`),mods.limitToLast(12)))
       ]);
-      const profile=profileSnap.val()||{}; const targetRole=await roleForUid(uid); const allowed=await canAct(uid); const restriction=restrictionSnap.val()||{};
+      const profile=profileSnap.val()||{}; const targetRole=await roleForUid(uid); const allowed=await canAct(uid,targetRole); const restriction=restrictionSnap.val()||{};
       const warnings=[]; warningsSnap.forEach(ch=>warnings.push(ch.val()||{})); const notes=[]; notesSnap.forEach(ch=>notes.push(ch.val()||{}));
       activeUser={uid,name:profile.displayName||handle,handle,role:targetRole,restriction};
       card.innerHTML=`<div class="amUserHead"><b>${esc(activeUser.name)}</b><span class="amHandle">@${esc(handle)}</span><span class="amRole ${esc(targetRole)}">${esc(targetRole)}</span></div>
