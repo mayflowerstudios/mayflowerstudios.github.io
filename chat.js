@@ -35,6 +35,16 @@
   // outgoing typing throttle
   let typingActive = false, typingStopTimer = null, lastTypingPing = 0;
 
+  // Global-chat moderation. Ranks are stored by username at /owner and /admins.
+  // The database rules remain the final authority; these values only decide
+  // whether the moderation button should be shown in the interface.
+  let myChatRole = "user";       // "user" | "admin" | "owner"
+  let ownerHandle = "";
+  let adminHandles = new Set();
+  let moderationSeq = 0;
+  const uidHandleCache = new Map();
+  const uidRoleCache = new Map();
+
   function esc(s) {
     return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
   }
@@ -771,25 +781,129 @@
     for (const b of bubbles) await translateBubble(b);
   }
 
-  // Map of Firebase message key -> its rendered row element, so edits and
-  // deletes can update exactly one row in place (O(1)) instead of re-rendering.
+  function cleanHandle(value) {
+    return String(value || "").trim().toLowerCase().replace(/^@/, "");
+  }
+
+  async function handleForUid(uid) {
+    if (!uid || !db || !mods) return "";
+    if (uidHandleCache.has(uid)) return uidHandleCache.get(uid);
+    const promise = mods.get(mods.ref(db, `users/${uid}/username`))
+      .then(snap => cleanHandle(snap.exists() ? snap.val() : ""))
+      .catch(() => "");
+    uidHandleCache.set(uid, promise);
+    const handle = await promise;
+    uidHandleCache.set(uid, handle);
+    return handle;
+  }
+
+  async function roleForUid(uid) {
+    if (!uid) return "user";
+    if (uid === me) return myChatRole;
+    if (uidRoleCache.has(uid)) return uidRoleCache.get(uid);
+    const promise = (async () => {
+      const handle = await handleForUid(uid);
+      if (!handle) return "user";
+      if (ownerHandle && handle === ownerHandle) return "owner";
+      if (adminHandles.has(handle)) return "admin";
+      try {
+        const snap = await mods.get(mods.ref(db, `admins/${handle}`));
+        if (snap.exists() && snap.val() === true) {
+          adminHandles.add(handle);
+          return "admin";
+        }
+      } catch (_) {}
+      return "user";
+    })();
+    uidRoleCache.set(uid, promise);
+    const role = await promise;
+    uidRoleCache.set(uid, role);
+    return role;
+  }
+
+  async function canModerateMessage(m) {
+    if (view !== "global" || !m || m.uid === me) return false;
+    if (myChatRole === "owner") return true;
+    if (myChatRole !== "admin") return false;
+    return (await roleForUid(m.uid)) === "user";
+  }
+
+  function resetModerationState() {
+    moderationSeq++;
+    myChatRole = "user";
+    ownerHandle = "";
+    adminHandles = new Set();
+    uidRoleCache.clear();
+    refreshVisibleActions();
+  }
+
+  async function refreshModerationState() {
+    if (!me || !db || !mods) { resetModerationState(); return; }
+    const seq = ++moderationSeq;
+    try {
+      let myHandle = cleanHandle(MFAuth.profile && MFAuth.profile.username);
+      if (!myHandle) myHandle = await handleForUid(me);
+      const ownerSnap = await mods.get(mods.ref(db, "owner"));
+      const nextOwner = cleanHandle(ownerSnap.exists() ? ownerSnap.val() : "");
+      const adminSnap = myHandle
+        ? await mods.get(mods.ref(db, `admins/${myHandle}`))
+        : null;
+      let nextRole = "user";
+      if (myHandle && nextOwner && myHandle === nextOwner) nextRole = "owner";
+      else if (adminSnap && adminSnap.exists() && adminSnap.val() === true) nextRole = "admin";
+
+      let nextAdmins = new Set();
+      if (nextRole === "owner" || nextRole === "admin") {
+        try {
+          const allAdmins = await mods.get(mods.ref(db, "admins"));
+          const values = allAdmins.exists() ? (allAdmins.val() || {}) : {};
+          Object.entries(values).forEach(([handle, enabled]) => {
+            if (enabled === true) nextAdmins.add(cleanHandle(handle));
+          });
+        } catch (_) {
+          if (nextRole === "admin" && myHandle) nextAdmins.add(myHandle);
+        }
+      }
+      if (seq !== moderationSeq || me == null) return;
+      ownerHandle = nextOwner;
+      adminHandles = nextAdmins;
+      myChatRole = nextRole;
+      uidRoleCache.clear();
+      uidRoleCache.set(me, myChatRole);
+      refreshVisibleActions();
+    } catch (_) {
+      if (seq === moderationSeq) resetModerationState();
+    }
+  }
+
+  // Map of Firebase message key -> its rendered row and message data, so edits
+  // and removals can update exactly one row in place instead of re-rendering.
   let msgRows = new Map();
+  let msgData = new Map();
 
   function subscribeMessages(node) {
     if (unsubscribe) { try { unsubscribe(); } catch (_) {} unsubscribe = null; }
     const log = document.getElementById("mfChatLog");
     if (log) log.innerHTML = "";
     msgRows = new Map();
+    msgData = new Map();
     const q = mods.query(node, mods.limitToLast(100));
     // Only render genuine messages — ignore any stray non-message children
     // (e.g. legacy typing data) so they never appear as garbled messages.
     const isMsg = (m) => m && typeof m === "object" && typeof m.uid === "string" && (typeof m.t === "number");
-    const onAdd = (snap) => { const m = snap.val(); if (isMsg(m)) renderMsg(snap.key, m); };
-    const onChange = (snap) => { const m = snap.val(); if (isMsg(m)) renderMsg(snap.key, m); };
+    const onAdd = (snap) => {
+      const m = snap.val();
+      if (isMsg(m)) { msgData.set(snap.key, m); renderMsg(snap.key, m); }
+    };
+    const onChange = (snap) => {
+      const m = snap.val();
+      if (isMsg(m)) { msgData.set(snap.key, m); renderMsg(snap.key, m); }
+    };
     const onRemove = (snap) => {
-      // Hard removal from the DB (rare — we soft-delete instead). Drop the row.
       const row = msgRows.get(snap.key);
-      if (row) { row.remove(); msgRows.delete(snap.key); }
+      if (row) row.remove();
+      msgRows.delete(snap.key);
+      msgData.delete(snap.key);
     };
     mods.onChildAdded(q, onAdd);
     mods.onChildChanged(q, onChange);
@@ -802,7 +916,7 @@
   }
 
   // Build OR update the row for a message. Adding and editing share this one
-  // path, so an edit re-renders in place and a delete shows a tombstone.
+  // path, so an edit re-renders in place and a removal drops the row cleanly.
   function renderMsg(key, m) {
     const log = document.getElementById("mfChatLog");
     if (!log) return;
@@ -814,13 +928,12 @@
     row.className = "mf-msg " + (mine ? "me" : "them");
     row.dataset.key = key;
 
+    // Hide legacy soft-deleted records too. New deletions remove the database
+    // node completely, but old tombstones may still exist from earlier builds.
     if (m.deleted) {
-      row.classList.add("deleted");
-      row.innerHTML =
-        (mine ? "" : `<span class="mf-msg-name" data-uid="${m.uid}">${esc(m.name || "someone")}</span>`)
-        + `<span class="mf-msg-text mf-msg-tomb">🥀 message deleted</span>`
-        + `<span class="mf-msg-time">${timeShort(m.t)}</span>`;
-      if (!existing) { log.appendChild(row); msgRows.set(key, row); }
+      if (existing) existing.remove();
+      msgRows.delete(key);
+      msgData.delete(key);
       return;
     }
 
@@ -846,8 +959,9 @@
         + `<span class="mf-msg-time">${timeShort(m.t)}</span>`;
     }
 
-    // Your own messages get an edit/delete affordance (edit is text-only).
-    if (mine) addMsgActions(row, key, m, !media);
+    // Your own messages can be edited/deleted. In the global room, admins can
+    // remove regular-user messages and the owner can remove any message.
+    syncMsgActions(row, key, m, !media);
 
     const nm = row.querySelector(".mf-msg-name");
     if (nm) nm.addEventListener("click", () => { if (window.MFProfile) MFProfile.show(m.uid); });
@@ -880,20 +994,54 @@
       : mods.ref(db, `dm/${pairKey(me, dmWith)}/${key}`);
   }
 
-  // Attach a small ⋯ menu (Edit / Delete) to one of your own text messages.
-  function addMsgActions(row, key, m, canEdit) {
-    if (row.querySelector(".mf-msg-actions")) return; // already wired (edit re-render)
+  function removeMsgActions(row) {
+    if (!row) return;
+    const actions = row.querySelector(".mf-msg-actions");
+    if (actions) actions.remove();
+    const menu = row.querySelector(".mf-msg-menu");
+    if (menu) menu.remove();
+    if (!row.classList.contains("me")) row.style.paddingRight = "";
+  }
+
+  async function syncMsgActions(row, key, m, canEditOwnText) {
+    removeMsgActions(row);
+    if (!row || !m) return;
+    if (m.uid === me) {
+      addMsgActions(row, key, m, canEditOwnText, true);
+      return;
+    }
+    if (!(await canModerateMessage(m))) return;
+    // The row may have been replaced while the role lookup was in flight.
+    if (!row.isConnected || msgRows.get(key) !== row || row.dataset.key !== key) return;
+    addMsgActions(row, key, m, false, true);
+  }
+
+  function refreshVisibleActions() {
+    for (const [key, m] of msgData.entries()) {
+      const row = msgRows.get(key);
+      if (!row) continue;
+      const canEditOwnText = !decodeMedia(m.text);
+      syncMsgActions(row, key, m, canEditOwnText);
+    }
+  }
+
+  // Attach the small ⋯ menu. Editing is always limited to the author; delete
+  // permission is additionally enforced by Firebase rules.
+  function addMsgActions(row, key, m, canEdit, canDelete) {
+    if (!canEdit && !canDelete) return;
+    if (row.querySelector(".mf-msg-actions")) return;
     const btn = document.createElement("button");
     btn.className = "mf-msg-actions";
     btn.type = "button";
-    btn.title = "Edit or delete";
+    btn.title = canEdit ? "Edit or delete" : "Remove message";
     btn.setAttribute("aria-label", "Message options");
     btn.textContent = "⋯";
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      openMsgMenu(row, key, m, canEdit);
+      openMsgMenu(row, key, m, canEdit, canDelete);
     });
     row.appendChild(btn);
+    if (!row.classList.contains("me")) row.style.paddingRight = "24px";
   }
 
   function closeMsgMenu() {
@@ -902,19 +1050,20 @@
     document.removeEventListener("click", closeMsgMenu);
   }
 
-  function openMsgMenu(row, key, m, canEdit) {
+  function openMsgMenu(row, key, m, canEdit, canDelete) {
     closeMsgMenu();
     const menu = document.createElement("div");
     menu.className = "mf-msg-menu";
     menu.innerHTML =
       (canEdit ? `<button type="button" data-act="edit">✏️ Edit</button>` : "") +
-      `<button type="button" data-act="delete">🗑️ Delete</button>`;
+      (canDelete ? `<button type="button" data-act="delete">🗑️ Remove</button>` : "");
     row.appendChild(menu);
     const editBtn = menu.querySelector('[data-act="edit"]');
     if (editBtn) editBtn.addEventListener("click", (e) => {
       e.stopPropagation(); closeMsgMenu(); startEdit(row, key, m);
     });
-    menu.querySelector('[data-act="delete"]').addEventListener("click", (e) => {
+    const deleteBtn = menu.querySelector('[data-act="delete"]');
+    if (deleteBtn) deleteBtn.addEventListener("click", (e) => {
       e.stopPropagation(); closeMsgMenu(); deleteMsg(key);
     });
     // close on next outside click
@@ -922,10 +1071,10 @@
   }
 
   function deleteMsg(key) {
-    // Soft delete: keep the node but blank the text and flag it, so both sides
-    // show "message deleted" rather than the message silently vanishing.
-    mods.update(msgRef(key), { text: "", deleted: true, editedAt: Date.now() })
-      .catch(() => toast("Couldn't delete that message"));
+    // True removal: child_removed makes the bubble disappear for everyone and
+    // no "message deleted" placeholder is left behind.
+    mods.remove(msgRef(key))
+      .catch(() => toast("Couldn't remove that message"));
   }
 
   function startEdit(row, key, m) {
@@ -1204,6 +1353,7 @@
     import(`https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js`).then(m => {
       mods = m;
       wired = true;
+      refreshModerationState();
       watchRequestCount();
       watchFriendsForWatchers();
       if (openPanel) render();
@@ -1216,6 +1366,8 @@
       me = user ? user.uid : null;
       myName = MFAuth.name();
       if (user && !wired) start();
+      if (user && wired) refreshModerationState();
+      if (!user) resetModerationState();
       if (document.getElementById("mfChatPanel")) {
         if (!user) { dmWith = null; view = "global"; }
         if (openPanel) render();
