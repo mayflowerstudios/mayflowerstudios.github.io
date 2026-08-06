@@ -12,7 +12,7 @@
   ];
   const ABOUT = [
     "Craft Planner", "Mayflower Radio", "Mayflower Idle RPG", "Farm Challenge",
-    "Minecraft mods", "Discord bots", "The website", "Something else"
+    "Minecraft mods", "BloomBot", "The website", "Something else"
   ];
 
   const el = id => document.getElementById(id);
