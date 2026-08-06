@@ -1189,6 +1189,55 @@
           ".validate": false
         }
       }
+    },
+    "notifications": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".indexOn": [
+          "createdAt"
+        ],
+        "$id": {
+          ".write": "auth != null && ((!data.exists() && newData.exists() && auth.uid !== $uid && newData.child('actorUid').val() === auth.uid && ((newData.child('type').val().matches(/^(general|friend_request|friend_accepted|gift|guestbook|relationship_request|relationship_accepted|room_invite|direct_message|mention)$/)) || ((newData.child('type').val().matches(/^moderation_(warning|timeout|unmute|block|unblock)$/)) && ((root.child('users').child(auth.uid).child('username').exists() && root.child('owner').exists() && root.child('owner').val().toLowerCase() === root.child('users').child(auth.uid).child('username').val().toLowerCase()) || (root.child('users').child(auth.uid).child('username').exists() && root.child('admins').child(root.child('users').child(auth.uid).child('username').val().toLowerCase()).val() === true))) || ((newData.child('type').val().matches(/^role_(promote|demote)$/)) && (root.child('users').child(auth.uid).child('username').exists() && root.child('owner').exists() && root.child('owner').val().toLowerCase() === root.child('users').child(auth.uid).child('username').val().toLowerCase())))) || (data.exists() && !newData.exists() && (auth.uid === $uid || data.child('actorUid').val() === auth.uid)))",
+          ".validate": "!newData.exists() || (newData.hasChildren(['type','title','body','icon','link','actorUid','actorName','actorUsername','sourceId','createdAt','readAt']) && newData.child('createdAt').isNumber() && ((!data.exists() && newData.child('createdAt').val() >= now - 300000 && newData.child('createdAt').val() <= now + 300000) || (data.exists() && newData.child('createdAt').val() === data.child('createdAt').val())))",
+          "type": {
+            ".validate": "newData.isString() && newData.val().matches(/^(general|friend_request|friend_accepted|gift|guestbook|relationship_request|relationship_accepted|room_invite|direct_message|mention|moderation_(warning|timeout|unmute|block|unblock)|role_(promote|demote))$/)"
+          },
+          "title": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 80"
+          },
+          "body": {
+            ".validate": "newData.isString() && newData.val().length <= 240"
+          },
+          "icon": {
+            ".validate": "newData.isString() && newData.val().length <= 8"
+          },
+          "link": {
+            ".validate": "newData.isString() && newData.val().length <= 300 && (newData.val().length === 0 || (newData.val().beginsWith('/') && !newData.val().beginsWith('//')))"
+          },
+          "actorUid": {
+            ".validate": "newData.isString() && ((!data.exists() && newData.val() === auth.uid) || (data.exists() && newData.val() === data.val()))"
+          },
+          "actorName": {
+            ".validate": "newData.isString() && newData.val().length <= 32"
+          },
+          "actorUsername": {
+            ".validate": "newData.isString() && newData.val().length <= 20"
+          },
+          "sourceId": {
+            ".validate": "newData.isString() && newData.val().length <= 120"
+          },
+          "createdAt": {
+            ".validate": "newData.isNumber()"
+          },
+          "readAt": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= now + 60000"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
     }
   }
 }

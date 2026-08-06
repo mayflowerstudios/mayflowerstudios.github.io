@@ -439,11 +439,26 @@
       updates[`chat/global/${messageKey}`] = payload;
       updates[`chat/lastPost/${me}`] = t;
       await mods.update(mods.ref(db), updates);
+      // Turn @username mentions into best-effort notifications without ever blocking the message itself.
+      const mentioned = [...new Set((text.match(/(?:^|\s)@([a-z0-9_]{3,20})/gi) || []).map(x => x.trim().slice(1).toLowerCase()))].slice(0,10);
+      for (const handle of mentioned) {
+        try {
+          const targetSnap = await mods.get(mods.ref(db, `usernames/${handle}`));
+          const targetUid = targetSnap.val();
+          if (!targetUid || targetUid === me || !MFAuth.createNotification) continue;
+          await MFAuth.createNotification(targetUid,{id:`mention_${messageKey}`,type:"mention",title:`${myName || "Someone"} mentioned you`,body:String(text).slice(0,240),icon:"💬",link:"/notifications.html",sourceId:messageKey});
+        } catch (_) {}
+      }
       lastGlobalPostAt = t;
       updateComposerState();
       return;
     }
-    await mods.push(chatNode(), payload);
+    const messageRef = mods.push(chatNode());
+    await mods.set(messageRef, payload);
+    if (dmWith && dmWith !== me) {
+      const nid = `dm_${messageRef.key}`;
+      try { await mods.set(mods.ref(db, `notifications/${dmWith}/${nid}`), { type:"direct_message", title:`New message from ${myName || "someone"}`, body:String(text).slice(0,240), icon:"💌", link:"/account.html#friends", actorUid:me, actorName:String(myName || "someone").slice(0,32), actorUsername:String(myHandle || "").slice(0,20), sourceId:messageRef.key, createdAt:t, readAt:0 }); } catch (_) {}
+    }
     afterSend();
   }
 
@@ -1355,7 +1370,12 @@
     if (!next.blocked && !(Number(next.mutedUntil) > Date.now())) {
       await mods.remove(mods.ref(db, `chatRestrictions/${uid}`));
     } else await mods.set(mods.ref(db, `chatRestrictions/${uid}`), next);
-    await addModerationLog(action, { uid, name }, { reason: String(reason || "").slice(0,200), mutedUntil: Number(next.mutedUntil)||0, blocked: !!next.blocked });
+    await addModerationLog(action, {uid,name}, { reason:String(reason||"").slice(0,200), mutedUntil:Number(next.mutedUntil)||0, blocked:!!next.blocked });
+    try {
+      const labels = { timeout:"You were timed out", unmute:"Your timeout was removed", block:"You were blocked from public chat", unblock:"Your public-chat block was removed" };
+      const bodies = { timeout:(Number(next.mutedUntil)>32500000000000?"Your public-chat timeout is indefinite.":`Your public-chat timeout lasts until ${new Date(Number(next.mutedUntil)||Date.now()).toLocaleString()}.`), unmute:"You may post in public chat again.", block:(reason?String(reason).slice(0,200):"You cannot currently post in public chat."), unblock:"You may post in public chat again." };
+      await MFAuth.createNotification(uid,{type:`moderation_${action}`,icon:action==="block"?"🚫":"⚠️",title:labels[action]||"Moderation update",body:bodies[action]||String(reason||""),link:"/notifications.html",sourceId:String(Date.now())});
+    } catch (_) {}
   }
   async function warnUser(uid, name) {
     if (!(await canActOnUid(uid))) return toast("That account is protected.");
@@ -1363,8 +1383,9 @@
     if (!text || !text.trim()) return;
     const now = Date.now();
     const key = mods.push(mods.ref(db, `chatWarnings/${uid}`)).key;
-    await mods.set(mods.ref(db, `chatWarnings/${uid}/${key}`), { text: text.trim().slice(0,500), byUid: me, byName: myName || "moderator", at: now });
+    await mods.set(mods.ref(db, `chatWarnings/${uid}/${key}`), { text:text.trim().slice(0,500), byUid:me, byName:myName || myHandle || "moderator", at:Date.now() });
     await addModerationLog("warning", {uid,name}, { reason: text.trim().slice(0,200) });
+    try { await MFAuth.createNotification(uid,{id:`warning_${key}`,type:"moderation_warning",icon:"⚠️",title:"Moderator warning",body:text.trim().slice(0,240),link:"/notifications.html",sourceId:key}); } catch (_) {}
     toast("Warning sent privately.");
   }
   async function addAdminNote(uid, name) {

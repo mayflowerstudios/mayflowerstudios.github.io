@@ -13,7 +13,7 @@
 
   let db = null, mods = null, me = null, myName = "", myHandle = "", role = "user";
   let ownerHandle = "", settings = { locked:false, slowSeconds:0, adminsCanUnlock:false };
-  let logs = [], activeUser = null, settingsUnsub = null, controlsWired = false;
+  let logs = [], activeUser = null, settingsUnsub = null, controlsWired = false, directoryUsers = [], directoryAdmins = new Set();
 
   function cleanHandle(v) { return String(v || "").trim().toLowerCase().replace(/^@/, ""); }
   function isMod() { return role === "admin" || role === "owner"; }
@@ -57,6 +57,10 @@
     };
     await mods.set(mods.ref(db, `moderationLog/${key}`), value);
     return key;
+  }
+  async function notifyUser(uid, data) {
+    if (!uid || uid === me || !window.MFAuth || !MFAuth.createNotification) return;
+    try { await MFAuth.createNotification(uid, data || {}); } catch (_) {}
   }
 
   function wireSettings() {
@@ -166,13 +170,19 @@
     const next = { ...old, ...patch, byUid:me, byName:myName || myHandle || "moderator", at:Date.now(), reason:String(reason || "").slice(0,200) };
     if (!next.blocked && !(Number(next.mutedUntil) > Date.now())) await mods.remove(ref); else await mods.set(ref, next);
     await addLog(action, user, { reason:String(reason || "").slice(0,200), mutedUntil:Number(next.mutedUntil)||0, blocked:!!next.blocked });
+    const title = {timeout:"You were timed out",unmute:"Your timeout was removed",block:"You were blocked from public chat",unblock:"Your public-chat block was removed"}[action] || "Moderation update";
+    let body = String(reason || "").slice(0,200);
+    if (action === "timeout") body = Number(next.mutedUntil)>32500000000000 ? "Your public-chat timeout is indefinite." : `Your public-chat timeout lasts until ${when(next.mutedUntil)}.`;
+    if (action === "unmute" || action === "unblock") body = "You may post in public chat again.";
+    await notifyUser(user.uid,{type:`moderation_${action}`,icon:action==="block"?"🚫":"⚠️",title,body,link:"/notifications.html",sourceId:String(Date.now())});
   }
   async function warnUser(user) {
     if (!(await canAct(user.uid))) throw new Error("protected");
     const text = prompt(`Private warning for ${user.name}:`, ""); if (!text || !text.trim()) return false;
     const key = mods.push(mods.ref(db, `chatWarnings/${user.uid}`)).key;
     await mods.set(mods.ref(db, `chatWarnings/${user.uid}/${key}`), { text:text.trim().slice(0,500), byUid:me, byName:myName || myHandle || "moderator", at:Date.now() });
-    await addLog("warning", user, {reason:text.trim().slice(0,200)}); return true;
+    await addLog("warning", user, {reason:text.trim().slice(0,200)});
+    await notifyUser(user.uid,{id:`warning_${key}`,type:"moderation_warning",icon:"⚠️",title:"Moderator warning",body:text.trim().slice(0,240),link:"/notifications.html",sourceId:key}); return true;
   }
   async function noteUser(user) {
     if (!(await canAct(user.uid))) throw new Error("protected");
@@ -201,36 +211,60 @@
     say(`${chosen.length} message${chosen.length===1?"":"s"} removed.`,"ok"); await loadLogs();
   }
 
-  async function loadUser() {
-    const handle = cleanHandle(el("amUser").value); const card=el("amUserCard");
-    if (!handle) return; card.hidden=false; card.innerHTML='<div class="acctEmpty">Loading user…</div>';
+  async function openUser(uid, preferredHandle) {
+    const card=el("amUserCard"); if (!uid) return;
+    card.hidden=false; card.innerHTML='<div class="acctEmpty">Loading user…</div>';
     try {
-      const uidSnap = await mods.get(mods.ref(db, `usernames/${handle}`)); const uid=uidSnap.val();
-      if (!uid) { card.innerHTML='<div class="acctEmpty">No account uses that username.</div>'; return; }
       const [profileSnap,restrictionSnap,warningsSnap,notesSnap] = await Promise.all([
         mods.get(mods.ref(db,`users/${uid}`)), mods.get(mods.ref(db,`chatRestrictions/${uid}`)),
         mods.get(mods.query(mods.ref(db,`chatWarnings/${uid}`),mods.limitToLast(12))),
         mods.get(mods.query(mods.ref(db,`moderationNotes/${uid}`),mods.limitToLast(12)))
       ]);
-      const profile=profileSnap.val()||{}; const targetRole=await roleForUid(uid); const allowed=await canAct(uid,targetRole); const restriction=restrictionSnap.val()||{};
+      const profile=profileSnap.val()||{}; const handle=cleanHandle(profile.username||preferredHandle); const targetRole=await roleForUid(uid); const allowed=await canAct(uid,targetRole); const restriction=restrictionSnap.val()||{};
       const warnings=[]; warningsSnap.forEach(ch=>warnings.push(ch.val()||{})); const notes=[]; notesSnap.forEach(ch=>notes.push(ch.val()||{}));
-      activeUser={uid,name:profile.displayName||handle,handle,role:targetRole,restriction};
-      card.innerHTML=`<div class="amUserHead"><b>${esc(activeUser.name)}</b><span class="amHandle">@${esc(handle)}</span><span class="amRole ${esc(targetRole)}">${esc(targetRole)}</span></div>
-        ${allowed?"":`<div class="amProtected">🛡️ ${targetRole === "owner" ? "The owner" : targetRole === "admin" ? "Another admin" : "Your own account"} is protected from these actions.</div>`}
+      activeUser={uid,name:profile.displayName||handle||"user",handle,role:targetRole,restriction};
+      if (el("amUser")) el("amUser").value = handle ? `@${handle}` : "";
+      card.innerHTML=`<div class="amUserHead"><b>${esc(activeUser.name)}</b>${handle?`<span class="amHandle">@${esc(handle)}</span>`:""}<span class="amRole ${esc(targetRole)}">${esc(targetRole)}</span></div>
+        ${allowed?"":`<div class="amProtected">🛡️ ${targetRole === "owner" ? "The owner" : uid === me ? "Your own account" : "This account"} is protected from these actions.</div>`}
         <div class="amActions">
           <button data-am-act="profile">👤 View profile</button>
           ${allowed?`<button data-am-act="warn">⚠️ Warn privately</button><button data-am-act="note">📝 Add private note</button>
           <button data-am-act="mute10">🔇 Mute 10 minutes</button><button data-am-act="mute60">🔇 Mute 1 hour</button><button data-am-act="mute1440">🔇 Mute 24 hours</button><button data-am-act="muteForever">🔇 Mute indefinitely</button>
           <button data-am-act="unmute">🔊 Remove timeout</button><button data-am-act="${restriction.blocked?"unblock":"block"}">${restriction.blocked?"✅ Unblock public chat":"🚫 Block public chat"}</button>
           <button data-am-act="del5">🧹 Delete last 5</button><button data-am-act="del10">🧹 Delete last 10</button><button data-am-act="delall" class="danger">🧹 Delete all recent</button>`:""}
-          ${role==="owner" && targetRole!=="owner"?`<button data-am-act="${targetRole==="admin"?"demote":"promote"}" class="owner">👑 ${targetRole==="admin"?"Remove admin":"Make admin"}</button>`:""}
+          ${role==="owner" && targetRole!=="owner" && handle?`<button data-am-act="${targetRole==="admin"?"demote":"promote"}" class="owner">👑 ${targetRole==="admin"?"Remove admin":"Make admin"}</button>`:""}
         </div>
         <div class="amHistory"><div class="amHistoryItem"><b>Current restriction:</b> ${restriction.blocked?"Blocked":Number(restriction.mutedUntil)>Date.now()?`Muted until ${esc(when(restriction.mutedUntil))}`:"None"}${restriction.reason?`<br><small>${esc(restriction.reason)}</small>`:""}</div>
           <div class="amHistoryItem"><b>Warning history (${warnings.length})</b>${warnings.length?warnings.reverse().map(w=>`<br><small>${esc(when(w.at))} · ${esc(w.byName||"moderator")}: ${esc(w.text||"")}</small>`).join(""):"<br><small>No warnings.</small>"}</div>
           <div class="amHistoryItem"><b>Private admin notes (${notes.length})</b>${notes.length?notes.reverse().map(n=>`<br><small>${esc(when(n.at))} · ${esc(n.byName||"moderator")}: ${esc(n.text||"")}</small>`).join(""):"<br><small>No notes.</small>"}</div>
         </div>`;
       card.querySelectorAll("[data-am-act]").forEach(btn=>btn.addEventListener("click",()=>userAction(btn)));
+      card.scrollIntoView({behavior:"smooth",block:"nearest"});
     } catch(err) { console.warn("load user",err); card.innerHTML='<div class="acctEmpty">Could not load that account.</div>'; }
+  }
+
+  async function loadUser() {
+    const handle = cleanHandle(el("amUser").value); const card=el("amUserCard");
+    if (!handle) return; card.hidden=false; card.innerHTML='<div class="acctEmpty">Loading user…</div>';
+    try { const uidSnap=await mods.get(mods.ref(db,`usernames/${handle}`)); const uid=uidSnap.val(); if(!uid){card.innerHTML='<div class="acctEmpty">No account uses that username.</div>';return;} await openUser(uid,handle); }
+    catch(err){console.warn("lookup user",err);card.innerHTML='<div class="acctEmpty">Could not load that account.</div>';}
+  }
+
+  function directoryRole(user) { if (cleanHandle(user.handle) === ownerHandle) return "owner"; return directoryAdmins.has(cleanHandle(user.handle)) ? "admin" : "user"; }
+  function drawDirectory() {
+    const list=el("amUserDirectory"); if(!list || role!=="owner") return;
+    const search=String(el("amDirectorySearch").value||"").trim().toLowerCase(); const filter=el("amDirectoryRole").value;
+    const visible=directoryUsers.filter(u=>{const r=directoryRole(u);return(!filter||r===filter)&&(!search||`${u.name} ${u.handle}`.toLowerCase().includes(search));});
+    el("amDirectoryCount").textContent=`${visible.length} of ${directoryUsers.length}`;
+    if(!visible.length){list.innerHTML='<div class="acctEmpty">No users match that search.</div>';return;}
+    list.innerHTML=visible.map(u=>{const r=directoryRole(u),initial=esc((u.name||u.handle||"?").slice(0,1).toUpperCase());const avatar=u.photoURL?`<img src="${esc(u.photoURL)}" alt="" loading="lazy">`:u.avatarEmoji?esc(u.avatarEmoji):initial;return `<article class="amDirectoryUser"><span class="amDirectoryAvatar">${avatar}</span><span class="amDirectoryName"><b>${esc(u.name||"Unnamed user")}</b><span>${u.handle?`@${esc(u.handle)}`:"No username yet"}</span><span class="amDirectoryRole ${r}">${r}${u.lastSeen?` · seen ${esc(new Date(u.lastSeen).toLocaleDateString())}`:""}</span></span><button type="button" data-directory-uid="${esc(u.uid)}" data-directory-handle="${esc(u.handle||"")}">Manage</button></article>`;}).join("");
+    list.querySelectorAll("[data-directory-uid]").forEach(btn=>btn.addEventListener("click",()=>openUser(btn.dataset.directoryUid,btn.dataset.directoryHandle)));
+  }
+  async function loadDirectory() {
+    if(role!=="owner"||!el("amDirectory")) return;
+    el("amDirectory").hidden=false; el("amUserDirectory").innerHTML='<div class="acctEmpty">Loading all users…</div>';
+    try { const [usersSnap,adminsSnap]=await Promise.all([mods.get(mods.ref(db,"users")),mods.get(mods.ref(db,"admins"))]);directoryAdmins=new Set();adminsSnap.forEach(ch=>{if(ch.val()===true)directoryAdmins.add(cleanHandle(ch.key));});directoryUsers=[];usersSnap.forEach(ch=>{const p=ch.val()||{};directoryUsers.push({uid:ch.key,name:p.displayName||p.username||"Unnamed user",handle:cleanHandle(p.username),photoURL:p.photoURL||"",avatarEmoji:p.avatarEmoji||"",lastSeen:Number(p.lastSeen)||0});});directoryUsers.sort((a,b)=>{const ar=directoryRole(a),br=directoryRole(b),rank={owner:0,admin:1,user:2};return rank[ar]-rank[br]||a.name.localeCompare(b.name);});drawDirectory(); }
+    catch(err){console.warn("user directory",err);el("amUserDirectory").innerHTML='<div class="acctEmpty">Could not load the user directory.</div>';}
   }
 
   async function userAction(button) {
@@ -251,8 +285,10 @@
         if(!confirm(`${action==="promote"?"Make":"Remove"} @${activeUser.handle} ${action==="promote"?"an admin":"from the admin team"}?`)){button.disabled=false;return;}
         const ref=mods.ref(db,`admins/${activeUser.handle}`); if(action==="promote") await mods.set(ref,true); else await mods.remove(ref);
         await addLog(action,activeUser,{reason:`@${activeUser.handle}`});
+        await notifyUser(activeUser.uid,{type:`role_${action}`,icon:"👑",title:action==="promote"?"You are now a site admin":"Your admin role was removed",body:action==="promote"?"The owner added you to the Mayflower Studios admin team.":"The owner removed your Mayflower Studios admin permissions.",link:"/admin.html",sourceId:activeUser.handle});
+        await loadDirectory();
       }
-      say("Moderation action saved.","ok"); await loadUser(); await loadLogs();
+      say("Moderation action saved.","ok"); await openUser(activeUser.uid,activeUser.handle); await loadLogs();
     } catch(err) { console.warn("user action",err); say(err && err.message==="protected"?"That account is protected.":"That moderation action was refused.","bad"); button.disabled=false; }
   }
 
@@ -265,6 +301,8 @@
     el("amLoadUser").addEventListener("click",loadUser); el("amUser").addEventListener("keydown",e=>{if(e.key==="Enter")loadUser();});
     el("amLogFilter").addEventListener("change",drawLogs); el("amLogSearch").addEventListener("input",drawLogs); el("amHideRestored").addEventListener("change",drawLogs);
     el("amRefresh").addEventListener("click",loadLogs); el("amPurge").addEventListener("click",purgeExpired);
+    if(el("amDirectorySearch")) el("amDirectorySearch").addEventListener("input",drawDirectory);
+    if(el("amDirectoryRole")) el("amDirectoryRole").addEventListener("change",drawDirectory);
   }
 
   async function start(user) {
@@ -278,7 +316,7 @@
     const [ownerSnap,adminSnap]=await Promise.all([mods.get(mods.ref(db,"owner")),mods.get(mods.ref(db,`admins/${myHandle}`))]);
     ownerHandle=cleanHandle(ownerSnap.val()); role=myHandle&&myHandle===ownerHandle?"owner":adminSnap.val()===true?"admin":"user";
     if(!isMod()){ el("amLogList").innerHTML='<div class="acctEmpty">This section is for admins.</div>'; return; }
-    wireControls(); wireSettings(); loadLogs();
+    wireControls(); wireSettings(); loadLogs(); if(role==="owner") loadDirectory();
   }
 
   function boot(){ if(window.MFAuth&&MFAuth.onChange) MFAuth.onChange(user=>start(user)); else setTimeout(boot,150); }

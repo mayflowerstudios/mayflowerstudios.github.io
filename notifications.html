@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notifications • Mayflower Studios</title>
+  <meta name="description" content="Your Mayflower Studios notifications." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="/style.css?v=36" />
+</head>
+<body data-nav="account">
+  <div class="site-page">
+    <div id="site-nav"></div>
+    <main class="content" style="max-width:900px;margin:0 auto;">
+      <section class="page-hero reveal">
+        <p class="page-kicker">✦ Your updates</p>
+        <h1 class="page-title">Notifications</h1>
+        <p class="page-sub">Friend requests, gifts, room invitations, messages, relationship updates, and important moderation notices—all in one place.</p>
+      </section>
+      <section class="sec reveal">
+        <div class="card" style="padding:18px 20px;">
+          <div class="mf-notification-toolbar" data-no-translate>
+            <button type="button" class="active" data-notification-filter="all">All</button>
+            <button type="button" data-notification-filter="unread">Unread</button>
+            <span id="mfNotificationPageCount"></span>
+            <button type="button" class="push" id="mfNotificationPageMarkAll">Mark all read</button>
+            <button type="button" id="mfNotificationPageClearRead">Clear read</button>
+          </div>
+          <div class="mf-notification-page" id="mfNotificationPageList" data-no-translate><div class="mf-notify-empty">Sign in to see your notifications.</div></div>
+        </div>
+      </section>
+    </main>
+    <div id="site-footer"></div>
+  </div>
+  <script src="/shared.js?v=42"></script>
+</body>
+</html>

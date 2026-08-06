@@ -499,6 +499,9 @@
           <div class="nav-links" id="navLinks">
             ${linksHtml}
             ${buildLangPicker()}
+            <button type="button" class="mf-notify-button" id="mfNotifyButton" aria-label="Notifications" aria-expanded="false" hidden data-no-translate>
+              <span aria-hidden="true">🔔</span><span class="mf-notify-badge" id="mfNotifyBadge" hidden></span>
+            </button>
             <a href="/account.html" class="nav-account" id="navAccount" data-nav="account">Sign in</a>
           </div>
         </div>
@@ -674,7 +677,7 @@
 
   // Bump this whenever auth.js / chat.js / profile-view.js change, so browsers
   // and the GitHub Pages CDN fetch the new version instead of a cached copy.
-  var MF_ASSET_VER = '41';
+  var MF_ASSET_VER = '42';
 
   function loadScript(src, attrs) {
     if (document.querySelector(`script[data-mf-src="${src}"]`)) return;
@@ -694,6 +697,8 @@
     loadScript('/profile-view.js', { 'data-mf-profile': '1' });
     // chat.js injects the universal floating chat once MFAuth is ready.
     loadScript('/chat.js', { 'data-mf-chat': '1' });
+    // notification-center.js owns the bell, unread badge, dropdown, and full page.
+    loadScript('/notification-center.js', { 'data-mf-notifications': '1' });
   }
 
   function initAccountNav() {

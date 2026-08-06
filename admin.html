@@ -148,6 +148,15 @@
     .amLookup input { min-width:190px; flex:1; }.amLookup button,.amFilters button { cursor:pointer; }
     .amLookup button:hover,.amFilters button:hover { border-color:var(--rose); }
     .amUserCard { margin-top:12px; border:1px solid var(--border-2); border-radius:13px; padding:14px; background:rgba(255,255,255,.025); }
+    .amDirectory { margin-top:14px; padding-top:14px; border-top:1px solid var(--border); }
+    .amDirectoryHead { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:10px; }
+    .amDirectoryHead b { font-size:13px; }.amDirectoryHead span { font-size:11.5px; color:var(--text-3); }
+    .amDirectoryHead input,.amDirectoryHead select { font:inherit;font-size:12px;color:var(--text);background:rgba(0,0,0,.28);border:1px solid var(--border-2);border-radius:9px;padding:7px 10px; }
+    .amDirectoryHead input { flex:1 1 220px; }.amUserDirectory { display:grid;grid-template-columns:repeat(auto-fill,minmax(245px,1fr));gap:8px;max-height:430px;overflow:auto;padding-right:3px; }
+    .amDirectoryUser { display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:9px;align-items:center;padding:10px;border:1px solid var(--border);border-radius:11px;background:rgba(255,255,255,.025); }
+    .amDirectoryAvatar { width:36px;height:36px;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:rgba(255,255,255,.07);font-weight:700; }
+    .amDirectoryAvatar img { width:100%;height:100%;object-fit:cover; }.amDirectoryName { min-width:0; }.amDirectoryName b,.amDirectoryName span { display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }.amDirectoryName b{font-size:12.5px}.amDirectoryName span{font-size:11px;color:var(--text-3);margin-top:2px}.amDirectoryUser button{font:inherit;font-size:11px;color:var(--text-2);background:transparent;border:1px solid var(--border-2);border-radius:999px;padding:5px 9px;cursor:pointer}.amDirectoryUser button:hover{color:var(--text);border-color:var(--rose)}
+    .amDirectoryRole { display:inline-block!important;width:max-content;margin-top:4px!important;font-size:9px!important;text-transform:uppercase;letter-spacing:.08em;color:var(--violet)!important }.amDirectoryRole.owner{color:var(--gold)!important}
     .amUserHead { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
     .amHandle { color:var(--text-3); }.amRole { font-size:10px; text-transform:uppercase; letter-spacing:.1em; border:1px solid var(--border-2); border-radius:999px; padding:2px 8px; }
     .amRole.admin { color:var(--violet); }.amRole.owner { color:var(--gold); }
@@ -254,6 +263,11 @@
           </div>
           <div class="amUserCard" id="amUserCard" hidden></div>
 
+          <section class="amDirectory" id="amDirectory" hidden>
+            <div class="amDirectoryHead"><b>All registered users</b><span id="amDirectoryCount"></span><input id="amDirectorySearch" type="search" placeholder="Search name or @username" autocomplete="off" /><select id="amDirectoryRole"><option value="">Every role</option><option value="user">Users</option><option value="admin">Admins</option><option value="owner">Owner</option></select></div>
+            <div class="amUserDirectory" id="amUserDirectory"><div class="acctEmpty">Loading users…</div></div>
+          </section>
+
           <div class="amFilters">
             <select id="amLogFilter">
               <option value="">All activity</option><option value="delete">Deleted messages</option><option value="bulk_delete">Bulk cleanup</option>
@@ -298,9 +312,9 @@
     <div id="site-footer"></div>
   </div><!-- /site-page -->
 
-  <script src="/shared.js?v=41"></script>
-  <script src="/auth.js?v=40"></script>
+  <script src="/shared.js?v=42"></script>
+  <script src="/auth.js?v=42"></script>
   <script src="/admin-inbox.js?v=6"></script>
-  <script src="/admin-moderation.js?v=2"></script>
+  <script src="/admin-moderation.js?v=3"></script>
 </body>
 </html>

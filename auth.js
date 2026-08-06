@@ -108,6 +108,34 @@
       MFAuth._app = app; // expose app so chat.js can init Storage on the same instance
       MFAuth._dbmod = dbMod; // expose RTDB module fns (ref/get/set/update/onValue/...) for rooms.js etc.
 
+      // ---- universal notifications ----
+      function notificationText(v, max) { return String(v || "").trim().slice(0, max); }
+      MFAuth.createNotification = async (toUid, data) => {
+        if (!MFAuth.user || !toUid || toUid === MFAuth.user.uid) return null;
+        data = data || {};
+        const id = notificationText(data.id, 120) || dbMod.push(dbMod.ref(db, `notifications/${toUid}`)).key;
+        const record = {
+          type: notificationText(data.type, 32) || "general",
+          title: notificationText(data.title, 80) || "Notification",
+          body: notificationText(data.body, 240),
+          icon: notificationText(data.icon, 8) || "🔔",
+          link: notificationText(data.link, 300),
+          actorUid: MFAuth.user.uid,
+          actorName: notificationText(MFAuth.name() || "someone", 32),
+          actorUsername: notificationText((MFAuth.profile && MFAuth.profile.username) || "", 20),
+          sourceId: notificationText(data.sourceId || "", 120),
+          createdAt: Date.now(),
+          readAt: 0,
+        };
+        try {
+          await dbMod.set(dbMod.ref(db, `notifications/${toUid}/${id}`), record);
+          return id;
+        } catch (err) {
+          console.warn("Notification could not be created", err);
+          return null;
+        }
+      };
+
       // ---- profile helpers ----
       async function loadProfile(uid) {
         try {
@@ -265,6 +293,7 @@
           username: (MFAuth.profile && MFAuth.profile.username) || "",
           t: Date.now(),
         });
+        await MFAuth.createNotification(targetUid, { id:`friend_request_${MFAuth.user.uid}`, type:"friend_request", icon:"🌸", title:"New friend request", body:`${MFAuth.name() || "Someone"} sent you a friend request.`, link:"/account.html#friends", sourceId:MFAuth.user.uid });
         return true;
       };
       MFAuth.acceptFriendRequest = async (fromUid) => {
@@ -277,11 +306,14 @@
           [`friends/${fromUid}/${me}`]: { t },
           [`friendRequests/${me}/${fromUid}`]: null,
         });
+        try { await dbMod.remove(dbMod.ref(db, `notifications/${me}/friend_request_${fromUid}`)); } catch (_) {}
+        await MFAuth.createNotification(fromUid, { id:`friend_accepted_${me}`, type:"friend_accepted", icon:"💞", title:"Friend request accepted", body:`${MFAuth.name() || "Someone"} accepted your friend request.`, link:"/account.html#friends", sourceId:me });
         return true;
       };
       MFAuth.declineFriendRequest = async (fromUid) => {
         if (!MFAuth.user) throw new Error("Not signed in");
         await dbMod.remove(dbMod.ref(db, `friendRequests/${MFAuth.user.uid}/${fromUid}`));
+        try { await dbMod.remove(dbMod.ref(db, `notifications/${MFAuth.user.uid}/friend_request_${fromUid}`)); } catch (_) {}
         return true;
       };
       MFAuth.removeFriend = async (otherUid) => {
@@ -405,6 +437,7 @@
           note: safeText(note, 160),
           t: Date.now(),
         });
+        await MFAuth.createNotification(toUid, { id:`gift_${id}`, type:"gift", icon:gift.emoji, title:`${MFAuth.name() || "Someone"} sent you ${gift.name}`, body:safeText(note,160) || "A little something is waiting on your profile.", link:"/account.html#gifts", sourceId:id });
         return id;
       };
 
@@ -427,6 +460,7 @@
           text,
           t: Date.now(),
         });
+        await MFAuth.createNotification(toUid, { id:`guestbook_${id}`, type:"guestbook", icon:"💌", title:"New guestbook message", body:`${MFAuth.name() || "Someone"}: ${text.slice(0,120)}`, link:"/account.html#guestbook", sourceId:id });
         return id;
       };
       MFAuth.deleteGuestbookPost = async (profileUid, postId) => {
@@ -455,6 +489,7 @@
           startedAt: Number(startedAt) || Date.now(),
           t: Date.now(),
         });
+        await MFAuth.createNotification(targetUid, { id:`relationship_request_${MFAuth.user.uid}`, type:"relationship_request", icon:"♡", title:"Relationship request", body:`${MFAuth.name() || "Someone"} wants to show your relationship on their profile.`, link:"/account.html#relationship", sourceId:MFAuth.user.uid });
         return true;
       };
       MFAuth.acceptRelationshipRequest = async (fromUid) => {
@@ -471,11 +506,14 @@
           [`relationships/${fromUid}`]: { partnerUid: me, partnerName: my.name, partnerUsername: my.username, startedAt, t: Date.now() },
           [`relationshipRequests/${me}/${fromUid}`]: null,
         });
+        try { await dbMod.remove(dbMod.ref(db, `notifications/${me}/relationship_request_${fromUid}`)); } catch (_) {}
+        await MFAuth.createNotification(fromUid, { id:`relationship_accepted_${me}`, type:"relationship_accepted", icon:"💗", title:"Relationship request accepted", body:`${my.name} accepted your relationship request.`, link:"/account.html#relationship", sourceId:me });
         return true;
       };
       MFAuth.declineRelationshipRequest = async (fromUid) => {
         if (!MFAuth.user) throw new Error("Not signed in");
         await dbMod.remove(dbMod.ref(db, `relationshipRequests/${MFAuth.user.uid}/${fromUid}`));
+        try { await dbMod.remove(dbMod.ref(db, `notifications/${MFAuth.user.uid}/relationship_request_${fromUid}`)); } catch (_) {}
       };
       MFAuth.clearRelationship = async () => {
         if (!MFAuth.user) throw new Error("Not signed in");

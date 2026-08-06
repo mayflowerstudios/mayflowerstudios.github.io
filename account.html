@@ -633,20 +633,20 @@
             <div class="acctRelPreview" id="acctRelPreview">Loading…</div>
           </section>
 
-          <section class="acctSocialCard">
+          <section class="acctSocialCard" id="gifts">
             <div class="acctSocialHead"><h3>🎁 Gifts received</h3><span id="acctGiftTotal">0 total</span></div>
             <div class="acctGiftCollection" id="acctGiftCollection"><div class="acctEmpty">Loading gifts…</div></div>
             <div class="acctRecentList" id="acctGiftRecent"></div>
           </section>
 
-          <section class="acctSocialCard">
+          <section class="acctSocialCard" id="guestbook">
             <div class="acctSocialHead"><h3>📝 Guestbook</h3><span id="acctGuestTotal">0 notes</span></div>
             <div class="acctGuestList" id="acctGuestList"><div class="acctEmpty">Loading guestbook…</div></div>
           </section>
         </div>
 
         <!-- ── your friends ── -->
-        <div class="secLabel">Your friends</div>
+        <div class="secLabel" id="friends">Your friends</div>
         <div class="acctFriendsCard" id="acctFriendsCard">
           <div class="acctFriendsList" id="acctFriendsList"><div class="acctEmpty">Loading friends…</div></div>
         </div>
@@ -742,7 +742,7 @@
 
 
         <!-- ── relationship status ── -->
-        <div class="secLabel">Relationship status</div>
+        <div class="secLabel" id="relationship">Relationship status</div>
         <div class="relPanel">
           <div class="relCurrent" id="relCurrent">Loading…</div>
           <div id="relSetup">
@@ -785,7 +785,7 @@
     <div id="site-footer"></div>
   </div>
 
-  <script src="/shared.js?v=41"></script>
+  <script src="/shared.js?v=42"></script>
   <script>
   (function () {
     const $ = (id) => document.getElementById(id);

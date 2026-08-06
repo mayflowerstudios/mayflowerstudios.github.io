@@ -115,6 +115,11 @@
       }
     }
     await m.update(m.ref(d), updates);
+    if (vis === "private" && invitees.length && a.createNotification) {
+      for (const uid of invitees) {
+        try { await a.createNotification(uid, { id:`room_invite_${id}`, type:"room_invite", icon:TYPES[type].emoji, title:"Room invitation", body:`${room.ownerName} invited you to ${name}.`, link:`/${MFRooms.pageFor(type)}?room=${encodeURIComponent(id)}`, sourceId:id }); } catch (_) {}
+      }
+    }
     return room;
   };
 
@@ -183,6 +188,7 @@
         fromName: a.name() || "someone", fromUid: a.uid, t: now,
       },
     });
+    if (a.createNotification) { try { await a.createNotification(friendUid, { id:`room_invite_${roomId}`, type:"room_invite", icon:(TYPES[room.type]||TYPES.watch).emoji, title:"Room invitation", body:`${a.name() || "Someone"} invited you to ${room.name}.`, link:`/${MFRooms.pageFor(room.type)}?room=${encodeURIComponent(roomId)}`, sourceId:roomId }); } catch (_) {} }
     return true;
   };
 
