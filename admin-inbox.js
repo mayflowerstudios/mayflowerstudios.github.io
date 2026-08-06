@@ -369,7 +369,8 @@
     if (!uid) { rankSay(`No account called @${handle}.`, "bad"); return; }
 
     try {
-      const r = await fetch(`${DB}/admins/${encodeURIComponent(handle)}.json?auth=${token}`, {
+      const tok = await fresh();
+      const r = await fetch(`${DB}/admins/${encodeURIComponent(handle)}.json?auth=${tok}`, {
         method: "PUT", body: "true"
       });
       if (!r.ok) throw new Error("HTTP " + r.status);
@@ -389,7 +390,8 @@
     const handle = t.dataset.drop;
     if (!confirm(`Take admin away from @${handle}?`)) return;
     try {
-      const r = await fetch(`${DB}/admins/${encodeURIComponent(handle)}.json?auth=${token}`, { method: "DELETE" });
+      const tok = await fresh();
+      const r = await fetch(`${DB}/admins/${encodeURIComponent(handle)}.json?auth=${tok}`, { method: "DELETE" });
       if (!r.ok) throw new Error("HTTP " + r.status);
       admins = admins.filter(h => h !== handle);
       drawAdmins();

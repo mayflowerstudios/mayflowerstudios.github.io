@@ -45,6 +45,17 @@
   const uidHandleCache = new Map();
   const uidRoleCache = new Map();
 
+  // Full chat-moderation state. The database rules are authoritative; the
+  // client mirrors them so people get clear controls and helpful feedback.
+  const DEFAULT_CHAT_SETTINGS = { locked: false, slowSeconds: 0, adminsCanUnlock: false };
+  let chatSettings = { ...DEFAULT_CHAT_SETTINGS };
+  let myRestriction = { blocked: false, mutedUntil: 0, reason: "" };
+  let myWarnings = {};
+  let lastGlobalPostAt = 0;
+  let modWatchUnsubs = [];
+  let composerTicker = null;
+  const MOD_LOG_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+
   function esc(s) {
     return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
   }
@@ -124,6 +135,7 @@
           <button class="mf-ct" data-ctab="dm">💌 Friends</button>
         </div>
         <div class="mf-chat-headtools">
+          <button class="mf-tr-btn" id="mfModBtn" title="Chat moderation" hidden>🛡️</button>
           <button class="mf-tr-btn" id="mfMuteBtn" title="Mute message sounds">🔔</button>
           <button class="mf-tr-btn" id="mfTrBtn" title="Translate messages">🌐</button>
           <select class="mf-tr-lang" id="mfTrLang" hidden></select>
@@ -201,6 +213,10 @@
       if (!muted) { unlockAudio(); playChime(); }
     });
     updateMuteUI();
+
+    const modBtn = panel.querySelector("#mfModBtn");
+    modBtn.addEventListener("click", (e) => { e.stopPropagation(); openChatSettings(); });
+    injectModerationStyles();
 
   }
 
@@ -297,6 +313,7 @@
     const body = document.getElementById("mfChatBody");
     const foot = document.getElementById("mfChatFoot");
     if (!body) return;
+    clearInterval(composerTicker); composerTicker = null;
 
     // tear down DM header watchers + stop broadcasting typing; they re-arm below
     stopTyping();
@@ -315,9 +332,11 @@
     }
 
     if (view === "global") {
-      body.innerHTML = `<div class="mf-chat-log" id="mfChatLog"></div>`;
+      body.innerHTML = `<div class="mf-global-notices" id="mfGlobalNotices"></div><div class="mf-chat-log" id="mfChatLog"></div>`;
       foot.innerHTML = composerHTML();
       wireComposer("global");
+      paintGlobalNotices();
+      updateComposerState();
       subscribeMessages(mods.ref(db, "chat/global"));
     } else {
       // DM mode: either a people list, or an open thread
@@ -367,33 +386,96 @@
     }
   }
 
+  function globalPostBlock() {
+    if (view !== "global") return null;
+    const now = Date.now();
+    if (myRestriction && myRestriction.blocked) {
+      return { hard: true, text: myRestriction.reason ? `You are blocked from public chat: ${myRestriction.reason}` : "You are blocked from public chat." };
+    }
+    const until = Number(myRestriction && myRestriction.mutedUntil) || 0;
+    if (until > now) {
+      const forever = until > 32500000000000;
+      return { hard: true, text: forever ? "You are muted from public chat." : `You are muted for ${formatDuration(until - now)}.` };
+    }
+    if (chatSettings.locked && myChatRole === "user") {
+      return { hard: true, text: "Public chat is temporarily locked by the moderation team." };
+    }
+    const slow = Number(chatSettings.slowSeconds) || 0;
+    if (slow > 0 && myChatRole === "user") {
+      const left = slow * 1000 - (Date.now() - lastGlobalPostAt);
+      if (left > 0) return { hard: false, text: `Slow mode: wait ${Math.ceil(left / 1000)}s before posting again.`, left };
+    }
+    return null;
+  }
+
+  function updateComposerState() {
+    const input = document.getElementById("mfChatText");
+    const send = document.getElementById("mfChatSend");
+    if (!input || !send) return;
+    const block = globalPostBlock();
+    const disabled = !!(block && block.hard);
+    input.disabled = disabled;
+    send.disabled = disabled;
+    if (disabled) input.placeholder = block.text;
+    else if (block && block.left) input.placeholder = block.text;
+    else input.placeholder = "Type a message…";
+  }
+
+  function canPostNow(showFeedback) {
+    const block = globalPostBlock();
+    if (!block) return true;
+    if (showFeedback) toast(block.text);
+    updateComposerState();
+    return false;
+  }
+
+  async function writeChatMessage(text) {
+    const t = Date.now();
+    const payload = { uid: me, name: myName || "someone", text, t };
+    if (view === "global") {
+      if (!canPostNow(true)) throw new Error("blocked");
+      const messageKey = mods.push(mods.ref(db, "chat/global")).key;
+      const updates = {};
+      updates[`chat/global/${messageKey}`] = payload;
+      updates[`chat/lastPost/${me}`] = t;
+      await mods.update(mods.ref(db), updates);
+      lastGlobalPostAt = t;
+      updateComposerState();
+      return;
+    }
+    await mods.push(chatNode(), payload);
+    afterSend();
+  }
+
   function wireComposer(kind) {
     const input = document.getElementById("mfChatText");
     const send = document.getElementById("mfChatSend");
     if (!input || !send) return;
-    const go = () => {
+    const go = async () => {
       const text = input.value.trim();
       if (!text) return;
-      // If the whole message is just an image/GIF URL, send it as inline media
-      // instead of a plain text link so it renders in the chat.
+      if (kind === "global" && !canPostNow(true)) return;
       const media = mediaUrlInfo(text);
       if (media) {
         input.value = ""; stopTyping();
-        measureRemoteImage(media.url).then((dims) => {
-          sendMedia({ kind: media.kind, url: media.url, w: dims.w, h: dims.h });
-        }).catch(() => {
-          sendMedia({ kind: media.kind, url: media.url });
-        });
+        try {
+          const dims = await measureRemoteImage(media.url).catch(() => ({}));
+          await sendMedia({ kind: media.kind, url: media.url, w: dims.w, h: dims.h });
+        } catch (_) { toast("Couldn't send that message"); }
         return;
       }
-      mods.push(chatNode(), { uid: me, name: myName || "someone", text, t: Date.now() });
-      afterSend();
       input.value = "";
       stopTyping();
+      try { await writeChatMessage(text); }
+      catch (err) {
+        if (err && err.message !== "blocked") {
+          input.value = text;
+          toast("Couldn't send that message. Check your chat permissions.");
+        }
+      }
     };
     send.addEventListener("click", go);
-    input.addEventListener("keydown", e => { if (e.key === "Enter") go(); });
-    // typing indicator (DM only) — ping on input, throttled; auto-stop when idle
+    input.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); go(); } });
     if (kind === "dm") {
       input.addEventListener("input", () => {
         if (input.value.trim()) pingTyping(); else stopTyping();
@@ -401,7 +483,10 @@
       input.addEventListener("blur", stopTyping);
     }
     wirePickers(input);
-    setTimeout(() => input.focus(), 50);
+    updateComposerState();
+    clearInterval(composerTicker);
+    if (kind === "global") composerTicker = setInterval(updateComposerState, 1000);
+    setTimeout(() => { if (!input.disabled) input.focus(); }, 50);
   }
 
   // Broadcast "I'm typing" to the current DM peer, throttled to ~1 write/2.5s,
@@ -501,9 +586,7 @@
 
   function sendMedia({ kind, url, w, h }) {
     if (!url) return Promise.reject();
-    return Promise.resolve(
-      mods.push(chatNode(), { uid: me, name: myName || "someone", text: encodeMedia({ kind, url, w, h }), t: Date.now() })
-    ).then(afterSend);
+    return writeChatMessage(encodeMedia({ kind, url, w, h }));
   }
 
   // ---- Emoji / GIF / image pickers ----
@@ -835,6 +918,9 @@
     adminHandles = new Set();
     uidRoleCache.clear();
     refreshVisibleActions();
+    updateModeratorButton();
+    paintGlobalNotices();
+    updateComposerState();
   }
 
   async function refreshModerationState() {
@@ -871,6 +957,9 @@
       uidRoleCache.clear();
       uidRoleCache.set(me, myChatRole);
       refreshVisibleActions();
+      updateModeratorButton();
+      paintGlobalNotices();
+      updateComposerState();
     } catch (_) {
       if (seq === moderationSeq) resetModerationState();
     }
@@ -964,7 +1053,10 @@
     syncMsgActions(row, key, m, !media);
 
     const nm = row.querySelector(".mf-msg-name");
-    if (nm) nm.addEventListener("click", () => { if (window.MFProfile) MFProfile.show(m.uid); });
+    if (nm) nm.addEventListener("click", () => {
+      if ((myChatRole === "admin" || myChatRole === "owner") && m.uid !== me) openUserModeration(m.uid, m.name || "someone");
+      else if (window.MFProfile) MFProfile.show(m.uid);
+    });
 
     if (!existing) {
       log.appendChild(row);
@@ -1064,17 +1156,26 @@
     });
     const deleteBtn = menu.querySelector('[data-act="delete"]');
     if (deleteBtn) deleteBtn.addEventListener("click", (e) => {
-      e.stopPropagation(); closeMsgMenu(); deleteMsg(key);
+      e.stopPropagation(); closeMsgMenu(); deleteMsg(key, m);
     });
     // close on next outside click
     setTimeout(() => document.addEventListener("click", closeMsgMenu), 0);
   }
 
-  function deleteMsg(key) {
-    // True removal: child_removed makes the bubble disappear for everyone and
-    // no "message deleted" placeholder is left behind.
-    mods.remove(msgRef(key))
-      .catch(() => toast("Couldn't remove that message"));
+  async function deleteMsg(key, m) {
+    if (!m) m = msgData.get(key);
+    if (!m) return;
+    const mine = m.uid === me;
+    const excerpt = messageExcerpt(m);
+    if (!confirm(mine ? `Delete “${excerpt}”?` : `Remove ${m.name || "this user's"} message: “${excerpt}”?`)) return;
+    try {
+      if (mine) {
+        await mods.remove(msgRef(key));
+      } else {
+        const reason = prompt("Reason for removal (optional):", "") || "";
+        await archiveAndDelete([{ key, message: m }], "delete", reason);
+      }
+    } catch (_) { toast("Couldn't remove that message"); }
   }
 
   function startEdit(row, key, m) {
@@ -1116,6 +1217,258 @@
       if (e.key === "Enter") { e.preventDefault(); finish(true); }
       else if (e.key === "Escape") { e.preventDefault(); finish(false); }
     });
+  }
+
+
+  // ---- full moderation suite ------------------------------------------------
+  function isModerator() { return myChatRole === "admin" || myChatRole === "owner"; }
+  function updateModeratorButton() {
+    const btn = document.getElementById("mfModBtn");
+    if (btn) btn.hidden = !isModerator();
+  }
+  function formatDuration(ms) {
+    ms = Math.max(0, Number(ms) || 0);
+    const mins = Math.ceil(ms / 60000);
+    if (mins < 60) return `${mins} minute${mins === 1 ? "" : "s"}`;
+    const hours = Math.ceil(mins / 60);
+    if (hours < 48) return `${hours} hour${hours === 1 ? "" : "s"}`;
+    const days = Math.ceil(hours / 24);
+    return `${days} day${days === 1 ? "" : "s"}`;
+  }
+  function messageExcerpt(m) {
+    const media = decodeMedia(m && m.text);
+    if (media) return media.kind === "gif" ? "GIF" : "image";
+    const text = String((m && m.text) || "message").replace(/\s+/g, " ").trim();
+    return text.length > 70 ? text.slice(0, 67) + "…" : text;
+  }
+  function dismissedWarningIds() {
+    try { return new Set(JSON.parse(localStorage.getItem("mf_dismissed_warnings") || "[]")); }
+    catch (_) { return new Set(); }
+  }
+  function dismissWarning(id) {
+    const set = dismissedWarningIds(); set.add(id);
+    try { localStorage.setItem("mf_dismissed_warnings", JSON.stringify([...set].slice(-200))); } catch (_) {}
+    paintGlobalNotices();
+  }
+  function paintGlobalNotices() {
+    const box = document.getElementById("mfGlobalNotices");
+    if (!box) return;
+    const bits = [];
+    const dismissed = dismissedWarningIds();
+    Object.entries(myWarnings || {}).sort((a,b)=>(b[1].at||0)-(a[1].at||0)).forEach(([id,w]) => {
+      if (dismissed.has(id)) return;
+      bits.push(`<div class="mf-chat-notice warning"><b>⚠️ Moderator warning</b><span>${esc(w.text || w.reason || "Please review the chat rules.")}</span><small>${w.byName ? `From ${esc(w.byName)} · ` : ""}${w.at ? esc(new Date(w.at).toLocaleString()) : ""}</small><button type="button" data-dismiss-warning="${esc(id)}">Dismiss</button></div>`);
+    });
+    if (myRestriction.blocked) bits.push(`<div class="mf-chat-notice danger"><b>🚫 Public chat blocked</b><span>${esc(myRestriction.reason || "A moderator blocked this account from public chat.")}</span></div>`);
+    else if ((Number(myRestriction.mutedUntil)||0) > Date.now()) bits.push(`<div class="mf-chat-notice danger"><b>🔇 Muted</b><span>${esc(myRestriction.reason || "You cannot post in public chat right now.")} ${myRestriction.mutedUntil < 32500000000000 ? `Ends ${esc(new Date(myRestriction.mutedUntil).toLocaleString())}.` : ""}</span></div>`);
+    if (chatSettings.locked) bits.push(`<div class="mf-chat-notice lock"><b>🔒 Chat locked</b><span>${isModerator() ? "Moderators can still post." : "Only moderators can post until it is unlocked."}</span></div>`);
+    else if ((Number(chatSettings.slowSeconds)||0) > 0) bits.push(`<div class="mf-chat-notice"><b>⏱️ Slow mode</b><span>Regular users can post once every ${Number(chatSettings.slowSeconds)} seconds.</span></div>`);
+    box.innerHTML = bits.join("");
+    box.querySelectorAll("[data-dismiss-warning]").forEach(btn => btn.addEventListener("click", () => dismissWarning(btn.dataset.dismissWarning)));
+  }
+  function stopModerationWatches() {
+    modWatchUnsubs.forEach(fn => { try { fn(); } catch (_) {} });
+    modWatchUnsubs = [];
+    chatSettings = { ...DEFAULT_CHAT_SETTINGS };
+    myRestriction = { blocked:false, mutedUntil:0, reason:"" };
+    myWarnings = {};
+    lastGlobalPostAt = 0;
+  }
+  function watchModerationEnvironment() {
+    stopModerationWatches();
+    if (!me || !db || !mods) return;
+    const watch = (ref, cb) => { const fn = mods.onValue(ref, cb); modWatchUnsubs.push(() => mods.off(ref, "value", cb)); return fn; };
+    const settingsRef = mods.ref(db, "chatSettings/global");
+    watch(settingsRef, snap => { chatSettings = { ...DEFAULT_CHAT_SETTINGS, ...(snap.val() || {}) }; paintGlobalNotices(); updateComposerState(); });
+    const restrictionRef = mods.ref(db, `chatRestrictions/${me}`);
+    watch(restrictionRef, snap => { myRestriction = { blocked:false, mutedUntil:0, reason:"", ...(snap.val() || {}) }; paintGlobalNotices(); updateComposerState(); });
+    const warningsRef = mods.ref(db, `chatWarnings/${me}`);
+    watch(warningsRef, snap => { myWarnings = snap.val() || {}; paintGlobalNotices(); });
+    const lastRef = mods.ref(db, `chat/lastPost/${me}`);
+    watch(lastRef, snap => { lastGlobalPostAt = Number(snap.val()) || 0; updateComposerState(); });
+  }
+  async function canActOnUid(uid) {
+    if (!isModerator() || !uid || uid === me) return false;
+    if (myChatRole === "owner") return true;
+    return (await roleForUid(uid)) === "user";
+  }
+  async function addModerationLog(action, target, extra) {
+    const key = mods.push(mods.ref(db, "moderationLog")).key;
+    const now = Date.now();
+    const rec = {
+      action, actorUid: me, actorName: myName || "moderator", actorRole: myChatRole,
+      targetUid: (target && target.uid) || "", targetName: (target && target.name) || "",
+      at: now, expiresAt: now + MOD_LOG_RETENTION_MS, ...(extra || {})
+    };
+    await mods.set(mods.ref(db, `moderationLog/${key}`), rec);
+    return key;
+  }
+  async function archiveAndDelete(items, action, reason) {
+    const updates = {};
+    const now = Date.now();
+    const batchId = items.length > 1 ? `${now.toString(36)}-${Math.random().toString(36).slice(2,7)}` : "";
+    for (const item of items) {
+      const m = item.message;
+      const logKey = mods.push(mods.ref(db, "moderationLog")).key;
+      updates[`moderationLog/${logKey}`] = {
+        action, actorUid: me, actorName: myName || "moderator", actorRole: myChatRole,
+        targetUid: m.uid || "", targetName: m.name || "", messageId: item.key,
+        messageText: String(m.text || "").slice(0,500), messageTime: Number(m.t)||now,
+        reason: String(reason || "").slice(0,200), at: now, expiresAt: now + MOD_LOG_RETENTION_MS,
+        ...(batchId ? { batchId } : {})
+      };
+      updates[`chat/global/${item.key}`] = null;
+    }
+    await mods.update(mods.ref(db), updates);
+  }
+  async function setRestriction(uid, name, patch, action, reason) {
+    if (!(await canActOnUid(uid))) throw new Error("protected");
+    const currentSnap = await mods.get(mods.ref(db, `chatRestrictions/${uid}`));
+    const current = currentSnap.val() || {};
+    const next = { ...current, ...patch, byUid: me, byName: myName || "moderator", at: Date.now(), reason: String(reason || "").slice(0,200) };
+    if (!next.blocked && !(Number(next.mutedUntil) > Date.now())) {
+      await mods.remove(mods.ref(db, `chatRestrictions/${uid}`));
+    } else await mods.set(mods.ref(db, `chatRestrictions/${uid}`), next);
+    await addModerationLog(action, { uid, name }, { reason: String(reason || "").slice(0,200), mutedUntil: Number(next.mutedUntil)||0, blocked: !!next.blocked });
+  }
+  async function warnUser(uid, name) {
+    if (!(await canActOnUid(uid))) return toast("That account is protected.");
+    const text = prompt(`Private warning for ${name}:`, "");
+    if (!text || !text.trim()) return;
+    const now = Date.now();
+    const key = mods.push(mods.ref(db, `chatWarnings/${uid}`)).key;
+    await mods.set(mods.ref(db, `chatWarnings/${uid}/${key}`), { text: text.trim().slice(0,500), byUid: me, byName: myName || "moderator", at: now });
+    await addModerationLog("warning", {uid,name}, { reason: text.trim().slice(0,200) });
+    toast("Warning sent privately.");
+  }
+  async function addAdminNote(uid, name) {
+    if (!(await canActOnUid(uid))) return toast("That account is protected.");
+    const text = prompt(`Private moderator note for ${name}:`, "");
+    if (!text || !text.trim()) return;
+    const key = mods.push(mods.ref(db, `moderationNotes/${uid}`)).key;
+    await mods.set(mods.ref(db, `moderationNotes/${uid}/${key}`), { text: text.trim().slice(0,1000), byUid: me, byName: myName || "moderator", at: Date.now() });
+    await addModerationLog("note", {uid,name}, { reason: text.trim().slice(0,200) });
+    toast("Private note saved.");
+  }
+  async function bulkDeleteForUser(uid, name, amount) {
+    if (!(await canActOnUid(uid))) return toast("That account is protected.");
+    const snap = await mods.get(mods.query(mods.ref(db, "chat/global"), mods.limitToLast(250)));
+    let rows = [];
+    snap.forEach(ch => { const m=ch.val(); if (m && m.uid === uid && !m.deleted) rows.push({key:ch.key,message:m}); });
+    rows.sort((a,b)=>(b.message.t||0)-(a.message.t||0));
+    if (amount !== "all") rows = rows.slice(0, Number(amount)||0);
+    if (!rows.length) return toast("No recent messages found for that user.");
+    const typed = prompt(`This will permanently remove ${rows.length} recent message${rows.length===1?"":"s"} from ${name}. Type DELETE to continue:`, "");
+    if (typed !== "DELETE") return;
+    const reason = prompt("Reason for bulk removal (optional):", "") || "";
+    for (let i=0;i<rows.length;i+=40) await archiveAndDelete(rows.slice(i,i+40), "bulk_delete", reason);
+    toast(`${rows.length} message${rows.length===1?"":"s"} removed.`);
+    closeModerationOverlay();
+  }
+  function closeModerationOverlay() {
+    const ov = document.getElementById("mfModOverlay"); if (ov) ov.remove();
+  }
+  function makeModerationOverlay(title) {
+    closeModerationOverlay();
+    const ov = document.createElement("div"); ov.id="mfModOverlay"; ov.className="mf-mod-overlay";
+    ov.innerHTML = `<div class="mf-mod-card" role="dialog" aria-modal="true"><button class="mf-mod-close" type="button">✕</button><h3>${esc(title)}</h3><div class="mf-mod-content">Loading…</div></div>`;
+    document.body.appendChild(ov);
+    ov.querySelector(".mf-mod-close").addEventListener("click", closeModerationOverlay);
+    ov.addEventListener("click", e => { if(e.target===ov) closeModerationOverlay(); });
+    return ov.querySelector(".mf-mod-content");
+  }
+  async function openUserModeration(uid, fallbackName) {
+    if (!isModerator()) { if (window.MFProfile) MFProfile.show(uid); return; }
+    const content = makeModerationOverlay(`Moderate ${fallbackName || "user"}`);
+    try {
+      const [userSnap, restrictSnap, warningsSnap, notesSnap] = await Promise.all([
+        mods.get(mods.ref(db, `users/${uid}`)), mods.get(mods.ref(db, `chatRestrictions/${uid}`)),
+        mods.get(mods.query(mods.ref(db, `chatWarnings/${uid}`), mods.limitToLast(10))),
+        mods.get(mods.query(mods.ref(db, `moderationNotes/${uid}`), mods.limitToLast(10)))
+      ]);
+      const user = userSnap.val() || {}; const name=user.displayName||fallbackName||"someone"; const handle=cleanHandle(user.username);
+      const role = await roleForUid(uid); const allowed = await canActOnUid(uid); const r=restrictSnap.val()||{};
+      const warnings=[]; warningsSnap.forEach(ch=>warnings.push({id:ch.key,...(ch.val()||{})}));
+      const notes=[]; notesSnap.forEach(ch=>notes.push({id:ch.key,...(ch.val()||{})}));
+      const protectedText = allowed ? "" : `<div class="mf-mod-protected">🛡️ ${role === "owner" ? "The owner" : "Another admin"} is protected from admin actions.</div>`;
+      content.innerHTML = `
+        <div class="mf-mod-userhead"><b>${esc(name)}</b>${handle?`<span>@${esc(handle)}</span>`:""}<span class="mf-role-pill ${esc(role)}">${esc(role)}</span></div>
+        ${protectedText}
+        <div class="mf-mod-grid">
+          <button data-mod-act="profile">👤 View profile</button>
+          ${allowed?`<button data-mod-act="warn">⚠️ Warn privately</button><button data-mod-act="note">📝 Add private note</button>
+          <button data-mod-act="mute10">🔇 Mute 10 minutes</button><button data-mod-act="mute60">🔇 Mute 1 hour</button><button data-mod-act="mute1440">🔇 Mute 24 hours</button><button data-mod-act="muteForever">🔇 Mute indefinitely</button>
+          <button data-mod-act="unmute">🔊 Remove timeout</button><button data-mod-act="${r.blocked?"unblock":"block"}">${r.blocked?"✅ Unblock public chat":"🚫 Block public chat"}</button>
+          <button data-mod-act="del5">🧹 Delete last 5</button><button data-mod-act="del10">🧹 Delete last 10</button><button data-mod-act="delall" class="danger">🧹 Delete all recent</button>`:""}
+          ${myChatRole==="owner" && role!=="owner"?`<button data-mod-act="${role==="admin"?"demote":"promote"}" class="owner-only">👑 ${role==="admin"?"Remove admin":"Make admin"}</button>`:""}
+        </div>
+        <div class="mf-mod-status"><b>Current restriction</b><span>${r.blocked?"Blocked from public chat":(Number(r.mutedUntil)>Date.now()?`Muted until ${esc(new Date(r.mutedUntil).toLocaleString())}`:"None")}</span>${r.reason?`<small>${esc(r.reason)}</small>`:""}</div>
+        <details><summary>Warning history (${warnings.length})</summary><div class="mf-mod-history">${warnings.length?warnings.reverse().map(w=>`<div><b>${esc(w.byName||"moderator")}</b> · ${esc(new Date(w.at||0).toLocaleString())}<br>${esc(w.text||"")}</div>`).join(""):"No warnings."}</div></details>
+        <details><summary>Private admin notes (${notes.length})</summary><div class="mf-mod-history">${notes.length?notes.reverse().map(n=>`<div><b>${esc(n.byName||"moderator")}</b> · ${esc(new Date(n.at||0).toLocaleString())}<br>${esc(n.text||"")}</div>`).join(""):"No notes."}</div></details>`;
+      content.querySelectorAll("[data-mod-act]").forEach(btn=>btn.addEventListener("click", async()=>{
+        const a=btn.dataset.modAct; btn.disabled=true;
+        try {
+          if(a==="profile") { closeModerationOverlay(); if(window.MFProfile) MFProfile.show(uid); return; }
+          if(a==="warn") await warnUser(uid,name);
+          else if(a==="note") await addAdminNote(uid,name);
+          else if(a.startsWith("mute")) { const mins={mute10:10,mute60:60,mute1440:1440}[a]; const until=mins?Date.now()+mins*60000:32503680000000; const why=prompt("Reason for timeout (optional):","")||""; await setRestriction(uid,name,{mutedUntil:until},"timeout",why); }
+          else if(a==="unmute") await setRestriction(uid,name,{mutedUntil:0},"unmute","");
+          else if(a==="block") { const why=prompt("Reason for blocking public chat (optional):","")||""; await setRestriction(uid,name,{blocked:true},"block",why); }
+          else if(a==="unblock") await setRestriction(uid,name,{blocked:false},"unblock","");
+          else if(a==="del5") return bulkDeleteForUser(uid,name,5);
+          else if(a==="del10") return bulkDeleteForUser(uid,name,10);
+          else if(a==="delall") return bulkDeleteForUser(uid,name,"all");
+          else if(a==="promote" || a==="demote") {
+            if(myChatRole!=="owner" || !handle) throw new Error("owner only");
+            if(!confirm(`${a==="promote"?"Make":"Remove"} @${handle} ${a==="promote"?"an admin":"from the admin team"}?`)) { btn.disabled=false; return; }
+            const ref=mods.ref(db,`admins/${handle}`); if(a==="promote") { await mods.set(ref,true); adminHandles.add(handle); } else { await mods.remove(ref); adminHandles.delete(handle); }
+            uidRoleCache.delete(uid);
+            await addModerationLog(a==="promote"?"promote":"demote",{uid,name},{reason:`@${handle}`});
+          }
+          toast("Moderation action saved."); closeModerationOverlay();
+        } catch(err) { toast(err && err.message==="protected"?"That account is protected.":"That moderation action was refused."); btn.disabled=false; }
+      }));
+    } catch (_) { content.innerHTML = `<div class="mf-mod-protected">Could not load that account.</div>`; }
+  }
+  function openChatSettings() {
+    if (!isModerator()) return;
+    const content = makeModerationOverlay("Chat moderation");
+    const canUnlock = myChatRole === "owner" || chatSettings.adminsCanUnlock;
+    content.innerHTML = `
+      <label class="mf-mod-setting"><span><b>Public chat lock</b><small>Regular users cannot post while locked.</small></span><input type="checkbox" id="mfSetLocked" ${chatSettings.locked?"checked":""} ${chatSettings.locked&&!canUnlock?"disabled":""}></label>
+      <label class="mf-mod-setting"><span><b>Slow mode</b><small>Posting delay for regular users.</small></span><select id="mfSetSlow"><option value="0">Off</option><option value="5">5 seconds</option><option value="10">10 seconds</option><option value="15">15 seconds</option><option value="30">30 seconds</option><option value="60">1 minute</option><option value="120">2 minutes</option><option value="300">5 minutes</option></select></label>
+      ${myChatRole==="owner"?`<label class="mf-mod-setting"><span><b>Admins may unlock chat</b><small>When off, only the owner can reopen a locked chat.</small></span><input type="checkbox" id="mfAdminsUnlock" ${chatSettings.adminsCanUnlock?"checked":""}></label>`:""}
+      <div class="mf-mod-grid"><a class="mf-mod-link" href="/admin.html#chat-moderation">Open moderation center</a></div>`;
+    content.querySelector("#mfSetSlow").value=String(Number(chatSettings.slowSeconds)||0);
+    content.querySelector("#mfSetLocked").addEventListener("change", async e=>{
+      try { await mods.set(mods.ref(db,"chatSettings/global/locked"),e.target.checked); await addModerationLog(e.target.checked?"lock":"unlock",{uid:"",name:"Public chat"},{}); }
+      catch(_){ e.target.checked=!e.target.checked; toast("You are not allowed to change that setting."); }
+    });
+    content.querySelector("#mfSetSlow").addEventListener("change", async e=>{
+      try { const v=Number(e.target.value)||0; await mods.set(mods.ref(db,"chatSettings/global/slowSeconds"),v); await addModerationLog("slow_mode",{uid:"",name:"Public chat"},{slowSeconds:v}); }
+      catch(_){ toast("Couldn't change slow mode."); }
+    });
+    const unlock=content.querySelector("#mfAdminsUnlock"); if(unlock) unlock.addEventListener("change",async e=>{
+      try { await mods.set(mods.ref(db,"chatSettings/global/adminsCanUnlock"),e.target.checked); await addModerationLog("unlock_policy",{uid:"",name:"Public chat"},{adminsCanUnlock:e.target.checked}); }
+      catch(_){ e.target.checked=!e.target.checked; toast("Only the owner can change that."); }
+    });
+  }
+  function injectModerationStyles() {
+    if (document.getElementById("mfModerationStyles")) return;
+    const st=document.createElement("style"); st.id="mfModerationStyles"; st.textContent=`
+      .mf-global-notices:empty{display:none}.mf-global-notices{display:grid;gap:6px;padding:8px 9px 0}
+      .mf-chat-notice{display:grid;gap:3px;position:relative;padding:8px 34px 8px 10px;border-radius:10px;border:1px solid rgba(196,181,253,.25);background:rgba(196,181,253,.08);font-size:11.5px;line-height:1.35}
+      .mf-chat-notice.warning{border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.09)}.mf-chat-notice.danger{border-color:rgba(251,113,133,.36);background:rgba(251,113,133,.09)}.mf-chat-notice.lock{border-color:rgba(148,163,184,.35);background:rgba(148,163,184,.08)}
+      .mf-chat-notice small{opacity:.65}.mf-chat-notice button{position:absolute;right:6px;top:6px;border:0;background:transparent;color:inherit;opacity:.7;cursor:pointer;font-size:10px}
+      .mf-mod-overlay{position:fixed;inset:0;z-index:100000;background:rgba(5,8,18,.72);display:grid;place-items:center;padding:16px;backdrop-filter:blur(6px)}
+      .mf-mod-card{position:relative;width:min(520px,100%);max-height:min(720px,92vh);overflow:auto;border:1px solid rgba(196,181,253,.3);border-radius:18px;background:rgba(18,23,40,.985);color:#f5f1fb;padding:20px;box-shadow:0 24px 80px rgba(0,0,0,.55);font:14px/1.45 system-ui,sans-serif}
+      .mf-mod-card h3{margin:0 30px 16px 0;font-size:19px}.mf-mod-close{position:absolute;right:12px;top:12px;border:0;background:transparent;color:#ddd;cursor:pointer;font-size:16px}
+      .mf-mod-userhead{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.mf-mod-userhead>span{opacity:.7}.mf-role-pill{font-size:10px;text-transform:uppercase;letter-spacing:.08em;border:1px solid rgba(255,255,255,.18);padding:2px 7px;border-radius:999px}.mf-role-pill.admin{color:#c4b5fd}.mf-role-pill.owner{color:#fbbf24}
+      .mf-mod-protected{padding:10px;border-radius:10px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);margin-bottom:12px}.mf-mod-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}.mf-mod-grid button,.mf-mod-link{font:inherit;text-align:left;color:#eee;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.13);border-radius:10px;padding:9px 10px;cursor:pointer;text-decoration:none}.mf-mod-grid button:hover,.mf-mod-link:hover{border-color:#c4b5fd}.mf-mod-grid .danger{border-color:rgba(251,113,133,.35)}.mf-mod-grid .owner-only{border-color:rgba(251,191,36,.35)}
+      .mf-mod-status{display:grid;gap:3px;padding:10px;border-radius:10px;background:rgba(255,255,255,.035);margin:10px 0}.mf-mod-status span,.mf-mod-status small{opacity:.75}.mf-mod-card details{border-top:1px solid rgba(255,255,255,.1);padding:10px 0}.mf-mod-card summary{cursor:pointer}.mf-mod-history{display:grid;gap:7px;margin-top:8px}.mf-mod-history>div{padding:8px;border-radius:9px;background:rgba(255,255,255,.035);font-size:12px}
+      .mf-mod-setting{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.1)}.mf-mod-setting span{display:grid}.mf-mod-setting small{opacity:.65}.mf-mod-setting select{background:#111827;color:#eee;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:6px}
+      @media(max-width:520px){.mf-mod-grid{grid-template-columns:1fr}.mf-mod-card{padding:17px}}
+    `; document.head.appendChild(st);
   }
 
   // ---- lightbox ----
@@ -1354,6 +1707,7 @@
       mods = m;
       wired = true;
       refreshModerationState();
+      watchModerationEnvironment();
       watchRequestCount();
       watchFriendsForWatchers();
       if (openPanel) render();
@@ -1366,8 +1720,8 @@
       me = user ? user.uid : null;
       myName = MFAuth.name();
       if (user && !wired) start();
-      if (user && wired) refreshModerationState();
-      if (!user) resetModerationState();
+      if (user && wired) { refreshModerationState(); watchModerationEnvironment(); }
+      if (!user) { resetModerationState(); stopModerationWatches(); }
       if (document.getElementById("mfChatPanel")) {
         if (!user) { dmWith = null; view = "global"; }
         if (openPanel) render();
