@@ -943,6 +943,13 @@
         }
       }
     },
+    "downloadCounts": {
+      ".read": true,
+      "$fileId": {
+        ".write": "$fileId.matches(/^(craft-planner|farm-challenge|idle-rpg|mayflower-radio)$/) && newData.isNumber() && ((!data.exists() && newData.val() === 1) || (data.isNumber() && newData.val() === data.val() + 1))",
+        ".validate": "newData.val() >= 0 && newData.val() <= 1000000000"
+      }
+    },
     "owner": {
       ".read": true,
       ".write": false
