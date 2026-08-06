@@ -211,6 +211,23 @@
     say(`${chosen.length} message${chosen.length===1?"":"s"} removed.`,"ok"); await loadLogs();
   }
 
+  function returnToUserDirectory() {
+    activeUser = null;
+    const card = el("amUserCard");
+    if (card) { card.hidden = true; card.innerHTML = ""; }
+    const directory = el("amDirectory");
+    if (role === "owner" && directory) {
+      directory.hidden = false;
+      drawDirectory();
+      directory.scrollIntoView({behavior:"smooth", block:"start"});
+      const search = el("amDirectorySearch");
+      if (search) setTimeout(() => search.focus({preventScroll:true}), 350);
+      return;
+    }
+    const lookup = document.querySelector(".amLookup");
+    if (lookup) lookup.scrollIntoView({behavior:"smooth", block:"nearest"});
+  }
+
   async function openUser(uid, preferredHandle) {
     const card=el("amUserCard"); if (!uid) return;
     card.hidden=false; card.innerHTML='<div class="acctEmpty">Loading user…</div>';
@@ -224,7 +241,7 @@
       const warnings=[]; warningsSnap.forEach(ch=>warnings.push(ch.val()||{})); const notes=[]; notesSnap.forEach(ch=>notes.push(ch.val()||{}));
       activeUser={uid,name:profile.displayName||handle||"user",handle,role:targetRole,restriction};
       if (el("amUser")) el("amUser").value = handle ? `@${handle}` : "";
-      card.innerHTML=`<div class="amUserHead"><b>${esc(activeUser.name)}</b>${handle?`<span class="amHandle">@${esc(handle)}</span>`:""}<span class="amRole ${esc(targetRole)}">${esc(targetRole)}</span></div>
+      card.innerHTML=`${role==="owner"?`<div class="amUserToolbar"><button type="button" class="amBackUsers" data-am-back-users>← Back to all users</button></div>`:""}<div class="amUserHead"><b>${esc(activeUser.name)}</b>${handle?`<span class="amHandle">@${esc(handle)}</span>`:""}<span class="amRole ${esc(targetRole)}">${esc(targetRole)}</span></div>
         ${allowed?"":`<div class="amProtected">🛡️ ${targetRole === "owner" ? "The owner" : uid === me ? "Your own account" : "This account"} is protected from these actions.</div>`}
         <div class="amActions">
           <button data-am-act="profile">👤 View profile</button>
@@ -238,6 +255,8 @@
           <div class="amHistoryItem"><b>Warning history (${warnings.length})</b>${warnings.length?warnings.reverse().map(w=>`<br><small>${esc(when(w.at))} · ${esc(w.byName||"moderator")}: ${esc(w.text||"")}</small>`).join(""):"<br><small>No warnings.</small>"}</div>
           <div class="amHistoryItem"><b>Private admin notes (${notes.length})</b>${notes.length?notes.reverse().map(n=>`<br><small>${esc(when(n.at))} · ${esc(n.byName||"moderator")}: ${esc(n.text||"")}</small>`).join(""):"<br><small>No notes.</small>"}</div>
         </div>`;
+      const backButton = card.querySelector("[data-am-back-users]");
+      if (backButton) backButton.addEventListener("click", returnToUserDirectory);
       card.querySelectorAll("[data-am-act]").forEach(btn=>btn.addEventListener("click",()=>userAction(btn)));
       card.scrollIntoView({behavior:"smooth",block:"nearest"});
     } catch(err) { console.warn("load user",err); card.innerHTML='<div class="acctEmpty">Could not load that account.</div>'; }
