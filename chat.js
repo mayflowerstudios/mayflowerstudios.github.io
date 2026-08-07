@@ -381,8 +381,11 @@
   }
   function afterSend() {
     if (view === "dm") {
-      mods.set(mods.ref(db, `dmIndex/${me}/${dmWith}`), { t: Date.now() });
-      mods.set(mods.ref(db, `dmIndex/${dmWith}/${me}`), { t: Date.now() });
+      // Use Firebase's clock for thread activity too. Device clocks can differ
+      // by seconds or minutes, which used to make conversations appear out of order.
+      const t = mods.serverTimestamp();
+      mods.set(mods.ref(db, `dmIndex/${me}/${dmWith}`), { t });
+      mods.set(mods.ref(db, `dmIndex/${dmWith}/${me}`), { t });
     }
   }
 
@@ -430,13 +433,19 @@
   }
 
   async function writeChatMessage(text) {
-    const t = Date.now();
+    // Message ordering must never depend on a visitor's device clock. `t` is
+    // server-authored for display/auditing; visual order comes from Firebase
+    // push IDs below, which also lets restored messages reuse their old place.
+    const clientNow = Date.now();
+    const t = mods.serverTimestamp();
     const payload = { uid: me, name: myName || "someone", text, t };
     if (view === "global") {
       if (!canPostNow(true)) throw new Error("blocked");
       const messageKey = mods.push(mods.ref(db, "chat/global")).key;
       const updates = {};
       updates[`chat/global/${messageKey}`] = payload;
+      // Keep this in the same atomic update as the message. Firebase resolves
+      // both serverTimestamp sentinels to the same authoritative server time.
       updates[`chat/lastPost/${me}`] = t;
       await mods.update(mods.ref(db), updates);
       // Turn @username mentions into best-effort notifications without ever blocking the message itself.
@@ -449,7 +458,7 @@
           await MFAuth.createNotification(targetUid,{id:`mention_${messageKey}`,type:"mention",title:`${myName || "Someone"} mentioned you`,body:String(text).slice(0,240),icon:"💬",link:"/notifications.html",sourceId:messageKey});
         } catch (_) {}
       }
-      lastGlobalPostAt = t;
+      lastGlobalPostAt = clientNow;
       updateComposerState();
       return;
     }
@@ -991,11 +1000,10 @@
     if (log) log.innerHTML = "";
     msgRows = new Map();
     msgData = new Map();
-    // Public chat is ordered by the message timestamp so a restored message can
-    // return to the same chronological place it originally occupied.
-    const q = view === "global"
-      ? mods.query(node, mods.orderByChild("t"), mods.limitToLast(100))
-      : mods.query(node, mods.limitToLast(100));
+    // Always order by Firebase message key, never by a client-supplied clock.
+    // Push IDs preserve send order, and restored messages reuse their original
+    // key, so a restoration naturally returns to its original position.
+    const q = mods.query(node, mods.orderByKey(), mods.limitToLast(100));
     // Only render genuine messages — ignore any stray non-message children
     // (e.g. legacy typing data) so they never appear as garbled messages.
     const isMsg = (m) => m && typeof m === "object" && typeof m.uid === "string" && (typeof m.t === "number");
@@ -1024,8 +1032,12 @@
   }
 
   function compareMessages(aKey, a, bKey, b) {
-    const timeDiff = (Number(a && a.t) || 0) - (Number(b && b.t) || 0);
-    return timeDiff || String(aKey).localeCompare(String(bKey));
+    // Firebase push keys are lexicographically chronological. Do not use `t`
+    // here: older builds wrote `t` from Date.now(), so two devices with clock
+    // skew could make later messages jump upward in the chat.
+    const ak = String(aKey);
+    const bk = String(bKey);
+    return ak === bk ? 0 : (ak < bk ? -1 : 1);
   }
 
   function reorderMessageRows(log) {
