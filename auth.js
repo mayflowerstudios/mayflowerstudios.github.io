@@ -32,7 +32,7 @@
   let mods = null; // loaded firebase modules
 
   const MFAuth = {
-    _ver: "privacy-notifications-achievements-1",   // bump marker: confirms the new typing path is loaded
+    _ver: "privacy-notifications-achievements-2",   // bump marker: confirms the new typing path is loaded
     user: null,
     profile: null,
     get uid() { return MFAuth.user ? MFAuth.user.uid : null; },
@@ -246,6 +246,9 @@
         if (Object.keys(patch).length) await dbMod.update(dbMod.ref(db), patch);
         return { ...existing, ...Object.fromEntries(ids.map(id => [id, existing[id] || { unlockedAt: now }])) };
       };
+      // Compatibility entry point used by pages that still know about the old
+      // calculated achievement state. Writes are append-only in Firebase.
+      MFAuth.migrateLegacyAchievements = async (ids) => MFAuth.unlockAchievements(ids);
       MFAuth.refreshBasicAchievements = async () => {
         if (!MFAuth.user) return {};
         const p = MFAuth.profile || {}, uid = MFAuth.uid;

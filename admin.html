@@ -7,7 +7,7 @@
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=2" />
   <link rel="apple-touch-icon" href="/assets/icons/favicon.png?v=2" />
-  <link rel="stylesheet" href="/style.css?v=50" />
+  <link rel="stylesheet" href="/style.css?v=36" />
 
   <style>
     .adminWrap { max-width: 1100px; margin: 0 auto; }
@@ -167,7 +167,6 @@
     .amActions { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
     .amActions button { font:inherit; font-size:12px; text-align:left; color:var(--text-2); cursor:pointer; background:rgba(0,0,0,.2); border:1px solid var(--border-2); border-radius:9px; padding:8px 9px; }
     .amActions button:hover { color:var(--text); border-color:var(--rose); }.amActions button.danger { border-color:rgba(251,113,133,.32); }.amActions button.owner { border-color:rgba(251,191,36,.32); }
-    .amBadgeManager{margin-top:12px;padding:12px;border:1px solid rgba(249,168,212,.18);border-radius:12px;background:rgba(249,168,212,.035)}.amBadgeHead{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:9px}.amBadgeHead b{font-size:12.5px}.amBadgeHead span,.amBadgeHint{font-size:10.5px;color:var(--text-3)}.amBadgeCurrent{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px}.amBadgeChip{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(249,168,212,.22);border-radius:999px;padding:4px 7px;font-size:11px;color:var(--text-2);background:rgba(249,168,212,.06)}.amBadgeChip button{border:0;background:transparent;color:var(--text-3);cursor:pointer;font:inherit;font-size:14px;line-height:1;padding:0}.amBadgeForm{display:grid;grid-template-columns:minmax(130px,1fr) 72px minmax(130px,1fr) auto;gap:7px}.amBadgeForm input,.amBadgeForm select{min-width:0;padding:8px 9px;border-radius:9px;border:1px solid var(--border-2);background:rgba(0,0,0,.22);color:var(--text);font:inherit;font-size:11.5px}.amBadgeForm button{font:inherit;font-size:11.5px;border:1px solid rgba(249,168,212,.28);border-radius:9px;background:rgba(249,168,212,.08);color:var(--text-2);cursor:pointer}.amBadgeHint{margin-top:6px}
     .amHistory { display:grid; gap:7px; margin-top:10px; }.amHistoryItem { font-size:12px; color:var(--text-2); padding:9px 10px; border-radius:9px; background:rgba(255,255,255,.03); }
     .amHistoryItem small { color:var(--text-3); }.amFilters { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:14px 0 10px; }
     .amFilters > input[type="text"] { min-width:220px; flex:1 1 300px; }
@@ -181,9 +180,7 @@
     .amLogReason { color:var(--gold); margin-top:4px; }.amLogActs { display:flex; gap:7px; margin-top:8px; }
     .amLogActs button { font:inherit; font-size:11.5px; color:var(--text-2); cursor:pointer; background:transparent; border:1px solid var(--border-2); border-radius:999px; padding:4px 10px; }
     .amLogActs button:hover { border-color:var(--rose); color:var(--text); }
-
-    .annAdminForm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.annAdminForm .wide{grid-column:1/-1}.annAdminForm input,.annAdminForm select,.annAdminForm textarea{width:100%;padding:9px 10px;border-radius:9px;border:1px solid var(--border-2);background:rgba(0,0,0,.23);color:var(--text);font:inherit;font-size:12px}.annAdminForm textarea{min-height:80px;resize:vertical}.annCheck{display:flex;gap:7px;align-items:center;color:var(--text-2);font-size:12px}.annCheck input{width:16px;height:16px;accent-color:var(--rose)}.annAdminButtons{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:9px}.annAdminButtons button,.annAdminActions button{font:inherit;font-size:11.5px;color:var(--text-2);background:transparent;border:1px solid var(--border-2);border-radius:999px;padding:6px 10px;cursor:pointer}.annAdminButtons button:first-child{color:#0b1120;background:linear-gradient(135deg,var(--rose),var(--violet));border:0;font-weight:700}.annAdminList{display:grid;gap:8px;margin-top:14px}.annAdminItem{border:1px solid var(--border);border-radius:12px;padding:11px 12px;background:rgba(255,255,255,.025)}.annAdminHead{display:flex;gap:7px;flex-wrap:wrap;align-items:center}.annAdminHead>b{font-size:12.5px}.annAdminHead>span{font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);border:1px solid var(--border-2);border-radius:999px;padding:2px 6px}.annState.active{color:var(--emerald)!important}.annState.scheduled{color:var(--violet)!important}.annState.expired{color:var(--text-3)!important}.annAdminItem p{font-size:12px;color:var(--text-2);line-height:1.5;margin:7px 0}.annAdminItem small{color:var(--text-3);font-size:10.5px}.annAdminActions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.annAdminActions button.danger{border-color:rgba(251,113,133,.3)}
-    @media (max-width:760px){.amTop{grid-template-columns:1fr}.amBadgeForm{grid-template-columns:1fr 72px 1fr}.amBadgeForm button{grid-column:1/-1;padding:8px}.amActions{grid-template-columns:repeat(2,minmax(0,1fr));}.amFilters>input[type="text"]{flex-basis:100%;order:2}.amFilterCheck{order:3}#amRefresh,#amPurge,#amLogCount{order:4}.annAdminForm{grid-template-columns:1fr}.annAdminForm .wide{grid-column:auto}}
+    @media (max-width:760px){.amTop{grid-template-columns:1fr}.amActions{grid-template-columns:repeat(2,minmax(0,1fr));}.amFilters>input[type="text"]{flex-basis:100%;order:2}.amFilterCheck{order:3}#amRefresh,#amPurge,#amLogCount{order:4}}
     @media (max-width:480px){.amActions{grid-template-columns:1fr}}
 
   </style>
@@ -239,26 +236,6 @@
 
           <p class="aiFoot">Signed in as <b id="aiWho"></b> <span class="aiRank" id="aiRankTag"></span></p>
         </div>
-
-
-        <section id="annAdminPanel" hidden>
-          <div class="secLabel" id="site-announcements">Site announcements</div>
-          <div class="acctFriendsCard">
-            <div class="annAdminForm">
-              <input id="annTitle" class="wide" maxlength="80" placeholder="Announcement title" />
-              <textarea id="annBody" class="wide" maxlength="400" placeholder="What should the site know?"></textarea>
-              <select id="annStyle"><option value="info">📣 Information</option><option value="celebrate">🌸 Celebration</option><option value="warning">⚠️ Warning</option><option value="urgent">🚨 Urgent</option></select>
-              <select id="annAudience"><option value="everyone">Everyone (including signed out)</option><option value="signed_in">All signed-in users</option><option value="users">Regular users only</option><option value="admins">Admins + owner</option><option value="owner">Owner only</option></select>
-              <label><span class="muted small">Starts</span><input id="annStart" type="datetime-local" /></label>
-              <label><span class="muted small">Ends (optional)</span><input id="annEnd" type="datetime-local" /></label>
-              <input id="annLink" class="wide" maxlength="300" placeholder="Optional site link, e.g. /projects.html" />
-              <label class="annCheck wide"><input id="annDismissible" type="checkbox" checked /> Allow people to dismiss this announcement</label>
-            </div>
-            <div class="annAdminButtons"><button id="annSave" type="button">Publish announcement</button><button id="annCancel" type="button" hidden>Cancel edit</button><span id="annStatus" class="amStatus"></span><span id="annCount" style="margin-left:auto;color:var(--text-3);font-size:11px;"></span></div>
-            <div id="annList" class="annAdminList"><div class="acctEmpty">Loading announcements…</div></div>
-            <p class="aiFoot">Announcements can be immediate or scheduled, targeted by audience, and optionally dismissible. Active announcements appear below the site navigation.</p>
-          </div>
-        </section>
 
 
         <div class="secLabel" id="chat-moderation">Chat moderation</div>
@@ -338,10 +315,9 @@
     <div id="site-footer"></div>
   </div><!-- /site-page -->
 
-  <script src="/shared.js?v=50"></script>
-  <script src="/auth.js?v=50"></script>
+  <script src="/shared.js?v=51"></script>
+  <script src="/auth.js?v=51"></script>
   <script src="/admin-inbox.js?v=6"></script>
-  <script src="/admin-announcements.js?v=50"></script>
-  <script src="/admin-moderation.js?v=50"></script>
+  <script src="/admin-moderation.js?v=4"></script>
 </body>
 </html>
