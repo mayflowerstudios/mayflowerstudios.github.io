@@ -120,6 +120,16 @@
         try { await a.createNotification(uid, { id:`room_invite_${id}`, type:"room_invite", icon:TYPES[type].emoji, title:"Room invitation", body:`${room.ownerName} invited you to ${name}.`, link:`/${MFRooms.pageFor(type)}?room=${encodeURIComponent(id)}`, sourceId:id }); } catch (_) {}
       }
     }
+    // Room achievements are stored immediately so deleting a room later never
+    // takes the achievement away.
+    if (a.unlockAchievements) {
+      try {
+        const counts = await MFRooms.countOwned(a.uid);
+        const unlock = ["host"];
+        if (counts.total >= 5) unlock.push("regular");
+        await a.unlockAchievements(unlock);
+      } catch (_) {}
+    }
     return room;
   };
 

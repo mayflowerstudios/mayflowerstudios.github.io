@@ -53,7 +53,7 @@
     const panel = document.createElement("section");
     panel.id = "mfNotifyPanel"; panel.className = "mf-notify-panel"; panel.hidden = true;
     panel.setAttribute("aria-label", "Notifications"); panel.setAttribute("data-no-translate", "");
-    panel.innerHTML = `<div class="mf-notify-head"><b>Notifications</b><span id="mfNotifySummary"></span><button type="button" id="mfNotifyMarkAll">Mark all read</button></div><div class="mf-notify-list" id="mfNotifyList"></div><div class="mf-notify-foot"><a href="/notifications.html">View all notifications</a><button type="button" id="mfNotifyClearRead">Clear read</button></div>`;
+    panel.innerHTML = `<div class="mf-notify-head"><b>Notifications</b><span id="mfNotifySummary"></span><button type="button" id="mfNotifyMarkAll">Mark all read</button></div><div class="mf-notify-list" id="mfNotifyList"></div><div class="mf-notify-foot"><a href="/notifications.html">View all notifications</a><a href="/settings.html#notifications">Preferences</a><button type="button" id="mfNotifyClearRead">Clear read</button></div>`;
     document.body.appendChild(panel);
     $("mfNotifyMarkAll").addEventListener("click", markAllRead);
     $("mfNotifyClearRead").addEventListener("click", clearRead);
@@ -80,7 +80,7 @@
       moderation_warning:["Moderator warning","⚠️"], moderation_timeout:["You were timed out","⚠️"],
       moderation_unmute:["Your timeout was removed","✅"], moderation_block:["You were blocked from public chat","🚫"],
       moderation_unblock:["Your public-chat block was removed","✅"], role_promote:["You are now a site admin","👑"],
-      role_demote:["Your admin role was removed","👑"]
+      role_demote:["Your admin role was removed","👑"], badge_awarded:["New profile badge","🏷️"]
     }[n.type];
     const title = fixed ? fixed[0] : (n.title || "Notification"), body = n.body || "", icon = fixed ? fixed[1] : (n.icon || "🔔");
     return `<a class="mf-notify-item${unread ? " unread" : ""}" href="${esc(link)}" data-notification-id="${esc(n.id)}"><span class="mf-notify-icon">${esc(icon)}</span><span class="mf-notify-copy"><b class="mf-notify-title">${esc(title)}</b>${body ? `<span class="mf-notify-body">${esc(body)}</span>` : ""}<span class="mf-notify-time" title="${esc(new Date(Number(n.createdAt)||0).toLocaleString())}">${esc(relativeTime(n.createdAt))}</span></span>${unread ? '<span class="mf-notify-dot" aria-label="Unread"></span>' : (page ? '<span></span>' : '')}</a>`;

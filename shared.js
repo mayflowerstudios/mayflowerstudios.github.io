@@ -1,6 +1,13 @@
 /* shared.js — Mayflower Studios */
 (function () {
 
+  function localPref(key, fallback) { try { const v = localStorage.getItem(key); return v === null ? fallback : v; } catch (_) { return fallback; } }
+  function applyLocalAppearance() {
+    const reduce = localPref('mf_reduce_motion', '0') === '1';
+    document.documentElement.classList.toggle('mf-reduce-motion', reduce);
+  }
+  applyLocalAppearance();
+
   function injectBg() {
     if (document.querySelector('.bg-scene')) return;
     const s1 = document.createElement('div'); s1.className = 'bg-scene';
@@ -17,7 +24,7 @@
   }
 
   function injectFireflies() {
-    if (document.getElementById('fireflies')) return;
+    if (document.getElementById('fireflies') || localPref('mf_hide_fireflies','0') === '1') return;
     const c = document.createElement('canvas'); c.id = 'fireflies';
     document.body.prepend(c);
   }
@@ -30,7 +37,7 @@
   }
 
   function startPetals(canvas) {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('mf-reduce-motion')) return;
     const ctx = canvas.getContext('2d');
     let W, H, petals = [], DPR = 1;
     const COLORS = ['rgba(249,168,212,', 'rgba(251,207,232,', 'rgba(196,181,253,', 'rgba(253,242,248,'];
@@ -517,6 +524,7 @@
           <a href="/projects.html">Projects</a>
           <a href="/contact.html">Contact</a>
           <a href="https://ko-fi.com/mayflowerstudiosteam" target="_blank" rel="noopener">Support ↗</a>
+          <a href="/settings.html">Settings</a>
           <a href="/privacy.html">Privacy</a>
           <a href="/tos.html">Terms</a>
         </div>
@@ -668,7 +676,7 @@
 
   function loadFireflies() {
     // Only load if not already loaded by a <script src> tag on the page
-    if (window._firefliesLoaded) return;
+    if (window._firefliesLoaded || localPref('mf_hide_fireflies','0') === '1') return;
     window._firefliesLoaded = true;
     const s = document.createElement('script');
     s.src = '/fireflies.js';
@@ -677,7 +685,7 @@
 
   // Bump this whenever auth.js / chat.js / profile-view.js change, so browsers
   // and the GitHub Pages CDN fetch the new version instead of a cached copy.
-  var MF_ASSET_VER = '42';
+  var MF_ASSET_VER = '50';
 
   function loadScript(src, attrs) {
     if (document.querySelector(`script[data-mf-src="${src}"]`)) return;
@@ -699,6 +707,8 @@
     loadScript('/chat.js', { 'data-mf-chat': '1' });
     // notification-center.js owns the bell, unread badge, dropdown, and full page.
     loadScript('/notification-center.js', { 'data-mf-notifications': '1' });
+    // announcement-center.js renders scheduled site announcements for the right audience.
+    loadScript('/announcement-center.js', { 'data-mf-announcements': '1' });
   }
 
   function initAccountNav() {

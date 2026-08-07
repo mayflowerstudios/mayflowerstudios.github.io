@@ -32,7 +32,7 @@
   let mods = null; // loaded firebase modules
 
   const MFAuth = {
-    _ver: "typing-dmTyping-1",   // bump marker: confirms the new typing path is loaded
+    _ver: "privacy-notifications-achievements-1",   // bump marker: confirms the new typing path is loaded
     user: null,
     profile: null,
     get uid() { return MFAuth.user ? MFAuth.user.uid : null; },
@@ -136,6 +136,176 @@
         }
       };
 
+
+      // ---- profile privacy, notification preferences, persistent achievements ----
+      // Privacy defaults preserve what the site already exposed before this feature.
+      // Friends are the exception: public friend lists are new, so they default to friends-only.
+      const PROFILE_PRIVACY_DEFAULTS = Object.freeze({
+        relationship:"everyone", gifts:"everyone", guestbook:"everyone", friends:"friends",
+        onlineStatus:"everyone", lastSeen:"everyone", achievements:"everyone", badges:"everyone"
+      });
+      const NOTIFICATION_PREF_DEFAULTS = Object.freeze({
+        friends:true, gifts:true, guestbook:true, relationship:true, rooms:true, messages:true
+      });
+      const ACHIEVEMENT_CATALOG = Object.freeze([
+        { id:"joined", icon:"🌸", name:"Welcome", desc:"Made an account" },
+        { id:"named", icon:"🪪", name:"Identity", desc:"Set a username" },
+        { id:"decorated", icon:"🖼️", name:"Decorated", desc:"Added a banner" },
+        { id:"open", icon:"📖", name:"Open Book", desc:"Wrote a bio" },
+        { id:"friend1", icon:"🤝", name:"Made a Friend", desc:"Added 1 friend" },
+        { id:"social", icon:"💞", name:"Social", desc:"Had 5 friends" },
+        { id:"gifted", icon:"🎁", name:"Gifted", desc:"Received a gift" },
+        { id:"guestbook", icon:"💌", name:"Signed", desc:"Got a guestbook note" },
+        { id:"birthday", icon:"🎂", name:"Birthday", desc:"Set your birthday" },
+        { id:"host", icon:"🚪", name:"Host", desc:"Opened a room" },
+        { id:"regular", icon:"🏡", name:"Regular", desc:"Opened 5 rooms" },
+        { id:"caretaker", icon:"🌱", name:"Caretaker", desc:"Raised a companion" },
+        { id:"grower", icon:"🌟", name:"Grower", desc:"A companion reached lvl 5" },
+        { id:"devoted", icon:"🦄", name:"Devoted", desc:"A companion reached lvl 18" },
+        { id:"veteran", icon:"🗓️", name:"Settled In", desc:"30 days as a member" },
+      ]);
+      MFAuth.profilePrivacyDefaults = PROFILE_PRIVACY_DEFAULTS;
+      MFAuth.notificationPrefDefaults = NOTIFICATION_PREF_DEFAULTS;
+      MFAuth.achievementCatalog = ACHIEVEMENT_CATALOG;
+
+      function allowedVisibility(v, fallback) {
+        return /^(everyone|friends|nobody)$/.test(String(v || "")) ? String(v) : fallback;
+      }
+      MFAuth.getProfilePrivacy = async (uid) => {
+        uid = uid || MFAuth.uid;
+        if (!uid) return { ...PROFILE_PRIVACY_DEFAULTS };
+        try {
+          const snap = await dbMod.get(dbMod.ref(db, `profilePrivacy/${uid}`));
+          const raw = snap.exists() ? (snap.val() || {}) : {};
+          const out = { ...PROFILE_PRIVACY_DEFAULTS };
+          Object.keys(out).forEach(k => out[k] = allowedVisibility(raw[k], out[k]));
+          return out;
+        } catch (_) { return { ...PROFILE_PRIVACY_DEFAULTS }; }
+      };
+      MFAuth.saveProfilePrivacy = async (values) => {
+        if (!MFAuth.user) throw new Error("Not signed in");
+        const patch = {};
+        Object.keys(PROFILE_PRIVACY_DEFAULTS).forEach(k => {
+          if (Object.prototype.hasOwnProperty.call(values || {}, k)) patch[k] = allowedVisibility(values[k], PROFILE_PRIVACY_DEFAULTS[k]);
+        });
+        if (Object.keys(patch).length) await dbMod.update(dbMod.ref(db, `profilePrivacy/${MFAuth.uid}`), patch);
+        return MFAuth.getProfilePrivacy(MFAuth.uid);
+      };
+      MFAuth.canViewProfileSection = async (uid, section, privacy) => {
+        if (!MFAuth.user || !uid) return false;
+        if (uid === MFAuth.uid) return true;
+        const p = privacy || await MFAuth.getProfilePrivacy(uid);
+        const mode = allowedVisibility(p && p[section], PROFILE_PRIVACY_DEFAULTS[section] || "everyone");
+        if (mode === "everyone") return true;
+        if (mode === "nobody") return false;
+        try { return (await dbMod.get(dbMod.ref(db, `friends/${MFAuth.uid}/${uid}`))).exists(); }
+        catch (_) { return false; }
+      };
+
+      MFAuth.getNotificationPrefs = async () => {
+        if (!MFAuth.user) return { ...NOTIFICATION_PREF_DEFAULTS };
+        try {
+          const snap = await dbMod.get(dbMod.ref(db, `notificationPrefs/${MFAuth.uid}`));
+          const raw = snap.exists() ? (snap.val() || {}) : {};
+          const out = { ...NOTIFICATION_PREF_DEFAULTS };
+          Object.keys(out).forEach(k => { if (typeof raw[k] === "boolean") out[k] = raw[k]; });
+          return out;
+        } catch (_) { return { ...NOTIFICATION_PREF_DEFAULTS }; }
+      };
+      MFAuth.saveNotificationPrefs = async (values) => {
+        if (!MFAuth.user) throw new Error("Not signed in");
+        const patch = {};
+        Object.keys(NOTIFICATION_PREF_DEFAULTS).forEach(k => {
+          if (typeof (values || {})[k] === "boolean") patch[k] = values[k];
+        });
+        if (Object.keys(patch).length) await dbMod.update(dbMod.ref(db, `notificationPrefs/${MFAuth.uid}`), patch);
+        return MFAuth.getNotificationPrefs();
+      };
+
+      MFAuth.getAchievements = async (uid) => {
+        uid = uid || MFAuth.uid;
+        if (!uid) return {};
+        try { const snap = await dbMod.get(dbMod.ref(db, `achievements/${uid}`)); return snap.exists() ? (snap.val() || {}) : {}; }
+        catch (_) { return {}; }
+      };
+      MFAuth.watchAchievements = (uid, cb) => {
+        uid = uid || MFAuth.uid;
+        if (!uid || typeof cb !== "function") return () => {};
+        const r = dbMod.ref(db, `achievements/${uid}`);
+        const h = dbMod.onValue(r, snap => cb(snap.exists() ? (snap.val() || {}) : {}), () => cb({}));
+        return () => dbMod.off(r, "value", h);
+      };
+      MFAuth.unlockAchievements = async (ids) => {
+        if (!MFAuth.user) throw new Error("Not signed in");
+        const valid = new Set(ACHIEVEMENT_CATALOG.map(a => a.id));
+        ids = [...new Set((Array.isArray(ids) ? ids : [ids]).map(x => String(x || "")).filter(x => valid.has(x)))];
+        if (!ids.length) return {};
+        const existing = await MFAuth.getAchievements(MFAuth.uid);
+        const patch = {}, now = Date.now();
+        ids.forEach(id => { if (!existing[id]) patch[`achievements/${MFAuth.uid}/${id}`] = { unlockedAt: now }; });
+        if (Object.keys(patch).length) await dbMod.update(dbMod.ref(db), patch);
+        return { ...existing, ...Object.fromEntries(ids.map(id => [id, existing[id] || { unlockedAt: now }])) };
+      };
+      MFAuth.refreshBasicAchievements = async () => {
+        if (!MFAuth.user) return {};
+        const p = MFAuth.profile || {}, uid = MFAuth.uid;
+        const ids = ["joined"];
+        if (p.username) ids.push("named");
+        if (p.bannerURL) ids.push("decorated");
+        if (p.bio && String(p.bio).trim()) ids.push("open");
+        if (p.birthday) ids.push("birthday");
+        if (p.createdAt && Date.now() - Number(p.createdAt) >= 30 * 86400000) ids.push("veteran");
+
+        // Migrate any achievements the account already qualifies for into the
+        // permanent store whenever they sign in. This means old accounts gain
+        // durable unlocks without needing to visit the profile editor first.
+        try {
+          const [friendsSnap, giftsSnap, guestSnap, roomsSnap] = await Promise.all([
+            dbMod.get(dbMod.ref(db, `friends/${uid}`)).catch(() => null),
+            dbMod.get(dbMod.ref(db, `gifts/${uid}`)).catch(() => null),
+            dbMod.get(dbMod.ref(db, `guestbooks/${uid}`)).catch(() => null),
+            dbMod.get(dbMod.ref(db, "rooms")).catch(() => null),
+          ]);
+          let friendCount = 0;
+          if (friendsSnap && friendsSnap.exists()) friendsSnap.forEach(() => { friendCount++; });
+          if (friendCount >= 1) ids.push("friend1");
+          if (friendCount >= 5) ids.push("social");
+          if (giftsSnap && giftsSnap.exists()) ids.push("gifted");
+          if (guestSnap && guestSnap.exists()) ids.push("guestbook");
+          if (roomsSnap && roomsSnap.exists()) {
+            let owned = 0;
+            roomsSnap.forEach(ch => { const room = ch.val() || {}; if (room.owner === uid) owned++; });
+            if (owned >= 1) ids.push("host");
+            if (owned >= 5) ids.push("regular");
+          }
+          if (typeof MFAuth.listMyPets === "function") {
+            const pets = await MFAuth.listMyPets().catch(() => []);
+            if (pets.length) ids.push("caretaker");
+            const top = pets.reduce((m, pet) => Math.max(m, Number(pet.level) || 0), 0);
+            if (top >= 5) ids.push("grower");
+            if (top >= 18) ids.push("devoted");
+          }
+        } catch (_) {}
+        try { return await MFAuth.unlockAchievements(ids); } catch (_) { return {}; }
+      };
+
+      MFAuth.getUserBadges = async (uid) => {
+        if (!uid) return {};
+        try { const snap = await dbMod.get(dbMod.ref(db, `userBadges/${uid}`)); return snap.exists() ? (snap.val() || {}) : {}; }
+        catch (_) { return {}; }
+      };
+      MFAuth.watchUserBadges = (uid, cb) => {
+        if (!uid || typeof cb !== "function") return () => {};
+        const r = dbMod.ref(db, `userBadges/${uid}`);
+        const h = dbMod.onValue(r, snap => cb(snap.exists() ? (snap.val() || {}) : {}), () => cb({}));
+        return () => dbMod.off(r, "value", h);
+      };
+      MFAuth.getFriendsForProfile = async (uid) => {
+        if (!uid) return {};
+        try { const snap = await dbMod.get(dbMod.ref(db, `friends/${uid}`)); return snap.exists() ? (snap.val() || {}) : {}; }
+        catch (_) { return {}; }
+      };
+
       // ---- profile helpers ----
       async function loadProfile(uid) {
         try {
@@ -228,6 +398,11 @@
         if (!Object.keys(patch).length) return MFAuth.profile;
         try {
           await dbMod.update(dbMod.ref(db, `users/${MFAuth.user.uid}`), patch);
+          const unlock = [];
+          if (patch.bannerURL) unlock.push("decorated");
+          if (typeof patch.bio === "string" && patch.bio.trim()) unlock.push("open");
+          if (patch.birthday) unlock.push("birthday");
+          if (unlock.length) { try { await MFAuth.unlockAchievements(unlock); } catch (_) {} }
         } catch (err) {
           // Surface a useful message instead of Firebase's generic wording.
           const code = (err && err.code) || "";
@@ -265,6 +440,7 @@
         if (current && current !== h) { try { await dbMod.remove(dbMod.ref(db, `usernames/${current}`)); } catch (_) {} }
         MFAuth.profile = { ...(MFAuth.profile || {}), username: h };
         MFAuth._emit();
+        try { await MFAuth.unlockAchievements("named"); } catch (_) {}
         return h;
       };
       MFAuth.lookupUsername = async (handle) => {
@@ -307,6 +483,11 @@
           [`friendRequests/${me}/${fromUid}`]: null,
         });
         try { await dbMod.remove(dbMod.ref(db, `notifications/${me}/friend_request_${fromUid}`)); } catch (_) {}
+        try {
+          const fs = await dbMod.get(dbMod.ref(db, `friends/${me}`)); let n = 0; fs.forEach(() => { n++; });
+          const unlock = n >= 5 ? ["friend1","social"] : ["friend1"];
+          await MFAuth.unlockAchievements(unlock);
+        } catch (_) {}
         await MFAuth.createNotification(fromUid, { id:`friend_accepted_${me}`, type:"friend_accepted", icon:"💞", title:"Friend request accepted", body:`${MFAuth.name() || "Someone"} accepted your friend request.`, link:"/account.html#friends", sourceId:me });
         return true;
       };
@@ -481,8 +662,6 @@
         if (targetUid === MFAuth.user.uid) throw new Error("That's you 🌸");
         const mine = await dbMod.get(dbMod.ref(db, `relationships/${MFAuth.user.uid}`));
         if (mine.exists()) throw new Error("Clear your current relationship status first");
-        const theirs = await dbMod.get(dbMod.ref(db, `relationships/${targetUid}`));
-        if (theirs.exists()) throw new Error("They already have a relationship status shown");
         await dbMod.set(dbMod.ref(db, `relationshipRequests/${targetUid}/${MFAuth.user.uid}`), {
           fromName: MFAuth.name() || "someone",
           fromUsername: (MFAuth.profile && MFAuth.profile.username) || "",
@@ -673,6 +852,7 @@
           ready = true;
           MFAuth._emit();
           try { MFAuth.profile = await ensureProfile(user); } catch (_) {}
+          try { await MFAuth.refreshBasicAchievements(); } catch (_) {}
           startPresence(user.uid);
           dbMod.onValue(dbMod.ref(db, `users/${user.uid}`), (snap) => {
             MFAuth.profile = snap.exists() ? snap.val() : MFAuth.profile;

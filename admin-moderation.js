@@ -8,7 +8,16 @@
     delete:"Deleted message", bulk_delete:"Bulk cleanup", timeout:"Timeout", unmute:"Timeout removed",
     block:"Chat blocked", unblock:"Chat unblocked", warning:"Warning", note:"Admin note",
     promote:"Made admin", demote:"Admin removed", lock:"Chat locked", unlock:"Chat unlocked",
-    slow_mode:"Slow mode", unlock_policy:"Unlock policy", restore:"Message restored"
+    slow_mode:"Slow mode", unlock_policy:"Unlock policy", restore:"Message restored",
+    badge_add:"Badge awarded", badge_remove:"Badge removed"
+  };
+  const BADGE_PRESETS = {
+    early:{icon:"🌱",label:"Early Member",description:"Part of the community early on"},
+    tester:{icon:"🧪",label:"Project Tester",description:"Helped test a Mayflower project"},
+    contributor:{icon:"🛠️",label:"Contributor",description:"Contributed to Mayflower Studios"},
+    supporter:{icon:"💗",label:"Supporter",description:"Supported the community"},
+    helper:{icon:"🤝",label:"Community Helper",description:"Known for helping others"},
+    founding:{icon:"🌸",label:"Founding Member",description:"A founding community member"}
   };
 
   let db = null, mods = null, me = null, myName = "", myHandle = "", role = "user";
@@ -232,13 +241,14 @@
     const card=el("amUserCard"); if (!uid) return;
     card.hidden=false; card.innerHTML='<div class="acctEmpty">Loading user…</div>';
     try {
-      const [profileSnap,restrictionSnap,warningsSnap,notesSnap] = await Promise.all([
+      const [profileSnap,restrictionSnap,warningsSnap,notesSnap,badgesSnap] = await Promise.all([
         mods.get(mods.ref(db,`users/${uid}`)), mods.get(mods.ref(db,`chatRestrictions/${uid}`)),
         mods.get(mods.query(mods.ref(db,`chatWarnings/${uid}`),mods.limitToLast(12))),
-        mods.get(mods.query(mods.ref(db,`moderationNotes/${uid}`),mods.limitToLast(12)))
+        mods.get(mods.query(mods.ref(db,`moderationNotes/${uid}`),mods.limitToLast(12))),
+        role === "owner" ? mods.get(mods.ref(db,`userBadges/${uid}`)) : Promise.resolve(null)
       ]);
       const profile=profileSnap.val()||{}; const handle=cleanHandle(profile.username||preferredHandle); const targetRole=await roleForUid(uid); const allowed=await canAct(uid,targetRole); const restriction=restrictionSnap.val()||{};
-      const warnings=[]; warningsSnap.forEach(ch=>warnings.push(ch.val()||{})); const notes=[]; notesSnap.forEach(ch=>notes.push(ch.val()||{}));
+      const warnings=[]; warningsSnap.forEach(ch=>warnings.push(ch.val()||{})); const notes=[]; notesSnap.forEach(ch=>notes.push(ch.val()||{})); const badges=badgesSnap&&badgesSnap.exists()?(badgesSnap.val()||{}):{};
       activeUser={uid,name:profile.displayName||handle||"user",handle,role:targetRole,restriction};
       if (el("amUser")) el("amUser").value = handle ? `@${handle}` : "";
       card.innerHTML=`${role==="owner"?`<div class="amUserToolbar"><button type="button" class="amBackUsers" data-am-back-users>← Back to all users</button></div>`:""}<div class="amUserHead"><b>${esc(activeUser.name)}</b>${handle?`<span class="amHandle">@${esc(handle)}</span>`:""}<span class="amRole ${esc(targetRole)}">${esc(targetRole)}</span></div>
@@ -251,6 +261,7 @@
           <button data-am-act="del5">🧹 Delete last 5</button><button data-am-act="del10">🧹 Delete last 10</button><button data-am-act="delall" class="danger">🧹 Delete all recent</button>`:""}
           ${role==="owner" && targetRole!=="owner" && handle?`<button data-am-act="${targetRole==="admin"?"demote":"promote"}" class="owner">👑 ${targetRole==="admin"?"Remove admin":"Make admin"}</button>`:""}
         </div>
+        ${role==="owner"?`<section class="amBadgeManager"><div class="amBadgeHead"><b>🏷️ User badges</b><span>Owner assigned · shown on public profile</span></div><div class="amBadgeCurrent">${Object.entries(badges).length?Object.entries(badges).map(([id,b])=>`<span class="amBadgeChip">${esc((b&&b.icon)||"🏷️")} ${esc((b&&b.label)||id)}<button type="button" data-badge-remove="${esc(id)}" title="Remove badge">×</button></span>`).join(""):`<span class="acctEmpty">No custom badges yet.</span>`}</div><div class="amBadgeForm"><select id="amBadgePreset"><option value="">Custom badge…</option>${Object.entries(BADGE_PRESETS).map(([id,b])=>`<option value="${esc(id)}">${esc(b.icon)} ${esc(b.label)}</option>`).join("")}</select><input id="amBadgeIcon" maxlength="8" placeholder="Icon" value="🏷️"><input id="amBadgeLabel" maxlength="28" placeholder="Badge name"><button type="button" id="amBadgeAssign">Award badge</button></div><div class="amBadgeHint" id="amBadgeHint">Choose a preset or make a custom badge.</div></section>`:""}
         <div class="amHistory"><div class="amHistoryItem"><b>Current restriction:</b> ${restriction.blocked?"Blocked":Number(restriction.mutedUntil)>Date.now()?`Muted until ${esc(when(restriction.mutedUntil))}`:"None"}${restriction.reason?`<br><small>${esc(restriction.reason)}</small>`:""}</div>
           <div class="amHistoryItem"><b>Warning history (${warnings.length})</b>${warnings.length?warnings.reverse().map(w=>`<br><small>${esc(when(w.at))} · ${esc(w.byName||"moderator")}: ${esc(w.text||"")}</small>`).join(""):"<br><small>No warnings.</small>"}</div>
           <div class="amHistoryItem"><b>Private admin notes (${notes.length})</b>${notes.length?notes.reverse().map(n=>`<br><small>${esc(when(n.at))} · ${esc(n.byName||"moderator")}: ${esc(n.text||"")}</small>`).join(""):"<br><small>No notes.</small>"}</div>
@@ -258,8 +269,33 @@
       const backButton = card.querySelector("[data-am-back-users]");
       if (backButton) backButton.addEventListener("click", returnToUserDirectory);
       card.querySelectorAll("[data-am-act]").forEach(btn=>btn.addEventListener("click",()=>userAction(btn)));
+      if (role === "owner") {
+        const preset = card.querySelector("#amBadgePreset"), label = card.querySelector("#amBadgeLabel"), icon = card.querySelector("#amBadgeIcon");
+        if (preset) preset.addEventListener("change", () => { const b=BADGE_PRESETS[preset.value]; if(b){label.value=b.label;icon.value=b.icon;} });
+        const assign = card.querySelector("#amBadgeAssign"); if(assign) assign.addEventListener("click",()=>awardBadge(card));
+        card.querySelectorAll("[data-badge-remove]").forEach(btn=>btn.addEventListener("click",()=>removeBadge(btn.dataset.badgeRemove)));
+      }
       card.scrollIntoView({behavior:"smooth",block:"nearest"});
     } catch(err) { console.warn("load user",err); card.innerHTML='<div class="acctEmpty">Could not load that account.</div>'; }
+  }
+
+  async function awardBadge(card) {
+    if (role !== "owner" || !activeUser) return;
+    const presetId=(card.querySelector("#amBadgePreset")||{}).value||"";
+    const preset=BADGE_PRESETS[presetId];
+    const label=String((card.querySelector("#amBadgeLabel")||{}).value||"").trim().slice(0,28);
+    const icon=String((card.querySelector("#amBadgeIcon")||{}).value||"🏷️").trim().slice(0,8)||"🏷️";
+    if(!label) return say("Give the badge a name first.","bad");
+    const id=presetId||("custom_"+label.toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,"").slice(0,24)||Date.now().toString(36));
+    const value={label,icon,description:(preset&&preset.description)||"Awarded by the Mayflower Studios owner",assignedAt:Date.now(),assignedByUid:me,assignedByName:myName||myHandle||"owner"};
+    try { await mods.set(mods.ref(db,`userBadges/${activeUser.uid}/${id}`),value); await addLog("badge_add",activeUser,{reason:`${icon} ${label}`}); await notifyUser(activeUser.uid,{id:`badge_${id}_${Date.now()}`,type:"badge_awarded",icon,title:"New profile badge",body:`You were awarded the ${label} badge.`,link:"/account.html",sourceId:id}); say(`${label} badge awarded.`,"ok"); await openUser(activeUser.uid,activeUser.handle); await loadLogs(); }
+    catch(err){console.warn("badge award",err);say("Could not award that badge.","bad");}
+  }
+  async function removeBadge(id) {
+    if(role!=="owner"||!activeUser||!id)return;
+    if(!confirm("Remove this badge from the user?"))return;
+    try { const snap=await mods.get(mods.ref(db,`userBadges/${activeUser.uid}/${id}`)); const b=snap.val()||{}; await mods.remove(mods.ref(db,`userBadges/${activeUser.uid}/${id}`)); await addLog("badge_remove",activeUser,{reason:`${b.icon||"🏷️"} ${b.label||id}`}); say("Badge removed.","ok"); await openUser(activeUser.uid,activeUser.handle); await loadLogs(); }
+    catch(err){console.warn("badge remove",err);say("Could not remove that badge.","bad");}
   }
 
   async function loadUser() {

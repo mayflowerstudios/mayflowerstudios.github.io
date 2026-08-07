@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings • Mayflower Studios</title>
+  <meta name="description" content="Your Mayflower Studios privacy, notifications, appearance, and account settings." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="/style.css?v=50" />
+  <style>
+    .settingsWrap{max-width:980px;margin:0 auto}.settingsShell{display:grid;grid-template-columns:210px minmax(0,1fr);gap:18px;align-items:start}
+    .settingsNav{position:sticky;top:86px;display:grid;gap:6px;padding:10px;border:1px solid var(--border-2);border-radius:18px;background:rgba(10,16,29,.82);backdrop-filter:blur(16px)}
+    .settingsNav button{border:0;text-align:left;font:inherit;font-size:13px;color:var(--text-2);background:transparent;border-radius:11px;padding:10px 12px;cursor:pointer}.settingsNav button:hover,.settingsNav button.active{color:var(--text);background:rgba(255,255,255,.065)}
+    .settingsPanel{display:none}.settingsPanel.active{display:block}.settingsCard{padding:22px;border:1px solid var(--border-2);border-radius:20px;background:rgba(255,255,255,.035);margin-bottom:14px}
+    .settingsCard h2{font-family:var(--font-d);font-size:25px;margin:0 0 6px}.settingsCard>p{color:var(--text-3);font-size:12.5px;line-height:1.55;margin:0 0 18px}
+    .settingRow{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,210px);gap:18px;align-items:center;padding:13px 0;border-top:1px solid var(--border)}.settingRow:first-of-type{border-top:0}.settingCopy b,.settingCopy span{display:block}.settingCopy b{font-size:13px}.settingCopy span{font-size:11.5px;color:var(--text-3);margin-top:3px;line-height:1.45}
+    .settingRow select,.settingRow input[type="text"]{width:100%;padding:9px 11px;border:1px solid var(--border-2);border-radius:10px;background:rgba(0,0,0,.25);color:var(--text);font:inherit;font-size:12px}
+    .settingsToggle{justify-self:end;display:inline-flex;align-items:center;gap:8px;color:var(--text-2);font-size:12px}.settingsToggle input{width:17px;height:17px;accent-color:var(--rose)}
+    .settingsStatus{min-height:18px;color:var(--text-3);font-size:11.5px;margin-top:10px}.settingsStatus.ok{color:var(--emerald)}.settingsStatus.bad{color:#fecaca}
+    .settingsActions{display:flex;gap:8px;flex-wrap:wrap}.settingsBtn{font:inherit;font-size:12px;border:1px solid var(--border-2);border-radius:999px;padding:8px 13px;background:rgba(255,255,255,.04);color:var(--text-2);cursor:pointer;text-decoration:none}.settingsBtn:hover{color:var(--text);border-color:var(--rose)}.settingsBtn.primary{background:linear-gradient(135deg,var(--rose),var(--violet));border:0;color:#0b1120;font-weight:700}
+    .settingsIdentity{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}.settingsAvatar{width:52px;height:52px;border-radius:15px;display:grid;place-items:center;overflow:hidden;background:rgba(255,255,255,.07);font-size:24px}.settingsAvatar img{width:100%;height:100%;object-fit:cover}.settingsIdentity b,.settingsIdentity span{display:block}.settingsIdentity span{font-size:12px;color:var(--text-3);margin-top:3px}.settingsMandatory{margin-top:12px;padding:10px 12px;border:1px solid rgba(251,191,36,.22);border-radius:12px;background:rgba(251,191,36,.06);color:var(--text-2);font-size:11.5px;line-height:1.5}
+    @media(max-width:760px){.settingsShell{grid-template-columns:1fr}.settingsNav{position:static;display:flex;overflow:auto}.settingsNav button{white-space:nowrap}.settingRow{grid-template-columns:1fr}.settingsToggle{justify-self:start}.settingRow select{max-width:none}}
+  </style>
+</head>
+<body data-nav="account">
+  <div class="site-page">
+    <div id="site-nav"></div>
+    <main class="content settingsWrap">
+      <section class="page-hero reveal">
+        <p class="page-kicker">✦ Your space, your rules</p>
+        <h1 class="page-title">Settings</h1>
+        <p class="page-sub">Account, privacy, notifications, presence, appearance, and security in one place.</p>
+        <div class="page-actions"><a href="/account.html" class="btn-ghost">← Back to your profile</a></div>
+      </section>
+
+      <section id="settingsSignedOut" class="card" style="padding:24px;display:none;"><h2 style="margin-top:0;">Sign in first</h2><p class="muted">Your settings are tied to your Mayflower Studios account.</p><a class="btn primary" href="/account.html">Sign in</a></section>
+
+      <section id="settingsApp" class="settingsShell" hidden>
+        <nav class="settingsNav" aria-label="Settings sections" data-no-translate>
+          <button type="button" class="active" data-settings-tab="account">👤 Account</button>
+          <button type="button" data-settings-tab="privacy">🔒 Privacy</button>
+          <button type="button" data-settings-tab="notifications">🔔 Notifications</button>
+          <button type="button" data-settings-tab="presence">💬 Chat & presence</button>
+          <button type="button" data-settings-tab="appearance">✨ Appearance</button>
+          <button type="button" data-settings-tab="security">🛡️ Security</button>
+        </nav>
+
+        <div>
+          <section class="settingsPanel active" data-settings-panel="account">
+            <div class="settingsCard"><h2>Account</h2><p>Your profile identity lives here; the full profile editor remains on your profile page.</p><div class="settingsIdentity"><div class="settingsAvatar" id="settingsAvatar">🌸</div><div><b id="settingsName">—</b><span id="settingsHandle"></span><span id="settingsEmail"></span></div></div><div class="settingsActions" style="margin-top:16px;"><a class="settingsBtn primary" href="/account.html">Edit public profile</a><a class="settingsBtn" href="/notifications.html">Open notifications</a></div></div>
+          </section>
+
+          <section class="settingsPanel" data-settings-panel="privacy">
+            <div class="settingsCard"><h2>Profile privacy</h2><p>Choose who can see each part of your public profile. “Friends” means only people on your friends list.</p>
+              <div class="settingRow"><div class="settingCopy"><b>💕 Relationship</b><span>Your relationship status and anniversary.</span></div><select data-privacy="relationship"></select></div>
+              <div class="settingRow"><div class="settingCopy"><b>🎁 Gifts</b><span>Your gift collection and recent gifts.</span></div><select data-privacy="gifts"></select></div>
+              <div class="settingRow"><div class="settingCopy"><b>📝 Guestbook</b><span>Your guestbook posts and posting area.</span></div><select data-privacy="guestbook"></select></div>
+              <div class="settingRow"><div class="settingCopy"><b>🤝 Friends</b><span>The friend list shown on your profile.</span></div><select data-privacy="friends"></select></div>
+              <div class="settingRow"><div class="settingCopy"><b>🟢 Online status</b><span>Whether others can see that you are online right now.</span></div><select data-privacy="onlineStatus"></select></div>
+              <div class="settingRow"><div class="settingCopy"><b>🕒 Last seen</b><span>Whether others can see when you were last online.</span></div><select data-privacy="lastSeen"></select></div>
+              <div class="settingRow"><div class="settingCopy"><b>🏆 Achievements</b><span>Your permanently unlocked achievements.</span></div><select data-privacy="achievements"></select></div>
+              <div class="settingRow"><div class="settingCopy"><b>🏷️ User badges</b><span>Badges the owner has awarded to your account. Owner/Admin role markers stay visible.</span></div><select data-privacy="badges"></select></div>
+              <div class="settingsStatus" id="privacyStatus"></div>
+            </div>
+          </section>
+
+          <section class="settingsPanel" data-settings-panel="notifications">
+            <div class="settingsCard"><h2>Notification preferences</h2><p>Turn off categories you do not want in the notification bell. Changes apply to new notifications.</p>
+              <div class="settingRow"><div class="settingCopy"><b>🌸 Friends</b><span>Friend requests and accepted requests.</span></div><label class="settingsToggle"><input type="checkbox" data-notify="friends" /> Enabled</label></div>
+              <div class="settingRow"><div class="settingCopy"><b>🎁 Gifts</b><span>When somebody sends you a gift.</span></div><label class="settingsToggle"><input type="checkbox" data-notify="gifts" /> Enabled</label></div>
+              <div class="settingRow"><div class="settingCopy"><b>💌 Guestbook</b><span>New guestbook notes.</span></div><label class="settingsToggle"><input type="checkbox" data-notify="guestbook" /> Enabled</label></div>
+              <div class="settingRow"><div class="settingCopy"><b>💗 Relationship</b><span>Relationship requests and acceptances.</span></div><label class="settingsToggle"><input type="checkbox" data-notify="relationship" /> Enabled</label></div>
+              <div class="settingRow"><div class="settingCopy"><b>🚪 Rooms</b><span>Invitations to shared rooms.</span></div><label class="settingsToggle"><input type="checkbox" data-notify="rooms" /> Enabled</label></div>
+              <div class="settingRow"><div class="settingCopy"><b>💬 Messages & mentions</b><span>Direct messages and public-chat @mentions.</span></div><label class="settingsToggle"><input type="checkbox" data-notify="messages" /> Enabled</label></div>
+              <div class="settingsMandatory">⚠️ Moderation notices and account-role changes cannot be disabled, so important account actions always reach you.</div>
+              <div class="settingsStatus" id="notificationStatus"></div>
+            </div>
+          </section>
+
+          <section class="settingsPanel" data-settings-panel="presence">
+            <div class="settingsCard"><h2>Chat & presence</h2><p>Presence is device-specific so you can appear offline on one device without changing another.</p>
+              <div class="settingRow"><div class="settingCopy"><b>👻 Appear offline</b><span>Friends will see you as offline and your typing indicators will be hidden. You can still use the site normally.</span></div><label class="settingsToggle"><input type="checkbox" id="settingsAppearOffline" /> Appear offline</label></div>
+              <div class="settingsStatus" id="presenceStatus"></div>
+            </div>
+          </section>
+
+          <section class="settingsPanel" data-settings-panel="appearance">
+            <div class="settingsCard"><h2>Appearance</h2><p>These preferences are saved on this device.</p>
+              <div class="settingRow"><div class="settingCopy"><b>🫧 Reduce motion</b><span>Minimizes transitions and decorative movement throughout the site.</span></div><label class="settingsToggle"><input type="checkbox" id="settingsReduceMotion" /> Reduce motion</label></div>
+              <div class="settingRow"><div class="settingCopy"><b>✨ Decorative fireflies</b><span>Turn the ambient firefly effect on or off.</span></div><label class="settingsToggle"><input type="checkbox" id="settingsFireflies" /> Show fireflies</label></div>
+              <div class="settingsStatus" id="appearanceStatus"></div>
+            </div>
+          </section>
+
+          <section class="settingsPanel" data-settings-panel="security">
+            <div class="settingsCard"><h2>Security</h2><p>Password resets are sent to the email address on your account.</p><div class="settingsActions"><button class="settingsBtn" id="settingsResetPassword" type="button">Send password-reset email</button><button class="settingsBtn" id="settingsSignOut" type="button">Sign out</button></div><div class="settingsStatus" id="securityStatus"></div></div>
+          </section>
+        </div>
+      </section>
+    </main>
+    <div id="site-footer"></div>
+  </div>
+  <script src="/shared.js?v=50"></script>
+  <script src="/settings.js?v=50"></script>
+</body>
+</html>
