@@ -8,7 +8,7 @@
   <meta name="description" content="Sign in to your Mayflower Studios account." />
   <meta name="robots" content="noindex, follow" />
   <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=2" />
-  <link rel="stylesheet" href="/style.css?v=36" />
+  <link rel="stylesheet" href="/style.css?v=53" />
   <style>
     .acctWrap { max-width: 460px; margin: 0 auto; }
     /* when the profile is showing, allow a wider two-column canvas */
@@ -237,6 +237,22 @@
     .achBadge .achDesc { font-size: 10.5px; color: var(--text-3); line-height: 1.35; }
     .achBadge.earned .achName { color: var(--gold); }
     .achCount { font-size: 12px; color: var(--text-3); margin-bottom: 10px; }
+
+    /* ── owner-awarded badges ── */
+    .acctBadgeCard {
+      border: 1px solid var(--border); border-radius: var(--r-md);
+      background: var(--glass-2); padding: 14px;
+    }
+    .acctBadgeList { display: flex; flex-wrap: wrap; gap: 8px; }
+    .acctBadge, .pvBadges span {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 600;
+      color: var(--gold); border: 1px solid rgba(253,230,138,.32); background: rgba(253,230,138,.08);
+    }
+    .acctBadge b { font-size: 14px; font-weight: 400; }
+    .pvBadges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+    .pvBadges[hidden] { display: none; }
+    .pvBadges span { padding: 3px 9px; font-size: 11.5px; }
 
 
     /* ── profile social dashboard (your own public-profile activity) ── */
@@ -601,6 +617,7 @@
                   <span class="pvPron" id="pvPron"></span>
                 </div>
                 <div class="pvHandle" id="pvHandle"></div>
+                <div class="pvBadges" id="pvBadges" hidden></div>
               </div>
               <div class="pvBtns">
                 <a class="acctBtn acctEditToggle" id="adminLink" href="/admin.html" hidden>🛡️ Admin</a>
@@ -662,6 +679,12 @@
         <div class="secLabel">Achievements</div>
         <div class="achCount" id="achCount">—</div>
         <div class="achGrid" id="achGrid"></div>
+
+        <!-- ── owner-awarded badges ── -->
+        <div class="secLabel" id="badges">Your badges</div>
+        <div class="acctBadgeCard">
+          <div class="acctBadgeList" id="acctBadgeList"><div class="acctEmpty">Loading badges…</div></div>
+        </div>
 
         </div><!-- /profShowcase -->
 
@@ -772,6 +795,14 @@
           </label>
         </div>
 
+        <div class="toggleRow" style="align-items:center;">
+          <div class="tgInfo">
+            <span class="tgTitle">⚙️ Privacy, notifications &amp; preferences</span>
+            <span class="tgHint">Choose who can see your gifts, guestbook, friends, achievements and badges, and pick which notifications reach you.</span>
+          </div>
+          <a class="ghostBtn" href="/settings.html" style="text-decoration:none;white-space:nowrap;margin:0;">Open settings</a>
+        </div>
+
         <button class="ghostBtn" id="signOutBtn">Sign out</button>
         <div class="acctMsg" id="profMsg"></div>
 
@@ -785,7 +816,7 @@
     <div id="site-footer"></div>
   </div>
 
-  <script src="/shared.js?v=52"></script>
+  <script src="/shared.js?v=53"></script>
   <script>
   (function () {
     const $ = (id) => document.getElementById(id);
@@ -1269,6 +1300,7 @@
         stats.hasBanner = !!p.bannerURL;
         stats.hasBio = !!(p.bio && p.bio.trim());
         if (p.createdAt) stats.ageDays = Math.floor((Date.now() - p.createdAt) / 86400000);
+        renderBadges();   // arms the badge watcher once we know the uid
 
         // pets
         try {
@@ -1321,24 +1353,29 @@
       let achievementWatchStop = null;
       let lastLegacyMigration = "";
 
+      // The catalog itself lives in auth.js, so this page, the public profile
+      // overlay and the unlock validator all read one list and can't drift
+      // apart. All that's decided here is which entries the account qualifies
+      // for right now.
       function achievementList() {
-        return [
-          { id: "joined",   icon: "🌸", name: "Welcome",      desc: "Made an account",           legacyEarned: true },
-          { id: "named",    icon: "🪪", name: "Identity",     desc: "Set a username",             legacyEarned: !!(MFAuth.profile && MFAuth.profile.username) },
-          { id: "decorated",icon: "🖼️", name: "Decorated",    desc: "Added a banner",             legacyEarned: stats.hasBanner },
-          { id: "open",     icon: "📖", name: "Open Book",    desc: "Wrote a bio",                legacyEarned: stats.hasBio },
-          { id: "friend1",  icon: "🤝", name: "Made a Friend",desc: "Added 1 friend",             legacyEarned: stats.friends >= 1 },
-          { id: "social",   icon: "💞", name: "Social",       desc: "5 friends",                  legacyEarned: stats.friends >= 5 },
-          { id: "gifted",   icon: "🎁", name: "Gifted",       desc: "Received a gift",            legacyEarned: stats.gifts >= 1 },
-          { id: "guestbook",icon: "💌", name: "Signed",       desc: "Got a guestbook note",       legacyEarned: stats.guestbook >= 1 },
-          { id: "birthday", icon: "🎂", name: "Birthday",     desc: "Set your birthday",          legacyEarned: !!(MFAuth.profile && MFAuth.profile.birthday) },
-          { id: "host",     icon: "🚪", name: "Host",         desc: "Opened a room",              legacyEarned: stats.rooms >= 1 },
-          { id: "regular",  icon: "🏡", name: "Regular",      desc: "Opened 5 rooms",             legacyEarned: stats.rooms >= 5 },
-          { id: "caretaker",icon: "🌱", name: "Caretaker",    desc: "Raised a companion",         legacyEarned: stats.pets >= 1 },
-          { id: "grower",   icon: "🌟", name: "Grower",       desc: "A companion reached lvl 5",  legacyEarned: stats.topLevel >= 5 },
-          { id: "devoted",  icon: "🦄", name: "Devoted",      desc: "A companion reached lvl 18", legacyEarned: stats.topLevel >= 18 },
-          { id: "veteran",  icon: "🗓️", name: "Settled In",   desc: "30 days as a member",        legacyEarned: stats.ageDays >= 30 },
-        ];
+        const q = {
+          joined:    true,
+          named:     !!(MFAuth.profile && MFAuth.profile.username),
+          decorated: stats.hasBanner,
+          open:      stats.hasBio,
+          friend1:   stats.friends >= 1,
+          social:    stats.friends >= 5,
+          gifted:    stats.gifts >= 1,
+          guestbook: stats.guestbook >= 1,
+          birthday:  !!(MFAuth.profile && MFAuth.profile.birthday),
+          host:      stats.rooms >= 1,
+          regular:   stats.rooms >= 5,
+          caretaker: stats.pets >= 1,
+          grower:    stats.topLevel >= 5,
+          devoted:   stats.topLevel >= 18,
+          veteran:   stats.ageDays >= 30,
+        };
+        return (MFAuth.achievementCatalog || []).map(a => ({ ...a, legacyEarned: !!q[a.id] }));
       }
 
       function migrateLegacyAchievements(list) {
@@ -1370,6 +1407,7 @@
         if (!grid) return;
         startAchievementWatch();
         const list = achievementList();
+        if (!list.length) return;   // auth.js hasn't handed over the catalog yet
 
         // This is the compatibility bridge for achievements that were already
         // lit up by the old calculated system before permanent storage existed.
@@ -1391,6 +1429,44 @@
           grid.appendChild(d);
         });
       }
+
+      // ── owner-awarded badges ──
+      // These are handed out from the admin page and appear on your public
+      // profile, so you should be able to see the ones you have from here too.
+      let myBadges = {}, badgeWatchStop = null, badgeWatchUid = null;
+
+      function startBadgeWatch() {
+        if (!MFAuth.uid || typeof MFAuth.watchUserBadges !== "function") return;
+        if (badgeWatchUid === MFAuth.uid) return;          // already watching this account
+        if (badgeWatchStop) { try { badgeWatchStop(); } catch (_) {} }
+        badgeWatchUid = MFAuth.uid;
+        badgeWatchStop = MFAuth.watchUserBadges(MFAuth.uid, records => {
+          myBadges = records || {};
+          renderBadges();
+        });
+      }
+
+      function renderBadges() {
+        startBadgeWatch();
+        const list = Object.entries(myBadges || {})
+          .map(([id, b]) => ({ id, ...(b || {}) }))
+          .sort((a, b) => (Number(b.assignedAt) || 0) - (Number(a.assignedAt) || 0));
+        const chip = b =>
+          `<span class="acctBadge" title="${escapeForHtml(b.description || "")}"><b>${escapeForHtml(b.icon || "🏷️")}</b>${escapeForHtml(b.label || "Badge")}</span>`;
+
+        const box = $("acctBadgeList");
+        if (box) {
+          box.innerHTML = list.length ? list.map(chip).join("")
+            : `<div class="acctEmpty">No badges yet. These are awarded by the owner and show on your public profile.</div>`;
+        }
+        // mirror them into the "how others see you" preview card
+        const strip = $("pvBadges");
+        if (strip) {
+          strip.innerHTML = list.map(chip).join("");
+          strip.hidden = !list.length;
+        }
+      }
+      renderBadges();
 
       function escapeForHtml(s){ return String(s||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 

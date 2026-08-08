@@ -626,24 +626,40 @@ html[data-mf-translating] .wrap { transition: opacity 200ms var(--ease); }
 
 .mf-chat-panel {
   position: fixed; right: 20px; bottom: 88px; z-index: 300;
-  width: min(360px, calc(100vw - 40px)); height: min(520px, 70vh);
+  /* --mf-chat-w/h are written by chat.js when you drag the corner grip */
+  width: var(--mf-chat-w, min(420px, calc(100vw - 40px)));
+  height: var(--mf-chat-h, min(620px, calc(100vh - 128px)));
   display: none; flex-direction: column; overflow: hidden;
   border-radius: 22px; border: 1px solid rgba(255,255,255,.14);
   background: rgba(11,17,32,.94); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
   box-shadow: 0 22px 70px rgba(0,0,0,.55);
 }
 .mf-chat-panel.open { display: flex; animation: mfChatIn .2s var(--ease); }
+.mf-chat-panel.resizing { user-select: none; animation: none; }
 @keyframes mfChatIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+/* drag the top-left corner to resize; double-click it to reset */
+.mf-chat-grip {
+  position: absolute; top: 0; left: 0; width: 24px; height: 24px; z-index: 6;
+  cursor: nwse-resize; touch-action: none;
+}
+.mf-chat-grip::before {
+  content: ""; position: absolute; top: 8px; left: 8px; width: 9px; height: 9px;
+  border-top: 2px solid rgba(255,255,255,.25); border-left: 2px solid rgba(255,255,255,.25);
+  border-top-left-radius: 4px; transition: border-color 140ms var(--ease);
+}
+.mf-chat-panel:hover .mf-chat-grip::before { border-color: rgba(249,168,212,.75); }
 
 .mf-chat-head {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,.1);
+  padding: 10px 12px 10px 22px; border-bottom: 1px solid rgba(255,255,255,.1);
+  min-width: 0;
 }
-.mf-chat-tabs { display: flex; gap: 4px; }
+.mf-chat-tabs { display: flex; gap: 4px; min-width: 0; }
 .mf-ct {
   border: 0; cursor: pointer; font-family: var(--font-b); font-size: 13px; font-weight: 500;
   padding: 7px 12px; border-radius: 999px; color: var(--text-2); background: rgba(255,255,255,.04);
-  transition: all 140ms var(--ease);
+  transition: all 140ms var(--ease); white-space: nowrap;
 }
 .mf-ct:hover { color: var(--text); }
 .mf-ct.on { color: var(--rose); background: rgba(249,168,212,.10); }
@@ -653,8 +669,19 @@ html[data-mf-translating] .wrap { transition: opacity 200ms var(--ease); }
 }
 .mf-chat-x:hover { color: var(--text); background: rgba(255,255,255,.06); }
 
+/* the translate language picker lives here, not crammed into the header */
+.mf-chat-subbar {
+  display: flex; align-items: center; gap: 8px; padding: 7px 12px;
+  border-bottom: 1px solid rgba(255,255,255,.08); background: rgba(196,181,253,.05);
+  font-size: 11.5px; color: var(--text-3); flex-shrink: 0;
+}
+.mf-chat-subbar[hidden] { display: none; }
+.mf-chat-subbar .mf-tr-lang { margin-left: auto; }
+
 .mf-chat-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; min-height: 0; }
 .mf-chat-log { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+/* keep a flick at the end of the log from scrolling the page behind the chat */
+.mf-chat-body, .mf-chat-log, .mf-chat-dmlist, .mf-pickerPop { overscroll-behavior: contain; }
 
 .mf-msg { max-width: 82%; padding: 8px 12px; border-radius: 14px; font-size: 14px; line-height: 1.45; word-wrap: break-word; position: relative; }
 .mf-msg.them { align-self: flex-start; background: rgba(255,255,255,.08); border-bottom-left-radius: 4px; }
@@ -760,8 +787,24 @@ html[data-mf-translating] .wrap { transition: opacity 200ms var(--ease); }
 .mf-chat-dmhead .mf-dm-dot { position: absolute; right: -1px; bottom: -1px; border: 2px solid rgba(11,17,32,.94); }
 
 @media (max-width: 520px) {
-  .mf-chat-panel { right: 12px; left: 12px; width: auto; bottom: 84px; height: min(70vh, 540px); }
+  /* Phones get a full sheet sized from the *visual* viewport (chat.js keeps
+     --mf-vvh/--mf-vvtop in sync). A vh-sized floating card kept getting half
+     buried by the keyboard, and the browser scrolled the page trying to fix it. */
+  .mf-chat-panel {
+    left: 0; right: 0; bottom: auto; top: var(--mf-vvtop, 0px);
+    width: auto; height: var(--mf-vvh, 100dvh);
+    border-radius: 0; border-left: 0; border-right: 0; border-top: 0;
+  }
+  .mf-chat-grip { display: none; }
   .mf-chat-fab { right: 16px; bottom: 16px; }
+  body.mf-chat-open .mf-chat-fab { display: none; }
+  /* Under 16px, iOS Safari zooms the page in on focus — which reads as the
+     whole page lurching and rescaling every time you tap the message box.
+     Scoped to the panel so these win over the later single-class rules. */
+  .mf-chat-panel .mf-chat-input input,
+  .mf-chat-panel .mf-gifSearch input,
+  .mf-chat-panel .mf-msg-editfield { font-size: 16px; }
+  .mf-pickerPop { max-height: 46vh; }
 }
 
 /* ── chat: clickable names + DM presence dots ── */
@@ -873,14 +916,40 @@ html[data-mf-translating] .wrap { transition: opacity 200ms var(--ease); }
 .mf-emojiGrid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; }
 .mf-emojiGrid button { border: 0; background: none; cursor: pointer; font-size: 19px; border-radius: 8px; padding: 4px 0; transition: all 120ms var(--ease); }
 .mf-emojiGrid button:hover { background: rgba(249,168,212,.18); transform: scale(1.15); }
-.mf-gifSearch { position: sticky; top: 0; margin-bottom: 8px; }
+.mf-gifPop { max-height: 340px; }
+.mf-gifTop {
+  position: sticky; top: 0; z-index: 2; margin: -10px -10px 8px;
+  padding: 10px 10px 8px; background: rgba(17,24,39,.98);
+}
+.mf-gifTabs { display: flex; gap: 4px; margin-bottom: 8px; }
+.mf-gifTab {
+  flex: 1; border: 0; cursor: pointer; font-family: var(--font-b);
+  font-size: 12px; font-weight: 600; padding: 6px 8px; border-radius: 999px;
+  color: var(--text-3); background: rgba(255,255,255,.05);
+  transition: all 130ms var(--ease);
+}
+.mf-gifTab:hover { color: var(--text); }
+.mf-gifTab.on { color: var(--rose); background: rgba(249,168,212,.12); }
 .mf-gifSearch input { width: 100%; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border-2); background: rgba(0,0,0,.3); color: var(--text); font-size: 13px; font-family: var(--font-b); }
 .mf-gifSearch input:focus { outline: none; border-color: rgba(196,181,253,.45); }
-.mf-gifGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.mf-gifGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-items: start; }
+.mf-gifCell { position: relative; }
 .mf-gifGrid img { width: 100%; border-radius: 10px; cursor: pointer; display: block; transition: filter 120ms var(--ease); }
 .mf-gifGrid img:hover { filter: brightness(1.1); }
+.mf-gifFav {
+  position: absolute; top: 4px; right: 4px; width: 25px; height: 25px;
+  border: 0; border-radius: 8px; cursor: pointer; padding: 0;
+  font-size: 14px; line-height: 1; color: #fff; background: rgba(0,0,0,.45);
+  opacity: 0; transition: opacity 120ms var(--ease), background 120ms var(--ease);
+}
+.mf-gifCell:hover .mf-gifFav, .mf-gifFav.on, .mf-gifFav:focus-visible { opacity: 1; }
+.mf-gifFav.on { color: var(--gold); }
+.mf-gifFav:hover { background: rgba(0,0,0,.72); }
+/* no hover on touch, so the star has to stay visible */
+@media (hover: none) { .mf-gifFav { opacity: .9; } }
 .mf-gifMsg { text-align: center; font-size: 12px; opacity: .6; padding: 14px 0; }
 .mf-gifAttr { text-align: center; font-size: 10px; opacity: .35; margin-top: 8px; }
+.mf-gifAttr:empty { display: none; }
 
 .mf-media img { border-radius: 12px; max-width: 100%; cursor: pointer; display: block; }
 .mf-msg.me .mf-media { display: flex; justify-content: flex-end; }

@@ -56,6 +56,12 @@
   let composerTicker = null;
   const MOD_LOG_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
 
+  // Phones get a full-height sheet instead of a floating card, and never get
+  // the auto-focus that pops the keyboard open (which used to shove the page
+  // around every time the composer re-rendered).
+  const isTouch = matchMedia("(hover: none) and (pointer: coarse)").matches;
+  const isPhone = () => window.innerWidth <= 520;
+
   function esc(s) {
     return String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
   }
@@ -129,6 +135,7 @@
     panel.id = "mfChatPanel";
     panel.className = "mf-chat-panel";
     panel.innerHTML = `
+      <div class="mf-chat-grip" id="mfChatGrip" title="Drag to resize"></div>
       <div class="mf-chat-head">
         <div class="mf-chat-tabs">
           <button class="mf-ct on" data-ctab="global">🌸 Everyone</button>
@@ -138,15 +145,20 @@
           <button class="mf-tr-btn" id="mfModBtn" title="Chat moderation" hidden>🛡️</button>
           <button class="mf-tr-btn" id="mfMuteBtn" title="Mute message sounds">🔔</button>
           <button class="mf-tr-btn" id="mfTrBtn" title="Translate messages">🌐</button>
-          <select class="mf-tr-lang" id="mfTrLang" hidden></select>
           <button class="mf-chat-x" id="mfChatX" aria-label="Close">✕</button>
         </div>
+      </div>
+      <div class="mf-chat-subbar" id="mfChatSubbar" hidden>
+        <span>🌐 Translating to</span>
+        <select class="mf-tr-lang" id="mfTrLang"></select>
       </div>
       <div class="mf-chat-body" id="mfChatBody"></div>
       <div class="mf-chat-foot" id="mfChatFoot"></div>`;
 
     document.body.appendChild(fab);
     document.body.appendChild(panel);
+    applySavedSize(panel);
+    wireResize(panel);
 
     fab.addEventListener("click", () => togglePanel());
     panel.querySelector("#mfChatX").addEventListener("click", () => togglePanel(false));
@@ -161,11 +173,12 @@
     const trBtn = panel.querySelector("#mfTrBtn");
     const trLang = panel.querySelector("#mfTrLang");
     trLang.innerHTML = Object.entries(LANG_NAMES).map(([k, v]) => `<option value="${k}">${v}</option>`).join("");
+    const trBar = panel.querySelector("#mfChatSubbar");
     function updateTrUI() {
-      if (!TR_OK) { trBtn.textContent = "🌐"; trBtn.title = "Translation isn't available in this browser"; trBtn.disabled = true; trLang.hidden = true; return; }
+      if (!TR_OK) { trBtn.textContent = "🌐"; trBtn.title = "Translation isn't available in this browser"; trBtn.disabled = true; trBar.hidden = true; return; }
       trBtn.classList.toggle("on", translateOn);
       trBtn.title = translateOn ? ("Translating to " + (LANG_NAMES[targetLang] || targetLang)) : "Translate messages";
-      trLang.hidden = !translateOn;
+      trBar.hidden = !translateOn;
       trLang.value = targetLang;
     }
     trBtn.addEventListener("click", () => {
@@ -217,7 +230,105 @@
     const modBtn = panel.querySelector("#mfModBtn");
     modBtn.addEventListener("click", (e) => { e.stopPropagation(); openChatSettings(); });
     injectModerationStyles();
+    trackViewport();
+  }
 
+  // ---- panel sizing ----
+  // The panel is anchored to the bottom-right, so dragging the top-left grip
+  // away from that corner makes it bigger. The size is remembered per device.
+  const SIZE_KEY = "mf_chat_size";
+  const MIN_W = 320, MIN_H = 360;
+  const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+  const maxW = () => Math.max(MIN_W, window.innerWidth - 40);
+  const maxH = () => Math.max(MIN_H, window.innerHeight - 104);
+
+  function applySavedSize(panel) {
+    panel.style.removeProperty("--mf-chat-w");
+    panel.style.removeProperty("--mf-chat-h");
+    if (isPhone()) return;   // phones use the full-height sheet, not a card
+    let s = null;
+    try { s = JSON.parse(localStorage.getItem(SIZE_KEY) || "null"); } catch (_) {}
+    if (!s || !Number.isFinite(s.w) || !Number.isFinite(s.h)) return;
+    panel.style.setProperty("--mf-chat-w", clamp(s.w, MIN_W, maxW()) + "px");
+    panel.style.setProperty("--mf-chat-h", clamp(s.h, MIN_H, maxH()) + "px");
+  }
+
+  function wireResize(panel) {
+    const grip = panel.querySelector("#mfChatGrip");
+    if (!grip) return;
+    let startX = 0, startY = 0, startW = 0, startH = 0, dragging = false;
+
+    const onMove = (e) => {
+      if (!dragging) return;
+      panel.style.setProperty("--mf-chat-w", clamp(startW + (startX - e.clientX), MIN_W, maxW()) + "px");
+      panel.style.setProperty("--mf-chat-h", clamp(startH + (startY - e.clientY), MIN_H, maxH()) + "px");
+    };
+    const onUp = () => {
+      if (!dragging) return;
+      dragging = false;
+      panel.classList.remove("resizing");
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerup", onUp);
+      const r = panel.getBoundingClientRect();
+      try { localStorage.setItem(SIZE_KEY, JSON.stringify({ w: Math.round(r.width), h: Math.round(r.height) })); } catch (_) {}
+    };
+    grip.addEventListener("pointerdown", (e) => {
+      if (isPhone()) return;
+      e.preventDefault();
+      const r = panel.getBoundingClientRect();
+      startX = e.clientX; startY = e.clientY; startW = r.width; startH = r.height;
+      dragging = true;
+      panel.classList.add("resizing");
+      document.addEventListener("pointermove", onMove);
+      document.addEventListener("pointerup", onUp);
+    });
+    // double-click the grip to go back to the default size
+    grip.addEventListener("dblclick", () => {
+      try { localStorage.removeItem(SIZE_KEY); } catch (_) {}
+      applySavedSize(panel);
+    });
+    // A saved size can outgrow a smaller window, and rotating a phone into
+    // landscape can cross out of sheet mode — re-settle both on resize.
+    window.addEventListener("resize", () => { applySavedSize(panel); lockPageScroll(openPanel); });
+  }
+
+  // The on-screen keyboard shrinks the visual viewport without touching the
+  // layout viewport, so a sheet sized in vh ends up half-buried behind the
+  // keyboard. Mirror the visual viewport into CSS variables and size from those.
+  function trackViewport() {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const sync = () => {
+      // A zero or nonsense reading would collapse the sheet to nothing, so keep
+      // the last good value (or the 100dvh fallback) instead of writing it.
+      if (!(vv.height > 160)) return;
+      const root = document.documentElement.style;
+      root.setProperty("--mf-vvh", vv.height + "px");
+      root.setProperty("--mf-vvtop", (vv.offsetTop || 0) + "px");
+    };
+    vv.addEventListener("resize", sync);
+    vv.addEventListener("scroll", sync);
+    sync();
+  }
+
+  // While the sheet is open on a phone, freeze the page behind it. Otherwise
+  // opening the keyboard scrolls the page under the chat, and dismissing it
+  // leaves you somewhere else on the page entirely.
+  let lockedScrollY = 0, pageLocked = false;
+  function lockPageScroll(on) {
+    if (on && isPhone()) {
+      if (pageLocked) return;
+      lockedScrollY = window.scrollY || window.pageYOffset || 0;
+      const s = document.body.style;
+      s.position = "fixed"; s.top = `-${lockedScrollY}px`;
+      s.left = "0"; s.right = "0"; s.width = "100%";
+      pageLocked = true;
+    } else if (pageLocked) {
+      pageLocked = false;
+      const s = document.body.style;
+      s.position = ""; s.top = ""; s.left = ""; s.right = ""; s.width = "";
+      window.scrollTo(0, lockedScrollY);
+    }
   }
 
   // ---- DM chime (a soft two-note ping; synthesized, no audio file) ----
@@ -279,6 +390,8 @@
   function togglePanel(force) {
     openPanel = (typeof force === "boolean") ? force : !openPanel;
     document.getElementById("mfChatPanel").classList.toggle("open", openPanel);
+    document.body.classList.toggle("mf-chat-open", openPanel);
+    lockPageScroll(openPanel);
     if (openPanel) render();
   }
 
@@ -356,11 +469,17 @@
   function composerHTML() {
     return `
       <div class="mf-pickerPop" id="mfEmojiPop"></div>
-      <div class="mf-pickerPop" id="mfGifPop">
-        <div class="mf-gifSearch"><input type="text" id="mfGifSearch" placeholder="Search GIFs…" autocomplete="off" /></div>
+      <div class="mf-pickerPop mf-gifPop" id="mfGifPop">
+        <div class="mf-gifTop">
+          <div class="mf-gifTabs">
+            <button type="button" class="mf-gifTab on" data-giftab="trending">🔥 Trending</button>
+            <button type="button" class="mf-gifTab" data-giftab="favs">★ Favourites</button>
+          </div>
+          <div class="mf-gifSearch"><input type="text" id="mfGifSearch" placeholder="Search GIFs…" autocomplete="off" /></div>
+        </div>
         <div class="mf-gifGrid" id="mfGifGrid"></div>
         <div class="mf-gifMsg" id="mfGifMsg" hidden></div>
-        <div class="mf-gifAttr">Powered by GIPHY</div>
+        <div class="mf-gifAttr" id="mfGifAttr"></div>
       </div>
       <div class="mf-chat-tools">
         <button class="mf-tool" id="mfEmojiBtn" title="Emoji" type="button">😊</button>
@@ -510,7 +629,10 @@
     updateComposerState();
     clearInterval(composerTicker);
     if (kind === "global") composerTicker = setInterval(updateComposerState, 1000);
-    setTimeout(() => { if (!input.disabled) input.focus(); }, 50);
+    // Never steal focus on a touch device: the composer re-renders on every tab
+    // switch and thread open, and each focus would pop the keyboard and jolt
+    // the page. Phones can tap the field themselves.
+    if (!isTouch) setTimeout(() => { if (!input.disabled) input.focus(); }, 50);
   }
 
   // Broadcast "I'm typing" to the current DM peer, throttled to ~1 write/2.5s,
@@ -673,85 +795,135 @@
     });
 
     // GIF
-    let gifTimer = null, gifReq = 0;
+    let gifTimer = null, gifReq = 0, gifTab = "trending";
     gifBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       const open = !gifPop.classList.contains("open");
       closePops("gif"); gifPop.classList.toggle("open", open); gifBtn.classList.toggle("on", open);
       if (open) {
-        const s = document.getElementById("mfGifSearch"); if (s) s.focus();
-        if (!document.getElementById("mfGifGrid").children.length) loadGifs("");
+        // Focusing here would pop the keyboard on a phone and cover the grid.
+        if (!isTouch) { const s = document.getElementById("mfGifSearch"); if (s) s.focus(); }
+        // Favourites are local, so they're free to re-read and may have changed.
+        if (gifTab === "favs" || !document.getElementById("mfGifGrid").children.length) loadGifs(gifSearch.value.trim());
       }
     });
     const gifSearch = document.getElementById("mfGifSearch");
     gifSearch.addEventListener("input", () => {
       clearTimeout(gifTimer);
-      gifTimer = setTimeout(() => loadGifs(gifSearch.value.trim()), 350);
+      gifTimer = setTimeout(() => loadGifs(gifSearch.value.trim()), gifTab === "favs" ? 0 : 350);
     });
+    gifPop.querySelectorAll("[data-giftab]").forEach(b => b.addEventListener("click", (e) => {
+      e.stopPropagation();
+      gifTab = b.dataset.giftab;
+      gifPop.querySelectorAll("[data-giftab]").forEach(x => x.classList.toggle("on", x === b));
+      gifSearch.placeholder = gifTab === "favs" ? "Search your favourites…" : "Search GIFs…";
+      loadGifs(gifSearch.value.trim());
+    }));
+
+    // One tile: the GIF itself sends on click, the corner star keeps it.
+    function gifTile(it) {
+      const cell = document.createElement("div");
+      cell.className = "mf-gifCell";
+      const im = document.createElement("img");
+      im.src = it.preview || it.full; im.loading = "lazy"; im.alt = it.title || "GIF";
+      im.addEventListener("click", () => { sendMedia({ kind: "gif", url: it.full, w: it.w, h: it.h }); closePops(); });
+      const star = document.createElement("button");
+      star.type = "button"; star.className = "mf-gifFav";
+      const paint = () => {
+        const on = isFavGif(it.full);
+        star.classList.toggle("on", on);
+        star.textContent = on ? "★" : "☆";
+        star.title = on ? "Remove from favourites" : "Save to favourites";
+      };
+      paint();
+      star.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleFavGif(it);
+        // On the favourites tab an unstarred GIF should leave the grid.
+        if (gifTab === "favs") loadGifs(gifSearch.value.trim()); else paint();
+      });
+      cell.append(im, star);
+      return cell;
+    }
+
     // Render an array of { preview, full, w, h, title } into the grid.
     function renderGifs(items, reqId, grid, msg) {
       if (reqId !== gifReq) return false;
       msg.hidden = true;
       for (const it of items) {
         if (!it.full) continue;
-        const im = document.createElement("img");
-        im.src = it.preview || it.full; im.loading = "lazy"; im.alt = it.title || "GIF";
-        im.addEventListener("click", () => { sendMedia({ kind: "gif", url: it.full, w: it.w, h: it.h }); closePops(); });
-        grid.appendChild(im);
+        grid.appendChild(gifTile(it));
       }
       return grid.children.length > 0;
     }
 
-    // Giphy primary, Klipy fallback. Klipy is only queried if Giphy errors
-    // or returns nothing, so results are Discord-tier by default. Per Giphy's
-    // terms the two are never mixed in one grid, and Giphy's own media URLs
-    // are used verbatim (no stripping/rewriting of query params).
+    // Klipy primary, Giphy fallback: Giphy is only queried if Klipy errors or
+    // comes back empty. Per Giphy's terms the two are never mixed in one grid,
+    // their media URLs are used verbatim (no stripping of query params), and
+    // the credit line names whichever service actually filled the grid.
     function loadGifs(q) {
       const reqId = ++gifReq;
       const grid = document.getElementById("mfGifGrid");
       const msg = document.getElementById("mfGifMsg");
-      grid.innerHTML = ""; msg.hidden = false; msg.textContent = "Loading…";
+      const attr = document.getElementById("mfGifAttr");
+      grid.innerHTML = "";
 
-      const base = "https://api.giphy.com/v1/gifs";
-      const gUrl = q
-        ? `${base}/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(q)}&limit=24&offset=0&rating=pg-13&bundle=messaging_non_clips`
-        : `${base}/trending?api_key=${GIPHY_KEY}&limit=24&offset=0&rating=pg-13&bundle=messaging_non_clips`;
+      if (gifTab === "favs") {
+        attr.textContent = "";
+        const all = favGifs();
+        const needle = q.toLowerCase();
+        const list = needle ? all.filter(f => String(f.title || "").toLowerCase().includes(needle)) : all;
+        if (!renderGifs(list, reqId, grid, msg)) {
+          msg.hidden = false;
+          msg.textContent = all.length ? "Nothing saved matches that 🌫️" : "Tap ☆ on any GIF to keep it here.";
+        }
+        return;
+      }
 
-      const runKlipy = () => {
-        const path = q ? `gifs/search?q=${encodeURIComponent(q)}&per_page=24` : `gifs/trending?per_page=24`;
-        const kUrl = `https://api.klipy.com/api/v1/${KLIPY_KEY}/${path}&content_filter=high`;
-        fetch(kUrl).then(r => { if (!r.ok) throw new Error("klipy " + r.status); return r.json(); })
+      msg.hidden = false; msg.textContent = "Loading…";
+
+      const kPath = q ? `gifs/search?q=${encodeURIComponent(q)}&per_page=24` : `gifs/trending?per_page=24`;
+      const kUrl = `https://api.klipy.com/api/v1/${KLIPY_KEY}/${kPath}&content_filter=high`;
+
+      const runGiphy = () => {
+        const base = "https://api.giphy.com/v1/gifs";
+        const gUrl = q
+          ? `${base}/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(q)}&limit=24&offset=0&rating=pg-13&bundle=messaging_non_clips`
+          : `${base}/trending?api_key=${GIPHY_KEY}&limit=24&offset=0&rating=pg-13&bundle=messaging_non_clips`;
+        fetch(gUrl).then(r => { if (!r.ok) throw new Error("giphy " + r.status); return r.json(); })
           .then(json => {
             if (reqId !== gifReq) return;
-            const results = (json && json.data && json.data.data) || [];
+            const results = (json && json.data) || [];
             const items = results.map(g => {
-              const { preview, full } = klipyUrls(g); const d = klipyDims(g);
-              return { preview, full, w: d[0], h: d[1], title: g.title };
+              const im = g.images || {};
+              const prev = im.fixed_width || im.fixed_height || im.downsized || {};
+              const big = im.downsized_medium || im.downsized || im.original || {};
+              return {
+                preview: prev.url,          // used verbatim, query params intact
+                full: big.url || prev.url,  // used verbatim, query params intact
+                w: parseInt(big.width || prev.width, 10) || undefined,
+                h: parseInt(big.height || prev.height, 10) || undefined,
+                title: g.title
+              };
             });
-            if (!renderGifs(items, reqId, grid, msg)) { msg.hidden = false; msg.textContent = "No GIFs found 🌫️"; }
+            if (renderGifs(items, reqId, grid, msg)) attr.textContent = "Powered by GIPHY";
+            else { attr.textContent = ""; msg.hidden = false; msg.textContent = "No GIFs found 🌫️"; }
           })
-          .catch(() => { if (reqId === gifReq) { msg.hidden = false; msg.textContent = "Couldn't reach the GIF service 🌧️"; } });
+          .catch(() => { if (reqId === gifReq) { attr.textContent = ""; msg.hidden = false; msg.textContent = "Couldn't reach the GIF service 🌧️"; } });
       };
 
-      fetch(gUrl).then(r => { if (!r.ok) throw new Error("giphy " + r.status); return r.json(); })
+      fetch(kUrl).then(r => { if (!r.ok) throw new Error("klipy " + r.status); return r.json(); })
         .then(json => {
           if (reqId !== gifReq) return;
-          const results = (json && json.data) || [];
+          const results = (json && json.data && json.data.data) || [];
           const items = results.map(g => {
-            const im = g.images || {};
-            const prev = im.fixed_width || im.fixed_height || im.downsized || {};
-            const big = im.downsized_medium || im.downsized || im.original || {};
-            return {
-              preview: prev.url,          // used verbatim, query params intact
-              full: big.url || prev.url,  // used verbatim, query params intact
-              w: parseInt(big.width || prev.width, 10) || undefined,
-              h: parseInt(big.height || prev.height, 10) || undefined,
-              title: g.title
-            };
+            const { preview, full } = klipyUrls(g); const d = klipyDims(g);
+            return { preview, full, w: d[0], h: d[1], title: g.title };
           });
-          if (!renderGifs(items, reqId, grid, msg)) runKlipy(); // empty Giphy -> fall back
+          if (renderGifs(items, reqId, grid, msg)) attr.textContent = "Powered by KLIPY";
+          else runGiphy(); // empty Klipy -> fall back
         })
-        .catch(runKlipy); // Giphy error -> fall back
+        .catch(runGiphy); // Klipy error -> fall back
     }
 
     // Image upload
@@ -796,14 +968,37 @@
     return storageMod.getDownloadURL(sref);
   }
 
-  // ---- GIF sources: Giphy primary, Klipy fallback ----
-  // Get a free Giphy key at developers.giphy.com: sign in, "Create an App",
-  // choose the API (not SDK) option, and copy the beta key. The beta key is
-  // rate-limited but fine for a personal site; apply for a production key only
-  // if you outgrow it. This key is public (client-side) by nature, same as the
-  // Klipy one. Until it's filled in, the picker silently falls back to Klipy.
+  // ---- GIF sources: Klipy primary, Giphy fallback ----
+  // Both keys are public (client-side) by nature. The Giphy one is a free beta
+  // key from developers.giphy.com — rate-limited, but it only ever gets hit
+  // when Klipy is down or has nothing for a search.
   const GIPHY_KEY = "XXL2Zso1ejR7BZJD4X5ndTDEw5ckB64g";
   const KLIPY_KEY = "CShaQsI9HgGHkocmgvSz0r8C9Nzzibp2qeAW0XvW4Gq7EF8Pp7nlq9RK6jJvEEG7";
+
+  // ---- favourite GIFs (this device) ----
+  // Kept in localStorage rather than the database so the star works instantly
+  // and needs no rules change. Newest first, capped so the entry can't grow
+  // without bound.
+  const GIF_FAV_KEY = "mf_gif_favs", GIF_FAV_MAX = 60;
+  let gifFavCache = null;
+  function favGifs() {
+    if (gifFavCache) return gifFavCache;
+    try {
+      const raw = JSON.parse(localStorage.getItem(GIF_FAV_KEY) || "[]");
+      gifFavCache = Array.isArray(raw) ? raw.filter(f => f && typeof f.full === "string") : [];
+    } catch (_) { gifFavCache = []; }
+    return gifFavCache;
+  }
+  function isFavGif(url) { return favGifs().some(f => f.full === url); }
+  function toggleFavGif(it) {
+    const list = favGifs();
+    const i = list.findIndex(f => f.full === it.full);
+    if (i >= 0) list.splice(i, 1);
+    else list.unshift({ full: it.full, preview: it.preview || it.full, w: it.w, h: it.h, title: it.title || "" });
+    gifFavCache = list.slice(0, GIF_FAV_MAX);
+    try { localStorage.setItem(GIF_FAV_KEY, JSON.stringify(gifFavCache)); } catch (_) {}
+    return i < 0;
+  }
   function klipyUrls(item) {
     const f = item.file || item.files || {};
     const pick = (sz) => { const s = f[sz] || {}; return (s.gif && (s.gif.url || s.gif)) || (s.webp && (s.webp.url || s.webp)) || null; };
