@@ -883,7 +883,7 @@
       msg.hidden = false; msg.textContent = "Loading…";
 
       const kPath = q ? `gifs/search?q=${encodeURIComponent(q)}&per_page=24` : `gifs/trending?per_page=24`;
-      const kUrl = `https://api.klipy.com/api/v1/${KLIPY_KEY}/${kPath}&content_filter=high`;
+      const kUrl = `https://api.klipy.com/api/v1/${KLIPY_KEY}/${kPath}&content_filter=${KLIPY_FILTER}`;
 
       const runGiphy = () => {
         const base = "https://api.giphy.com/v1/gifs";
@@ -974,6 +974,13 @@
   // when Klipy is down or has nothing for a search.
   const GIPHY_KEY = "XXL2Zso1ejR7BZJD4X5ndTDEw5ckB64g";
   const KLIPY_KEY = "CShaQsI9HgGHkocmgvSz0r8C9Nzzibp2qeAW0XvW4Gq7EF8Pp7nlq9RK6jJvEEG7";
+  // Klipy's filter, strongest to weakest: high | medium | low | off.
+  // "high" over-filters anything affectionate — a search for two people
+  // kissing came back with forehead kisses and a ping-pong table — while
+  // making no difference at all to ordinary searches like hug or dance.
+  // "medium" matches what Discord's Klipy picker returns and still keeps
+  // the openly sexual results out. Turn it back up here if that changes.
+  const KLIPY_FILTER = "medium";
 
   // ---- favourite GIFs (this device) ----
   // Kept in localStorage rather than the database so the star works instantly
