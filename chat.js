@@ -47,7 +47,7 @@
 
   // Full chat-moderation state. The database rules are authoritative; the
   // client mirrors them so people get clear controls and helpful feedback.
-  const DEFAULT_CHAT_SETTINGS = { locked: false, slowSeconds: 0, adminsCanUnlock: false };
+  const DEFAULT_CHAT_SETTINGS = { locked: false, slowSeconds: 0, adminsCanUnlock: false, gifFilter: "medium" };
   let chatSettings = { ...DEFAULT_CHAT_SETTINGS };
   let myRestriction = { blocked: false, mutedUntil: 0, reason: "" };
   let myWarnings = {};
@@ -883,7 +883,7 @@
       msg.hidden = false; msg.textContent = "Loading…";
 
       const kPath = q ? `gifs/search?q=${encodeURIComponent(q)}&per_page=24` : `gifs/trending?per_page=24`;
-      const kUrl = `https://api.klipy.com/api/v1/${KLIPY_KEY}/${kPath}&content_filter=${KLIPY_FILTER}`;
+      const kUrl = `https://api.klipy.com/api/v1/${KLIPY_KEY}/${kPath}&content_filter=${klipyFilter()}`;
 
       const runGiphy = () => {
         const base = "https://api.giphy.com/v1/gifs";
@@ -974,13 +974,22 @@
   // when Klipy is down or has nothing for a search.
   const GIPHY_KEY = "XXL2Zso1ejR7BZJD4X5ndTDEw5ckB64g";
   const KLIPY_KEY = "CShaQsI9HgGHkocmgvSz0r8C9Nzzibp2qeAW0XvW4Gq7EF8Pp7nlq9RK6jJvEEG7";
-  // Klipy's filter, strongest to weakest: high | medium | low | off.
-  // "high" over-filters anything affectionate — a search for two people
-  // kissing came back with forehead kisses and a ping-pong table — while
-  // making no difference at all to ordinary searches like hug or dance.
-  // "medium" matches what Discord's Klipy picker returns and still keeps
-  // the openly sexual results out. Turn it back up here if that changes.
-  const KLIPY_FILTER = "medium";
+  // Klipy's filter, strongest to weakest: high | medium | low | off. The owner
+  // picks the level on the admin page and it lands in chatSettings/global, so
+  // this is only the fallback for before those settings arrive.
+  //
+  // "high" over-filters anything affectionate — a search for two people kissing
+  // came back with forehead kisses and a ping-pong table — while making no
+  // difference at all to ordinary searches like hug or dance. "medium" is what
+  // Discord's Klipy picker appears to use and still keeps explicit results out.
+  const KLIPY_FILTERS = ["high", "medium", "low", "off"];
+  const KLIPY_FILTER_DEFAULT = "medium";
+  // Validated against the list rather than used raw: this value comes from the
+  // database and gets interpolated into the request URL.
+  function klipyFilter() {
+    const v = String((chatSettings && chatSettings.gifFilter) || "");
+    return KLIPY_FILTERS.includes(v) ? v : KLIPY_FILTER_DEFAULT;
+  }
 
   // ---- favourite GIFs (this device) ----
   // Kept in localStorage rather than the database so the star works instantly

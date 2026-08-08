@@ -9,8 +9,11 @@
     block:"Chat blocked", unblock:"Chat unblocked", warning:"Warning", note:"Admin note",
     promote:"Made admin", demote:"Admin removed", lock:"Chat locked", unlock:"Chat unlocked",
     slow_mode:"Slow mode", unlock_policy:"Unlock policy", restore:"Message restored",
-    badge_add:"Badge awarded", badge_remove:"Badge removed"
+    badge_add:"Badge awarded", badge_remove:"Badge removed", gif_filter:"GIF filter"
   };
+  // Klipy's content filter, strongest first. Kept in sync with chat.js.
+  const GIF_FILTERS = ["high", "medium", "low", "off"];
+  const GIF_FILTER_DEFAULT = "medium";
   const BADGE_PRESETS = {
     early:{icon:"🌱",label:"Early Member",description:"Part of the community early on"},
     tester:{icon:"🧪",label:"Project Tester",description:"Helped test a Mayflower project"},
@@ -21,7 +24,7 @@
   };
 
   let db = null, mods = null, me = null, myName = "", myHandle = "", role = "user";
-  let ownerHandle = "", settings = { locked:false, slowSeconds:0, adminsCanUnlock:false };
+  let ownerHandle = "", settings = { locked:false, slowSeconds:0, adminsCanUnlock:false, gifFilter:GIF_FILTER_DEFAULT };
   let logs = [], activeUser = null, settingsUnsub = null, controlsWired = false, directoryUsers = [], directoryAdmins = new Set();
 
   function cleanHandle(v) { return String(v || "").trim().toLowerCase().replace(/^@/, ""); }
@@ -76,10 +79,12 @@
     if (settingsUnsub) { try { settingsUnsub(); } catch (_) {} }
     const ref = mods.ref(db, "chatSettings/global");
     const cb = snap => {
-      settings = { locked:false, slowSeconds:0, adminsCanUnlock:false, ...(snap.val() || {}) };
+      settings = { locked:false, slowSeconds:0, adminsCanUnlock:false, gifFilter:GIF_FILTER_DEFAULT, ...(snap.val() || {}) };
       el("amLock").checked = !!settings.locked;
       el("amSlow").value = String(Number(settings.slowSeconds)||0);
       el("amAdminsUnlock").checked = !!settings.adminsCanUnlock;
+      el("amGifFilter").value = GIF_FILTERS.includes(settings.gifFilter) ? settings.gifFilter : GIF_FILTER_DEFAULT;
+      el("amGifFilterWrap").hidden = role !== "owner";
       el("amAdminsUnlockWrap").hidden = role !== "owner";
       el("amPurge").hidden = role !== "owner";
       el("amLock").disabled = role === "admin" && settings.locked && !settings.adminsCanUnlock;
@@ -353,6 +358,10 @@
     el("amLock").addEventListener("change", e => changeSetting("locked",e.target.checked,e.target.checked?"lock":"unlock",{}));
     el("amSlow").addEventListener("change", e => { const value=Number(e.target.value)||0; changeSetting("slowSeconds",value,"slow_mode",{slowSeconds:value}); });
     el("amAdminsUnlock").addEventListener("change", e => changeSetting("adminsCanUnlock",e.target.checked,"unlock_policy",{adminsCanUnlock:e.target.checked}));
+    el("amGifFilter").addEventListener("change", e => {
+      const value = GIF_FILTERS.includes(e.target.value) ? e.target.value : GIF_FILTER_DEFAULT;
+      changeSetting("gifFilter",value,"gif_filter",{gifFilter:value});
+    });
     el("amLoadUser").addEventListener("click",loadUser); el("amUser").addEventListener("keydown",e=>{if(e.key==="Enter")loadUser();});
     el("amLogFilter").addEventListener("change",drawLogs); el("amLogSearch").addEventListener("input",drawLogs); el("amHideRestored").addEventListener("change",drawLogs);
     el("amRefresh").addEventListener("click",loadLogs); el("amPurge").addEventListener("click",purgeExpired);

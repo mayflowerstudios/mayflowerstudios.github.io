@@ -273,6 +273,15 @@
               <span class="amSettingCopy"><b>Admins may unlock</b><small>Owner-only policy for reopening chat.</small></span>
               <input id="amAdminsUnlock" type="checkbox" aria-label="Allow admins to unlock public chat" />
             </label>
+            <label class="amSetting" id="amGifFilterWrap" hidden>
+              <span class="amSettingCopy"><b>GIF search filter</b><small>Owner-only. Strictest also hides plain affection; no filtering allows adult results.</small></span>
+              <select id="amGifFilter" aria-label="GIF search content filter">
+                <option value="high" title="Hides anything suggestive, and a lot of ordinary affection with it">Strictest</option>
+                <option value="medium" title="Keeps explicit results out. Matches what Discord's picker returns">Balanced (default)</option>
+                <option value="low" title="Allows suggestive results through">Relaxed</option>
+                <option value="off" title="No filtering at all, including adult results">No filtering</option>
+              </select>
+            </label>
           </div>
           <p class="amStatus" id="amStatus">Loading moderation settings…</p>
 
@@ -331,9 +340,9 @@
     <div id="site-footer"></div>
   </div><!-- /site-page -->
 
-  <script src="/shared.js?v=54"></script>
+  <script src="/shared.js?v=55"></script>
   <script src="/auth.js?v=51"></script>
   <script src="/admin-inbox.js?v=6"></script>
-  <script src="/admin-moderation.js?v=4"></script>
+  <script src="/admin-moderation.js?v=5"></script>
 </body>
 </html>
