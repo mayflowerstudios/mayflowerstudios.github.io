@@ -47,7 +47,10 @@
 
   // Full chat-moderation state. The database rules are authoritative; the
   // client mirrors them so people get clear controls and helpful feedback.
-  const DEFAULT_CHAT_SETTINGS = { locked: false, slowSeconds: 0, adminsCanUnlock: false, gifFilter: "medium" };
+  // Defined in shared.js, which is a blocking script on every page and is what
+  // loads this file — so it is always present by the time we get here.
+  const CHAT_CONFIG = window.MFChatConfig;
+  const DEFAULT_CHAT_SETTINGS = { ...CHAT_CONFIG.settingDefaults };
   let chatSettings = { ...DEFAULT_CHAT_SETTINGS };
   let myRestriction = { blocked: false, mutedUntil: 0, reason: "" };
   let myWarnings = {};
@@ -472,8 +475,9 @@
       <div class="mf-pickerPop mf-gifPop" id="mfGifPop">
         <div class="mf-gifTop">
           <div class="mf-gifTabs">
-            <button type="button" class="mf-gifTab on" data-giftab="trending">🔥 Trending</button>
-            <button type="button" class="mf-gifTab" data-giftab="favs">★ Favourites</button>
+            <button type="button" class="mf-gifTab on" data-giftab="trending">🔥 GIFs</button>
+            <button type="button" class="mf-gifTab" data-giftab="stickers">🩷 Stickers</button>
+            <button type="button" class="mf-gifTab" data-giftab="favs">★ Saved</button>
           </div>
           <div class="mf-gifSearch"><input type="text" id="mfGifSearch" placeholder="Search GIFs…" autocomplete="off" /></div>
         </div>
@@ -816,7 +820,8 @@
       e.stopPropagation();
       gifTab = b.dataset.giftab;
       gifPop.querySelectorAll("[data-giftab]").forEach(x => x.classList.toggle("on", x === b));
-      gifSearch.placeholder = gifTab === "favs" ? "Search your favourites…" : "Search GIFs…";
+      gifSearch.placeholder = gifTab === "favs" ? "Search what you've saved…"
+                            : gifTab === "stickers" ? "Search stickers…" : "Search GIFs…";
       loadGifs(gifSearch.value.trim());
     }));
 
@@ -875,18 +880,21 @@
         const list = needle ? all.filter(f => String(f.title || "").toLowerCase().includes(needle)) : all;
         if (!renderGifs(list, reqId, grid, msg)) {
           msg.hidden = false;
-          msg.textContent = all.length ? "Nothing saved matches that 🌫️" : "Tap ☆ on any GIF to keep it here.";
+          msg.textContent = all.length ? "Nothing saved matches that 🌫️" : "Tap ☆ on any GIF or sticker to keep it here.";
         }
         return;
       }
 
       msg.hidden = false; msg.textContent = "Loading…";
 
-      const kPath = q ? `gifs/search?q=${encodeURIComponent(q)}&per_page=24` : `gifs/trending?per_page=24`;
+      // Stickers come from the same key and return the same shape as GIFs, so
+      // only the path segment changes. Both services call them "stickers".
+      const kind = gifTab === "stickers" ? "stickers" : "gifs";
+      const kPath = q ? `${kind}/search?q=${encodeURIComponent(q)}&per_page=24` : `${kind}/trending?per_page=24`;
       const kUrl = `https://api.klipy.com/api/v1/${KLIPY_KEY}/${kPath}&content_filter=${klipyFilter()}`;
 
       const runGiphy = () => {
-        const base = "https://api.giphy.com/v1/gifs";
+        const base = `https://api.giphy.com/v1/${kind}`;
         const gUrl = q
           ? `${base}/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(q)}&limit=24&offset=0&rating=pg-13&bundle=messaging_non_clips`
           : `${base}/trending?api_key=${GIPHY_KEY}&limit=24&offset=0&rating=pg-13&bundle=messaging_non_clips`;
@@ -974,40 +982,45 @@
   // when Klipy is down or has nothing for a search.
   const GIPHY_KEY = "XXL2Zso1ejR7BZJD4X5ndTDEw5ckB64g";
   const KLIPY_KEY = "CShaQsI9HgGHkocmgvSz0r8C9Nzzibp2qeAW0XvW4Gq7EF8Pp7nlq9RK6jJvEEG7";
-  // Klipy's filter, strongest to weakest: high | medium | low | off. The owner
-  // picks the level on the admin page and it lands in chatSettings/global, so
-  // this is only the fallback for before those settings arrive.
+  // The filter level is chosen by the owner on the admin page and stored at
+  // chatSettings/global/gifFilter. The list of levels lives in shared.js so the
+  // admin page and this file cannot disagree about what is valid.
   //
-  // "high" over-filters anything affectionate — a search for two people kissing
-  // came back with forehead kisses and a ping-pong table — while making no
-  // difference at all to ordinary searches like hug or dance. "medium" is what
-  // Discord's Klipy picker appears to use and still keeps explicit results out.
-  const KLIPY_FILTERS = ["high", "medium", "low", "off"];
-  const KLIPY_FILTER_DEFAULT = "medium";
+  // On why the default is "medium": "high" over-filters anything affectionate —
+  // a search for two people kissing came back with forehead kisses and a
+  // ping-pong table — while making no difference at all to ordinary searches
+  // like hug or dance.
+  //
   // Validated against the list rather than used raw: this value comes from the
   // database and gets interpolated into the request URL.
   function klipyFilter() {
     const v = String((chatSettings && chatSettings.gifFilter) || "");
-    return KLIPY_FILTERS.includes(v) ? v : KLIPY_FILTER_DEFAULT;
+    return CHAT_CONFIG.gifFilters.includes(v) ? v : CHAT_CONFIG.gifFilterDefault;
   }
 
-  // ---- favourite GIFs (this device) ----
+  // ---- saved GIFs and stickers (this device) ----
   // Kept in localStorage rather than the database so the star works instantly
   // and needs no rules change. Newest first, capped so the entry can't grow
   // without bound.
   const GIF_FAV_KEY = "mf_gif_favs", GIF_FAV_MAX = 60;
   let gifFavCache = null;
-  function favGifs() {
-    if (gifFavCache) return gifFavCache;
+  function readFavGifs() {
     try {
       const raw = JSON.parse(localStorage.getItem(GIF_FAV_KEY) || "[]");
-      gifFavCache = Array.isArray(raw) ? raw.filter(f => f && typeof f.full === "string") : [];
-    } catch (_) { gifFavCache = []; }
+      return Array.isArray(raw) ? raw.filter(f => f && typeof f.full === "string") : [];
+    } catch (_) { return []; }
+  }
+  // Cached only for the many isFavGif() calls one grid render makes.
+  function favGifs() {
+    if (!gifFavCache) gifFavCache = readFavGifs();
     return gifFavCache;
   }
   function isFavGif(url) { return favGifs().some(f => f.full === url); }
   function toggleFavGif(it) {
-    const list = favGifs();
+    // Read fresh rather than trusting the cache: another tab may have starred
+    // something since this one last looked, and writing the stale copy back
+    // would silently drop it.
+    const list = readFavGifs();
     const i = list.findIndex(f => f.full === it.full);
     if (i >= 0) list.splice(i, 1);
     else list.unshift({ full: it.full, preview: it.preview || it.full, w: it.w, h: it.h, title: it.title || "" });
@@ -1015,6 +1028,8 @@
     try { localStorage.setItem(GIF_FAV_KEY, JSON.stringify(gifFavCache)); } catch (_) {}
     return i < 0;
   }
+  // Another tab (or clearing site data) changed the list — drop the cache.
+  window.addEventListener("storage", e => { if (e.key === GIF_FAV_KEY) gifFavCache = null; });
   function klipyUrls(item) {
     const f = item.file || item.files || {};
     const pick = (sz) => { const s = f[sz] || {}; return (s.gif && (s.gif.url || s.gif)) || (s.webp && (s.webp.url || s.webp)) || null; };
@@ -1708,6 +1723,7 @@
       <label class="mf-mod-setting"><span><b>Public chat lock</b><small>Regular users cannot post while locked.</small></span><input type="checkbox" id="mfSetLocked" ${chatSettings.locked?"checked":""} ${chatSettings.locked&&!canUnlock?"disabled":""}></label>
       <label class="mf-mod-setting"><span><b>Slow mode</b><small>Posting delay for regular users.</small></span><select id="mfSetSlow"><option value="0">Off</option><option value="5">5 seconds</option><option value="10">10 seconds</option><option value="15">15 seconds</option><option value="30">30 seconds</option><option value="60">1 minute</option><option value="120">2 minutes</option><option value="300">5 minutes</option></select></label>
       ${myChatRole==="owner"?`<label class="mf-mod-setting"><span><b>Admins may unlock chat</b><small>When off, only the owner can reopen a locked chat.</small></span><input type="checkbox" id="mfAdminsUnlock" ${chatSettings.adminsCanUnlock?"checked":""}></label>`:""}
+      ${myChatRole==="owner"?`<label class="mf-mod-setting"><span><b>GIF search filter</b><small>Strictest also hides plain affection; no filtering allows adult results.</small></span><select id="mfGifFilter"><option value="high">Strictest</option><option value="medium">Balanced (default)</option><option value="low">Relaxed</option><option value="off">No filtering</option></select></label>`:""}
       <div class="mf-mod-grid"><a class="mf-mod-link" href="/admin.html#chat-moderation">Open moderation center</a></div>`;
     content.querySelector("#mfSetSlow").value=String(Number(chatSettings.slowSeconds)||0);
     content.querySelector("#mfSetLocked").addEventListener("change", async e=>{
@@ -1722,6 +1738,14 @@
       try { await mods.set(mods.ref(db,"chatSettings/global/adminsCanUnlock"),e.target.checked); await addModerationLog("unlock_policy",{uid:"",name:"Public chat"},{adminsCanUnlock:e.target.checked}); }
       catch(_){ e.target.checked=!e.target.checked; toast("Only the owner can change that."); }
     });
+    const gifF=content.querySelector("#mfGifFilter"); if(gifF){
+      gifF.value = klipyFilter();
+      gifF.addEventListener("change", async e=>{
+        const v = CHAT_CONFIG.gifFilters.includes(e.target.value) ? e.target.value : CHAT_CONFIG.gifFilterDefault;
+        try { await mods.set(mods.ref(db,"chatSettings/global/gifFilter"),v); await addModerationLog("gif_filter",{uid:"",name:"Public chat"},{gifFilter:v}); }
+        catch(_){ e.target.value = klipyFilter(); toast("Only the owner can change that."); }
+      });
+    }
   }
   function injectModerationStyles() {
     if (document.getElementById("mfModerationStyles")) return;

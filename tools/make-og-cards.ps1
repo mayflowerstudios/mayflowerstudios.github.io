@@ -152,7 +152,16 @@ $pages = @(
   @{ file="privacy.png"; kicker="The fine print"; title="Privacy";        sub="What's collected, what isn't, and how your data is treated.";  accent=$COL.emerald; emoji="🔒" }
   @{ file="tos.png";     kicker="The fine print"; title="Terms of Use";   sub="The friendly ground rules for using Mayflower Studios things."; accent=$COL.violet;  emoji="📜" }
   @{ file="404.png";     kicker="Lost in the forest"; title="Page not found"; sub="This path doesn't lead anywhere — let's head back home.";   accent=$COL.rose;    emoji="🧭"; titleSize=56 }
+  @{ file="remote.png";      kicker="Shared screen"; title="Mayflower Remote"; sub="Connect to a shared screen with a room code — no install, straight from the browser."; accent=$COL.violet; emoji="🖥️"; titleSize=54 }
+  @{ file="remote-host.png"; kicker="Shared screen"; title="Remote Host";      sub="Share your screen with someone you trust, and hand over control when you want to.";     accent=$COL.gold;   emoji="🛰️"; titleSize=56 }
 )
+# Note: the four mods__*.png rows generate cards that nothing can currently use.
+# Mod pages are served from projects.html?mod=<slug>, and link unfurlers do not
+# run the JavaScript that reads that query string, so a shared mod link only
+# ever shows projects.html's own og:image. The rows are kept so the artwork can
+# be regenerated the moment the mods get real pages, but the PNGs are not
+# committed — they would be four unreferenced files in the repo.
+# Run this script to produce them locally if you need them.
 
 foreach ($p in $pages) {
   New-OgCard -file $p.file -kicker $p.kicker -title ($p.title -replace '&&', '&') -sub $p.sub `

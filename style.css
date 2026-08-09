@@ -769,12 +769,14 @@ html[data-mf-translating] .wrap { transition: opacity 200ms var(--ease); }
 }
 .mf-dm-item:hover { background: rgba(255,255,255,.06); }
 .mf-dm-av {
-  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600;
   color: #0b1120; background: linear-gradient(135deg, var(--rose), var(--violet));
 }
 .mf-dm-av.sm { width: 28px; height: 28px; font-size: 12px; }
-.mf-dm-av img { width: 100%; height: 100%; object-fit: cover; }
+/* The round crop lives on the image, not the container: the presence dot sits
+   just outside the circle, and overflow:hidden here used to swallow it. */
+.mf-dm-av img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .mf-dm-name { font-weight: 500; }
 
 .mf-chat-dmhead { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,.08); }
@@ -1241,6 +1243,10 @@ html[data-mf-translating] .wrap { transition: opacity 200ms var(--ease); }
 }
 
 /* ── community settings + public profile extras v50 ── */
+/* Two ways in: the site's own toggle (html.mf-reduce-motion, set by shared.js)
+   and the reduce-motion setting people have already turned on in Windows,
+   macOS or iOS. The OS one used to be ignored here, so anyone relying on it
+   still got every animation unless they found the site's switch. */
 html.mf-reduce-motion *,
 html.mf-reduce-motion *::before,
 html.mf-reduce-motion *::after {
@@ -1252,6 +1258,27 @@ html.mf-reduce-motion *::after {
 html.mf-reduce-motion .petal,
 html.mf-reduce-motion .firefly,
 html.mf-reduce-motion .mf-firefly { display: none !important; }
+
+/* Off-screen until focused, then it lands over the nav. */
+.mf-skip {
+  position: absolute; left: 8px; top: -60px; z-index: 500;
+  padding: 10px 16px; border-radius: 0 0 12px 12px;
+  font-family: var(--font-b); font-size: 14px; font-weight: 600;
+  color: #0b1120; background: linear-gradient(135deg, var(--rose), var(--violet));
+  text-decoration: none; transition: top 140ms var(--ease);
+}
+.mf-skip:focus { top: 0; outline: 2px solid var(--text); outline-offset: 2px; }
+main:focus, [id="mf-main"]:focus { outline: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+  .petal, .firefly, .mf-firefly, #petals, #fireflies { display: none !important; }
+}
 
 .mf-prof-badge-strip {
   display: flex;

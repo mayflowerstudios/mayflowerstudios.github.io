@@ -18,8 +18,10 @@
 
   function injectFavicon() {
     if (document.querySelector('link[rel="icon"]')) return;
-    const l = document.createElement('link'); l.rel = 'icon'; l.type = 'image/png'; l.href = '/assets/icons/favicon.png?v=2';
-    const a = document.createElement('link'); a.rel = 'apple-touch-icon'; a.href = '/assets/icons/favicon.png?v=2';
+    // A tab icon draws at 16-32px and a home-screen icon at 180px, so these
+    // point at files that size rather than the full-resolution artwork.
+    const l = document.createElement('link'); l.rel = 'icon'; l.type = 'image/png'; l.sizes = '32x32'; l.href = '/assets/icons/favicon-32.png?v=4';
+    const a = document.createElement('link'); a.rel = 'apple-touch-icon'; a.href = '/assets/icons/favicon-180.png?v=4';
     document.head.appendChild(l); document.head.appendChild(a);
   }
 
@@ -545,7 +547,33 @@
         document.getElementById('navLinks').classList.toggle('open');
       });
     }
+    injectSkipLink();
     wireLangPicker();
+  }
+
+  // A keyboard or screen-reader user otherwise has to tab through the whole nav
+  // on every page. Injected here rather than added to each page's markup so it
+  // covers all of them, including any added later.
+  function injectSkipLink() {
+    if (document.querySelector('.mf-skip')) return;   // page supplied its own
+    const nav = document.querySelector('#site-nav, #shared-nav');
+    if (!nav) return;
+    // Find where the page's real content starts: a <main>, else the first
+    // meaningful sibling after the nav.
+    let target = document.querySelector('main');
+    if (!target) {
+      let n = nav.nextElementSibling;
+      while (n && (n.id === 'site-footer' || n.id === 'shared-footer' || n.tagName === 'SCRIPT')) n = n.nextElementSibling;
+      target = n;
+    }
+    if (!target) return;
+    if (!target.id) target.id = 'mf-main';
+    if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+    const a = document.createElement('a');
+    a.className = 'mf-skip';
+    a.href = '#' + target.id;
+    a.textContent = 'Skip to content';
+    nav.parentNode.insertBefore(a, nav);
   }
 
   function injectFooter() {
@@ -685,7 +713,26 @@
 
   // Bump this whenever auth.js / chat.js / profile-view.js change, so browsers
   // and the GitHub Pages CDN fetch the new version instead of a cached copy.
-  var MF_ASSET_VER = '55';
+  var MF_ASSET_VER = '56';
+
+  // ─────────────────────────────────────────────────────────────
+  //  Chat + moderation config, shared by chat.js and admin-moderation.js.
+  //  Both used to keep their own copies of these, which meant adding one GIF
+  //  filter level or one chat setting had to be done twice and stayed correct
+  //  only by luck. This lives in shared.js because shared.js is a blocking
+  //  script on every page, so it has always run before chat.js (which it loads
+  //  itself) and before admin-moderation.js.
+  // ─────────────────────────────────────────────────────────────
+  window.MFChatConfig = Object.freeze({
+    // Klipy's content filter, strongest to weakest. The owner picks one on the
+    // admin page; it is stored at chatSettings/global/gifFilter.
+    gifFilters: Object.freeze(['high', 'medium', 'low', 'off']),
+    gifFilterDefault: 'medium',
+    // Defaults for chatSettings/global, used until the real values arrive.
+    settingDefaults: Object.freeze({
+      locked: false, slowSeconds: 0, adminsCanUnlock: false, gifFilter: 'medium'
+    })
+  });
 
   function loadScript(src, attrs) {
     if (document.querySelector(`script[data-mf-src="${src}"]`)) return;

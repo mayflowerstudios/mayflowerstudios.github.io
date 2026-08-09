@@ -11,11 +11,11 @@
   <link rel="canonical" href="https://mayflowerstudios.net/server.html" />
   <meta property="og:type"        content="website" />
   <meta name="robots" content="noindex" />
-  <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=1" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png?v=4" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/style.css?v=53" />
+  <link rel="stylesheet" href="/style.css?v=57" />
 
   <style>
     /* ════════════════════════════════════════════════
@@ -1002,7 +1002,7 @@
   <div id="site-footer"></div>
 
   <script src="/hls.min.js"></script>
-  <script src="/shared.js?v=55"></script>
+  <script src="/shared.js?v=56"></script>
   <script>
   /* ════════════════════════════════════════════════════════════════════
      Jellyfin browse + watch — talks directly to the media server's
@@ -1244,7 +1244,7 @@
         btn.type = 'button';
         const initial = (u.Name || '?').trim().charAt(0).toUpperCase();
         const avatar = u.PrimaryImageTag
-          ? `<img class="ava" alt="" src="${SERVER}/Users/${u.Id}/Images/Primary?tag=${u.PrimaryImageTag}&width=52&quality=90" onerror="this.outerHTML='<span class=&quot;ava&quot;>${initial}</span>'" />`
+          ? `<img class="ava" alt="" loading="lazy" decoding="async" src="${SERVER}/Users/${u.Id}/Images/Primary?tag=${u.PrimaryImageTag}&width=52&quality=90" onerror="this.outerHTML='<span class=&quot;ava&quot;>${initial}</span>'" />`
           : `<span class="ava">${initial}</span>`;
         btn.innerHTML = avatar + `<span>${escapeHtml(u.Name)}</span>`;
         btn.addEventListener('click', () => quickSignIn(u.Name, btn));
@@ -1822,7 +1822,7 @@
       if (bd) { const im = new Image(); im.onload = () => im.classList.add('shown'); im.src = bd; spotBg.appendChild(im); }
       // logo or title
       const lg = logoUrl(item);
-      spotLogoWrap.innerHTML = lg ? `<img class="lib-spot-logo" alt="${escapeHtml(item.Name)}" src="${lg}" onerror="this.remove()" />` : '';
+      spotLogoWrap.innerHTML = lg ? `<img class="lib-spot-logo" alt="${escapeHtml(item.Name)}" loading="lazy" decoding="async" src="${lg}" onerror="this.remove()" />` : '';
       spotTitle.style.display = lg ? 'none' : 'block';
       spotTitle.textContent = item.Name;
       spotKicker.textContent = item.Type === 'Series' ? 'Featured series' : 'Featured film';
@@ -2221,7 +2221,7 @@
         card.className = 'lib-pl-card';
         const hasCover = pl.ImageTags && pl.ImageTags.Primary;
         const cover = hasCover
-          ? `<img alt="" src="${SERVER}/Items/${pl.Id}/Images/Primary?fillWidth=420&quality=85" />`
+          ? `<img alt="" loading="lazy" decoding="async" src="${SERVER}/Items/${pl.Id}/Images/Primary?fillWidth=420&quality=85" />`
           : `<div class="empty">▦</div>`;
         const n = pl.ChildCount != null ? pl.ChildCount : 0;
         card.innerHTML = `
@@ -2494,7 +2494,7 @@
         people.forEach((p) => {
           const card = document.createElement('button'); card.className = 'lib-cast'; card.type = 'button';
           const img = (p.PrimaryImageTag)
-            ? `<img class="lib-cast-img" alt="" src="${SERVER}/Items/${p.Id}/Images/Primary?tag=${p.PrimaryImageTag}&fillHeight=144&quality=85" onerror="this.outerHTML='<div class=&quot;lib-cast-img ph&quot;>${escapeHtml((p.Name||'?').charAt(0))}</div>'" />`
+            ? `<img class="lib-cast-img" alt="" loading="lazy" decoding="async" src="${SERVER}/Items/${p.Id}/Images/Primary?tag=${p.PrimaryImageTag}&fillHeight=144&quality=85" onerror="this.outerHTML='<div class=&quot;lib-cast-img ph&quot;>${escapeHtml((p.Name||'?').charAt(0))}</div>'" />`
             : `<div class="lib-cast-img ph">${escapeHtml((p.Name || '?').charAt(0))}</div>`;
           card.innerHTML = img + `<div class="lib-cast-name">${escapeHtml(p.Name || '')}</div>${p.Role ? `<div class="lib-cast-role">${escapeHtml(p.Role)}</div>` : ''}`;
           card.addEventListener('click', () => openPerson(p));

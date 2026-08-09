@@ -11,9 +11,11 @@
     slow_mode:"Slow mode", unlock_policy:"Unlock policy", restore:"Message restored",
     badge_add:"Badge awarded", badge_remove:"Badge removed", gif_filter:"GIF filter"
   };
-  // Klipy's content filter, strongest first. Kept in sync with chat.js.
-  const GIF_FILTERS = ["high", "medium", "low", "off"];
-  const GIF_FILTER_DEFAULT = "medium";
+  // Defined in shared.js, which every page loads as a blocking script before
+  // this one, so chat.js and this file always agree on the valid levels.
+  const CHAT_CONFIG = window.MFChatConfig;
+  const GIF_FILTERS = CHAT_CONFIG.gifFilters;
+  const GIF_FILTER_DEFAULT = CHAT_CONFIG.gifFilterDefault;
   const BADGE_PRESETS = {
     early:{icon:"🌱",label:"Early Member",description:"Part of the community early on"},
     tester:{icon:"🧪",label:"Project Tester",description:"Helped test a Mayflower project"},
@@ -24,7 +26,7 @@
   };
 
   let db = null, mods = null, me = null, myName = "", myHandle = "", role = "user";
-  let ownerHandle = "", settings = { locked:false, slowSeconds:0, adminsCanUnlock:false, gifFilter:GIF_FILTER_DEFAULT };
+  let ownerHandle = "", settings = { ...CHAT_CONFIG.settingDefaults };
   let logs = [], activeUser = null, settingsUnsub = null, controlsWired = false, directoryUsers = [], directoryAdmins = new Set();
 
   function cleanHandle(v) { return String(v || "").trim().toLowerCase().replace(/^@/, ""); }
@@ -79,7 +81,7 @@
     if (settingsUnsub) { try { settingsUnsub(); } catch (_) {} }
     const ref = mods.ref(db, "chatSettings/global");
     const cb = snap => {
-      settings = { locked:false, slowSeconds:0, adminsCanUnlock:false, gifFilter:GIF_FILTER_DEFAULT, ...(snap.val() || {}) };
+      settings = { ...CHAT_CONFIG.settingDefaults, ...(snap.val() || {}) };
       el("amLock").checked = !!settings.locked;
       el("amSlow").value = String(Number(settings.slowSeconds)||0);
       el("amAdminsUnlock").checked = !!settings.adminsCanUnlock;

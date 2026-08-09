@@ -7,8 +7,8 @@
   <title>Account — Mayflower Studios</title>
   <meta name="description" content="Sign in to your Mayflower Studios account." />
   <meta name="robots" content="noindex, follow" />
-  <link rel="icon" type="image/png" href="/assets/icons/favicon.png?v=2" />
-  <link rel="stylesheet" href="/style.css?v=53" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png?v=4" />
+  <link rel="stylesheet" href="/style.css?v=57" />
   <style>
     .acctWrap { max-width: 460px; margin: 0 auto; }
     /* when the profile is showing, allow a wider two-column canvas */
@@ -311,11 +311,12 @@
       padding:11px 12px; border-radius:var(--r-md); background:rgba(0,0,0,.16); border:1px solid var(--border);
     }
     .acctFriendAv {
-      position:relative; width:38px; height:38px; border-radius:50%; overflow:hidden; flex-shrink:0;
+      position:relative; width:38px; height:38px; border-radius:50%; flex-shrink:0;
       display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.06);
       font-size:18px; cursor:pointer;
     }
-    .acctFriendAv img { width:100%; height:100%; object-fit:cover; }
+    /* round crop on the image, so the presence dot outside the circle survives */
+    .acctFriendAv img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
     .acctFriendDot {
       position:absolute; right:-1px; bottom:-1px; width:10px; height:10px; border-radius:50%;
       background:#6b7280; border:2px solid rgba(10,16,29,1);
@@ -429,11 +430,11 @@
     }
     #profileView .acctSocialCard:nth-child(3) { grid-column: 2; grid-row: 1 / span 2; }
     #profileView .acctGuestList { max-height: none; }
-    #profileView .acctFriendsCard,
-    #profileView .petsStrip,
-    #profileView .achCount,
-    #profileView .achGrid,
-    #profileView .acctBadgeCard { margin-left: 34px; margin-right: 34px; }
+    /* Every block in the left-hand showcase column carries .showcaseInset so it
+       lines up with its neighbours. Add the class to anything new you put there
+       — this used to be four hand-listed selectors and a new section silently
+       sat flush to the card edge when it missed them. */
+    #profileView .showcaseInset { margin-left: 34px; margin-right: 34px; }
     #profileView .acctBadgeCard { margin-bottom: 26px; }
     #profileView .profEditor {
       display: none;
@@ -466,11 +467,7 @@
       #profileView .secLabel { margin-left: 18px; margin-right: 18px; }
       #profileView .acctSocialStack { grid-template-columns: 1fr; padding: 0 18px 8px; }
       #profileView .acctSocialCard:nth-child(3) { grid-column: auto; grid-row: auto; }
-      #profileView .acctFriendsCard,
-      #profileView .petsStrip,
-      #profileView .achCount,
-      #profileView .achGrid,
-      #profileView .acctBadgeCard { margin-left: 18px; margin-right: 18px; }
+      #profileView .showcaseInset { margin-left: 18px; margin-right: 18px; }
       #profileView .profEditor { margin: 18px; padding: 18px; }
     }
 
@@ -529,7 +526,7 @@
     #profileView .acctGiftStat { min-width: 86px; border-radius: 18px; padding: 12px 9px; }
     #profileView .acctRecentItem, #profileView .acctGuestItem { border-radius: 18px; padding: 13px 14px; }
     #profileView .acctFriendItem { border-radius: 18px; padding: 13px 14px; }
-    #profileView .acctFriendsCard, #profileView .petsStrip, #profileView .achCount, #profileView .achGrid, #profileView .acctBadgeCard { margin-left: 42px; margin-right: 42px; }
+    #profileView .showcaseInset { margin-left: 42px; margin-right: 42px; }
     #profileView .acctBadgeCard { border-radius: 22px; padding: 18px; }
     #profileView .profEditor {
       margin: 22px 42px 42px; padding: 26px; border-radius: 28px;
@@ -547,7 +544,7 @@
       #profileView .acctEditToggle { grid-column: 1 / -1; width: 100%; margin-top: 10px; }
       #profileView .secLabel { margin-left: 18px; margin-right: 18px; }
       #profileView .acctSocialStack { grid-template-columns: 1fr; padding-left: 18px; padding-right: 18px; }
-      #profileView .acctFriendsCard, #profileView .petsStrip, #profileView .achCount, #profileView .achGrid, #profileView .acctBadgeCard { margin-left: 18px; margin-right: 18px; }
+      #profileView .showcaseInset { margin-left: 18px; margin-right: 18px; }
       #profileView .profEditor { margin: 18px; padding: 18px; }
     }
 
@@ -667,25 +664,25 @@
 
         <!-- ── your friends ── -->
         <div class="secLabel" id="friends">Your friends</div>
-        <div class="acctFriendsCard" id="acctFriendsCard">
+        <div class="acctFriendsCard showcaseInset" id="acctFriendsCard">
           <div class="acctFriendsList" id="acctFriendsList"><div class="acctEmpty">Loading friends…</div></div>
         </div>
 
 
         <!-- ── companions ── -->
         <div class="secLabel">Your companions</div>
-        <div class="petsStrip" id="petsStrip">
+        <div class="petsStrip showcaseInset" id="petsStrip">
           <div class="petsEmpty" id="petsEmpty">Loading…</div>
         </div>
 
         <!-- ── achievements ── -->
         <div class="secLabel">Achievements</div>
-        <div class="achCount" id="achCount">—</div>
-        <div class="achGrid" id="achGrid"></div>
+        <div class="achCount showcaseInset" id="achCount">—</div>
+        <div class="achGrid showcaseInset" id="achGrid"></div>
 
         <!-- ── owner-awarded badges ── -->
         <div class="secLabel" id="badges">Your badges</div>
-        <div class="acctBadgeCard">
+        <div class="acctBadgeCard showcaseInset">
           <div class="acctBadgeList" id="acctBadgeList"><div class="acctEmpty">Loading badges…</div></div>
         </div>
 
@@ -819,7 +816,7 @@
     <div id="site-footer"></div>
   </div>
 
-  <script src="/shared.js?v=55"></script>
+  <script src="/shared.js?v=56"></script>
   <script>
   (function () {
     const $ = (id) => document.getElementById(id);
@@ -1278,7 +1275,7 @@
             const name = u.displayName || "someone";
             const a = MFAuth.avatarFor(u, name);
             const avEl = $("acctFriendAv_" + uid);
-            if (avEl) avEl.innerHTML = (a.kind === "photo" ? `<img src="${escapeForHtml(a.value)}">` : escapeForHtml(a.value)) + `<i class="acctFriendDot" id="acctFriendDot_${escapeForHtml(uid)}"></i>`;
+            if (avEl) avEl.innerHTML = (a.kind === "photo" ? `<img src="${escapeForHtml(a.value)}" loading="lazy" decoding="async">` : escapeForHtml(a.value)) + `<i class="acctFriendDot" id="acctFriendDot_${escapeForHtml(uid)}"></i>`;
             const nameEl = $("acctFriendName_" + uid); if (nameEl) nameEl.textContent = name;
             const handleEl = $("acctFriendHandle_" + uid); if (handleEl) handleEl.textContent = u.username ? "@" + u.username : "";
           });
@@ -1594,6 +1591,6 @@
     });
   })();
   </script>
-  <script src="/admin-inbox.js?v=5"></script>
+  <script src="/admin-inbox.js?v=6"></script>
 </body>
 </html>

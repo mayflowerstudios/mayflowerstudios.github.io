@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Watch Together — Mayflower Studios</title>
-  <link rel="stylesheet" href="/style.css?v=53" />
+  <link rel="stylesheet" href="/style.css?v=57" />
 
   <style>
     /* Ensure padding is included in element width so nothing overflows the
@@ -440,13 +440,13 @@
 <meta property="og:url" content="https://mayflowerstudios.net/watch-together.html" />
 <meta name="robots" content="noindex, follow" />
   <meta property="og:type" content="website" />
-<meta property="og:image" content="https://mayflowerstudios.net/assets/og/watch-together.png?v=2" />
+<meta property="og:image" content="https://mayflowerstudios.net/assets/og/watch-together.png?v=3" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Watch Together — Mayflower Studios" />
 <meta name="twitter:description" content="A cozy private space to watch YouTube and videos together, perfectly in sync." />
-<meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/watch-together.png?v=2" />
+<meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/watch-together.png?v=3" />
 <!-- OG:END -->
 </head>
 
@@ -661,7 +661,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/shared.js?v=55"></script>
+  <script src="/shared.js?v=56"></script>
 
   <script src="fireflies.js"></script>
 
@@ -1565,7 +1565,7 @@
 
     // Thumbnail + label helpers shared by the queue / history / now-playing rows.
     function mediaThumb(kind, src) {
-      if (kind === "yt") return `<img class="qThumb" src="https://i.ytimg.com/vi/${src}/mqdefault.jpg" alt="" />`;
+      if (kind === "yt") return `<img class="qThumb" loading="lazy" decoding="async" src="https://i.ytimg.com/vi/${src}/mqdefault.jpg" alt="" />`;
       if (kind === "tiktok") return `<div class="qThumb ttThumb" style="display:grid;place-items:center;font-size:16px">🎵</div>`;
       return `<div class="qThumb" style="display:grid;place-items:center;font-size:16px">🎬</div>`;
     }
