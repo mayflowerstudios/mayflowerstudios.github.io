@@ -44,6 +44,26 @@
       if (MFAuth.user && MFAuth.user.email) return MFAuth.user.email.split("@")[0];
       return null;
     },
+    // Make a user-supplied image link safe to drop into a CSS url() or an
+    // <img src>. Returns "" for anything that isn't a plain http(s) URL.
+    //
+    // The percent-encoding matters as much as the scheme check. A banner URL
+    // ending in  x.png');position:fixed;inset:0;z-index:99999;--a:url('
+    // used to pass the old "starts with http" test, and HTML-escaping it did
+    // not help: the parser turns &#39; back into a quote before the CSS engine
+    // sees it, so the url() token closed early and the rest became real CSS —
+    // enough to cover the screen of anyone opening that profile.
+    //
+    // encodeURIComponent is not used here because it leaves ' ( ) untouched.
+    safeImageURL(value) {
+      const raw = String(value == null ? "" : value).trim();
+      if (!raw) return "";
+      let u;
+      try { u = new URL(raw); } catch (_) { return ""; }
+      if (u.protocol !== "https:" && u.protocol !== "http:") return "";
+      return u.href.replace(/["'()\\\s;<>]/g,
+        ch => "%" + ch.charCodeAt(0).toString(16).toUpperCase().padStart(2, "0"));
+    },
     // Returns { kind:'photo'|'emoji'|'letter', value } for any profile object.
     avatarFor(profile, name) {
       const p = profile || {};
@@ -62,6 +82,14 @@
       listeners.forEach(cb => { try { cb(MFAuth.user, MFAuth.profile); } catch (_) {} });
     },
   };
+
+  // A failed database read here returns an empty value, which is
+  // indistinguishable from "there is nothing to show" — so a rules mistake
+  // looks exactly like an empty profile. Naming the read in the console is
+  // the difference between a five-minute fix and an afternoon.
+  function dbRead(what, err) {
+    console.warn("[MFAuth] read failed: " + what, err && (err.code || err.message) || err);
+  }
 
   function notReady() { return Promise.reject(new Error("Auth not ready yet")); }
   // Placeholder methods until modules load
@@ -199,7 +227,7 @@
         if (mode === "everyone") return true;
         if (mode === "nobody") return false;
         try { return (await dbMod.get(dbMod.ref(db, `friends/${MFAuth.uid}/${uid}`))).exists(); }
-        catch (_) { return false; }
+        catch (e) { dbRead("canSee/friends", e); return false; }
       };
 
       MFAuth.getNotificationPrefs = async () => {
@@ -226,7 +254,7 @@
         uid = uid || MFAuth.uid;
         if (!uid) return {};
         try { const snap = await dbMod.get(dbMod.ref(db, `achievements/${uid}`)); return snap.exists() ? (snap.val() || {}) : {}; }
-        catch (_) { return {}; }
+        catch (e) { dbRead("getAchievements", e); return {}; }
       };
       MFAuth.watchAchievements = (uid, cb) => {
         uid = uid || MFAuth.uid;
@@ -295,7 +323,7 @@
       MFAuth.getUserBadges = async (uid) => {
         if (!uid) return {};
         try { const snap = await dbMod.get(dbMod.ref(db, `userBadges/${uid}`)); return snap.exists() ? (snap.val() || {}) : {}; }
-        catch (_) { return {}; }
+        catch (e) { dbRead("getUserBadges", e); return {}; }
       };
       MFAuth.watchUserBadges = (uid, cb) => {
         if (!uid || typeof cb !== "function") return () => {};
@@ -306,7 +334,7 @@
       MFAuth.getFriendsForProfile = async (uid) => {
         if (!uid) return {};
         try { const snap = await dbMod.get(dbMod.ref(db, `friends/${uid}`)); return snap.exists() ? (snap.val() || {}) : {}; }
-        catch (_) { return {}; }
+        catch (e) { dbRead("getFriendsForProfile", e); return {}; }
       };
 
       // ---- profile helpers ----
@@ -314,7 +342,7 @@
         try {
           const snap = await dbMod.get(dbMod.ref(db, `users/${uid}`));
           return snap.exists() ? snap.val() : null;
-        } catch (_) { return null; }
+        } catch (e) { dbRead("loadProfile", e); return null; }
       }
       async function ensureProfile(user) {
         // Seed a profile on first sign-in; keep light + non-destructive.
@@ -391,12 +419,19 @@
           patch.avatarType = "emoji";
         }
         if (typeof fields.photoURL === "string" && fields.photoURL) {
-          patch.photoURL = fields.photoURL.slice(0, 500);
+          const safe = MFAuth.safeImageURL(fields.photoURL);
+          if (!safe) throw new Error("That photo link isn't a valid http(s) address");
+          patch.photoURL = safe.slice(0, 500);
           patch.avatarType = "photo";
         }
         // bannerURL: a string sets it; an empty string clears it (both valid)
         if (typeof fields.bannerURL === "string") {
-          patch.bannerURL = fields.bannerURL.slice(0, 500);
+          if (!fields.bannerURL) patch.bannerURL = "";
+          else {
+            const safe = MFAuth.safeImageURL(fields.bannerURL);
+            if (!safe) throw new Error("That banner link isn't a valid http(s) address");
+            patch.bannerURL = safe.slice(0, 500);
+          }
         }
         if (!Object.keys(patch).length) return MFAuth.profile;
         try {
@@ -452,7 +487,7 @@
         try {
           const snap = await dbMod.get(dbMod.ref(db, `usernames/${h}`));
           return snap.exists() ? snap.val() : null; // returns uid or null
-        } catch (_) { return null; }
+        } catch (e) { dbRead("uidForUsername", e); return null; }
       };
 
       // ---- friends & requests ----
@@ -524,7 +559,7 @@
       MFAuth.areFriends = async (otherUid) => {
         if (!MFAuth.user) return false;
         try { return (await dbMod.get(dbMod.ref(db, `friends/${MFAuth.user.uid}/${otherUid}`))).exists(); }
-        catch (_) { return false; }
+        catch (e) { dbRead("areFriends", e); return false; }
       };
 
       // Avatar upload via Firebase Storage (loaded lazily so pages that never
@@ -722,7 +757,7 @@
         try {
           const snap = await dbMod.get(dbMod.ref(db, `relationships/${uid}`));
           return snap.exists() ? snap.val() : null;
-        } catch (_) { return null; }
+        } catch (e) { dbRead("getRelationship", e); return null; }
       };
 
       // ---- pet summaries (for the profile page) ----
@@ -773,7 +808,7 @@
           // newest/strongest first
           out.sort((a, b) => b.level - a.level);
           return out;
-        } catch (_) { return []; }
+        } catch (e) { dbRead("listMyPets", e); return []; }
       };
 
       // ---- presence (online + lastSeen) with optional "appear offline" ----

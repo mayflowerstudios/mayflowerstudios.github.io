@@ -713,7 +713,7 @@
 
   // Bump this whenever auth.js / chat.js / profile-view.js change, so browsers
   // and the GitHub Pages CDN fetch the new version instead of a cached copy.
-  var MF_ASSET_VER = '56';
+  var MF_ASSET_VER = '57';
 
   // ─────────────────────────────────────────────────────────────
   //  Chat + moderation config, shared by chat.js and admin-moderation.js.
@@ -743,19 +743,37 @@
     document.body.appendChild(s);
   }
 
+  // Run a job when the browser is next idle, so these scripts stop competing
+  // with the page's own first paint. Falls back to a short timeout where
+  // requestIdleCallback isn't available (Safari until fairly recently).
+  function whenIdle(fn) {
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(fn, { timeout: 2000 });
+    else setTimeout(fn, 200);
+  }
+
   function loadAuthAndChat() {
-    // auth.js defines window.MFAuth (universal identity).
+    // auth.js defines window.MFAuth (universal identity). The nav's account
+    // link and the notification bell both wait on it, so it stays eager.
     if (!window.MFAuth) loadScript('/auth.js', { 'data-mf-auth': '1' });
-    // rooms.js defines window.MFRooms (unified activity room registry).
-    loadScript('/rooms.js?v=2', { 'data-mf-rooms': '1' });
-    // profile-view.js defines window.MFProfile (public profile overlay).
-    loadScript('/profile-view.js', { 'data-mf-profile': '1' });
-    // chat.js injects the universal floating chat once MFAuth is ready.
-    loadScript('/chat.js', { 'data-mf-chat': '1' });
-    // notification-center.js owns the bell, unread badge, dropdown, and full page.
+    // notification-center.js owns the bell, unread badge, dropdown, and full
+    // page — part of the nav, so it is eager too.
     loadScript('/notification-center.js', { 'data-mf-notifications': '1' });
-    // announcement-center.js renders scheduled site announcements for the right audience.
-    loadScript('/announcement-center.js', { 'data-mf-announcements': '1' });
+
+    // rooms.js defines window.MFRooms (unified activity room registry). Only
+    // the room pages touch it, so it is opt-in via <body data-rooms="1">
+    // rather than 16KB parsed on every page that will never call it.
+    if (document.body.dataset.rooms === '1') loadScript('/rooms.js', { 'data-mf-rooms': '1' });
+
+    // The rest mount their own UI (chat bubble, announcement banners) and are
+    // never needed for first paint, so they wait for an idle moment.
+    whenIdle(function () {
+      // profile-view.js defines window.MFProfile (public profile overlay).
+      loadScript('/profile-view.js', { 'data-mf-profile': '1' });
+      // chat.js injects the universal floating chat once MFAuth is ready.
+      loadScript('/chat.js', { 'data-mf-chat': '1' });
+      // announcement-center.js renders scheduled site announcements for the right audience.
+      loadScript('/announcement-center.js', { 'data-mf-announcements': '1' });
+    });
   }
 
   function initAccountNav() {

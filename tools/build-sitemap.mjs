@@ -29,9 +29,12 @@ function shouldSkipFile(relPath, fileName, absPath) {
   if (rel.startsWith("partials/")) return true;
 
   // Never list utility / dynamic-app pages we don't want indexed
+  // Pages that only mean anything with a query parameter — a bare visit shows
+  // an empty shell, which reads to a crawler as thin content.
   const ALWAYS_SKIP = new Set([
     "404.html", "watch.html", "account.html",
     "watch-together.html", "together-room.html", "date-night.html",
+    "radio/station.html",   // needs ?id=<station>
   ]);
   if (ALWAYS_SKIP.has(rel)) return true;
 

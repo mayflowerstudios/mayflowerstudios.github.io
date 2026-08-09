@@ -11,10 +11,10 @@
           ".validate": "newData.isString() && newData.val().length <= 20 && newData.val().matches(/^[a-z0-9_]+$/)"
         },
         "photoURL": {
-          ".validate": "newData.isString() && newData.val().length <= 500"
+          ".validate": "newData.isString() && newData.val().length <= 500 && (newData.val().length == 0 || newData.val().matches(/^https?:[/][/][A-Za-z0-9._~:/?#@!$&*+,=%-]+$/))"
         },
         "bannerURL": {
-          ".validate": "newData.isString() && newData.val().length <= 500"
+          ".validate": "newData.isString() && newData.val().length <= 500 && (newData.val().length == 0 || newData.val().matches(/^https?:[/][/][A-Za-z0-9._~:/?#@!$&*+,=%-]+$/))"
         },
         "avatarEmoji": {
           ".validate": "newData.isString() && newData.val().length <= 8"
