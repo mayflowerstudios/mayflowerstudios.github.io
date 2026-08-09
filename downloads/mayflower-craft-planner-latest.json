@@ -1,9 +1,9 @@
 {
   "name": "Mayflower Craft Planner",
-  "version": "1.16.0",
-  "codename": "Use It On That",
+  "version": "1.17.0",
+  "codename": "Pay What You Want",
   "platform": "Windows",
-  "file": "/downloads/MayflowerCraftPlanner_v1.16.0.exe",
+  "file": "/downloads/MayflowerCraftPlanner_v1.17.0.exe",
   "size": "Single EXE",
-  "notes": "Two more ways of getting something: from a quest, and by using one thing on another — an empty glass on a cow, an empty bucket at a well. A use-on says what it uses up, and the plan then asks for those, so four glasses of milk puts four empty glasses on your list."
+  "notes": "A tip jar in the corner of the window. The planner is free and stays free — nothing is behind it — but if it has saved you a few trips to the mines there is now somewhere to say so."
 }
