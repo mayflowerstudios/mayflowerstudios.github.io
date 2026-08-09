@@ -4,15 +4,25 @@
 // "Identifier 'canvas' has already been declared", a fatal SyntaxError that
 // aborted other scripts on the page. The IIFE keeps canvas/ctx local, and the
 // flag makes a second load a harmless no-op.
+//
+// The flag is only raised once we have actually started, and that matters.
+// shared.js creates the canvas on DOMContentLoaded and then loads this file.
+// Some pages also carried their own <script src="/fireflies.js"> tag, which
+// runs while the document is still parsing — before the canvas exists. That
+// copy warned, raised the flag anyway, and so stopped shared.js from ever
+// loading it again: the canvas sat at its default 300x150, blank, on every
+// page with a direct tag. Those tags are gone now, and leaving the flag down
+// when there is no canvas means a stray one can no longer wedge it shut.
 if (window._firefliesLoaded) {
   // already initialized — do nothing
+} else if (!document.getElementById("fireflies")) {
+  // Too early, or fireflies are switched off in settings so shared.js never
+  // made the canvas. Either way this load does nothing and does not claim it.
 } else {
   window._firefliesLoaded = true;
 (function () {
 const canvas = document.getElementById("fireflies");
-if (!canvas) {
-  console.warn("Fireflies canvas not found!");
-} else {
+{
   const ctx = canvas.getContext("2d", { alpha: true });
 
   let fireflies = [];

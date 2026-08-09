@@ -80,6 +80,9 @@
           <section class="settingsPanel" data-settings-panel="presence">
             <div class="settingsCard"><h2>Chat & presence</h2><p>Presence is device-specific so you can appear offline on one device without changing another.</p>
               <div class="settingRow"><div class="settingCopy"><b>👻 Appear offline</b><span>Friends will see you as offline and your typing indicators will be hidden. You can still use the site normally.</span></div><label class="settingsToggle"><input type="checkbox" id="settingsAppearOffline" /> Appear offline</label></div>
+              <div class="settingRow"><div class="settingCopy"><b>🔔 Message sound</b><span>A soft chime when a message arrives while the chat is open. Saved on this device.</span></div><label class="settingsToggle"><input type="checkbox" id="settingsChatSound" /> Play a sound</label></div>
+              <div class="settingRow"><div class="settingCopy"><b>🌐 Translate messages</b><span>Translates chat into your language as it arrives. The site's own language picker in the header changes this too.</span></div><label class="settingsToggle"><input type="checkbox" id="settingsTranslate" /> Translate chat</label></div>
+              <div class="settingRow"><div class="settingCopy"><b>🗣️ Translate into</b><span>Which language chat and the site are translated into.</span></div><select id="settingsTranslateLang"></select></div>
               <div class="settingsStatus" id="presenceStatus"></div>
             </div>
           </section>
@@ -100,7 +103,7 @@
     </main>
     <div id="site-footer"></div>
   </div>
-  <script src="/shared.js?v=57"></script>
-  <script src="/settings.js?v=50"></script>
+  <script src="/shared.js?v=59"></script>
+  <script src="/settings.js?v=51"></script>
 </body>
 </html>

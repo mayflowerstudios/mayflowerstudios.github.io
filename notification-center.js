@@ -11,6 +11,46 @@
   };
 
   let db = null, mods = null, uid = null, rows = [], unsub = null;
+
+  // ---- notification preferences ----
+  // The six switches on the settings page used to do nothing at all: nothing
+  // consulted them when a notification was created, and the sender could not
+  // have done so anyway — notificationPrefs/$uid is readable only by its owner.
+  // So they are applied here instead, on the recipient's own device, where the
+  // preference actually lives. A muted type is neither listed nor counted.
+  //
+  // Moderation notices and awarded badges are deliberately absent from this
+  // map: they always show. Being able to switch off a warning from a moderator
+  // would make the warning pointless.
+  const PREF_FOR_TYPE = {
+    friend_request: "friends", friend_accepted: "friends",
+    gift: "gifts",
+    guestbook: "guestbook",
+    relationship_request: "relationship", relationship_accepted: "relationship",
+    room_invite: "rooms",
+    mention: "messages", direct_message: "messages",
+  };
+  let prefs = null;   // null until loaded; nothing is filtered before then
+
+  function wanted(n) {
+    if (!prefs) return true;
+    const key = PREF_FOR_TYPE[String(n && n.type || "")];
+    return !key || prefs[key] !== false;
+  }
+  function visibleRows() { return rows.filter(wanted); }
+
+  async function loadPrefs() {
+    if (!window.MFAuth || !MFAuth.getNotificationPrefs) return;
+    try { prefs = await MFAuth.getNotificationPrefs(); }
+    catch (_) { prefs = null; }
+    draw();
+  }
+  // Changing a switch on the settings page should take effect on any tab that
+  // is already open, not only after a reload.
+  window.addEventListener("mf-notification-prefs-changed", e => {
+    if (e && e.detail) { prefs = e.detail; draw(); }
+    else loadPrefs();
+  });
   let panelOpen = false, pageFilter = "all";
   const $ = id => document.getElementById(id);
 
@@ -59,7 +99,7 @@
     $("mfNotifyClearRead").addEventListener("click", clearRead);
   }
 
-  function unreadRows() { return rows.filter(n => !Number(n.readAt)); }
+  function unreadRows() { return visibleRows().filter(n => !Number(n.readAt)); }
   function updateBadge() {
     const button = $("mfNotifyButton"), badge = $("mfNotifyBadge");
     if (!button || !badge) return;
@@ -99,7 +139,7 @@
   function drawPanel() {
     const list = $("mfNotifyList"), summary = $("mfNotifySummary");
     if (!list) return;
-    const recent = rows.slice(0, 14), unread = unreadRows().length;
+    const recent = visibleRows().slice(0, 14), unread = unreadRows().length;
     if (summary) summary.textContent = unread ? `${unread} unread` : "You're caught up";
     list.innerHTML = recent.length ? recent.map(n => itemHtml(n, false)).join("") : '<div class="mf-notify-empty">No notifications yet.<br>Friend requests, gifts, room invites, messages, and moderation notices will appear here.</div>';
     wireItems(list);
@@ -108,8 +148,9 @@
   function drawPage() {
     const list = $("mfNotificationPageList"), count = $("mfNotificationPageCount");
     if (!list) return;
-    const visible = pageFilter === "unread" ? unreadRows() : rows;
-    if (count) count.textContent = rows.length ? `${visible.length} shown · ${unreadRows().length} unread` : "";
+    const shown = visibleRows();
+    const visible = pageFilter === "unread" ? unreadRows() : shown;
+    if (count) count.textContent = shown.length ? `${visible.length} shown · ${unreadRows().length} unread` : "";
     list.innerHTML = visible.length ? visible.map(n => itemHtml(n, true)).join("") : `<div class="mf-notify-empty">${pageFilter === "unread" ? "Nothing unread — nicely done 🌼" : "No notifications yet."}</div>`;
     wireItems(list);
   }
@@ -173,11 +214,12 @@
 
   async function readyAuth(user) {
     uid = user ? user.uid : null;
-    if (!uid) { togglePanel(false); subscribe(); return; }
+    if (!uid) { prefs = null; togglePanel(false); subscribe(); return; }
     db = MFAuth.db;
     if (!db) { setTimeout(() => readyAuth(MFAuth.user), 100); return; }
     if (!mods) mods = await import(`https://www.gstatic.com/firebasejs/${FB_VERSION}/firebase-database.js`);
     subscribe();
+    loadPrefs();   // which types this account wants to be told about
   }
 
   function boot() {

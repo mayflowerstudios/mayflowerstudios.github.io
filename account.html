@@ -784,17 +784,6 @@
         <!-- ── privacy ── -->
         <div class="secLabel">Privacy</div>
 
-        <div class="toggleRow">
-          <div class="tgInfo">
-            <span class="tgTitle">👻 Appear offline</span>
-            <span class="tgHint">Friends won't see you as online, and your typing won't show. You can still see them. Saved on this device.</span>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="appearOfflineToggle" />
-            <span class="switchTrack"></span>
-          </label>
-        </div>
-
         <div class="toggleRow" style="align-items:center;">
           <div class="tgInfo">
             <span class="tgTitle">⚙️ Privacy, notifications &amp; preferences</span>
@@ -816,7 +805,7 @@
     <div id="site-footer"></div>
   </div>
 
-  <script src="/shared.js?v=57"></script>
+  <script src="/shared.js?v=59"></script>
   <script>
   (function () {
     const $ = (id) => document.getElementById(id);
@@ -947,11 +936,8 @@
         $("pvSince").textContent = "—";
       }
 
-      // appear-offline toggle reflects the per-device setting
-      const tog = $("appearOfflineToggle");
-      if (tog && MFAuth.getAppearOffline) tog.checked = !!MFAuth.getAppearOffline();
-
-      // online dot reflects current (real) presence, dimmed when appearing offline
+      // Appear offline lives on the settings page now, but the dot here still
+      // reflects it: real presence, dimmed while appearing offline.
       updateOnlineDot();
 
       renderPreview();   // paint the live preview card from the form values
@@ -1134,15 +1120,7 @@
         } catch (err) { msg($("profMsg"), friendlyError(err), "err"); }
       });
 
-      // appear-offline toggle (moved here from the chat header). Per-device.
-      const aoTog = $("appearOfflineToggle");
-      if (aoTog) {
-        aoTog.addEventListener("change", () => {
-          if (MFAuth.setAppearOffline) MFAuth.setAppearOffline(aoTog.checked);
-          updateOnlineDot();
-          msg($("profMsg"), aoTog.checked ? "You now appear offline 👻" : "You're back online 🟢", "ok");
-        });
-      }
+      // Appear offline now lives on the settings page, with everything else.
 
       // copy your @handle so friends can add you
       $("copyHandleBtn").addEventListener("click", async () => {

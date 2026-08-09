@@ -201,19 +201,29 @@
     });
     updateTrUI();
 
-    // Keep the chat translator in sync with the site-wide language picker.
+    // Keep the chat translator in sync with the site-wide language picker and
+    // with the settings page.
     window.addEventListener("mf-lang-change", (e) => {
-      const lang = e && e.detail && e.detail.lang;
+      const d = (e && e.detail) || {};
+      const lang = d.lang;
       if (!lang || !TR_OK) return;
       targetLang = lang;
       document.querySelectorAll(".mf-msg-text[data-text]").forEach(b => { delete b.dataset.trFor; });
-      // If the whole site is being translated, mirror that in chat automatically.
-      if (lang !== "en") {
+      if (typeof d.on === "boolean") {
+        // Settings said so outright. Honour it — including switching translation
+        // off while a non-English language is still selected, which the rule
+        // below would otherwise undo on the spot.
+        translateOn = d.on;
+        try { localStorage.setItem("mf_tr_on", d.on ? "1" : "0"); } catch (_) {}
+      } else if (lang !== "en") {
+        // Came from the header picker: if the whole site is being translated,
+        // mirror that in chat automatically.
         translateOn = true;
         try { localStorage.setItem("mf_tr_on", "1"); } catch (_) {}
       }
       updateTrUI();
       if (translateOn) applyTranslations();
+      else { document.querySelectorAll(".mf-msg-text[data-text]").forEach(b => { b.innerHTML = linkify(b.dataset.text); delete b.dataset.trFor; }); document.querySelectorAll(".mf-msg-orig").forEach(o => o.remove()); }
     });
     const muteBtn = panel.querySelector("#mfMuteBtn");
     function updateMuteUI() {
@@ -227,6 +237,11 @@
       updateMuteUI();
       // tapping unmute is a user gesture — unlock audio and give a tiny preview
       if (!muted) { unlockAudio(); playChime(); }
+    });
+    // The same switch lives on the settings page; keep an open panel in step.
+    window.addEventListener("mf-chat-sound-changed", (e) => {
+      muted = !!(e && e.detail && e.detail.muted);
+      updateMuteUI();
     });
     updateMuteUI();
 

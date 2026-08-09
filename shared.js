@@ -703,17 +703,22 @@
   }
 
   function loadFireflies() {
-    // Only load if not already loaded by a <script src> tag on the page
-    if (window._firefliesLoaded || localPref('mf_hide_fireflies','0') === '1') return;
-    window._firefliesLoaded = true;
+    // _firefliesLoaded belongs to fireflies.js and means "I have started".
+    // Setting it here used to raise it *before* the script was fetched, so the
+    // script then saw its own guard already true and did nothing at all —
+    // which is why the fireflies never appeared while the petals did. Track
+    // the request separately and leave that flag to fireflies.js.
+    if (window._firefliesRequested || window._firefliesLoaded) return;
+    if (localPref('mf_hide_fireflies', '0') === '1') return;
+    window._firefliesRequested = true;
     const s = document.createElement('script');
-    s.src = '/fireflies.js';
+    s.src = '/fireflies.js?v=' + MF_ASSET_VER;
     document.body.appendChild(s);
   }
 
   // Bump this whenever auth.js / chat.js / profile-view.js change, so browsers
   // and the GitHub Pages CDN fetch the new version instead of a cached copy.
-  var MF_ASSET_VER = '57';
+  var MF_ASSET_VER = '59';
 
   // ─────────────────────────────────────────────────────────────
   //  Chat + moderation config, shared by chat.js and admin-moderation.js.
