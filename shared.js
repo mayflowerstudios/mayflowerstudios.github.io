@@ -718,7 +718,7 @@
 
   // Bump this whenever auth.js / chat.js / profile-view.js change, so browsers
   // and the GitHub Pages CDN fetch the new version instead of a cached copy.
-  var MF_ASSET_VER = '59';
+  var MF_ASSET_VER = '60';
 
   // ─────────────────────────────────────────────────────────────
   //  Chat + moderation config, shared by chat.js and admin-moderation.js.

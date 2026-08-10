@@ -845,6 +845,13 @@
       const cell = document.createElement("div");
       cell.className = "mf-gifCell";
       const im = document.createElement("img");
+      // Both services hand us the real dimensions, so the tile can claim its
+      // final height before the image arrives. Without this the columns pack
+      // themselves around zero-height boxes and then shuffle as each GIF
+      // loads, which looks like the grid is fighting you.
+      if (Number.isFinite(it.w) && Number.isFinite(it.h) && it.w > 0 && it.h > 0) {
+        im.style.aspectRatio = it.w + " / " + it.h;
+      }
       im.src = it.preview || it.full; im.loading = "lazy"; im.alt = it.title || "GIF";
       im.addEventListener("click", () => { sendMedia({ kind: "gif", url: it.full, w: it.w, h: it.h }); closePops(); });
       const star = document.createElement("button");

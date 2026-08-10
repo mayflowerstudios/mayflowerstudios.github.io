@@ -934,8 +934,15 @@ html[data-mf-translating] .wrap { transition: opacity 200ms var(--ease); }
 .mf-gifTab.on { color: var(--rose); background: rgba(249,168,212,.12); }
 .mf-gifSearch input { width: 100%; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--border-2); background: rgba(0,0,0,.3); color: var(--text); font-size: 13px; font-family: var(--font-b); }
 .mf-gifSearch input:focus { outline: none; border-color: rgba(196,181,253,.45); }
-.mf-gifGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; align-items: start; }
-.mf-gifCell { position: relative; }
+/* Masonry, the Discord way. A grid puts every row on the tallest item in it,
+   so a short GIF leaves a hole underneath. Multi-column flow instead lets each
+   column pack tight, and column-width (rather than a fixed count) means
+   dragging the panel wider adds a column instead of stretching two. */
+/* 150px keeps two columns at the narrowest the panel gets (a phone sheet is
+   ~335px of usable width) and adds a third and fourth as it is dragged wider.
+   At 170px a narrow panel fell back to one full-width column. */
+.mf-gifGrid { column-width: 150px; column-gap: 6px; }
+.mf-gifCell { position: relative; break-inside: avoid; margin-bottom: 6px; }
 .mf-gifGrid img { width: 100%; border-radius: 10px; cursor: pointer; display: block; transition: filter 120ms var(--ease); }
 .mf-gifGrid img:hover { filter: brightness(1.1); }
 .mf-gifFav {
