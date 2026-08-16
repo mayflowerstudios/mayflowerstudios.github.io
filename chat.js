@@ -1068,14 +1068,14 @@
   }
 
   // ---- Translation engine (two-tier: on-device, then free server fallback) ----
-  const LANG_NAMES = { en:"English", es:"Spanish", de:"German", fr:"French", pt:"Portuguese", it:"Italian", nl:"Dutch", ja:"Japanese", ko:"Korean", zh:"Chinese", ru:"Russian" };
+  const LANG_NAMES = { en:"English", es:"Spanish", de:"German", fr:"French", pt:"Português (Brasil)", it:"Italian", nl:"Dutch", ja:"Japanese", ko:"Korean", zh:"Chinese", ru:"Russian" };
   let translateOn = false, targetLang = "en";
   const translationCache = new Map(), translatorPool = new Map();
   function guessLang() { const l = (navigator.language || "en").slice(0,2).toLowerCase(); return LANG_NAMES[l] ? l : "en"; }
   try { translateOn = localStorage.getItem("mf_tr_on") === "1"; targetLang = localStorage.getItem("mf_tr_lang") || guessLang(); } catch (_) { targetLang = guessLang(); }
   const HAS_DEVICE = (typeof self !== "undefined") && ("Translator" in self) && ("LanguageDetector" in self);
   const HAS_SERVER = /^https?:$/.test(location.protocol);
-  const TR_MODE = HAS_DEVICE ? "device" : (HAS_SERVER ? "server" : "none");
+  const TR_MODE = HAS_SERVER ? "server" : (HAS_DEVICE ? "device" : "none");
   const TR_OK = TR_MODE !== "none";
   async function getTranslator(src, tgt) {
     const key = src + "->" + tgt;
@@ -1087,22 +1087,32 @@
     try { if ("LanguageDetector" in self) { const d = await self.LanguageDetector.create(); const res = await d.detect(text); if (res && res.length) { const top = res.find(r => r.detectedLanguage && r.detectedLanguage !== "und"); if (top && top.confidence > 0.15) return top.detectedLanguage.slice(0,2); } } } catch (_) {}
     return null;
   }
+  function onlineTargetLang(tgt) { return tgt === "pt" ? "pt-BR" : tgt; }
   async function serverTranslate(text, tgt) {
-    const url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" + encodeURIComponent(tgt) + "&dt=t&q=" + encodeURIComponent(text);
-    try { const ctrl = new AbortController(); const timer = setTimeout(() => ctrl.abort(), 8000); const r = await fetch(url, { signal: ctrl.signal }); clearTimeout(timer); if (!r.ok) return null; const data = await r.json(); const out = (data[0] || []).map(s => s[0]).join(""); const src = (data[2] || "").slice(0,2); if (!out) return null; return { text: out, src }; } catch (_) { return null; }
+    const url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" + encodeURIComponent(onlineTargetLang(tgt)) + "&dt=t&ie=UTF-8&oe=UTF-8&q=" + encodeURIComponent(text);
+    try { const ctrl = new AbortController(); const timer = setTimeout(() => ctrl.abort(), 8000); const r = await fetch(url, { signal: ctrl.signal }); clearTimeout(timer); if (!r.ok) return null; const data = await r.json(); const out = (data[0] || []).map(s => s[0]).join(""); const src = String(data[2] || "").toLowerCase().slice(0,2); if (!out) return null; return { text: out, src }; } catch (_) { return null; }
   }
   async function translateText(text, tgt) {
     const ck = tgt + "||" + text;
     if (translationCache.has(ck)) return translationCache.get(ck);
     let out = null;
-    if (TR_MODE === "device") {
+
+    // Quality first: use Google's online translation whenever we're online.
+    // The browser's on-device model remains an offline/failure fallback.
+    if (HAS_SERVER) {
+      const r = await serverTranslate(text, tgt);
+      if (r) {
+        if (r.src && r.src === tgt) { translationCache.set(ck, null); return null; }
+        out = r.text;
+      }
+    }
+    if (!out && HAS_DEVICE) {
       const src = await detectLang(text);
       if (src && src === tgt) { translationCache.set(ck, null); return null; }
-      if (src) { const t = await getTranslator(src, tgt); if (t) { try { out = await t.translate(text); } catch (_) { out = null; } } }
-      if (!out && HAS_SERVER) { const r = await serverTranslate(text, tgt); if (r) { if (r.src && r.src === tgt) { translationCache.set(ck, null); return null; } out = r.text; } }
-    } else if (TR_MODE === "server") {
-      const r = await serverTranslate(text, tgt);
-      if (r) { if (r.src && r.src === tgt) { translationCache.set(ck, null); return null; } out = r.text; }
+      if (src) {
+        const t = await getTranslator(src, tgt);
+        if (t) { try { out = await t.translate(text); } catch (_) { out = null; } }
+      }
     }
     translationCache.set(ck, out || null);
     return out || null;

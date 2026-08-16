@@ -98,19 +98,19 @@
   //  SITE-WIDE TRANSLATION
   //  A self-contained page translator that walks the DOM, swaps text
   //  in place, and keeps originals so it can revert / re-translate.
-  //  Two-tier engine: on-device Translator API → free Google fallback.
+  //  Two-tier engine: Google online translation first → on-device fallback.
   //  Shares the localStorage key "mf_tr_lang" with the chat translator.
   // ─────────────────────────────────────────────────────────────
   var MFTranslate = (function () {
     const LANG_NAMES = {
       en: "English", es: "Español", de: "Deutsch", fr: "Français",
-      pt: "Português", it: "Italiano", nl: "Nederlands", ja: "日本語",
+      pt: "Português (Brasil)", it: "Italiano", nl: "Nederlands", ja: "日本語",
       ko: "한국어", zh: "中文", ru: "Русский"
     };
 
     const HAS_DEVICE = (typeof self !== "undefined") && ("Translator" in self) && ("LanguageDetector" in self);
     const HAS_SERVER = /^https?:$/.test(location.protocol);
-    const TR_MODE = HAS_DEVICE ? "device" : (HAS_SERVER ? "server" : "none");
+    const TR_MODE = HAS_SERVER ? "server" : (HAS_DEVICE ? "device" : "none");
     const TR_OK = TR_MODE !== "none";
 
     function guessLang() {
@@ -125,7 +125,7 @@
     // Translations are deterministic for a given (text -> language), so we keep
     // them in localStorage. Repeat visits then translate from cache instantly
     // and only fetch strings we've never seen before.
-    const CACHE_KEY = "mf_tr_cache_v1";  // bump the v# to invalidate all cached translations
+    const CACHE_KEY = "mf_tr_cache_v2";  // bump the v# to invalidate all cached translations
     const CACHE_MAX = 4000;              // entry ceiling so we never blow the ~5MB quota
     const cache = new Map();             // key `${tgt}||${text}` -> translated string (or null)
     let cacheDirty = false;
@@ -189,9 +189,14 @@
       return p;
     }
 
+    function onlineTargetLang(tgt) {
+      // The site's Portuguese option is specifically Brazilian Portuguese.
+      return tgt === "pt" ? "pt-BR" : tgt;
+    }
+
     async function serverTranslate(text, tgt) {
       const url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" +
-        encodeURIComponent(tgt) + "&dt=t&q=" + encodeURIComponent(text);
+        encodeURIComponent(onlineTargetLang(tgt)) + "&dt=t&ie=UTF-8&oe=UTF-8&q=" + encodeURIComponent(text);
       try {
         const ctrl = new AbortController();
         const timer = setTimeout(() => ctrl.abort(), 9000);
@@ -200,7 +205,7 @@
         if (!r.ok) return null;
         const data = await r.json();
         const out = (data[0] || []).map(s => s[0]).join("");
-        const src = (data[2] || "").slice(0, 2);
+        const src = String(data[2] || "").toLowerCase().slice(0, 2);
         if (!out) return null;
         return { text: out, src };
       } catch (_) { return null; }
@@ -210,14 +215,18 @@
       const ck = tgt + "||" + text;
       if (cache.has(ck)) return cache.get(ck);
       let out = null;
-      if (TR_MODE === "device") {
-        const t = await getTranslator(pageSrcLang, tgt);
-        if (t) { try { out = await t.translate(text); } catch (_) { out = null; } }
-        if (!out && HAS_SERVER) { const r = await serverTranslate(text, tgt); if (r) out = r.text; }
-      } else if (TR_MODE === "server") {
+
+      // Prefer Google's online engine for quality and use the smaller local
+      // browser model only as an offline/failure fallback.
+      if (HAS_SERVER) {
         const r = await serverTranslate(text, tgt);
         if (r) out = r.text;
       }
+      if (!out && HAS_DEVICE) {
+        const t = await getTranslator(pageSrcLang, tgt);
+        if (t) { try { out = await t.translate(text); } catch (_) { out = null; } }
+      }
+
       cacheSet(ck, out || null);
       return out || null;
     }
@@ -718,7 +727,7 @@
 
   // Bump this whenever auth.js / chat.js / profile-view.js change, so browsers
   // and the GitHub Pages CDN fetch the new version instead of a cached copy.
-  var MF_ASSET_VER = '60';
+  var MF_ASSET_VER = '61';
 
   // ─────────────────────────────────────────────────────────────
   //  Chat + moderation config, shared by chat.js and admin-moderation.js.

@@ -461,7 +461,7 @@
                       <option value="es">Español</option>
                       <option value="de">Deutsch</option>
                       <option value="fr">Français</option>
-                      <option value="pt">Português</option>
+                      <option value="pt">Português (Brasil)</option>
                       <option value="it">Italiano</option>
                       <option value="nl">Nederlands</option>
                       <option value="ja">日本語</option>
@@ -662,7 +662,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/shared.js?v=60"></script>
+  <script src="/shared.js?v=61"></script>
 
   <script>window._firefliesLoaded = true;</script>
 
@@ -701,7 +701,7 @@
     // Two tiers: 1) on-device Translator API (Chromium desktop) — private/local;
     // 2) a free public endpoint fallback (Opera/Firefox/Safari/mobile) — sends
     // text over the network. "n/a" only when neither is available.
-    const LANG_NAMES = { en:"English", es:"Spanish", de:"German", fr:"French", pt:"Portuguese",
+    const LANG_NAMES = { en:"English", es:"Spanish", de:"German", fr:"French", pt:"Português (Brasil)",
                          it:"Italian", nl:"Dutch", ja:"Japanese", ko:"Korean", zh:"Chinese", ru:"Russian" };
     function guessLang(){
       const l = (navigator.language || "en").slice(0,2).toLowerCase();
@@ -714,7 +714,7 @@
     }
     const HAS_DEVICE = deviceTranslationSupported();
     const HAS_SERVER = /^https?:$/.test(location.protocol);
-    const TRANSLATE_MODE = HAS_DEVICE ? "device" : (HAS_SERVER ? "server" : "none");
+    const TRANSLATE_MODE = HAS_SERVER ? "server" : (HAS_DEVICE ? "device" : "none");
     const TRANSLATE_OK = TRANSLATE_MODE !== "none";
 
     async function getTranslator(src, tgt){
@@ -743,9 +743,10 @@
       } catch(_){}
       return null;
     }
+    function onlineTargetLang(tgt){ return tgt === "pt" ? "pt-BR" : tgt; }
     async function serverTranslate(text, tgt){
       const url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl="
-        + encodeURIComponent(tgt) + "&dt=t&q=" + encodeURIComponent(text);
+        + encodeURIComponent(onlineTargetLang(tgt)) + "&dt=t&ie=UTF-8&oe=UTF-8&q=" + encodeURIComponent(text);
       try {
         const ctrl = new AbortController();
         const timer = setTimeout(() => ctrl.abort(), 8000);
@@ -754,7 +755,7 @@
         if (!r.ok) return null;
         const data = await r.json();
         const out = (data[0] || []).map(seg => seg[0]).join("");
-        const src = (data[2] || "").slice(0,2);
+        const src = String(data[2] || "").toLowerCase().slice(0,2);
         if (!out) return null;
         return { text: out, src };
       } catch(_){ return null; }
@@ -763,22 +764,22 @@
       const cacheKey = tgt + "||" + text;
       if (translationCache.has(cacheKey)) return translationCache.get(cacheKey);
       let out = null;
-      if (TRANSLATE_MODE === "device"){
+
+      // Prefer the online Google engine for quality; keep the local browser
+      // translator as an offline/failure fallback.
+      if (HAS_SERVER){
+        const r = await serverTranslate(text, tgt);
+        if (r){
+          if (r.src && r.src === tgt){ translationCache.set(cacheKey, null); return null; }
+          out = r.text;
+        }
+      }
+      if (!out && HAS_DEVICE){
         const src = await detectLang(text);
         if (src && src === tgt){ translationCache.set(cacheKey, null); return null; }
         if (src){
           const t = await getTranslator(src, tgt);
           if (t){ try { out = await t.translate(text); } catch(_){ out = null; } }
-        }
-        if (!out && HAS_SERVER){
-          const r = await serverTranslate(text, tgt);
-          if (r){ if (r.src && r.src === tgt){ translationCache.set(cacheKey, null); return null; } out = r.text; }
-        }
-      } else if (TRANSLATE_MODE === "server"){
-        const r = await serverTranslate(text, tgt);
-        if (r){
-          if (r.src && r.src === tgt){ translationCache.set(cacheKey, null); return null; }
-          out = r.text;
         }
       }
       translationCache.set(cacheKey, out || null);
@@ -1534,9 +1535,9 @@
       }
       btn.textContent = "🌐 " + (qTranslateOn ? (LANG_NAMES[qTargetLang] || qTargetLang) : "Off");
       btn.classList.toggle("active", qTranslateOn);
-      btn.title = TRANSLATE_MODE === "device"
-        ? "On-device translation (private, runs locally)"
-        : "Translation via a free online service (text is sent to it to translate)";
+      btn.title = TRANSLATE_MODE === "server"
+        ? "Higher-quality online translation (text is sent to Google to translate)"
+        : "On-device translation (private, runs locally)";
       sel.hidden = !qTranslateOn;
       sel.value = qTargetLang;
     }
@@ -1547,7 +1548,7 @@
         if (!TRANSLATE_OK){ toast("Translation isn't available in this browser"); return; }
         qTranslateOn = !qTranslateOn;
         try { localStorage.setItem("tg_q_translate_on", qTranslateOn ? "1":"0"); } catch(_){}
-        if (qTranslateOn && TRANSLATE_MODE === "server") toast("Translating via a free online service 🌐");
+        if (qTranslateOn && TRANSLATE_MODE === "server") toast("Using higher-quality online translation 🌐");
         updateQTranslateUI();
         renderQuestionTranslation();
         applyAnswerTranslations();
