@@ -1072,7 +1072,19 @@
   let translateOn = false, targetLang = "en";
   const translationCache = new Map(), translatorPool = new Map();
   function guessLang() { const l = (navigator.language || "en").slice(0,2).toLowerCase(); return LANG_NAMES[l] ? l : "en"; }
-  try { translateOn = localStorage.getItem("mf_tr_on") === "1"; targetLang = localStorage.getItem("mf_tr_lang") || guessLang(); } catch (_) { targetLang = guessLang(); }
+  try {
+    const savedOn = localStorage.getItem("mf_tr_on");
+    targetLang = localStorage.getItem("mf_tr_lang") || guessLang();
+    // Older installs may already have a non-English site language saved but
+    // no chat toggle yet. Treat that as translation-on. This also avoids an
+    // Opera Mobile race where the site-language event can fire before this
+    // lazily-loaded script has attached its listener. An explicit saved "0"
+    // still wins, so Settings can intentionally leave chat untranslated.
+    translateOn = savedOn === "1" || (savedOn === null && targetLang !== "en");
+  } catch (_) {
+    targetLang = guessLang();
+    translateOn = targetLang !== "en";
+  }
   const HAS_DEVICE = (typeof self !== "undefined") && ("Translator" in self) && ("LanguageDetector" in self);
   const HAS_SERVER = /^https?:$/.test(location.protocol);
   const TR_MODE = HAS_SERVER ? "server" : (HAS_DEVICE ? "device" : "none");

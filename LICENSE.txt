@@ -1,0 +1,28 @@
+MAYFLOWER STUDIOS PROPRIETARY CONTENT LICENSE
+
+Copyright © 2026 Mayflower Studios. All rights reserved.
+
+Unless a specific file, project, dependency, or third-party component states a
+different license, the original Mayflower Studios source code, compiled software,
+website code, artwork, photographs, graphics, stories, text, documentation,
+designs, and other original creative assets are proprietary and are not released
+under an open-source or public-domain license.
+
+Permission is granted only to access the public website and to download and use
+Mayflower Studios software for its intended personal use under the Terms of Use
+and Software License at:
+
+https://mayflowerstudios.net/tos.html
+
+No permission is granted to sell, sublicense, mirror, re-upload, redistribute,
+republish, bundle, extract assets from, or claim authorship of Mayflower Studios
+works, or to create redistributable copies or substantially copied competing
+products, except where Mayflower Studios gives prior written permission or
+applicable law expressly provides otherwise.
+
+Third-party components and user-submitted content remain subject to their own
+licenses and owners' rights. This notice does not claim ownership of third-party
+material.
+
+Licensing and permission requests: contact@mayflowerstudios.net
+Copyright information: https://mayflowerstudios.net/copyright.html

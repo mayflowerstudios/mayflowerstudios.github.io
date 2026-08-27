@@ -425,8 +425,15 @@
       if (lang === targetLang) return;
       const prev = targetLang;
       targetLang = lang;
-      try { localStorage.setItem("mf_tr_lang", lang); } catch (_) {}
-      // keep chat translator in sync if it reads the same key live
+      try {
+        localStorage.setItem("mf_tr_lang", lang);
+        // The header language picker also controls chat translation. Persist
+        // that state instead of relying only on the mf-lang-change event: on
+        // some mobile browsers (notably Opera Mobile) chat.js is loaded during
+        // an idle callback and can miss the event entirely.
+        localStorage.setItem("mf_tr_on", lang === "en" ? "0" : "1");
+      } catch (_) {}
+      // keep chat translator in sync even when it loaded after the picker
       if (lang === "en") {
         revertAll();
         document.documentElement.lang = pageSrcLang;
@@ -538,8 +545,9 @@
           <a href="/settings.html">Settings</a>
           <a href="/privacy.html">Privacy</a>
           <a href="/tos.html">Terms</a>
+          <a href="/copyright.html">Copyright &amp; IP</a>
         </div>
-        <p class="footer-copy">© <span class="footer-year"></span> Mayflower Studios — made with <span class="footer-flower" role="button" tabindex="-1" aria-label="🌸" title="🌸" data-no-translate style="cursor:default;display:inline-block;user-select:none;">🌸</span> and fireflies</p>
+        <p class="footer-copy">© <span class="footer-year"></span> Mayflower Studios. All rights reserved. — made with <span class="footer-flower" role="button" tabindex="-1" aria-label="🌸" title="🌸" data-no-translate style="cursor:default;display:inline-block;user-select:none;">🌸</span> and fireflies</p>
       </footer>`;
   }
 
@@ -727,7 +735,7 @@
 
   // Bump this whenever auth.js / chat.js / profile-view.js change, so browsers
   // and the GitHub Pages CDN fetch the new version instead of a cached copy.
-  var MF_ASSET_VER = '61';
+  var MF_ASSET_VER = '63';
 
   // ─────────────────────────────────────────────────────────────
   //  Chat + moderation config, shared by chat.js and admin-moderation.js.
