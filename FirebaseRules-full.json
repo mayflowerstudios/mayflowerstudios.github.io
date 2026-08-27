@@ -1444,9 +1444,8 @@
         },
         "tags": {
           "$i": {
-            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 32"
-          },
-          ".validate": "!newData.exists() || newData.numChildren() <= 12"
+            ".validate": "$i.matches(/^([0-9]|1[01])$/) && newData.isString() && newData.val().length > 0 && newData.val().length <= 32"
+          }
         },
         "world": {
           ".validate": "newData.hasChildren(['url','path','name','size'])",
@@ -1468,7 +1467,7 @@
         },
         "images": {
           "$i": {
-            ".validate": "newData.hasChildren(['url','path','name','size'])",
+            ".validate": "$i.matches(/^([0-9]|1[0-9])$/) && newData.hasChildren(['url','path','name','size'])",
             "url": {
               ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 1600 && newData.val().beginsWith('https://')"
             },
@@ -1484,8 +1483,7 @@
             "$other": {
               ".validate": false
             }
-          },
-          ".validate": "!newData.exists() || newData.numChildren() <= 20"
+          }
         },
         "$other": {
           ".validate": false

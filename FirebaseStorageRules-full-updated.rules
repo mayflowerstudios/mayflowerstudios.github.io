@@ -1,0 +1,83 @@
+rules_version = '2';
+// Firebase Storage rules — Mayflower Studios
+// Publish in Firebase Console → Storage → Rules.
+//
+// Upload areas:
+//   uploads/{roomId}/...                         — Watch Together shared video/image uploads (open).
+//   avatars/{uid}/...                           — Profile photos: world-readable, owner-writable, images only, <5 MB.
+//   banners/{uid}/...                           — Profile banners: world-readable, owner-writable, images only, <8 MB.
+//   chatmedia/{uid}/...                         — Universal chat pictures: world-readable, owner-writable, images only, <12 MB.
+//   world-library/{uid}/{worldId}/images/...    — 3DX World Library screenshots: world-readable, uploader-writable, images only, <=15 MB.
+//   world-library/{uid}/{worldId}/world/...     — 3DX .world files: world-readable, uploader-writable, <=250 MB.
+// Everything else is denied.
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Watch Together — shared video/image uploads per room
+    match /uploads/{roomId}/{fileName} {
+      allow read: if true;
+      allow write: if request.resource == null
+                   || (
+                        (request.resource.contentType.matches('video/.*')
+                         && request.resource.size < 2 * 1024 * 1024 * 1024)
+                        || (request.resource.contentType.matches('image/.*')
+                            && request.resource.size < 15 * 1024 * 1024)
+                      );
+      allow delete: if true;
+    }
+
+    // Profile avatars — world-readable, owner-writable, images only, <5 MB
+    match /avatars/{uid}/{file} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.auth.uid == uid
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    // Profile banners — world-readable, owner-writable, images only, <8 MB
+    match /banners/{uid}/{file} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.auth.uid == uid
+                   && request.resource.size < 8 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    // Universal chat pictures — your own folder, images only, <12 MB
+    match /chatmedia/{uid}/{file} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.auth.uid == uid
+                   && request.resource.size < 12 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    // 3DX World Library screenshots — public downloads, uploader-owned writes
+    match /world-library/{userId}/{worldId}/images/{fileName} {
+      allow read: if true;
+      allow create, update: if request.auth != null
+                            && request.auth.uid == userId
+                            && request.resource.size <= 15 * 1024 * 1024
+                            && request.resource.contentType.matches('image/(jpeg|png|webp|gif)');
+      allow delete: if request.auth != null
+                    && request.auth.uid == userId;
+    }
+
+    // 3DX World Library .world files — public downloads, uploader-owned writes
+    match /world-library/{userId}/{worldId}/world/{fileName} {
+      allow read: if true;
+      allow create, update: if request.auth != null
+                            && request.auth.uid == userId
+                            && fileName.matches('.*[.][wW][oO][rR][lL][dD]$')
+                            && request.resource.size <= 250 * 1024 * 1024
+                            && request.resource.contentType == 'application/octet-stream';
+      allow delete: if request.auth != null
+                    && request.auth.uid == userId;
+    }
+
+    // Everything else: deny by default.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
