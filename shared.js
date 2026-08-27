@@ -509,6 +509,7 @@
       { href: '/together.html', label: 'Together', key: 'together' },
       { href: '/sakari.html',   label: 'Stories',  key: 'stories'  },
       { href: '/projects.html', label: 'Projects', key: 'projects' },
+      { href: '/worlds.html',   label: 'Worlds',   key: 'worlds'   },
       { href: '/radio/',        label: 'Radio',    key: 'radio'    },
       { href: '/contact.html',  label: 'Contact',  key: 'contact'  },
     ];
@@ -540,6 +541,7 @@
           <a href="/together.html">Together</a>
           <a href="/sakari.html">Stories</a>
           <a href="/projects.html">Projects</a>
+          <a href="/worlds.html">3DX Worlds</a>
           <a href="/contact.html">Contact</a>
           <a href="https://ko-fi.com/mayflowerstudiosteam" target="_blank" rel="noopener">Support ↗</a>
           <a href="/settings.html">Settings</a>
@@ -735,7 +737,7 @@
 
   // Bump this whenever auth.js / chat.js / profile-view.js change, so browsers
   // and the GitHub Pages CDN fetch the new version instead of a cached copy.
-  var MF_ASSET_VER = '63';
+  var MF_ASSET_VER = '64';
 
   // ─────────────────────────────────────────────────────────────
   //  Chat + moderation config, shared by chat.js and admin-moderation.js.

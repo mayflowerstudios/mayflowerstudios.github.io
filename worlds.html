@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3DX World Library • Mayflower Studios</title>
+  <link rel="stylesheet" href="/style.css?v=61" />
+  <link rel="stylesheet" href="/worlds.css?v=1" />
+  <meta name="description" content="Download 3DXChat world files shared by Mayflower Studios, with screenshots, descriptions, and easy .world downloads." />
+  <meta property="og:title" content="3DX World Library • Mayflower Studios" />
+  <meta property="og:description" content="Browse downloadable 3DXChat worlds from Mayflower Studios." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://mayflowerstudios.net/worlds.html" />
+  <link rel="canonical" href="https://mayflowerstudios.net/worlds.html" />
+</head>
+<body data-nav="worlds">
+  <div class="wrap">
+    <div id="site-nav"></div>
+
+    <main class="worldPage" id="worldPage">
+      <section class="hero worldHero reveal">
+        <div>
+          <p class="kicker">Mayflower Studios • 3DXChat</p>
+          <h1>🏡 World Library</h1>
+          <p class="muted">Worlds you can actually look through before downloading — screenshots, descriptions, details, and the <code>.world</code> file all together.</p>
+        </div>
+        <div class="worldHeroNote">
+          <span class="worldHeroIcon">📦</span>
+          <div><strong>One library, no separate pages</strong><span>Every new world is added from the admin manager and appears here automatically.</span></div>
+        </div>
+      </section>
+
+      <section class="worldToolbar card" aria-label="World library controls">
+        <label class="worldSearch"><span aria-hidden="true">⌕</span><input id="worldSearch" type="search" placeholder="Search worlds, descriptions or tags…" autocomplete="off" /></label>
+        <select id="worldSort" aria-label="Sort worlds">
+          <option value="newest">Newest first</option>
+          <option value="az">A–Z</option>
+          <option value="featured">Featured first</option>
+        </select>
+        <span id="worldCount" class="worldCount"></span>
+      </section>
+
+      <div id="worldNotice" class="worldNotice" hidden></div>
+      <section id="worldGrid" class="worldGrid" aria-live="polite"><div class="worldLoading">Loading worlds…</div></section>
+
+      <section class="card worldDisclaimer">
+        <strong>About these files</strong>
+        <p>These downloads are shared for use in 3DXChat. Unless a world says otherwise, original Mayflower Studios work remains protected by copyright and may not be re-uploaded, redistributed, sold, or claimed as someone else’s work without permission. 3DXChat and any third-party names or assets remain the property of their respective owners. Mayflower Studios is not affiliated with or endorsed by 3DXChat.</p>
+      </section>
+    </main>
+
+    <div id="site-footer"></div>
+  </div>
+
+  <div id="worldLightbox" class="worldLightbox" hidden role="dialog" aria-modal="true" aria-label="Screenshot viewer">
+    <button class="worldLightboxClose" type="button" aria-label="Close">×</button>
+    <button class="worldLightboxPrev" type="button" aria-label="Previous screenshot">‹</button>
+    <img id="worldLightboxImage" alt="" />
+    <button class="worldLightboxNext" type="button" aria-label="Next screenshot">›</button>
+    <div id="worldLightboxCaption" class="worldLightboxCaption"></div>
+  </div>
+
+  <script src="/shared.js?v=64"></script>
+  <script src="/worlds.js?v=1"></script>
+</body>
+</html>

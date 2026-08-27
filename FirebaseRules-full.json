@@ -1406,6 +1406,94 @@
           ".validate": "!newData.exists() || (newData.isNumber() && newData.val() >= now - 300000 && newData.val() <= now + 300000)"
         }
       }
+    },
+    "worldLibrary": {
+      ".read": "((auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('owner').exists() && root.child('owner').val().toLowerCase() === root.child('users').child(auth.uid).child('username').val().toLowerCase()) || (auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('admins').child(root.child('users').child(auth.uid).child('username').val().toLowerCase()).val() === true)) || (query.orderByChild == 'published' && query.equalTo == true)",
+      "$slug": {
+        ".write": "((auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('owner').exists() && root.child('owner').val().toLowerCase() === root.child('users').child(auth.uid).child('username').val().toLowerCase()) || (auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('admins').child(root.child('users').child(auth.uid).child('username').val().toLowerCase()).val() === true))",
+        ".validate": "!newData.exists() || (newData.hasChildren(['title','creator','description','featured','published','world','createdAt','updatedAt','createdByUid','createdByName']) && newData.child('updatedAt').val() >= now - 300000 && newData.child('updatedAt').val() <= now + 300000)",
+        "title": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 80"
+        },
+        "creator": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
+        },
+        "description": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 4000"
+        },
+        "version": {
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "featured": {
+          ".validate": "newData.isBoolean()"
+        },
+        "published": {
+          ".validate": "newData.isBoolean()"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber() && ((!data.exists() && newData.val() >= now - 300000 && newData.val() <= now + 300000) || (data.exists() && newData.val() === data.val()))"
+        },
+        "updatedAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "createdByUid": {
+          ".validate": "newData.isString() && ((!data.exists() && newData.val() === auth.uid) || (data.exists() && newData.val() === data.val()))"
+        },
+        "createdByName": {
+          ".validate": "newData.isString() && newData.val().length <= 60"
+        },
+        "tags": {
+          "$i": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 32"
+          },
+          ".validate": "!newData.exists() || newData.numChildren() <= 12"
+        },
+        "world": {
+          ".validate": "newData.hasChildren(['url','path','name','size'])",
+          "url": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 1600 && newData.val().beginsWith('https://')"
+          },
+          "path": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 300 && newData.val().beginsWith('world-library/')"
+          },
+          "name": {
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 120 && newData.val().matches(/.*[.][wW][oO][rR][lL][dD]$/)"
+          },
+          "size": {
+            ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= 262144000"
+          },
+          "$other": {
+            ".validate": false
+          }
+        },
+        "images": {
+          "$i": {
+            ".validate": "newData.hasChildren(['url','path','name','size'])",
+            "url": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 1600 && newData.val().beginsWith('https://')"
+            },
+            "path": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 300 && newData.val().beginsWith('world-library/')"
+            },
+            "name": {
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 120"
+            },
+            "size": {
+              ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= 15728640"
+            },
+            "$other": {
+              ".validate": false
+            }
+          },
+          ".validate": "!newData.exists() || newData.numChildren() <= 20"
+        },
+        "$other": {
+          ".validate": false
+        }
+      },
+      ".indexOn": [
+        "published"
+      ]
     }
   }
 }
