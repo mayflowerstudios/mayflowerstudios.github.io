@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0b1120" />
   <title>Mayflower Studios</title>
-  <meta name="description" content="A small indie studio making cozy, thoughtful little things — Mayflower Idle RPG, watch parties, shared games, interactive stories, Farming Simulator and Minecraft mods, and BloomBot, all with a bit of enchanted-forest magic." />
+  <meta name="description" content="Mayflower Studios creates 3DXChat worlds, small indie software, shared online experiences, interactive stories, mods, and useful little tools." />
   <meta property="og:title" content="Mayflower Studios" />
-  <meta property="og:description" content="A small indie studio making cozy things — Mayflower Idle RPG, watch parties, shared games, interactive stories, Farming Simulator and Minecraft mods, and BloomBot." />
+  <meta property="og:description" content="3DXChat worlds, indie software, shared experiences, stories, mods, and small tools made with care." />
   <meta property="og:url" content="https://mayflowerstudios.net/" />
   <link rel="canonical" href="https://mayflowerstudios.net/" />
   <meta property="og:type" content="website" />
@@ -18,235 +18,276 @@
   <link rel="stylesheet" href="/style.css?v=61" />
 
   <style>
-    /* ───────────── Home-only flourishes (structure comes from style.css) ───────────── */
+    /* Home page — intentionally simple. The rest of the site does the explaining. */
+    .home-hero {
+      position: relative;
+      padding: clamp(64px, 9vw, 112px) 0 clamp(46px, 7vw, 82px);
+      max-width: 950px;
+    }
+    .home-hero::before {
+      content: "";
+      position: absolute;
+      width: min(620px, 80vw);
+      height: 330px;
+      left: -120px;
+      top: 5px;
+      z-index: -1;
+      pointer-events: none;
+      background: radial-gradient(circle, rgba(249,168,212,.15), rgba(196,181,253,.07) 42%, transparent 72%);
+      filter: blur(14px);
+    }
+    .home-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+      color: var(--rose);
+      font-size: 12px;
+      letter-spacing: .55px;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .home-kicker::before {
+      content: "";
+      width: 26px;
+      height: 1px;
+      background: linear-gradient(90deg, var(--rose), transparent);
+    }
+    .home-title {
+      font-family: var(--font-d);
+      font-size: clamp(58px, 9vw, 108px);
+      line-height: .94;
+      letter-spacing: -2px;
+      margin: 0;
+      max-width: 9ch;
+    }
+    .home-title span {
+      display: block;
+      font-style: italic;
+      background: linear-gradient(110deg, var(--rose), var(--violet) 55%, var(--gold));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .home-lede {
+      max-width: 700px;
+      margin: 26px 0 0;
+      color: var(--text-2);
+      font-size: clamp(16px, 2vw, 19px);
+      line-height: 1.75;
+    }
+    .home-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+    .home-note {
+      margin-top: 18px;
+      color: var(--text-3);
+      font-size: 12px;
+    }
 
-    /* Aurora wash behind the hero — soft, slow, decorative */
-    .home-aurora {
-      position: absolute; inset: -10% -10% auto -10%; height: 560px; z-index: 0;
-      pointer-events: none; overflow: hidden; filter: blur(60px); opacity: .55;
+    .home-section {
+      padding: clamp(42px, 6vw, 72px) 0;
+      border-top: 1px solid rgba(255,255,255,.055);
     }
-    .home-aurora span {
-      position: absolute; display: block; border-radius: 50%;
-      background: radial-gradient(circle at 30% 30%, var(--c1), transparent 70%);
-      animation: auroraDrift var(--d) var(--ease) infinite alternate;
+    .home-section:first-of-type { border-top: 0; }
+    .home-section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 24px;
     }
-    .home-aurora .a1 { width: 420px; height: 420px; left: 4%;  top: -40px; --c1: rgba(249,168,212,.45); --d: 14s; }
-    .home-aurora .a2 { width: 380px; height: 380px; right: 6%; top: 20px;  --c1: rgba(196,181,253,.42); --d: 18s; animation-delay: -4s; }
-    .home-aurora .a3 { width: 300px; height: 300px; left: 42%; top: 120px; --c1: rgba(110,231,183,.26); --d: 22s; animation-delay: -8s; }
-    @keyframes auroraDrift {
-      from { transform: translate3d(0,0,0) scale(1); }
-      to   { transform: translate3d(28px,26px,0) scale(1.12); }
+    .home-section-head > div { max-width: 680px; }
+    .home-section-label {
+      color: var(--rose);
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      margin-bottom: 7px;
     }
-
-    .home-hero { position: relative; z-index: 1; padding-top: 30px; }
-    .home-hero .page-title { font-size: clamp(54px, 9vw, 108px); line-height: 1.0; letter-spacing: -1px; }
-    .home-hero .page-title em {
-      display: block; font-style: italic;
-      background: linear-gradient(110deg, var(--rose) 0%, var(--violet) 45%, var(--gold) 70%, var(--rose) 100%);
-      background-size: 220% auto;
-      -webkit-background-clip: text; background-clip: text; color: transparent;
-      animation: titleSheen 9s linear infinite;
+    .home-section-title {
+      font-size: clamp(30px, 4vw, 43px);
+      margin: 0;
+      line-height: 1.08;
     }
-    @keyframes titleSheen { to { background-position: 220% center; } }
-
-    .home-eyebrow {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 6px 15px; border-radius: 999px; align-self: flex-start;
-      border: 1px solid rgba(249,168,212,.24); background: rgba(249,168,212,.08);
-      font-size: 12px; color: var(--rose); letter-spacing: .4px;
-      backdrop-filter: blur(6px);
-    }
-    .home-eyebrow .dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: var(--emerald); box-shadow: 0 0 0 0 rgba(110,231,183,.5);
-      animation: livePulse 2.4s var(--ease) infinite;
-    }
-    @keyframes livePulse {
-      0%   { box-shadow: 0 0 0 0 rgba(110,231,183,.55); }
-      70%  { box-shadow: 0 0 0 7px rgba(110,231,183,0); }
-      100% { box-shadow: 0 0 0 0 rgba(110,231,183,0); }
+    .home-section-copy {
+      margin: 8px 0 0;
+      max-width: 62ch;
+      color: var(--text-2);
+      font-size: 14px;
+      line-height: 1.7;
     }
 
-    /* The three things — large, calm cards */
-    .make-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; }
-    @media (max-width: 880px) { .make-grid { grid-template-columns: 1fr 1fr; } }
-    @media (max-width: 560px) { .make-grid { grid-template-columns: 1fr; } }
-    .make-card {
-      display: flex; flex-direction: column; gap: 14px;
-      padding: 30px 28px 26px; min-height: 280px;
-      transition: transform 240ms var(--ease), border-color 240ms var(--ease), box-shadow 240ms var(--ease);
+    /* Featured worlds stay visually special, but without turning the page into a dashboard. */
+    .home-worlds-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
     }
-    .make-card:hover { transform: translateY(-5px); }
-    .make-card .make-icon {
-      font-size: 32px; line-height: 1; width: 58px; height: 58px;
-      display: grid; place-items: center; border-radius: 16px;
-      background: rgba(255,255,255,.04); border: 1px solid var(--border);
-      transition: transform 240ms var(--ease);
-    }
-    .make-card:hover .make-icon { transform: scale(1.08) rotate(-4deg); }
-    .make-card h3 { font-size: 26px; }
-    .make-card p { flex: 1; font-size: 14px; }
-    .make-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-    .make-tag {
-      font-size: 11px; color: var(--text-3);
-      padding: 4px 10px; border-radius: 999px;
-      border: 1px solid var(--border); background: rgba(255,255,255,.03);
-    }
-    .make-card .btn-pri { align-self: flex-start; margin-top: 4px; }
-
-
-
-    /* Featured 3DX worlds — filled automatically from the World Library */
-    .home-worlds { position: relative; }
-    .home-worlds-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; }
     .home-world-card {
-      position: relative; overflow: hidden; min-height: 100%; padding: 0;
-      border-color: rgba(251,191,36,.22);
-      background: linear-gradient(180deg,rgba(255,255,255,.052),rgba(255,255,255,.024));
-      transition: transform 220ms var(--ease), border-color 220ms var(--ease), box-shadow 220ms var(--ease);
+      position: relative;
+      overflow: hidden;
+      padding: 0;
+      border-color: rgba(251,191,36,.2);
+      background: linear-gradient(180deg,rgba(251,191,36,.035),rgba(255,255,255,.018));
+      transition: transform 180ms var(--ease), border-color 180ms var(--ease), box-shadow 180ms var(--ease);
     }
-    .home-world-card:hover { transform: translateY(-5px); border-color: rgba(251,191,36,.48); box-shadow: 0 18px 48px rgba(0,0,0,.2); }
-    .home-world-cover { display:block; height: 220px; overflow:hidden; background:rgba(255,255,255,.03); }
-    .home-world-cover img { width:100%; height:100%; object-fit:cover; display:block; transition:transform 300ms var(--ease); }
-    .home-world-card:hover .home-world-cover img { transform:scale(1.035); }
-    .home-world-empty { height:100%; display:grid; place-items:center; font-size:48px; background:radial-gradient(circle at 25% 20%,rgba(251,191,36,.13),transparent 38%),radial-gradient(circle at 80% 80%,rgba(249,168,212,.14),transparent 42%); }
-    .home-world-body { padding:17px 18px 19px; }
-    .home-world-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
-    .home-world-top h3 { font-size:21px; line-height:1.2; margin:0; }
-    .home-world-featured { flex:0 0 auto; font-size:10px; font-weight:750; color:#fde68a; border:1px solid rgba(251,191,36,.3); background:rgba(251,191,36,.09); border-radius:999px; padding:3px 7px; }
-    .home-world-by { font-size:11px; color:var(--text-3); margin-top:4px; }
-    .home-world-price { display:inline-flex; margin-top:9px; font-size:11px; font-weight:750; padding:4px 8px; border-radius:999px; border:1px solid rgba(251,191,36,.28); color:#fde68a; background:rgba(251,191,36,.065); }
-    .home-world-price.free { border-color:rgba(134,239,172,.24); color:#bbf7d0; background:rgba(134,239,172,.055); }
-    .home-world-desc { color:var(--text-2); font-size:13px; line-height:1.55; margin:11px 0 15px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:40px; }
-    .home-world-actions { display:flex; gap:8px; flex-wrap:wrap; }
-    .home-world-actions .btn-ghost { font-size:12px; }
-    @media (max-width:900px){ .home-worlds-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
-    @media (max-width:620px){ .home-worlds-grid{grid-template-columns:1fr;} .home-world-cover{height:230px;} }
+    .home-world-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(251,191,36,.4);
+      box-shadow: 0 18px 44px rgba(0,0,0,.2);
+    }
+    .home-world-cover {
+      display: block;
+      height: 215px;
+      overflow: hidden;
+      background: rgba(255,255,255,.025);
+    }
+    .home-world-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 260ms var(--ease);
+    }
+    .home-world-card:hover .home-world-cover img { transform: scale(1.025); }
+    .home-world-empty {
+      height: 100%;
+      display: grid;
+      place-items: center;
+      font-size: 46px;
+      background: radial-gradient(circle at 25% 20%,rgba(251,191,36,.11),transparent 38%),radial-gradient(circle at 80% 80%,rgba(249,168,212,.12),transparent 42%);
+    }
+    .home-world-body { padding: 17px 18px 19px; }
+    .home-world-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .home-world-top h3 { font-size: 21px; line-height: 1.2; margin: 0; }
+    .home-world-featured {
+      flex: 0 0 auto;
+      font-size: 10px;
+      font-weight: 750;
+      color: #fde68a;
+      border: 1px solid rgba(251,191,36,.28);
+      background: rgba(251,191,36,.07);
+      border-radius: 999px;
+      padding: 3px 7px;
+    }
+    .home-world-by { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+    .home-world-price {
+      display: inline-flex;
+      margin-top: 9px;
+      font-size: 11px;
+      font-weight: 750;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(251,191,36,.25);
+      color: #fde68a;
+      background: rgba(251,191,36,.055);
+    }
+    .home-world-price.free { border-color: rgba(134,239,172,.22); color: #bbf7d0; background: rgba(134,239,172,.05); }
+    .home-world-desc {
+      color: var(--text-2);
+      font-size: 13px;
+      line-height: 1.55;
+      margin: 11px 0 15px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 40px;
+    }
+    .home-world-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .home-world-actions .btn-ghost { font-size: 12px; }
 
-        /* Featured radio section */
-    .radio-feature {
-      display: grid; grid-template-columns: 220px 1fr; gap: 30px; align-items: center;
-      padding: 34px 34px;
+    /* Four clear destinations instead of a wall of project panels. */
+    .home-destinations {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 12px;
     }
-    @media (max-width: 760px) {
-      .radio-feature { grid-template-columns: 1fr; gap: 22px; text-align: center; padding: 28px 24px; }
+    .home-destination {
+      position: relative;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 16px;
+      align-items: center;
+      min-height: 132px;
+      padding: 22px 24px;
+      text-decoration: none;
+      color: inherit;
+      border-radius: var(--r);
+      border: 1px solid var(--border);
+      background: rgba(13,18,35,.42);
+      transition: transform 170ms var(--ease), border-color 170ms var(--ease), background 170ms var(--ease);
     }
-    .rf-art { display: flex; flex-direction: column; align-items: center; gap: 14px; }
-    .rf-art img {
-      width: 168px; height: 168px; max-width: 60vw;
-      filter: drop-shadow(0 16px 34px rgba(0,0,0,.45));
-      animation: rfFloat 7s var(--ease) infinite alternate;
+    .home-destination:hover,
+    .home-destination:focus-visible {
+      transform: translateY(-3px);
+      border-color: var(--border-2);
+      background: rgba(19,25,46,.56);
     }
-    @keyframes rfFloat { from { transform: translateY(0) rotate(-1.5deg); } to { transform: translateY(-10px) rotate(1.5deg); } }
-    .rf-onair {
-      display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--emerald);
-      padding: 4px 12px; border-radius: 999px;
-      border: 1px solid rgba(110,231,183,.28); background: rgba(110,231,183,.08);
+    .home-destination-icon {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      font-size: 26px;
+      background: rgba(255,255,255,.035);
+      border: 1px solid var(--border);
     }
-    .rf-onair .dot {
-      width: 7px; height: 7px; border-radius: 50%; background: var(--emerald);
-      box-shadow: 0 0 0 0 rgba(110,231,183,.5); animation: livePulse 2.4s var(--ease) infinite;
-    }
-    .rf-kicker { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--rose); letter-spacing: .4px; margin-bottom: 8px; }
-    .rf-kicker .ver { color: var(--text-3); }
-    .rf-title { font-size: clamp(30px, 5vw, 42px); line-height: 1.05; margin-bottom: 12px; letter-spacing: -.5px; }
-    .rf-text { font-size: 15px; color: var(--text-2); line-height: 1.75; margin-bottom: 16px; max-width: 60ch; }
-    .rf-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 20px; }
-    @media (max-width: 760px) { .rf-tags, .rf-text { justify-content: center; margin-left: auto; margin-right: auto; } .rf-tags { justify-content: center; } }
-    .rf-tag {
-      font-size: 12px; color: var(--text-3); padding: 4px 11px; border-radius: 999px;
-      border: 1px solid var(--border); background: rgba(255,255,255,.03);
-    }
-    .rf-actions { display: flex; flex-wrap: wrap; gap: 10px; }
-    @media (max-width: 760px) { .rf-actions { justify-content: center; } }
+    .home-destination h3 { margin: 0 0 5px; font-size: 22px; }
+    .home-destination p { margin: 0; color: var(--text-2); font-size: 13px; line-height: 1.6; }
+    .home-destination-arrow { color: var(--text-3); font-size: 20px; transition: transform 170ms var(--ease), color 170ms var(--ease); }
+    .home-destination:hover .home-destination-arrow { transform: translateX(3px); color: var(--rose); }
 
-    /* Projects — mods & bots showcase */
-    .proj-band { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
-    @media (max-width: 820px) { .proj-band { grid-template-columns: 1fr; } }
-    .proj-col { display: flex; flex-direction: column; gap: 14px; padding: 26px 24px; }
-    .proj-col-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-    .proj-col-head h3 { font-size: 20px; }
-    .proj-col-head .pill {
-      font-size: 11px; color: var(--text-3); padding: 3px 10px; border-radius: 999px;
-      border: 1px solid var(--border); background: rgba(255,255,255,.03);
+    .home-final {
+      display: grid;
+      grid-template-columns: 1.4fr .8fr;
+      gap: 18px;
+      align-items: stretch;
     }
-    .proj-items { display: flex; flex-direction: column; gap: 8px; }
-    .proj-row {
-      display: flex; align-items: center; gap: 12px; padding: 10px 12px;
-      border-radius: var(--r-sm); border: 1px solid transparent;
-      text-decoration: none; color: inherit;
-      transition: background 160ms var(--ease), border-color 160ms var(--ease), transform 160ms var(--ease);
+    .home-about {
+      padding: 28px 30px;
+      border-radius: var(--r);
+      border: 1px solid var(--border);
+      background: rgba(13,18,35,.36);
     }
-    .proj-row:hover { background: rgba(255,255,255,.04); border-color: var(--border-2); transform: translateX(3px); }
-    .proj-row .pr-ic {
-      width: 34px; height: 34px; border-radius: 9px; object-fit: cover; flex-shrink: 0;
-      background: rgba(255,255,255,.05); border: 1px solid var(--border);
+    .home-about h2 { font-size: clamp(28px,4vw,38px); margin: 0 0 12px; }
+    .home-about p { color: var(--text-2); font-size: 14px; line-height: 1.8; margin: 0; max-width: 68ch; }
+    .home-about-links { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 20px; }
+    .home-support {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 28px;
+      border-radius: var(--r);
+      border: 1px solid rgba(249,168,212,.15);
+      background: linear-gradient(145deg,rgba(249,168,212,.055),rgba(196,181,253,.025));
     }
-    .proj-row .pr-emoji {
-      width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0; font-size: 19px;
-      display: grid; place-items: center; background: rgba(255,255,255,.05); border: 1px solid var(--border);
-    }
-    .proj-row .pr-body { min-width: 0; }
-    .proj-row .pr-name { font-size: 14px; font-weight: 600; display: block; }
-    .proj-row .pr-tag { font-size: 12px; color: var(--text-3); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .proj-row .pr-arrow { margin-left: auto; color: var(--text-3); opacity: .35; transition: opacity 160ms var(--ease), transform 160ms var(--ease); }
-    .proj-row:hover .pr-arrow,
-    .proj-row:focus-visible .pr-arrow { opacity: 1; transform: translateX(2px); }
-    .proj-col .btn-ghost { align-self: flex-start; margin-top: 2px; }
+    .home-support .emoji { font-size: 28px; margin-bottom: 12px; }
+    .home-support h3 { font-size: 23px; margin: 0 0 8px; }
+    .home-support p { color: var(--text-2); font-size: 13px; line-height: 1.7; margin: 0 0 18px; }
 
-    /* About strip */
-    .about-card { padding: 34px 30px; }
-    .about-card p { font-size: 15px; line-height: 1.85; margin-bottom: 16px; }
-    .about-card p:last-child { margin-bottom: 0; }
-    .about-card em { color: var(--rose); font-style: italic; }
-    .ethos { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 24px; }
-    @media (max-width: 640px) { .ethos { grid-template-columns: 1fr; } }
-    .ethos-item {
-      display: flex; gap: 11px; align-items: flex-start;
-      padding: 14px; border-radius: var(--r-sm);
-      background: rgba(255,255,255,.03); border: 1px solid var(--border);
-      transition: border-color 180ms var(--ease), transform 180ms var(--ease);
+    @media (max-width: 900px) {
+      .home-worlds-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .home-final { grid-template-columns: 1fr; }
     }
-    .ethos-item:hover { border-color: var(--border-2); transform: translateY(-2px); }
-    .ethos-item .ei { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
-    .ethos-item strong { display: block; font-family: var(--font-b); font-size: 13px; font-weight: 600; margin-bottom: 3px; }
-    .ethos-item span { font-size: 12px; color: var(--text-3); line-height: 1.55; }
-
-    /* Support / Ko-fi */
-    .kofi-card { display: grid; grid-template-columns: 1fr 1.15fr; gap: 0; padding: 0; overflow: hidden; }
-    @media (max-width: 720px) { .kofi-card { grid-template-columns: 1fr; } }
-    .kofi-side { padding: 30px 30px 28px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
-    .kofi-side h3 { font-size: 24px; }
-    .kofi-side p { font-size: 14px; color: var(--text-2); line-height: 1.75; flex: 1; }
-    .kofi-side .btn-pri { margin-top: 4px; }
-    .kofi-embed { min-height: 420px; background: rgba(0,0,0,.12); border-left: 1px solid var(--border); }
-    @media (max-width: 720px) { .kofi-embed { border-left: none; border-top: 1px solid var(--border); min-height: 380px; } }
-    .kofi-embed iframe { display: block; width: 100%; height: 100%; min-height: 420px; border: none; }
-    @media (max-width: 720px) { .kofi-embed iframe { min-height: 380px; } }
-    .kofi-facade {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 8px; width: 100%; height: 100%; min-height: 420px; cursor: pointer;
-      background: transparent; border: none; color: var(--text-2);
-      font-family: inherit; text-align: center; padding: 24px;
-      transition: background 200ms var(--ease), color 200ms var(--ease);
+    @media (max-width: 720px) {
+      .home-destinations { grid-template-columns: 1fr; }
+      .home-section-head { align-items: flex-start; flex-direction: column; }
     }
-    @media (max-width: 720px) { .kofi-facade { min-height: 380px; } }
-    .kofi-facade:hover, .kofi-facade:focus-visible { background: rgba(255,255,255,.03); color: var(--text); }
-    .kofi-facade-icon { font-size: 34px; line-height: 1; }
-    .kofi-facade-text { font-size: 15px; font-weight: 600; }
-    .kofi-facade-note { font-size: 11.5px; color: var(--text-3); }
-
-    /* Staggered reveal — children rise in sequence */
-    .reveal.stagger > * { opacity: 0; transform: translateY(16px); transition: opacity .55s var(--ease), transform .55s var(--ease); }
-    .reveal.stagger.visible > * { opacity: 1; transform: none; }
-    .reveal.stagger.visible > *:nth-child(2) { transition-delay: .07s; }
-    .reveal.stagger.visible > *:nth-child(3) { transition-delay: .14s; }
-    .reveal.stagger.visible > *:nth-child(4) { transition-delay: .21s; }
-
-    @media (prefers-reduced-motion: reduce) {
-      .home-aurora span, .home-hero .page-title em, .home-eyebrow .dot,
-      .card-shine { animation: none !important; }
-      .reveal.stagger > * { transition: none !important; }
+    @media (max-width: 620px) {
+      .home-hero { padding-top: 48px; }
+      .home-title { letter-spacing: -1px; }
+      .home-worlds-grid { grid-template-columns: 1fr; }
+      .home-world-cover { height: 230px; }
+      .home-destination { grid-template-columns: auto 1fr; }
+      .home-destination-arrow { display: none; }
     }
   </style>
 
@@ -260,7 +301,7 @@
         "name": "Mayflower Studios",
         "url": "https://mayflowerstudios.net/",
         "logo": "https://mayflowerstudios.net/assets/icons/favicon.png",
-        "description": "A solo indie studio making cozy web apps, desktop games, Minecraft mods, and BloomBot — small things made with care to bring people into the same moment."
+        "description": "An independent studio creating 3DXChat worlds, software, shared online experiences, stories, mods, and small tools."
       },
       {
         "@type": "WebSite",
@@ -274,355 +315,112 @@
   </script>
 </head>
 <body data-nav="home">
-
   <div class="site-page">
     <div id="site-nav"></div>
 
-    <div class="content">
-
-      <!-- ══ HERO ══ -->
-      <section class="page-hero home-hero reveal">
-        <div class="home-aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
-        <span class="home-eyebrow"><span class="dot"></span> a tiny indie studio</span>
-        <h1 class="page-title">Mayflower <em>Studios</em></h1>
-        <p class="page-sub">
-          I make small, cozy things meant to be shared — a place to <strong>watch videos in sync</strong>,
-          a little room of <strong>games to play with someone</strong>, <strong>interactive stories</strong>,
-          and now a <strong>fully idle fantasy RPG</strong> that keeps writing its chronicle while you are away.
-          Everything is built with a bit of enchanted-forest magic.
+    <main class="content">
+      <section class="home-hero reveal">
+        <div class="home-kicker">Independent studio · made with care</div>
+        <h1 class="home-title">Mayflower <span>Studios</span></h1>
+        <p class="home-lede">
+          3DXChat worlds, small software, shared online experiences, stories and mods — built to be useful, personal, and pleasant to spend time with.
         </p>
-        <div class="page-actions">
-          <a href="/mayflower-idle-rpg.html" class="btn-pri">🌙 View Idle RPG</a>
-          <a href="#make" class="btn-ghost">✦ See what I make</a>
+        <div class="home-actions">
+          <a href="/worlds.html" class="btn-pri">🏡 Browse Worlds</a>
+          <a href="/projects.html" class="btn-ghost">Explore Projects</a>
         </div>
+        <div class="home-note">No giant product wall. Pick a direction and wander from there.</div>
       </section>
 
-
-      <!-- ══ FEATURED 3DX WORLDS ══ -->
-      <section id="featured-worlds" class="sec home-worlds reveal" hidden>
-        <div class="sec-head">
-          <div class="sec-kicker">★ From the World Library</div>
-          <h2 class="sec-title">Featured 3DX worlds</h2>
-          <p class="sec-sub">A few builds I especially want to put in the spotlight right now. The lineup updates automatically when I mark a world Featured in Admin.</p>
+      <section id="featured-worlds" class="home-section reveal" hidden>
+        <div class="home-section-head">
+          <div>
+            <div class="home-section-label">Featured worlds</div>
+            <h2 class="home-section-title">A few builds worth seeing first</h2>
+            <p class="home-section-copy">Selected 3DXChat worlds from the library, with screenshots and free or paid downloads.</p>
+          </div>
+          <a class="btn-ghost sm" href="/worlds.html">View all worlds →</a>
         </div>
         <div id="homeFeaturedWorldsGrid" class="home-worlds-grid"></div>
-        <div style="margin-top:16px"><a class="btn-ghost" href="/worlds.html">Browse the full World Library →</a></div>
       </section>
 
-      <!-- ══ FEATURED: MAYFLOWER RADIO ══ -->
-      <section id="radio" class="sec reveal">
-        <article class="card card-accent-top radio-feature">
-          <div class="card-shine"></div>
-          <div class="rf-art">
-            <img src="/radio/weblogo.png" alt="Mayflower Radio logo" loading="lazy"
-                 onerror="this.onerror=null;this.src='/assets/icons/mayflowerradio.png'">
-            <span class="rf-onair" id="rfOnair" hidden><span class="dot"></span><span id="rfOnairText">on air now</span></span>
-          </div>
+      <section class="home-section reveal" id="explore">
+        <div class="home-section-head">
           <div>
-            <div class="rf-kicker">📻 Free Windows app <span class="ver">· <span id="rver">v1.x</span></span></div>
-            <h2 class="rf-title">Mayflower Radio</h2>
-            <p class="rf-text">
-              Run your own internet radio station from your PC. Build a library from YouTube,
-              Spotify or Apple Music links, press play, and share one URL that anyone can listen to —
-              in a browser, in VLC, in a game room, anywhere. It sets itself up, opens your router
-              port for you, and quietly keeps itself up to date.
+            <div class="home-section-label">Explore Mayflower</div>
+            <h2 class="home-section-title">What are you here for?</h2>
+            <p class="home-section-copy">The homepage stays simple; each section has its own space for the details.</p>
+          </div>
+        </div>
+
+        <div class="home-destinations">
+          <a class="home-destination" href="/worlds.html">
+            <span class="home-destination-icon" aria-hidden="true">🏡</span>
+            <span>
+              <h3>3DXChat Worlds</h3>
+              <p>Browse world builds, screenshots, featured releases, and your purchased downloads.</p>
+            </span>
+            <span class="home-destination-arrow" aria-hidden="true">→</span>
+          </a>
+
+          <a class="home-destination" href="/together.html">
+            <span class="home-destination-icon" aria-hidden="true">💞</span>
+            <span>
+              <h3>Together</h3>
+              <p>Shared rooms, synced watching, games, drawing, questions, and little things to do together.</p>
+            </span>
+            <span class="home-destination-arrow" aria-hidden="true">→</span>
+          </a>
+
+          <a class="home-destination" href="/sakari.html">
+            <span class="home-destination-icon" aria-hidden="true">🌸</span>
+            <span>
+              <h3>Stories</h3>
+              <p>Interactive stories and narrative projects in their own quiet corner of the site.</p>
+            </span>
+            <span class="home-destination-arrow" aria-hidden="true">→</span>
+          </a>
+
+          <a class="home-destination" href="/projects.html">
+            <span class="home-destination-icon" aria-hidden="true">🛠️</span>
+            <span>
+              <h3>Projects</h3>
+              <p>Desktop apps, games, utilities, Minecraft and Farming Simulator mods, and other builds.</p>
+            </span>
+            <span class="home-destination-arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="home-section reveal">
+        <div class="home-final">
+          <div class="home-about">
+            <div class="home-section-label">About</div>
+            <h2>Small studio. Lots of curiosity.</h2>
+            <p>
+              Mayflower Studios is an independent studio for projects that are useful, cozy, interesting, or simply fun to build. The site is organized so the homepage can stay calm while each project gets room to breathe on its own page.
             </p>
-            <div class="rf-tags">
-              <span class="rf-tag">🎵 YouTube · Spotify · Apple Music</span>
-              <span class="rf-tag">🎚️ real DJ controls</span>
-              <span class="rf-tag">🛜 sets itself up</span>
-              <span class="rf-tag">✨ self-updating</span>
+            <div class="home-about-links">
+              <a href="/radio/" class="btn-ghost sm">📻 Mayflower Radio</a>
+              <a href="/contact.html" class="btn-ghost sm">Contact</a>
+              <a href="/projects.html" class="btn-ghost sm">All projects</a>
             </div>
-            <div class="rf-actions">
-              <a href="/radio/MayflowerRadio.exe" class="btn-pri" download data-download-id="mayflower-radio">⬇️ Download for Windows</a>
-              <a href="/radio/stations.html" class="btn-ghost">📻 Stations on air</a>
-              <a href="/radio/" class="btn-ghost">Learn more →</a>
-            </div>
-            <p class="download-license-note">Mayflower Studios software is licensed, not sold. By downloading or using it, you agree to the <a href="/tos.html#software">Software License</a>.</p>
           </div>
-        </article>
-      </section>
-      <script>
-        // Live version badge
-        fetch('/radio/version.json?t=' + Date.now()).then(r => r.json())
-          .then(v => { document.getElementById('rver').textContent = 'v' + v.version; }).catch(() => {});
-        // "On air now" if any station is live in the last few minutes
-        fetch('https://watchtogether-95d7d-default-rtdb.firebaseio.com/stations.json?t=' + Date.now())
-          .then(r => r.ok ? r.json() : null)
-          .then(j => {
-            if (!j) return;
-            var now = Date.now(), live = 0;
-            Object.keys(j).forEach(function (k) {
-              var s = j[k];
-              if (s && s.lastSeen && (now - s.lastSeen) < 4 * 60 * 1000) live++;
-            });
-            if (live > 0) {
-              document.getElementById('rfOnairText').textContent =
-                live === 1 ? '1 station on air now' : live + ' stations on air now';
-              document.getElementById('rfOnair').hidden = false;
-            }
-          }).catch(function () {});
-      </script>
 
-      <!-- ══ THINGS I MAKE ══ -->
-      <section id="make" class="sec reveal">
-        <div class="sec-head">
-          <div class="sec-kicker">✦ What I make</div>
-          <h2 class="sec-title">A few little things</h2>
-          <p class="sec-sub">Small in scope, made with care — web rooms, stories, desktop tools, and cozy systems with a soft little heartbeat.</p>
-        </div>
-
-        <div class="make-grid reveal stagger">
-          <article class="card card-accent-top make-card">
-            <div class="card-shine"></div>
-            <div class="make-icon" aria-hidden="true">📻</div>
-            <h3>Mayflower Radio</h3>
-            <p>Run your own internet radio station from your PC. Add music from YouTube, Spotify or Apple Music links, press play, and share one URL anyone can listen to — with its own live now-playing page.</p>
-            <div class="make-tags">
-              <span class="make-tag">internet radio</span>
-              <span class="make-tag">Windows app</span>
-              <span class="make-tag">self-updating</span>
-            </div>
-            <a href="/radio/" class="btn-pri sm">Get the radio</a>
-          </article>
-
-          <article class="card card-accent-top make-card">
-            <div class="card-shine"></div>
-            <div class="make-icon" aria-hidden="true">🌙</div>
-            <h3>Mayflower Idle RPG</h3>
-            <p>A fully idle fantasy chronicle where heroes travel, age, meet companions, leave heirs, discover places, and submit public leaderboard records while the world keeps moving.</p>
-            <div class="make-tags">
-              <span class="make-tag">idle RPG</span>
-              <span class="make-tag">living world</span>
-              <span class="make-tag">leaderboards</span>
-            </div>
-            <a href="/mayflower-idle-rpg.html" class="btn-pri sm">Open the page</a>
-          </article>
-
-          <article class="card card-accent-top make-card">
-            <div class="card-shine"></div>
-            <div class="make-icon" aria-hidden="true">📺</div>
-            <h3>Watch Together</h3>
-            <p>Spin up a room and watch YouTube or videos perfectly in sync — with live chat, a shared queue, and playlists. Keep it public, friends-only, or private for just the people you invite.</p>
-            <div class="make-tags">
-              <span class="make-tag">synced playback</span>
-              <span class="make-tag">live chat</span>
-              <span class="make-tag">shared queue</span>
-            </div>
-            <a href="/watch-together.html" class="btn-pri sm">Open a room</a>
-          </article>
-
-          <article class="card card-accent-top make-card">
-            <div class="card-shine"></div>
-            <div class="make-icon" aria-hidden="true">💞</div>
-            <h3>Together</h3>
-            <p>A cozy hub of things to do with someone in real time — draw on a shared canvas, trade question cards, or play a quick game. Everything syncs live, in the same little room.</p>
-            <div class="make-tags">
-              <span class="make-tag">shared canvas</span>
-              <span class="make-tag">question cards</span>
-              <span class="make-tag">mini-games</span>
-            </div>
-            <a href="/together.html" class="btn-pri sm">Open a room</a>
-          </article>
-
-          <article class="card card-accent-top make-card">
-            <div class="card-shine"></div>
-            <div class="make-icon" aria-hidden="true">🌱</div>
-            <h3>Companion</h3>
-            <p>Raise a little creature that lives with your account — feed it, play with it, and watch it grow over days and weeks. Keep it to yourself, or share one with a friend and raise it together.</p>
-            <div class="make-tags">
-              <span class="make-tag">grows over time</span>
-              <span class="make-tag">solo or shared</span>
-              <span class="make-tag">always cozy</span>
-            </div>
-            <a href="/companion.html" class="btn-pri sm">Meet your companion</a>
-          </article>
-
-          <article class="card card-accent-top make-card">
-            <div class="card-shine"></div>
-            <div class="make-icon" aria-hidden="true">🌸</div>
-            <h3>Sakari Stories</h3>
-            <p>A narrative engine for intimate, honest stories. Choose-your-path games where some choices are visible but unavailable — not because of the plot, but because of what the brain allows. Free to read, always.</p>
-            <div class="make-tags">
-              <span class="make-tag">interactive fiction</span>
-              <span class="make-tag">honest</span>
-              <span class="make-tag">free</span>
-            </div>
-            <a href="/sakari.html" class="btn-pri sm">Read stories</a>
-          </article>
-        </div>
-      </section>
-
-      <!-- ══ PROJECTS, MODS & DISCORD BOTS ══ -->
-      <section id="projects" class="sec reveal">
-        <div class="sec-head">
-          <div class="sec-kicker">🌿 Beyond the web apps</div>
-          <h2 class="sec-title">Projects, mods &amp; Discord bots</h2>
-          <p class="sec-sub">A desktop RPG, your own internet radio station, an Endless Online crafting tool, Farming Simulator and Minecraft mods, and Discord bots — each linked to its own page for details, guides, and downloads.</p>
-        </div>
-
-        <div class="proj-band reveal stagger">
-          <!-- DESKTOP -->
-          <article class="card proj-col">
-            <div class="proj-col-head">
-              <h3>🌙 Desktop Apps</h3>
-              <span class="pill">Windows</span>
-            </div>
-            <div class="proj-items">
-              <a class="proj-row" href="/mayflower-idle-rpg.html">
-                <span class="pr-emoji">📖</span>
-                <span class="pr-body"><span class="pr-name">Mayflower Idle RPG</span><span class="pr-tag">An idle fantasy chronicle with offline progress</span></span>
-                <span class="pr-arrow">→</span>
-              </a>
-              <a class="proj-row" href="/radio/">
-                <img class="pr-ic" src="/assets/icons/mayflowerradio.png" alt="" loading="lazy">
-                <span class="pr-body"><span class="pr-name">Mayflower Radio</span><span class="pr-tag">Your own internet radio station</span></span>
-                <span class="pr-arrow">→</span>
-              </a>
-              <a class="proj-row" href="/craft-planner.html">
-                <img class="pr-ic" src="/assets/icons/craftplanner.png" alt="" loading="lazy">
-                <span class="pr-body"><span class="pr-name">Craft Planner</span><span class="pr-tag">Every material behind an Endless Online craft</span></span>
-                <span class="pr-arrow">→</span>
-              </a>
-            </div>
-            <a href="/radio/" class="btn-ghost sm">Get the radio →</a>
-          </article>
-
-          <!-- MODS -->
-          <article class="card proj-col">
-            <div class="proj-col-head">
-              <h3>🧱 Minecraft Mods</h3>
-              <span class="pill">Forge 1.20.1</span>
-            </div>
-            <div class="proj-items">
-              <a class="proj-row" href="/projects.html?mod=steelhold">
-                <img class="pr-ic" src="/assets/icons/steelhold.png" alt="" loading="lazy">
-                <span class="pr-body"><span class="pr-name">Steelhold</span><span class="pr-tag">Player-owned safes, keys &amp; doors</span></span>
-                <span class="pr-arrow">→</span>
-              </a>
-              <a class="proj-row" href="/projects.html?mod=logichest">
-                <img class="pr-ic" src="/assets/icons/logichest.png" alt="" loading="lazy">
-                <span class="pr-body"><span class="pr-name">LogiChest</span><span class="pr-tag">Hub-and-sorter storage routing</span></span>
-                <span class="pr-arrow">→</span>
-              </a>
-              <a class="proj-row" href="/projects.html?mod=gentlecreeper">
-                <img class="pr-ic" src="/assets/icons/gentlecreeper.png" alt="" loading="lazy">
-                <span class="pr-body"><span class="pr-name">The Gentle Creeper</span><span class="pr-tag">A creeper who just wants a friend</span></span>
-                <span class="pr-arrow">→</span>
-              </a>
-              <a class="proj-row" href="/projects.html?mod=amumucurse">
-                <img class="pr-ic" src="/assets/icons/amumucurse.png" alt="" loading="lazy">
-                <span class="pr-body"><span class="pr-name">Amumu Curse</span><span class="pr-tag">A quiet, sorrow-driven curse</span></span>
-                <span class="pr-arrow">→</span>
-              </a>
-            </div>
-            <a href="/projects.html" class="btn-ghost sm">See all projects →</a>
-          </article>
-
-          <!-- FARMING SIMULATOR -->
-          <article class="card proj-col">
-            <div class="proj-col-head">
-              <h3>🚜 Farming Simulator</h3>
-              <span class="pill">FS25</span>
-            </div>
-            <div class="proj-items">
-              <a class="proj-row" href="/farm-challenge.html">
-                <img class="pr-ic" src="/assets/icons/farmchallenge.png" alt="" loading="lazy">
-                <span class="pr-body"><span class="pr-name">Farm Challenge</span><span class="pr-tag">Create custom challenge runs in-game</span></span>
-                <span class="pr-arrow">→</span>
-              </a>
-            </div>
-            <a href="/farm-challenge.html" class="btn-ghost sm">View the mod →</a>
-          </article>
-
-          <!-- DISCORD BOTS -->
-          <article class="card proj-col">
-            <div class="proj-col-head">
-              <h3>🤖 Discord Bots</h3>
-              <span class="pill">public bots</span>
-            </div>
-            <div class="proj-items">
-              <a class="proj-row" href="/bots/bloombot.html">
-                <span class="pr-emoji">🌼</span>
-                <span class="pr-body"><span class="pr-name">BloomBot</span><span class="pr-tag">A gentle Discord companion for cozy communities</span></span>
-                <span class="pr-arrow">→</span>
-              </a>
-            </div>
-            <a href="/bots/bloombot.html" class="btn-ghost sm">Learn about BloomBot →</a>
-          </article>
-        </div>
-      </section>
-
-      <!-- ══ ABOUT ══ -->
-      <section id="about" class="sec reveal">
-        <div class="sec-head">
-          <div class="sec-kicker">✨ Who's behind it</div>
-          <h2 class="sec-title">About the studio</h2>
-        </div>
-        <div class="card about-card">
-          <p>
-            Mayflower Studios is a one-person indie studio. I build small, deliberate projects —
-            the kind of things I'd actually want to use with the people I care about. No bloat,
-            no roadmaps a mile long; just a few cozy tools and stories, polished until they feel right.
-          </p>
-          <p>
-            Every project starts with the same question: <em>"Would this make a moment with someone a little better?"</em>
-            That keeps the scope honest and keeps the magic in.
-          </p>
-          <div class="ethos reveal stagger">
-            <div class="ethos-item"><span class="ei" aria-hidden="true">🌱</span><div><strong>Small on purpose</strong><span>Few things, made well, kept tidy.</span></div></div>
-            <div class="ethos-item"><span class="ei" aria-hidden="true">🤝</span><div><strong>Made to share</strong><span>Built for two, or for a quiet crowd.</span></div></div>
-            <div class="ethos-item"><span class="ei" aria-hidden="true">🌙</span><div><strong>Cozy &amp; honest</strong><span>Warm to look at, gentle to use.</span></div></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ══ SUPPORT ══ -->
-      <section id="support" class="sec reveal">
-        <div class="sec-head">
-          <div class="sec-kicker">☕ If you'd like to help</div>
-          <h2 class="sec-title">Support the studio</h2>
-          <p class="sec-sub">Everything here is free. If something brought you a nice moment, a tip helps keep the rooms running and the magic flowing — no pressure at all.</p>
-        </div>
-        <div class="card kofi-card">
-          <div class="kofi-side">
-            <h3>☕ Buy me a coffee</h3>
-            <p>One-off or recurring, every bit goes toward hosting and keeping these little things alive. Thank you for being here. 🌸</p>
+          <aside class="home-support">
+            <div class="emoji" aria-hidden="true">☕</div>
+            <h3>Support Mayflower</h3>
+            <p>If something here is useful or makes your day a little nicer, you can help support hosting and future projects.</p>
             <a href="https://ko-fi.com/mayflowerstudiosteam" target="_blank" rel="noopener" class="btn-pri sm">Open Ko-fi ↗</a>
-          </div>
-          <div class="kofi-embed">
-            <button type="button" class="kofi-facade" id="kofi-facade"
-                    aria-label="Load the Ko-fi support widget">
-              <span class="kofi-facade-icon" aria-hidden="true">☕</span>
-              <span class="kofi-facade-text">Load the Ko-fi widget</span>
-              <span class="kofi-facade-note">Loads a Ko-fi frame from ko-fi.com</span>
-            </button>
-          </div>
+          </aside>
         </div>
       </section>
-
-    </div><!-- /content -->
+    </main>
 
     <div id="site-footer"></div>
-  </div><!-- /site-page -->
+  </div>
 
-  <script src="/home-worlds.js?v=1"></script>
-  <script type="module" src="/download-counts.js?v=1"></script>
+  <script src="/home-worlds.js?v=2"></script>
   <script src="/shared.js?v=65"></script>
-  <script>
-    (function () {
-      var facade = document.getElementById('kofi-facade');
-      if (!facade) return;
-      facade.addEventListener('click', function () {
-        var frame = document.createElement('iframe');
-        frame.src = 'https://ko-fi.com/mayflowerstudiosteam/?hidefeed=true&widget=true&embed=true&preview=true';
-        frame.title = 'Support Mayflower Studios on Ko-fi';
-        frame.referrerPolicy = 'no-referrer-when-downgrade';
-        frame.setAttribute('allow', 'payment');
-        frame.style.cssText = 'display:block;width:100%;height:100%;min-height:420px;border:none;';
-        facade.replaceWith(frame);
-      });
-    })();
-  </script>
 </body>
 </html>
