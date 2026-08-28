@@ -47,4 +47,4 @@ Publish BOTH rule sets in Firebase before using uploads.
 
 PAID WORLDS
 -----------
-The Admin World Manager now has a Free/Paid access selector. Paid worlds use BMT Micro checkout and protected Firebase/Cloud Storage delivery. See PAID-WORLDS-SETUP.txt before publishing any paid world.
+The Admin World Manager now has a Free/Paid access selector. Paid worlds use Stripe Checkout and protected Firebase/Cloud Storage delivery. See PAID-WORLDS-SETUP.txt before publishing any paid world.

@@ -1,5 +1,12 @@
 {
   "functions": {
-    "source": "functions"
+    "source": "functions",
+    "runtime": "nodejs22"
+  },
+  "database": {
+    "rules": "FirebaseRules-full.json"
+  },
+  "storage": {
+    "rules": "FirebaseStorageRules-full-updated.rules"
   }
 }

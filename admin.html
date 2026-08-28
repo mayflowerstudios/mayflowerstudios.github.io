@@ -214,7 +214,7 @@
     @media(max-width:620px){.wmTop{flex-direction:column}.wmForm{grid-template-columns:1fr}.wmField.wide,.wmAssetPanel,.wmActions,.wmMiniHint{grid-column:auto}.wmGallery{grid-template-columns:repeat(2,minmax(0,1fr))}.wmTopActions{width:100%}.wmTopActions button{flex:1}.wmLibrarySide{min-width:0}}
 
   
-    .wmCommercePanel{grid-column:1/-1;border:1px solid rgba(251,191,36,.22);border-radius:12px;padding:12px;background:linear-gradient(135deg,rgba(251,191,36,.045),rgba(196,181,253,.025))}.wmCommerceGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.wmCommerceHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}.wmCommerceHead strong{font-size:12px}.wmCommerceHead small{font-size:10.5px;color:var(--text-3);line-height:1.45}.wmPaidField[hidden]{display:none!important}.wmPriceRow{display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:7px}.wmCommerceHelp{grid-column:1/-1;margin:2px 0 0;padding:9px 10px;border-radius:9px;border:1px dashed rgba(196,181,253,.25);background:rgba(0,0,0,.12);color:var(--text-3);font-size:10.5px;line-height:1.5}.wmCommerceHelp b{color:var(--text-2)}.wmAccessPill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 7px;font-size:10px;border:1px solid var(--border);color:var(--text-3);width:max-content}.wmAccessPill.paid{border-color:rgba(251,191,36,.35);color:#fde68a;background:rgba(251,191,36,.07)}@media(max-width:760px){.wmCommerceGrid{grid-template-columns:1fr}.wmCommerceHelp{grid-column:1}.wmPriceRow{grid-template-columns:1fr 96px}}
+    .wmCommercePanel{grid-column:1/-1;border:1px solid rgba(251,191,36,.22);border-radius:12px;padding:12px;background:linear-gradient(135deg,rgba(251,191,36,.045),rgba(196,181,253,.025))}.wmCommerceGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.wmCommerceHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}.wmCommerceHead strong{font-size:12px}.wmCommerceHead small{font-size:10.5px;color:var(--text-3);line-height:1.45}.wmPaidField[hidden]{display:none!important}.wmPriceRow{display:grid;grid-template-columns:32px minmax(0,1fr);gap:7px;align-items:center}.wmDollar{display:grid;place-items:center;height:38px;border:1px solid var(--border);border-radius:9px;background:rgba(255,255,255,.025);color:#fde68a;font-weight:800;font-size:14px}.wmCommerceHelp{grid-column:1/-1;margin:2px 0 0;padding:9px 10px;border-radius:9px;border:1px dashed rgba(196,181,253,.25);background:rgba(0,0,0,.12);color:var(--text-3);font-size:10.5px;line-height:1.5}.wmCommerceHelp b{color:var(--text-2)}.wmAccessPill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 7px;font-size:10px;border:1px solid var(--border);color:var(--text-3);width:max-content}.wmAccessPill.paid{border-color:rgba(251,191,36,.35);color:#fde68a;background:rgba(251,191,36,.07)}@media(max-width:760px){.wmCommerceGrid{grid-template-columns:1fr}.wmCommerceHelp{grid-column:1}.wmPriceRow{grid-template-columns:32px 1fr}}
 </style>
 </head>
 <body data-nav="account">
@@ -348,13 +348,11 @@
                 <label class="wmField"><span>Version / note</span><input id="wmVersion" maxlength="40" placeholder="1.0 or Updated Aug 2026" /></label>
 
                 <section class="wmCommercePanel">
-                  <div class="wmCommerceHead"><div><strong>World access & payment</strong><br><small>Free worlds download normally. Paid worlds stay in protected storage and unlock only after a verified purchase.</small></div><span class="wmAccessPill" id="wmAccessPill">Free</span></div>
+                  <div class="wmCommerceHead"><div><strong>World access & price</strong><br><small>Choose Free or Paid. For a paid world, just type the price — Stripe checkout is created automatically when somebody buys it.</small></div><span class="wmAccessPill" id="wmAccessPill">Free</span></div>
                   <div class="wmCommerceGrid">
                     <label class="wmField"><span>Access</span><select id="wmAccess"><option value="free">Free download</option><option value="paid">Paid world</option></select></label>
-                    <label class="wmField wmPaidField" hidden><span>Display price</span><div class="wmPriceRow"><input id="wmPrice" inputmode="decimal" maxlength="10" placeholder="4.99" /><select id="wmCurrency"><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="BRL">BRL</option><option value="CAD">CAD</option><option value="AUD">AUD</option></select></div><small class="wmFileNote">This is the price shown on Mayflower Studios. The actual charge is controlled by BMT Micro.</small></label>
-                    <label class="wmField wmPaidField" hidden><span>BMT Micro CID</span><input id="wmBmtCid" maxlength="32" placeholder="Example: 6598 or 2054/10" /><small class="wmFileNote">The CID from your BMT secure order link.</small></label>
-                    <label class="wmField wmPaidField" hidden><span>BMT Product ID</span><input id="wmBmtProductId" inputmode="numeric" maxlength="32" placeholder="12345678" /><small class="wmFileNote">Create one BMT product for each paid world and paste its Product ID here.</small></label>
-                    <div class="wmCommerceHelp wmPaidField" hidden><b>Secure delivery:</b> the public site never receives the paid file URL. BMT confirms completed orders directly to a Firebase Cloud Function, which records ownership. The download function then creates a short-lived link only for the signed-in purchaser. You can save a paid world as hidden before its BMT IDs are ready.</div>
+                    <label class="wmField wmPaidField" hidden><span>Price</span><div class="wmPriceRow"><span class="wmDollar">$</span><input id="wmPrice" inputmode="decimal" maxlength="10" placeholder="4.99" /><input type="hidden" id="wmCurrency" value="USD" /></div><small class="wmFileNote">That’s it. Save the world and the site handles Stripe Checkout automatically.</small></label>
+                    <div class="wmCommerceHelp wmPaidField" hidden><b>Stripe secure delivery:</b> paid <code>.world</code> files are encrypted in your browser before upload. Checkout is created by a Firebase HTTPS Function using the price saved here, and Stripe confirms payment through its signed webhook before Mayflower releases the decryption key to the purchaser’s account. No Stripe secret key or card data is stored in this page.</div>
                   </div>
                 </section>
 
@@ -412,10 +410,10 @@
     <div id="site-footer"></div>
   </div><!-- /site-page -->
 
-  <script src="/shared.js?v=64"></script>
-  <script src="/auth.js?v=64" data-mf-src="/auth.js"></script>
+  <script src="/shared.js?v=65"></script>
+  <script src="/auth.js?v=65" data-mf-src="/auth.js"></script>
   <script src="/admin-inbox.js?v=6"></script>
   <script src="/admin-moderation.js?v=6"></script>
-  <script src="/admin-worlds.js?v=3"></script>
+  <script src="/admin-worlds.js?v=4"></script>
 </body>
 </html>

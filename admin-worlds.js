@@ -103,13 +103,36 @@
   function fileOKImage(f){return f&&/^image\/(jpeg|png|webp|gif)$/i.test(f.type)&&f.size>0&&f.size<=15*1024*1024}
   function imageArray(v){return Array.isArray(v)?v.filter(Boolean):Object.keys(v||{}).sort((a,b)=>Number(a)-Number(b)).map(k=>v[k]).filter(Boolean)}
 
-  async function upload(file,path,contentType,onPct,publicUrl=true){
+  function bytesToB64(bytes){
+    let s=""; const step=0x8000;
+    for(let i=0;i<bytes.length;i+=step)s+=String.fromCharCode(...bytes.subarray(i,Math.min(i+step,bytes.length)));
+    return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"");
+  }
+  async function encryptWorldFile(file){
+    if(!window.crypto||!crypto.subtle)throw new Error("This browser does not support the encryption needed for paid worlds. Use a current Chrome, Edge, Firefox, or Opera browser.");
+    progress("Encrypting paid world file locally…");
+    const key=await crypto.subtle.generateKey({name:"AES-GCM",length:256},true,["encrypt"]);
+    const rawKey=new Uint8Array(await crypto.subtle.exportKey("raw",key));
+    const iv=crypto.getRandomValues(new Uint8Array(12));
+    const plain=await file.arrayBuffer();
+    const encrypted=await crypto.subtle.encrypt({name:"AES-GCM",iv},key,plain);
+    return {
+      blob:new Blob([encrypted],{type:"application/octet-stream"}),
+      key:bytesToB64(rawKey),
+      iv:bytesToB64(iv),
+      scheme:"AES-GCM-256-v1",
+      originalName:file.name,
+      originalSize:file.size
+    };
+  }
+
+  async function upload(file,path,contentType,onPct,publicUrl=true,displayName=null,displaySize=null){
     const ref=smod.ref(store,path);
-    const task=smod.uploadBytesResumable(ref,file,{contentType:contentType||file.type||"application/octet-stream"});
+    const task=smod.uploadBytesResumable(ref,file,{contentType:contentType||file.type||"application/octet-stream",cacheControl:publicUrl?"public,max-age=3600":"private,no-store"});
     await new Promise((res,rej)=>task.on("state_changed",s=>{
       if(onPct)onPct(Math.round((s.bytesTransferred/s.totalBytes)*100));
     },rej,res));
-    const out={path,name:file.name,size:file.size};
+    const out={path,name:displayName||file.name||"file",size:Number(displaySize==null?file.size:displaySize)||0};
     if(publicUrl)out.url=await smod.getDownloadURL(ref);
     return out;
   }
@@ -199,8 +222,6 @@
     $("wmAccess").value="free";
     $("wmPrice").value="";
     $("wmCurrency").value="USD";
-    $("wmBmtCid").value="";
-    $("wmBmtProductId").value="";
     $("wmEditor").classList.remove("wmEditing");
     $("wmEditorTitle").textContent="Add a new world";
     $("wmSave").textContent="Publish world";
@@ -228,8 +249,6 @@
     $("wmAccess").value=c.type==="paid"?"paid":"free";
     $("wmPrice").value=c.type==="paid"?((Number(c.priceCents)||0)/100).toFixed(2):"";
     $("wmCurrency").value=c.currency||"USD";
-    $("wmBmtCid").value=c.bmtCid||"";
-    $("wmBmtProductId").value=c.bmtProductId||"";
     $("wmFeatured").checked=!!w.featured;
     $("wmPublished").checked=w.published!==false;
     $("wmWorldFile").value="";
@@ -252,7 +271,7 @@
     const paid=$("wmAccess").value==="paid";
     if(selected){
       box.classList.remove("empty");
-      box.innerHTML=`<span>${paid?"🔐":"📦"}</span><span><strong>${esc(selected.name)}</strong><br>${esc(size(selected.size))} · ${paid?"will be stored privately":"ready for public download"}${editing?" · replaces current file when saved":""}</span>`;
+      box.innerHTML=`<span>${paid?"🔐":"📦"}</span><span><strong>${esc(selected.name)}</strong><br>${esc(size(selected.size))} · ${paid?"will be encrypted before upload":"ready for public download"}${editing?" · replaces current file when saved":""}</span>`;
       return;
     }
     if(editing){
@@ -265,7 +284,7 @@
       }
     }
     box.classList.add("empty");
-    box.textContent=paid?"No protected world file selected yet.":"No world file selected yet.";
+    box.textContent=paid?"No paid world file selected yet.":"No world file selected yet.";
   }
 
   function addImages(){
@@ -379,8 +398,6 @@
     const access=$("wmAccess").value==="paid"?"paid":"free";
     const priceCents=cents($("wmPrice").value);
     const currency=String($("wmCurrency").value||"USD").toUpperCase();
-    const bmtCid=$("wmBmtCid").value.trim();
-    const bmtProductId=$("wmBmtProductId").value.trim();
     const published=$("wmPublished").checked;
     const oldAccess=editing&&isPaid(editing)?"paid":"free";
 
@@ -388,10 +405,6 @@
     if(access==="paid"){
       if(!Number.isFinite(priceCents)||priceCents<1){msg("Enter a valid paid-world price, such as 4.99.",true);return}
       if(!/^[A-Z]{3}$/.test(currency)){msg("Choose a valid three-letter currency.",true);return}
-      if((bmtCid&&!/^[A-Za-z0-9/_-]{1,32}$/.test(bmtCid))||(bmtProductId&&!/^\d{4,32}$/.test(bmtProductId))){msg("The BMT CID contains an unsupported character, or the Product ID is not numeric.",true);return}
-      const duplicate=Object.entries(items).find(([id,w])=>id!==wid&&w&&w.commerce&&w.commerce.type==="paid"&&String(w.commerce.bmtProductId||"")===bmtProductId&&bmtProductId);
-      if(duplicate){msg(`That BMT Product ID is already assigned to “${duplicate[1].title||duplicate[0]}”. Each paid world needs its own BMT product.`,true);return}
-      if(published&&(!bmtCid||!bmtProductId)){msg("A published paid world needs both its BMT CID and BMT Product ID. Save it hidden until those are ready.",true);return}
     }
     if(!editing&&!fileOKWorld(wf)){msg("Choose a .world file (up to 250 MB).",true);return}
     if(editing&&access!==oldAccess&&!fileOKWorld(wf)){msg(`Re-select the .world file when changing a world from ${oldAccess} to ${access}. That lets me move it into the correct ${access==="paid"?"protected":"public"} storage area.`,true);return}
@@ -409,19 +422,29 @@
       let uploadedWorld=null;
 
       if(wf){
-        progress(access==="paid"?"Uploading protected world file…":"Uploading world file…");
-        const basePath=access==="paid"?"world-library-private":"world-library";
-        const path=`${basePath}/${user.uid}/${wid}/world/${stamp}-${safeName(wf.name)}`;
-        uploadedWorld=await upload(wf,path,"application/octet-stream",p=>progress(`${access==="paid"?"Uploading protected world file":"Uploading world file"}… ${p}%`),access!=="paid");
+        if(access==="paid"){
+          const enc=await encryptWorldFile(wf);
+          const path=`world-library-paid/${user.uid}/${wid}/world/${stamp}-${safeName(wf.name)}.enc`;
+          progress("Uploading encrypted paid world file…");
+          uploadedWorld=await upload(enc.blob,path,"application/octet-stream",p=>progress(`Uploading encrypted paid world file… ${p}%`),true,wf.name,wf.size);
+          uploadedWorld.key=enc.key;
+          uploadedWorld.iv=enc.iv;
+          uploadedWorld.scheme=enc.scheme;
+          uploadedWorld.encryptedSize=enc.blob.size;
+        }else{
+          const path=`world-library/${user.uid}/${wid}/world/${stamp}-${safeName(wf.name)}`;
+          progress("Uploading world file…");
+          uploadedWorld=await upload(wf,path,"application/octet-stream",p=>progress(`Uploading world file… ${p}%`),true);
+        }
         newlyUploaded.push(uploadedWorld.path);
       }
 
       let publicWorld,privateWorld=null;
       if(access==="paid"){
         const src=uploadedWorld||oldPrivate;
-        if(!src||!src.path)throw new Error("Protected world file metadata is missing. Please choose the .world file again.");
+        if(!src||!src.path||!src.url||!src.key||!src.iv)throw new Error("Encrypted paid-world metadata is missing. Please choose the .world file again.");
         publicWorld={name:src.name,size:src.size,private:true};
-        privateWorld={path:src.path,name:src.name,size:src.size,uploadedByUid:src.uploadedByUid||user.uid,updatedAt:Date.now()};
+        privateWorld={path:src.path,url:src.url,name:src.name,size:src.size,encryptedSize:Number(src.encryptedSize)||0,key:src.key,iv:src.iv,scheme:src.scheme||"AES-GCM-256-v1",uploadedByUid:src.uploadedByUid||user.uid,updatedAt:Date.now()};
       }else{
         const src=uploadedWorld||oldPublicWorld;
         if(!src||!src.url||!src.path)throw new Error("Public world file metadata is missing. Please choose the .world file again.");
@@ -446,7 +469,7 @@
       }
 
       const now=Date.now();
-      const commerce=access==="paid"?{type:"paid",priceCents,currency,bmtCid,bmtProductId}:{type:"free"};
+      const commerce=access==="paid"?{type:"paid",priceCents,currency}:{type:"free"};
       const record={
         title,creator,description,tags,version,commerce,
         featured:$("wmFeatured").checked,
@@ -474,7 +497,7 @@
       if(privateWorld)privateItems[wid]=privateWorld;else delete privateItems[wid];
       const savedTitle=title;
       reset();
-      msg(`“${savedTitle}” ${record.published?"is live in":"was saved to"} the World Library${access==="paid"?" as a protected paid world":""}.`);
+      msg(`“${savedTitle}” ${record.published?"is live in":"was saved to"} the World Library${access==="paid"?" as an encrypted paid world":""}.`);
     }catch(err){
       console.warn("world publish",err);
       if(!committed)for(const path of newlyUploaded)await erase(path);
