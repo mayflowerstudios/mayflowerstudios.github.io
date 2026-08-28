@@ -1,37 +1,19 @@
-// 3DX WORLD LIBRARY — FIREBASE STORAGE RULE SNIPPET
-// -------------------------------------------------
-// Add these match blocks INSIDE the existing:
-//
-//   service firebase.storage {
-//     match /b/{bucket}/o {
-//       ...paste the blocks here...
-//     }
-//   }
-//
-// Do not replace your full Storage rules with this file. The site already uses
-// Firebase Storage for avatars, banners, chat images and video uploads.
-//
-// Security model:
-// - Anyone can DOWNLOAD a published World Library file/image.
-// - A signed-in account can only upload inside its OWN uid folder.
-// - Realtime Database rules separately restrict /worldLibrary metadata to the
-//   Mayflower Studios owner/admin accounts, so random users cannot publish a
-//   world into the visible library even if they know this storage path.
+// 3DX World Library Storage additions (already merged into FirebaseStorageRules-full-updated.rules)
 
 match /world-library/{userId}/{worldId}/images/{fileName} {
   allow read: if true;
-  allow create, update: if request.auth != null
-    && request.auth.uid == userId
-    && request.resource.size <= 15 * 1024 * 1024
-    && request.resource.contentType.matches('image/(jpeg|png|webp|gif)');
+  allow create, update: if request.auth != null && request.auth.uid == userId && request.resource.size <= 15 * 1024 * 1024 && request.resource.contentType.matches('image/(jpeg|png|webp|gif)');
   allow delete: if request.auth != null && request.auth.uid == userId;
 }
 
 match /world-library/{userId}/{worldId}/world/{fileName} {
   allow read: if true;
-  allow create, update: if request.auth != null
-    && request.auth.uid == userId
-    && request.resource.size <= 250 * 1024 * 1024
-    && request.resource.contentType == 'application/octet-stream';
+  allow create, update: if request.auth != null && request.auth.uid == userId && fileName.matches('.*[.][wW][oO][rR][lL][dD]$') && request.resource.size <= 250 * 1024 * 1024 && request.resource.contentType == 'application/octet-stream';
+  allow delete: if request.auth != null && request.auth.uid == userId;
+}
+
+match /world-library-private/{userId}/{worldId}/world/{fileName} {
+  allow read: if false;
+  allow create, update: if request.auth != null && request.auth.uid == userId && fileName.matches('.*[.][wW][oO][rR][lL][dD]$') && request.resource.size <= 250 * 1024 * 1024 && request.resource.contentType == 'application/octet-stream';
   allow delete: if request.auth != null && request.auth.uid == userId;
 }

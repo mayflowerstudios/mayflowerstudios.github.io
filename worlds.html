@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>3DX World Library • Mayflower Studios</title>
   <link rel="stylesheet" href="/style.css?v=61" />
-  <link rel="stylesheet" href="/worlds.css?v=1" />
-  <meta name="description" content="Download 3DXChat world files shared by Mayflower Studios, with screenshots, descriptions, and easy .world downloads." />
+  <link rel="stylesheet" href="/worlds.css?v=2" />
+  <meta name="description" content="Browse free and paid 3DXChat world files shared by Mayflower Studios, with screenshots, descriptions, secure purchases, and protected downloads." />
   <meta property="og:title" content="3DX World Library • Mayflower Studios" />
-  <meta property="og:description" content="Browse downloadable 3DXChat worlds from Mayflower Studios." />
+  <meta property="og:description" content="Browse free and paid downloadable 3DXChat worlds from Mayflower Studios." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://mayflowerstudios.net/worlds.html" />
   <link rel="canonical" href="https://mayflowerstudios.net/worlds.html" />
@@ -42,6 +42,10 @@
       </section>
 
       <div id="worldNotice" class="worldNotice" hidden></div>
+      <section id="worldPurchases" class="card worldPurchases" hidden>
+        <div class="worldPurchasesHead"><div><strong>🔐 My purchased worlds</strong><span>Paid worlds stay attached to your Mayflower Studios account.</span></div><button class="btn ghost" id="worldPurchaseRefresh" type="button">Refresh purchases</button></div>
+        <div id="worldPurchaseList" class="worldPurchaseList"></div>
+      </section>
       <section id="worldGrid" class="worldGrid" aria-live="polite"><div class="worldLoading">Loading worlds…</div></section>
 
       <section class="card worldDisclaimer">
@@ -62,6 +66,6 @@
   </div>
 
   <script src="/shared.js?v=64"></script>
-  <script src="/worlds.js?v=1"></script>
+  <script src="/worlds.js?v=2"></script>
 </body>
 </html>

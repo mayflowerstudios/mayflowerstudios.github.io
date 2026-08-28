@@ -8,7 +8,8 @@ rules_version = '2';
 //   banners/{uid}/...                           — Profile banners: world-readable, owner-writable, images only, <8 MB.
 //   chatmedia/{uid}/...                         — Universal chat pictures: world-readable, owner-writable, images only, <12 MB.
 //   world-library/{uid}/{worldId}/images/...    — 3DX World Library screenshots: world-readable, uploader-writable, images only, <=15 MB.
-//   world-library/{uid}/{worldId}/world/...     — 3DX .world files: world-readable, uploader-writable, <=250 MB.
+//   world-library/{uid}/{worldId}/world/...     — Free 3DX .world files: world-readable, uploader-writable, <=250 MB.
+//   world-library-private/{uid}/{worldId}/...    — Paid 3DX .world files: NO public reads; uploader-writable, <=250 MB.
 // Everything else is denied.
 service firebase.storage {
   match /b/{bucket}/o {
@@ -63,9 +64,23 @@ service firebase.storage {
                     && request.auth.uid == userId;
     }
 
-    // 3DX World Library .world files — public downloads, uploader-owned writes
+    // Free 3DX World Library .world files — public downloads, uploader-owned writes
     match /world-library/{userId}/{worldId}/world/{fileName} {
       allow read: if true;
+      allow create, update: if request.auth != null
+                            && request.auth.uid == userId
+                            && fileName.matches('.*[.][wW][oO][rR][lL][dD]$')
+                            && request.resource.size <= 250 * 1024 * 1024
+                            && request.resource.contentType == 'application/octet-stream';
+      allow delete: if request.auth != null
+                    && request.auth.uid == userId;
+    }
+
+
+    // Paid 3DX World Library .world files — never directly readable from Firebase Storage.
+    // A backend function checks the purchase and issues a short-lived Google Cloud Storage signed URL.
+    match /world-library-private/{userId}/{worldId}/world/{fileName} {
+      allow read: if false;
       allow create, update: if request.auth != null
                             && request.auth.uid == userId
                             && fileName.matches('.*[.][wW][oO][rR][lL][dD]$')

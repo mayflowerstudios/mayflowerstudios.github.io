@@ -1411,7 +1411,7 @@
       ".read": "((auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('owner').exists() && root.child('owner').val().toLowerCase() === root.child('users').child(auth.uid).child('username').val().toLowerCase()) || (auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('admins').child(root.child('users').child(auth.uid).child('username').val().toLowerCase()).val() === true)) || (query.orderByChild == 'published' && query.equalTo == true)",
       "$slug": {
         ".write": "((auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('owner').exists() && root.child('owner').val().toLowerCase() === root.child('users').child(auth.uid).child('username').val().toLowerCase()) || (auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('admins').child(root.child('users').child(auth.uid).child('username').val().toLowerCase()).val() === true))",
-        ".validate": "!newData.exists() || (newData.hasChildren(['title','creator','description','featured','published','world','createdAt','updatedAt','createdByUid','createdByName']) && newData.child('updatedAt').val() >= now - 300000 && newData.child('updatedAt').val() <= now + 300000)",
+        ".validate": "!newData.exists() || (newData.hasChildren(['title','creator','description','featured','published','commerce','world','createdAt','updatedAt','createdByUid','createdByName']) && newData.child('updatedAt').val() >= now - 300000 && newData.child('updatedAt').val() <= now + 300000)",
         "title": {
           ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 80"
         },
@@ -1448,7 +1448,7 @@
           }
         },
         "world": {
-          ".validate": "newData.hasChildren(['url','path','name','size'])",
+          ".validate": "newData.hasChildren(['name','size']) && ((newData.parent().child('commerce').child('type').val() === 'paid' && newData.child('private').val() === true && !newData.child('url').exists() && !newData.child('path').exists()) || (newData.parent().child('commerce').child('type').val() !== 'paid' && newData.hasChildren(['url','path']) && newData.child('private').val() !== true))",
           "url": {
             ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 1600 && newData.val().beginsWith('https://')"
           },
@@ -1460,6 +1460,9 @@
           },
           "size": {
             ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= 262144000"
+          },
+          "private": {
+            ".validate": "newData.isBoolean()"
           },
           "$other": {
             ".validate": false
@@ -1487,11 +1490,70 @@
         },
         "$other": {
           ".validate": false
+        },
+        "commerce": {
+          ".validate": "newData.hasChild('type') && (newData.child('type').val() === 'free' || (newData.child('type').val() === 'paid' && newData.hasChildren(['priceCents','currency','bmtCid','bmtProductId']) && (newData.parent().child('published').val() !== true || (newData.child('bmtCid').val().length > 0 && newData.child('bmtProductId').val().length > 0))))",
+          "type": {
+            ".validate": "newData.val() === 'free' || newData.val() === 'paid'"
+          },
+          "priceCents": {
+            ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 100000000"
+          },
+          "currency": {
+            ".validate": "newData.isString() && newData.val().matches(/^[A-Z]{3}$/)"
+          },
+          "bmtCid": {
+            ".validate": "newData.isString() && (newData.val().length === 0 || newData.val().matches(/^[A-Za-z0-9\\/_-]{1,32}$/))"
+          },
+          "bmtProductId": {
+            ".validate": "newData.isString() && (newData.val().length === 0 || newData.val().matches(/^[0-9]{4,32}$/))"
+          },
+          "$other": {
+            ".validate": false
+          }
         }
       },
       ".indexOn": [
         "published"
       ]
+    },
+    "worldPrivate": {
+      ".read": "((auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('owner').exists() && root.child('owner').val().toLowerCase() === root.child('users').child(auth.uid).child('username').val().toLowerCase()) || (auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('admins').child(root.child('users').child(auth.uid).child('username').val().toLowerCase()).val() === true))",
+      "$slug": {
+        ".write": "((auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('owner').exists() && root.child('owner').val().toLowerCase() === root.child('users').child(auth.uid).child('username').val().toLowerCase()) || (auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('admins').child(root.child('users').child(auth.uid).child('username').val().toLowerCase()).val() === true))",
+        ".validate": "!newData.exists() || (newData.hasChildren(['path','name','size','uploadedByUid','updatedAt']) && newData.child('updatedAt').val() >= now - 300000 && newData.child('updatedAt').val() <= now + 300000)",
+        "path": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 300 && newData.val().beginsWith('world-library-private/')"
+        },
+        "name": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 120 && newData.val().matches(/.*[.][wW][oO][rR][lL][dD]$/)"
+        },
+        "size": {
+          ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= 262144000"
+        },
+        "uploadedByUid": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 128"
+        },
+        "updatedAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "worldPurchases": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || ((auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('owner').exists() && root.child('owner').val().toLowerCase() === root.child('users').child(auth.uid).child('username').val().toLowerCase()) || (auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('admins').child(root.child('users').child(auth.uid).child('username').val().toLowerCase()).val() === true)))",
+        ".write": false,
+        "$worldId": {
+          ".validate": true
+        }
+      }
+    },
+    "worldOrders": {
+      ".read": "((auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('owner').exists() && root.child('owner').val().toLowerCase() === root.child('users').child(auth.uid).child('username').val().toLowerCase()) || (auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('admins').child(root.child('users').child(auth.uid).child('username').val().toLowerCase()).val() === true))",
+      ".write": false
     }
   }
 }

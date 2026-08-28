@@ -1,0 +1,126 @@
+MAYFLOWER STUDIOS — PAID 3DX WORLD SETUP
+========================================
+
+WHAT IS ALREADY BUILT
+---------------------
+• Admin World Manager now supports Free / Paid worlds, display price, currency, BMT CID and BMT Product ID.
+• Paid .world files upload to world-library-private/ and are not directly readable by Firebase Storage clients.
+• Public screenshots stay public.
+• BMT checkout receives the signed-in Firebase UID through ORDERPARAMETERS and the world slug through ITEMINFO.
+• worldBmtWebhook verifies BMT server notifications with HTTP Basic Auth and records purchases server-side.
+• Credits/refunds revoke the matching world purchase.
+• worldDownload verifies Firebase login + active purchase and returns a 5-minute Google Cloud Storage signed URL.
+• My purchased worlds appears on worlds.html for signed-in users.
+
+IMPORTANT: THERE IS NO PAYMENT SECRET IN THE WEBSITE JAVASCRIPT.
+The BMT webhook username/password are Firebase Function secrets only.
+
+1) PUBLISH THE UPDATED DATABASE + STORAGE RULES
+------------------------------------------------
+Realtime Database → Rules:
+  paste FirebaseRules-full.json
+
+Storage → Rules:
+  paste FirebaseStorageRules-full-updated.rules
+
+2) INSTALL FIREBASE CLI (ONCE)
+-------------------------------
+From a terminal:
+  npm install -g firebase-tools
+  firebase login
+
+Open this site folder in the terminal. .firebaserc already points at:
+  watchtogether-95d7d
+
+3) CREATE TWO RANDOM BMT WEBHOOK SECRETS
+-----------------------------------------
+Run:
+  firebase functions:secrets:set BMT_WEBHOOK_USER
+  firebase functions:secrets:set BMT_WEBHOOK_PASS
+
+Use long random URL-safe values (letters, numbers, - and _ are easiest). Do NOT put them into HTML, JS, GitHub, or Realtime Database.
+
+4) ENABLE SIGNED-URL SIGNING
+-----------------------------
+worldDownload creates a short-lived Cloud Storage signed URL. Google requires the function's runtime service account to have iam.serviceAccounts.signBlob (Service Account Token Creator).
+
+For 2nd-gen Functions, this is normally the project's default Compute Engine service account. In Google Cloud Console → IAM, grant that runtime service account:
+  Service Account Token Creator
+
+Also make sure the Service Account Credentials API is enabled.
+
+5) DEPLOY THE FUNCTIONS
+------------------------
+From this folder:
+  cd functions
+  npm install
+  cd ..
+  firebase deploy --only functions
+
+Functions used by the site:
+  worldBmtWebhook
+  worldDownload
+  stripPaidWorldDownloadToken
+
+6) CREATE YOUR BMT MICRO VENDOR ACCOUNT / PRODUCT
+--------------------------------------------------
+BMT Micro must approve the products you sell. Create one BMT product for each paid 3DX world.
+
+For each product:
+• Set the real price in BMT Micro.
+• The price you type in Mayflower Admin is DISPLAY ONLY and should match BMT.
+• Configure BMT to require ORDERPARAMETERS so a purchase is associated with a Mayflower account.
+• Under Vendor Order Notifications, set the product's “Send XML Notification to remote system” URL to the worldBmtWebhook function.
+• In BMT account/vendor notification settings, ENABLE credit/refund order notifications so a refunded purchase is automatically revoked on Mayflower Studios.
+• Protect that URL with the same Basic Auth username/password you stored as Firebase secrets. BMT's documentation explicitly supports username/password in the notification URL.
+• Do NOT put the paid .world file on a public BMT/download URL if you want Mayflower account-based delivery. The Mayflower backend is the fulfillment gate.
+
+Webhook endpoint:
+  https://us-central1-watchtogether-95d7d.cloudfunctions.net/worldBmtWebhook
+
+BMT's help shows URLs in this form for Basic Auth:
+  https://USERNAME:PASSWORD@server.example.com/notification
+
+If BMT's control panel rejects credentials embedded in the URL, ask BMT vendor support to configure HTTP Basic Auth for the notification endpoint, or use their XML notification encryption option. Do not remove webhook authentication.
+
+7) ADD A PAID WORLD
+--------------------
+Admin → 3DX World Library
+• Access: Paid world
+• Display price + currency
+• BMT CID (some BMT carts use forms such as 6598 or 2054/10)
+• BMT Product ID
+• Upload .world file + screenshots
+• Publish
+
+You may save the world HIDDEN before BMT IDs are ready. A public paid world requires both BMT IDs.
+
+8) TEST BEFORE REAL SALES
+--------------------------
+BMT Micro provides an Order Tester in the Vendor Control Panel. Use it. Confirm all of these before selling publicly:
+1. Checkout starts only after signing into Mayflower.
+2. BMT receives ORDERPARAMETERS = Firebase UID and ITEMINFO = world slug.
+3. Test order creates worldPurchases/{uid}/{worldId} with status=active.
+4. The purchaser can download.
+5. A different account gets HTTP 403 from worldDownload.
+6. Direct Firebase Storage reads of world-library-private/... fail.
+7. A BMT credit/refund changes the purchase to status=revoked and download stops working.
+
+SECURITY NOTES
+--------------
+• Never make world-library-private publicly readable.
+• Never put a private paid-world Storage URL in worldLibrary.
+• Never mark purchases from browser JavaScript. worldPurchases client writes are denied.
+• Never put BMT account passwords or webhook secrets in the website.
+• A signed download URL lasts five minutes. Anyone who receives that exact temporary URL can use it until it expires, so do not increase the lifetime unnecessarily.
+• No technical DRM can stop a legitimate buyer from manually sharing a file after downloading it. Your copyright/license terms address that separate problem.
+
+BMT REFERENCES USED FOR THIS INTEGRATION
+-----------------------------------------
+BMT Micro documents:
+• XML order notifications to a remote URL
+• ORDERPARAMETERS and ITEMINFO checkout parameters
+• HTTP username/password protection for XML notifications
+• Order Tester for test transactions
+
+The code does not handle or store card numbers. Payment details stay with BMT Micro.

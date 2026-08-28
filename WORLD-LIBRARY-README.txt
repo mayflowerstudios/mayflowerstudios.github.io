@@ -43,3 +43,8 @@ FirebaseStorageRules-full-updated.rules contains the complete Storage rules incl
 world-library screenshots and .world files.
 
 Publish BOTH rule sets in Firebase before using uploads.
+
+
+PAID WORLDS
+-----------
+The Admin World Manager now has a Free/Paid access selector. Paid worlds use BMT Micro checkout and protected Firebase/Cloud Storage delivery. See PAID-WORLDS-SETUP.txt before publishing any paid world.
