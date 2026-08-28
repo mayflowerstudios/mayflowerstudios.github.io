@@ -21,20 +21,37 @@
     /* Home page — intentionally simple. The rest of the site does the explaining. */
     .home-hero {
       position: relative;
-      padding: clamp(64px, 9vw, 112px) 0 clamp(46px, 7vw, 82px);
+      padding: clamp(72px, 10vw, 124px) 0 clamp(70px, 8vw, 96px);
       max-width: 950px;
+      isolation: isolate;
     }
     .home-hero::before {
       content: "";
       position: absolute;
-      width: min(620px, 80vw);
-      height: 330px;
-      left: -120px;
-      top: 5px;
+      width: min(720px, 90vw);
+      height: 430px;
+      left: -150px;
+      top: -20px;
       z-index: -1;
       pointer-events: none;
-      background: radial-gradient(circle, rgba(249,168,212,.15), rgba(196,181,253,.07) 42%, transparent 72%);
-      filter: blur(14px);
+      background:
+        radial-gradient(circle at 34% 44%, rgba(249,168,212,.18), transparent 31%),
+        radial-gradient(circle at 58% 38%, rgba(196,181,253,.11), transparent 42%),
+        radial-gradient(ellipse at 48% 88%, rgba(110,231,183,.065), transparent 54%);
+      filter: blur(18px);
+      animation: forestMist 10s ease-in-out infinite alternate;
+    }
+    .home-hero::after {
+      content: "✧   ·   ✦   ·   ❀";
+      position: absolute;
+      left: 2px;
+      bottom: 24px;
+      color: rgba(249,168,212,.42);
+      font-family: var(--font-d);
+      font-size: 15px;
+      letter-spacing: 8px;
+      text-shadow: 0 0 12px rgba(249,168,212,.25);
+      animation: forestBreath 6s ease-in-out infinite;
     }
     .home-kicker {
       display: inline-flex;
@@ -49,9 +66,16 @@
     }
     .home-kicker::before {
       content: "";
-      width: 26px;
+      width: 30px;
       height: 1px;
-      background: linear-gradient(90deg, var(--rose), transparent);
+      background: linear-gradient(90deg, var(--emerald), var(--rose), transparent);
+      box-shadow: 0 0 8px rgba(110,231,183,.18);
+    }
+    .home-kicker::after {
+      content: "✦";
+      color: rgba(253,230,138,.72);
+      font-size: 9px;
+      text-shadow: 0 0 8px rgba(253,230,138,.45);
     }
     .home-title {
       font-family: var(--font-d);
@@ -64,10 +88,13 @@
     .home-title span {
       display: block;
       font-style: italic;
-      background: linear-gradient(110deg, var(--rose), var(--violet) 55%, var(--gold));
+      background: linear-gradient(110deg, var(--rose) 0%, var(--violet) 42%, var(--gold) 58%, var(--rose) 78%, var(--violet) 100%);
+      background-size: 220% 100%;
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
+      animation: titleShimmer 9s ease-in-out infinite;
+      filter: drop-shadow(0 0 20px rgba(249,168,212,.08));
     }
     .home-lede {
       max-width: 700px;
@@ -80,19 +107,45 @@
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-top: 28px;
+      margin-top: 30px;
     }
-    .home-note {
-      margin-top: 18px;
-      color: var(--text-3);
-      font-size: 12px;
+    .home-actions .btn-pri {
+      box-shadow: 0 8px 30px rgba(249,168,212,.13), 0 0 18px rgba(196,181,253,.08);
     }
-
+    .home-actions a { transition: transform 180ms var(--ease), box-shadow 180ms var(--ease), border-color 180ms var(--ease); }
+    .home-actions a:hover { transform: translateY(-2px); }
     .home-section {
-      padding: clamp(42px, 6vw, 72px) 0;
-      border-top: 1px solid rgba(255,255,255,.055);
+      position: relative;
+      padding: clamp(58px, 7vw, 86px) 0;
+      border-top: 0;
+      isolation: isolate;
     }
-    .home-section:first-of-type { border-top: 0; }
+    .home-section::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: min(680px, 88%);
+      height: 1px;
+      transform: translateX(-50%);
+      background: linear-gradient(90deg, transparent, rgba(110,231,183,.18) 18%, rgba(249,168,212,.36) 48%, rgba(196,181,253,.28) 70%, transparent);
+      box-shadow: 0 0 18px rgba(249,168,212,.09);
+    }
+    .home-section::after {
+      content: "✦";
+      position: absolute;
+      top: -11px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 0 12px;
+      color: rgba(253,230,138,.78);
+      font-size: 13px;
+      text-shadow: 0 0 9px rgba(253,230,138,.45), 0 0 18px rgba(249,168,212,.2);
+      background: radial-gradient(circle, rgba(11,17,32,.96) 0 42%, transparent 72%);
+      animation: forestTwinkle 4.8s ease-in-out infinite;
+    }
+    .home-section:first-of-type::before,
+    .home-section:first-of-type::after { display: none; }
     .home-section-head {
       display: flex;
       align-items: end;
@@ -102,12 +155,21 @@
     }
     .home-section-head > div { max-width: 680px; }
     .home-section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
       color: var(--rose);
       font-size: 11px;
       font-weight: 750;
-      letter-spacing: .6px;
+      letter-spacing: .65px;
       text-transform: uppercase;
       margin-bottom: 7px;
+    }
+    .home-section-label::before {
+      content: "❀";
+      color: rgba(110,231,183,.7);
+      font-size: 10px;
+      filter: drop-shadow(0 0 6px rgba(110,231,183,.2));
     }
     .home-section-title {
       font-size: clamp(30px, 4vw, 43px);
@@ -220,15 +282,37 @@
       color: inherit;
       border-radius: var(--r);
       border: 1px solid var(--border);
-      background: rgba(13,18,35,.42);
-      transition: transform 170ms var(--ease), border-color 170ms var(--ease), background 170ms var(--ease);
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(110,231,183,.045), transparent 34%),
+        rgba(13,18,35,.42);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.018);
+      transition: transform 200ms var(--ease), border-color 200ms var(--ease), background 200ms var(--ease), box-shadow 200ms var(--ease);
+    }
+    .home-destination::before {
+      content: "";
+      position: absolute;
+      width: 110px;
+      height: 110px;
+      right: -48px;
+      top: -54px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(249,168,212,.10), transparent 66%);
+      opacity: 0;
+      transition: opacity 220ms var(--ease), transform 500ms var(--ease);
+      pointer-events: none;
     }
     .home-destination:hover,
     .home-destination:focus-visible {
-      transform: translateY(-3px);
-      border-color: var(--border-2);
-      background: rgba(19,25,46,.56);
+      transform: translateY(-4px);
+      border-color: rgba(249,168,212,.24);
+      background:
+        radial-gradient(circle at 12% 18%, rgba(110,231,183,.07), transparent 34%),
+        rgba(19,25,46,.62);
+      box-shadow: 0 16px 38px rgba(0,0,0,.18), 0 0 24px rgba(196,181,253,.045);
     }
+    .home-destination:hover::before,
+    .home-destination:focus-visible::before { opacity: 1; transform: scale(1.15); }
     .home-destination-icon {
       width: 52px;
       height: 52px;
@@ -236,8 +320,14 @@
       place-items: center;
       border-radius: 14px;
       font-size: 26px;
-      background: rgba(255,255,255,.035);
-      border: 1px solid var(--border);
+      background: radial-gradient(circle at 35% 25%, rgba(249,168,212,.09), rgba(255,255,255,.025));
+      border: 1px solid rgba(249,168,212,.12);
+      box-shadow: 0 0 0 1px rgba(255,255,255,.01), 0 8px 22px rgba(0,0,0,.12);
+      transition: transform 220ms var(--ease), box-shadow 220ms var(--ease);
+    }
+    .home-destination:hover .home-destination-icon {
+      transform: translateY(-2px) rotate(-2deg);
+      box-shadow: 0 0 22px rgba(249,168,212,.10), 0 8px 22px rgba(0,0,0,.15);
     }
     .home-destination h3 { margin: 0 0 5px; font-size: 22px; }
     .home-destination p { margin: 0; color: var(--text-2); font-size: 13px; line-height: 1.6; }
@@ -254,7 +344,10 @@
       padding: 28px 30px;
       border-radius: var(--r);
       border: 1px solid var(--border);
-      background: rgba(13,18,35,.36);
+      background:
+        radial-gradient(circle at 0 0, rgba(110,231,183,.045), transparent 38%),
+        rgba(13,18,35,.36);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.018);
     }
     .home-about h2 { font-size: clamp(28px,4vw,38px); margin: 0 0 12px; }
     .home-about p { color: var(--text-2); font-size: 14px; line-height: 1.8; margin: 0; max-width: 68ch; }
@@ -267,11 +360,39 @@
       padding: 28px;
       border-radius: var(--r);
       border: 1px solid rgba(249,168,212,.15);
-      background: linear-gradient(145deg,rgba(249,168,212,.055),rgba(196,181,253,.025));
+      background:
+        radial-gradient(circle at 85% 10%, rgba(253,230,138,.07), transparent 34%),
+        linear-gradient(145deg,rgba(249,168,212,.065),rgba(196,181,253,.03));
+      box-shadow: 0 14px 38px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.02);
     }
     .home-support .emoji { font-size: 28px; margin-bottom: 12px; }
     .home-support h3 { font-size: 23px; margin: 0 0 8px; }
     .home-support p { color: var(--text-2); font-size: 13px; line-height: 1.7; margin: 0 0 18px; }
+
+    @keyframes titleShimmer {
+      0%, 20% { background-position: 0% 50%; }
+      50%, 70% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes forestMist {
+      from { transform: translate3d(-8px, 3px, 0) scale(.98); opacity: .78; }
+      to   { transform: translate3d(18px, -8px, 0) scale(1.04); opacity: 1; }
+    }
+    @keyframes forestBreath {
+      0%,100% { opacity: .38; transform: translateY(0); }
+      50% { opacity: .72; transform: translateY(-2px); }
+    }
+    @keyframes forestTwinkle {
+      0%,100% { opacity: .45; transform: translateX(-50%) scale(.9) rotate(0deg); }
+      50% { opacity: 1; transform: translateX(-50%) scale(1.08) rotate(8deg); }
+    }
+
+    html.mf-reduce-motion .home-title span,
+    html.mf-reduce-motion .home-hero::before,
+    html.mf-reduce-motion .home-hero::after,
+    html.mf-reduce-motion .home-section::after {
+      animation: none !important;
+    }
 
     @media (max-width: 900px) {
       .home-worlds-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
@@ -329,7 +450,6 @@
           <a href="/worlds.html" class="btn-pri">🏡 Browse Worlds</a>
           <a href="/projects.html" class="btn-ghost">Explore Projects</a>
         </div>
-        <div class="home-note">No giant product wall. Pick a direction and wander from there.</div>
       </section>
 
       <section id="featured-worlds" class="home-section reveal" hidden>
@@ -349,7 +469,7 @@
           <div>
             <div class="home-section-label">Explore Mayflower</div>
             <h2 class="home-section-title">What are you here for?</h2>
-            <p class="home-section-copy">The homepage stays simple; each section has its own space for the details.</p>
+            <p class="home-section-copy">Follow whichever little path catches your eye — worlds, shared spaces, stories, or the things being built behind the scenes.</p>
           </div>
         </div>
 
@@ -398,7 +518,7 @@
             <div class="home-section-label">About</div>
             <h2>Small studio. Lots of curiosity.</h2>
             <p>
-              Mayflower Studios is an independent studio for projects that are useful, cozy, interesting, or simply fun to build. The site is organized so the homepage can stay calm while each project gets room to breathe on its own page.
+              Mayflower Studios is an independent little corner for things that are useful, cozy, curious, or simply fun to make — from hand-built virtual spaces to stories, software, and experiments that grow into something worth sharing.
             </p>
             <div class="home-about-links">
               <a href="/radio/" class="btn-ghost sm">📻 Mayflower Radio</a>
