@@ -109,15 +109,24 @@
       const r=await fetch(`${DOWNLOAD_FN}?world=${encodeURIComponent(id)}`,{headers:{Authorization:`Bearer ${token}`},cache:"no-store"});
       const data=await r.json().catch(()=>({}));
       if(!r.ok)throw new Error(data.error||`Download check failed (${r.status})`);
-      if(data.scheme!=="AES-GCM-256-v1"||!data.key||!data.iv||!Number.isInteger(Number(data.chunks))||Number(data.chunks)<1||Number(data.encryptedSize)<1)throw new Error("The protected download information was not returned correctly.");
+      if(data.delivery==="inline-v1"&&data.data){
+        if(button)button.textContent="Preparing world…";
+        const plain=b64ToBytes(data.data);
+        if(Number(data.size)>0&&plain.length!==Number(data.size))throw new Error("The protected world download was incomplete.");
+        saveBlob(new Blob([plain],{type:"application/octet-stream"}),data.name||"world.world");
+        return;
+      }
+      if(data.delivery!=="encrypted-chunks-v2"||data.scheme!=="AES-GCM-256-v1"||!data.key||!data.iv||!Number.isInteger(Number(data.chunks))||Number(data.chunks)<1||Number(data.encryptedSize)<1)throw new Error("The protected download information was not returned correctly.");
       const chunks=Number(data.chunks),encryptedSize=Number(data.encryptedSize);
       const encrypted=new Uint8Array(encryptedSize);
       let offset=0;
       for(let i=0;i<chunks;i++){
-        if(button)button.textContent=`Downloading encrypted world… ${i+1}/${chunks}`;
+        if(button)button.textContent=`Downloading protected world… ${i+1}/${chunks}`;
         const fr=await fetch(`${DOWNLOAD_CHUNK_FN}?world=${encodeURIComponent(id)}&chunk=${i}`,{headers:{Authorization:`Bearer ${token}`},cache:"no-store"});
-        if(!fr.ok){const problem=await fr.json().catch(()=>({}));throw new Error(problem.error||`Protected file download failed (${fr.status}).`)}
-        const part=new Uint8Array(await fr.arrayBuffer());
+        const partData=await fr.json().catch(()=>({}));
+        if(!fr.ok)throw new Error(partData.error||`Protected file download failed (${fr.status}).`);
+        if(!partData.data)throw new Error("A protected file chunk was empty.");
+        const part=b64ToBytes(partData.data);
         if(offset+part.length>encrypted.length)throw new Error("Protected file data was larger than expected.");
         encrypted.set(part,offset);offset+=part.length;
       }
@@ -125,7 +134,7 @@
       if(button)button.textContent="Decrypting world…";
       const key=await crypto.subtle.importKey("raw",b64ToBytes(data.key),{name:"AES-GCM"},false,["decrypt"]);
       let plain;
-      try{plain=await crypto.subtle.decrypt({name:"AES-GCM",iv:b64ToBytes(data.iv)},key,encrypted)}catch(_){throw new Error("The protected world file could not be decrypted. Re-upload the world from Admin if this keeps happening.")}
+      try{plain=await crypto.subtle.decrypt({name:"AES-GCM",iv:b64ToBytes(data.iv)},key,encrypted)}catch(_){throw new Error("The protected world file could not be decrypted. Edit this world in Admin and re-select the original .world file once.")}
       saveBlob(new Blob([plain],{type:"application/octet-stream"}),data.name||"world.world");
     }catch(err){alert(err.message||"Could not unlock this download.")}
     finally{if(button){button.disabled=false;button.textContent="🔐 Download purchased world"}}
