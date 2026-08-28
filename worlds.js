@@ -4,15 +4,18 @@
   const DB="https://watchtogether-95d7d-default-rtdb.firebaseio.com";
   const CHECKOUT_FN="https://us-central1-watchtogether-95d7d.cloudfunctions.net/worldCheckout";
   const DOWNLOAD_FN="https://us-central1-watchtogether-95d7d.cloudfunctions.net/worldDownload";
+  const DOWNLOAD_CHUNK_FN="https://us-central1-watchtogether-95d7d.cloudfunctions.net/worldDownloadChunk";
+  const STORE_INFO_FN="https://us-central1-watchtogether-95d7d.cloudfunctions.net/worldStoreInfo";
   const grid=document.getElementById("worldGrid"), search=document.getElementById("worldSearch"), sort=document.getElementById("worldSort"), count=document.getElementById("worldCount"), notice=document.getElementById("worldNotice"), page=document.getElementById("worldPage");
   const purchaseBox=document.getElementById("worldPurchases"), purchaseList=document.getElementById("worldPurchaseList"), purchaseRefresh=document.getElementById("worldPurchaseRefresh");
-  let all=[], shots=[], shotIndex=0, authUser=null, purchases={}, activeDetail=null;
+  let all=[], shots=[], shotIndex=0, authUser=null, purchases={}, activeDetail=null, storeMode="unknown";
   const esc=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
   const safeUrl=v=>{try{const u=new URL(String(v||""),location.origin);return (u.protocol==="https:"||u.protocol==="http:")?u.href:""}catch(_){return ""}};
   const fileSize=n=>{n=Number(n)||0;if(!n)return "";const u=["B","KB","MB","GB"];let i=0;while(n>=1024&&i<u.length-1){n/=1024;i++}return `${n>=10||i===0?n.toFixed(0):n.toFixed(1)} ${u[i]}`};
   const date=v=>{const d=new Date(Number(v)||0);return isNaN(d)?"":d.toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"})};
   const paid=w=>!!(w&&w.commerce&&w.commerce.type==="paid");
-  const owned=w=>!!(authUser&&purchases&&purchases[w.id]&&purchases[w.id].status==="active");
+  const purchaseMode=p=>p&&p.livemode===true?"live":"test";
+  const owned=w=>{const p=authUser&&purchases&&purchases[w.id];return !!(p&&p.status==="active"&&(storeMode==="unknown"||purchaseMode(p)===storeMode))};
   function b64ToBytes(v){
     let s=String(v||"").replace(/-/g,"+").replace(/_/g,"/");
     while(s.length%4)s+="=";
@@ -106,11 +109,19 @@
       const r=await fetch(`${DOWNLOAD_FN}?world=${encodeURIComponent(id)}`,{headers:{Authorization:`Bearer ${token}`},cache:"no-store"});
       const data=await r.json().catch(()=>({}));
       if(!r.ok)throw new Error(data.error||`Download check failed (${r.status})`);
-      if(data.scheme!=="AES-GCM-256-v1"||!safeUrl(data.url)||!data.key||!data.iv)throw new Error("The protected download information was not returned correctly.");
-      if(button)button.textContent="Downloading encrypted world…";
-      const fr=await fetch(safeUrl(data.url),{cache:"no-store"});
-      if(!fr.ok)throw new Error(`Protected file download failed (${fr.status}).`);
-      const encrypted=await fr.arrayBuffer();
+      if(data.scheme!=="AES-GCM-256-v1"||!data.key||!data.iv||!Number.isInteger(Number(data.chunks))||Number(data.chunks)<1||Number(data.encryptedSize)<1)throw new Error("The protected download information was not returned correctly.");
+      const chunks=Number(data.chunks),encryptedSize=Number(data.encryptedSize);
+      const encrypted=new Uint8Array(encryptedSize);
+      let offset=0;
+      for(let i=0;i<chunks;i++){
+        if(button)button.textContent=`Downloading encrypted world… ${i+1}/${chunks}`;
+        const fr=await fetch(`${DOWNLOAD_CHUNK_FN}?world=${encodeURIComponent(id)}&chunk=${i}`,{headers:{Authorization:`Bearer ${token}`},cache:"no-store"});
+        if(!fr.ok){const problem=await fr.json().catch(()=>({}));throw new Error(problem.error||`Protected file download failed (${fr.status}).`)}
+        const part=new Uint8Array(await fr.arrayBuffer());
+        if(offset+part.length>encrypted.length)throw new Error("Protected file data was larger than expected.");
+        encrypted.set(part,offset);offset+=part.length;
+      }
+      if(offset!==encrypted.length)throw new Error("Protected file download was incomplete.");
       if(button)button.textContent="Decrypting world…";
       const key=await crypto.subtle.importKey("raw",b64ToBytes(data.key),{name:"AES-GCM"},false,["decrypt"]);
       let plain;
@@ -142,6 +153,9 @@
     notice.hidden=false;notice.textContent="Stripe returned you successfully, but the purchase webhook is still processing. Use Refresh purchases in a moment if the download has not unlocked yet.";
   }
 
+  async function loadStoreMode(){
+    try{const r=await fetch(STORE_INFO_FN,{cache:"no-store"});if(r.ok){const d=await r.json();if(d&&/^(test|live)$/.test(d.mode))storeMode=d.mode}}catch(err){console.warn("store mode",err)}
+  }
   async function loadPurchases(){
     purchases={};
     if(!authUser){renderPurchases();refreshWorldUI();return}
@@ -155,10 +169,10 @@
   function renderPurchases(){
     if(!purchaseBox||!purchaseList)return;
     if(!authUser){purchaseBox.hidden=true;return}
-    const ids=Object.entries(purchases||{}).filter(([,p])=>p&&p.status==="active").map(([id])=>id);
+    const rows=Object.entries(purchases||{}).filter(([,p])=>p&&p.status==="active");
     purchaseBox.hidden=false;
-    if(!ids.length){purchaseList.innerHTML='<div class="worldPurchasePending">No paid worlds are attached to this account yet. After a completed purchase, use “Refresh purchases” if the checkout tab is still open.</div>';return}
-    purchaseList.innerHTML=ids.map(id=>{const w=all.find(x=>x.id===id);return `<div class="worldPurchaseItem"><strong>${esc(w?w.title:"Purchased world")}</strong><button class="btn ghost" type="button" data-paid-download="${esc(id)}">Download</button></div>`}).join("");
+    if(!rows.length){purchaseList.innerHTML='<div class="worldPurchasePending">No paid worlds are attached to this account yet. After a completed purchase, use “Refresh purchases” if the checkout tab is still open.</div>';return}
+    purchaseList.innerHTML=rows.map(([id,p])=>{const w=all.find(x=>x.id===id),mode=purchaseMode(p),matches=storeMode==="unknown"||mode===storeMode;return `<div class="worldPurchaseItem"><strong>${esc(w?w.title:"Purchased world")}</strong><span class="worldTag">${mode==="live"?"Live purchase":"Test purchase"}</span>${matches?`<button class="btn ghost" type="button" data-paid-download="${esc(id)}">Download</button>`:`<span class="worldPurchasePending">Does not unlock the ${esc(storeMode)} store</span>`}</div>`}).join("");
   }
   function refreshWorldUI(){
     if(activeDetail){const w=all.find(x=>x.id===activeDetail.id);if(w)detail(w)}else draw();
@@ -166,7 +180,7 @@
   if(purchaseRefresh)purchaseRefresh.addEventListener("click",async()=>{purchaseRefresh.disabled=true;purchaseRefresh.textContent="Refreshing…";await loadPurchases();purchaseRefresh.disabled=false;purchaseRefresh.textContent="Refresh purchases"});
   function waitAuth(){
     if(!window.MFAuth){setTimeout(waitAuth,100);return}
-    MFAuth.onChange(async u=>{authUser=u||null;checkoutNotice();await loadPurchases();if(authUser)pollCheckoutPurchase()});
+    MFAuth.onChange(async u=>{authUser=u||null;checkoutNotice();await loadStoreMode();await loadPurchases();if(authUser)pollCheckoutPurchase()});
   }
 
   async function load(){

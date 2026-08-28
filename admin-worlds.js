@@ -426,7 +426,7 @@
           const enc=await encryptWorldFile(wf);
           const path=`world-library-paid/${user.uid}/${wid}/world/${stamp}-${safeName(wf.name)}.enc`;
           progress("Uploading encrypted paid world file…");
-          uploadedWorld=await upload(enc.blob,path,"application/octet-stream",p=>progress(`Uploading encrypted paid world file… ${p}%`),true,wf.name,wf.size);
+          uploadedWorld=await upload(enc.blob,path,"application/octet-stream",p=>progress(`Uploading encrypted paid world file… ${p}%`),false,wf.name,wf.size);
           uploadedWorld.key=enc.key;
           uploadedWorld.iv=enc.iv;
           uploadedWorld.scheme=enc.scheme;
@@ -442,9 +442,9 @@
       let publicWorld,privateWorld=null;
       if(access==="paid"){
         const src=uploadedWorld||oldPrivate;
-        if(!src||!src.path||!src.url||!src.key||!src.iv)throw new Error("Encrypted paid-world metadata is missing. Please choose the .world file again.");
+        if(!src||!src.path||!src.key||!src.iv)throw new Error("Encrypted paid-world metadata is missing. Please choose the .world file again.");
         publicWorld={name:src.name,size:src.size,private:true};
-        privateWorld={path:src.path,url:src.url,name:src.name,size:src.size,encryptedSize:Number(src.encryptedSize)||0,key:src.key,iv:src.iv,scheme:src.scheme||"AES-GCM-256-v1",uploadedByUid:src.uploadedByUid||user.uid,updatedAt:Date.now()};
+        privateWorld={path:src.path,name:src.name,size:src.size,encryptedSize:Number(src.encryptedSize)||0,key:src.key,iv:src.iv,scheme:src.scheme||"AES-GCM-256-v1",uploadedByUid:src.uploadedByUid||user.uid,updatedAt:Date.now()};
       }else{
         const src=uploadedWorld||oldPublicWorld;
         if(!src||!src.url||!src.path)throw new Error("Public world file metadata is missing. Please choose the .world file again.");
