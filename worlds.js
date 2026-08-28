@@ -1,4 +1,4 @@
-/* Mayflower Studios — public 3DX World Library + protected paid-world delivery */
+/* Mayflower Studios — public 3DX World Library */
 (function(){
   "use strict";
   const DB="https://watchtogether-95d7d-default-rtdb.firebaseio.com";
@@ -8,7 +8,7 @@
   const STORE_INFO_FN="https://us-central1-watchtogether-95d7d.cloudfunctions.net/worldStoreInfo";
   const grid=document.getElementById("worldGrid"), search=document.getElementById("worldSearch"), sort=document.getElementById("worldSort"), count=document.getElementById("worldCount"), notice=document.getElementById("worldNotice"), page=document.getElementById("worldPage");
   const featuredSection=document.getElementById("worldFeaturedSection"), featuredGrid=document.getElementById("worldFeaturedGrid");
-  const purchaseBox=document.getElementById("worldPurchases"), purchaseList=document.getElementById("worldPurchaseList"), purchaseRefresh=document.getElementById("worldPurchaseRefresh");
+  const purchaseBox=document.getElementById("worldPurchases"), purchaseList=document.getElementById("worldPurchaseList");
   let all=[], shots=[], shotIndex=0, authUser=null, purchases={}, activeDetail=null, storeMode="unknown";
   const esc=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
   const safeUrl=v=>{try{const u=new URL(String(v||""),location.origin);return (u.protocol==="https:"||u.protocol==="http:")?u.href:""}catch(_){return ""}};
@@ -43,7 +43,7 @@
       const dl=safeUrl(w.world&&w.world.url);
       return dl?`<a class="btn primary" href="${esc(dl)}" download="${esc((w.world&&w.world.name)||w.title+'.world')}">⬇ Download .world</a>`:`<span class="btn ghost" aria-disabled="true">File unavailable</span>`;
     }
-    if(owned(w))return `<button class="btn primary worldOwned" type="button" data-paid-download="${esc(w.id)}">🔐 Download purchased world</button>`;
+    if(owned(w))return `<button class="btn primary worldOwned" type="button" data-paid-download="${esc(w.id)}">⬇ Download world</button>`;
     const c=w.commerce||{}, ready=Number.isInteger(Number(c.priceCents))&&Number(c.priceCents)>0&&/^[A-Z]{3}$/.test(String(c.currency||""));
     if(!ready)return `<span class="btn ghost" aria-disabled="true">Paid download not on sale yet</span>`;
     return `<button class="btn primary" type="button" data-buy="${esc(w.id)}">Buy ${esc(price(w))}</button>`;
@@ -51,7 +51,7 @@
   function card(w,spotlight=false){
     const tags=(w.tags||[]).slice(0,spotlight?4:5).map(t=>`<span class="worldTag">${esc(t)}</span>`).join("");
     const classes=["card","worldCard",w.featured?"worldCardFeatured":"",spotlight?"worldSpotlightCard":""].filter(Boolean).join(" ");
-    return `<article class="${classes}">${spotlight?'<div class="worldSpotlightGlow" aria-hidden="true"></div>':''}<button class="worldCoverBtn" type="button" data-open="${esc(w.id)}" aria-label="Open ${esc(w.title)}">${cover(w)}</button><div class="worldCardBody"><div class="worldCardTop"><div><h2>${esc(w.title)}</h2><div class="worldBy">${esc(w.creator||"Mayflower Studios")}${w.updatedAt?` · ${esc(date(w.updatedAt))}`:""}</div></div><div>${w.featured?'<span class="worldFeatured">★ Featured</span>':''}</div></div><div style="margin-top:8px"><span class="worldPrice${paid(w)?"":" free"}">${paid(w)?"🔐 ":""}${esc(price(w))}${owned(w)?" · Owned":""}</span></div><p class="worldSummary">${esc(w.description||"No description yet.")}</p>${tags?`<div class="worldTags">${tags}</div>`:""}<div class="worldCardActions"><a class="btn ghost" href="?world=${encodeURIComponent(w.id)}">View world</a>${actionButtons(w)}</div>${paid(w)?'<div class="worldBuyNote">Payment is handled securely by Stripe. The protected file unlocks only after Stripe verifies payment for the Mayflower account used to start checkout.</div>':''}</div></article>`;
+    return `<article class="${classes}">${spotlight?'<div class="worldSpotlightGlow" aria-hidden="true"></div>':''}<button class="worldCoverBtn" type="button" data-open="${esc(w.id)}" aria-label="Open ${esc(w.title)}">${cover(w)}</button><div class="worldCardBody"><div class="worldCardTop"><div><h2>${esc(w.title)}</h2><div class="worldBy">${esc(w.creator||"Mayflower Studios")}${w.updatedAt?` · ${esc(date(w.updatedAt))}`:""}</div></div><div>${w.featured?'<span class="worldFeatured">★ Featured</span>':''}</div></div><div style="margin-top:8px"><span class="worldPrice${paid(w)?"":" free"}">${esc(price(w))}${owned(w)?" · Owned":""}</span></div><p class="worldSummary">${esc(w.description||"No description yet.")}</p>${tags?`<div class="worldTags">${tags}</div>`:""}<div class="worldCardActions"><a class="btn ghost" href="?world=${encodeURIComponent(w.id)}">View details</a>${actionButtons(w)}</div></div></article>`;
   }
   function renderFeatured(){
     if(!featuredSection||!featuredGrid)return;
@@ -75,8 +75,8 @@
     const imgs=(w.images||[]).filter(x=>x&&safeUrl(x.url));
     const gallery=imgs.length?`<div class="sectionTitle"><h2>🖼️ Screenshots</h2><span>${imgs.length} image${imgs.length===1?"":"s"}</span></div><section class="worldGallery">${imgs.map((im,i)=>`<button class="worldShot" type="button" data-shot="${i}" aria-label="Open screenshot ${i+1}"><img src="${esc(safeUrl(im.url))}" alt="${esc(im.caption||w.title+' screenshot '+(i+1))}" loading="lazy" onerror="this.closest('.worldShot').remove()"></button>`).join("")}</section>`:"";
     const tags=(w.tags||[]).map(t=>`<span class="worldTag">${esc(t)}</span>`).join("");
-    const commerce=paid(w)?`<div class="worldCommerceBanner"><strong>${owned(w)?"Purchased":"Secure paid world"} · ${esc(price(w))}</strong><br>${owned(w)?"This world is unlocked for your signed-in Mayflower Studios account. The encrypted file is unlocked only for this purchased account.":"Checkout is processed by Stripe. Mayflower Studios never receives or stores your card number. Download access is granted only after Stripe sends a signed server-to-server payment confirmation."}</div>`:"";
-    page.innerHTML=`<a class="worldDetailBack" href="/worlds.html">← All worlds</a><section class="worldDetailHero"><div class="worldDetailCover">${cover(w)}</div><div class="card worldDetailInfo"><div class="worldDetailKicker">3DXChat World${w.featured?'<span class="worldDetailFeatured">★ Featured</span>':''}</div><h1>${esc(w.title)}</h1><div class="worldBy">Shared by ${esc(w.creator||"Mayflower Studios")}</div><div style="margin-top:10px"><span class="worldPrice${paid(w)?"":" free"}">${paid(w)?"🔐 ":""}${esc(price(w))}${owned(w)?" · Owned":""}</span></div>${tags?`<div class="worldTags" style="margin-top:12px">${tags}</div>`:""}<p class="worldDetailDesc">${esc(w.description||"")}</p><div class="worldMeta">${w.version?`<div><span>Version</span><strong>${esc(w.version)}</strong></div>`:""}<div><span>File</span><strong>${esc((w.world&&w.world.name)||"World file")}</strong></div>${w.world&&w.world.size?`<div><span>Size</span><strong>${esc(fileSize(w.world.size))}</strong></div>`:""}${w.updatedAt?`<div><span>Updated</span><strong>${esc(date(w.updatedAt))}</strong></div>`:""}</div><div class="worldDetailActions">${actionButtons(w,true)}<button class="btn ghost" id="worldShare" type="button">🔗 Copy link</button></div>${paid(w)?'<div class="worldSecureLine">🔒 <span><b>Encrypted protected delivery</b> · purchase required for the actual .world file</span></div>':''}${commerce}</div></section>${gallery}<section class="card worldDisclaimer"><strong>Using this world</strong><p>${paid(w)?"Purchasing this world grants the purchaser a personal, non-transferable license to use the downloaded world in 3DXChat. It does not transfer copyright or grant permission to redistribute, resell, mirror, or claim the world as your own. ":"Download the <code>.world</code> file and import it through 3DXChat's world editor. "}Unless this world says otherwise, downloading original Mayflower Studios work does not grant permission to re-upload, redistribute, sell, or claim it as your own.</p></section>`;
+    const commerce=paid(w)?`<div class="worldCommerceBanner"><strong>${owned(w)?"Owned":"Buy once, keep it"} · ${esc(price(w))}</strong><br>${owned(w)?"Available to download again anytime from this Mayflower Studios account.":"Secure checkout by Stripe. Your purchase stays linked to your Mayflower Studios account for future downloads."}</div>`:"";
+    page.innerHTML=`<a class="worldDetailBack" href="/worlds.html">← All worlds</a><section class="worldDetailHero"><div class="worldDetailCover">${cover(w)}</div><div class="card worldDetailInfo"><div class="worldDetailKicker">3DXChat World${w.featured?'<span class="worldDetailFeatured">★ Featured</span>':''}</div><h1>${esc(w.title)}</h1><div class="worldBy">By ${esc(w.creator||"Mayflower Studios")}</div><div style="margin-top:10px"><span class="worldPrice${paid(w)?"":" free"}">${esc(price(w))}${owned(w)?" · Owned":""}</span></div>${tags?`<div class="worldTags" style="margin-top:12px">${tags}</div>`:""}<p class="worldDetailDesc">${esc(w.description||"")}</p><div class="worldMeta">${w.version?`<div><span>Version</span><strong>${esc(w.version)}</strong></div>`:""}<div><span>Format</span><strong>3DXChat .world</strong></div>${w.world&&w.world.size?`<div><span>Size</span><strong>${esc(fileSize(w.world.size))}</strong></div>`:""}${w.updatedAt?`<div><span>Updated</span><strong>${esc(date(w.updatedAt))}</strong></div>`:""}</div><div class="worldDetailActions">${actionButtons(w,true)}<button class="btn ghost" id="worldShare" type="button">🔗 Copy link</button></div>${commerce}</div></section>${gallery}<section class="card worldDisclaimer"><strong>Using this world</strong><p>${paid(w)?"Your purchase gives you a personal, non-transferable license to use this world in 3DXChat and download it again from your Mayflower Studios account. ":"Download the <code>.world</code> file and import it through 3DXChat's world editor. "}Please do not re-upload, redistribute, resell, or claim original Mayflower Studios work as your own.</p></section>`;
     shots=imgs;wireDetail();
   }
   function wireDetail(){
@@ -112,7 +112,7 @@
     const w=all.find(x=>x.id===id);if(w&&!paid(w))return;
     if(!authUser){alert("Sign in to the account that purchased this world first.");const back=location.pathname+location.search;location.href=`/account.html?next=${encodeURIComponent(back)}`;return}
     if(!window.crypto||!crypto.subtle){alert("This browser cannot decrypt protected world downloads. Use a current Chrome, Edge, Firefox, or Opera browser.");return}
-    if(button){button.disabled=true;button.textContent="Checking purchase…"}
+    if(button){button.disabled=true;button.textContent="Preparing download…"}
     try{
       const token=await authUser.getIdToken(true);
       const r=await fetch(`${DOWNLOAD_FN}?world=${encodeURIComponent(id)}`,{headers:{Authorization:`Bearer ${token}`},cache:"no-store"});
@@ -130,7 +130,7 @@
       const encrypted=new Uint8Array(encryptedSize);
       let offset=0;
       for(let i=0;i<chunks;i++){
-        if(button)button.textContent=`Downloading protected world… ${i+1}/${chunks}`;
+        if(button)button.textContent=`Downloading world… ${i+1}/${chunks}`;
         const fr=await fetch(`${DOWNLOAD_CHUNK_FN}?world=${encodeURIComponent(id)}&chunk=${i}`,{headers:{Authorization:`Bearer ${token}`},cache:"no-store"});
         const partData=await fr.json().catch(()=>({}));
         if(!fr.ok)throw new Error(partData.error||`Protected file download failed (${fr.status}).`);
@@ -146,7 +146,7 @@
       try{plain=await crypto.subtle.decrypt({name:"AES-GCM",iv:b64ToBytes(data.iv)},key,encrypted)}catch(_){throw new Error("The protected world file could not be decrypted. Edit this world in Admin and re-select the original .world file once.")}
       saveBlob(new Blob([plain],{type:"application/octet-stream"}),data.name||"world.world");
     }catch(err){alert(err.message||"Could not unlock this download.")}
-    finally{if(button){button.disabled=false;button.textContent="🔐 Download purchased world"}}
+    finally{if(button){button.disabled=false;button.textContent="⬇ Download world"}}
   }
   document.addEventListener("click",e=>{
     const buy=e.target.closest&&e.target.closest("[data-buy]");if(buy){startBuy(buy.dataset.buy,buy);return}
@@ -157,7 +157,7 @@
 
   function checkoutNotice(){
     const state=new URLSearchParams(location.search).get("checkout");
-    if(state==="success"){notice.hidden=false;notice.textContent="Payment completed. Stripe is confirming your purchase now — the download normally unlocks within a few seconds."}
+    if(state==="success"){notice.hidden=false;notice.textContent="Payment completed. Your world is being added to your account now — this normally takes just a few seconds."}
     else if(state==="cancelled"){notice.hidden=false;notice.textContent="Stripe Checkout was cancelled. You were not charged by this checkout."}
   }
   async function pollCheckoutPurchase(){
@@ -165,10 +165,10 @@
     const id=q.get("world");if(!id)return;
     for(let i=0;i<6;i++){
       await loadPurchases();
-      const w=all.find(x=>x.id===id);if(w&&owned(w)){notice.hidden=false;notice.textContent="✓ Purchase confirmed by Stripe. This world is now unlocked on your account.";return}
+      const w=all.find(x=>x.id===id);if(w&&owned(w)){notice.hidden=false;notice.textContent="✓ Purchase confirmed. This world is now available in your account.";return}
       if(i<5)await new Promise(r=>setTimeout(r,1800));
     }
-    notice.hidden=false;notice.textContent="Stripe returned you successfully, but the purchase webhook is still processing. Use Refresh purchases in a moment if the download has not unlocked yet.";
+    notice.hidden=false;notice.textContent="Your payment was received, but the purchase is still being confirmed. Try the download again in a moment.";
   }
 
   async function loadStoreMode(){
@@ -187,15 +187,14 @@
   function renderPurchases(){
     if(!purchaseBox||!purchaseList)return;
     if(!authUser){purchaseBox.hidden=true;return}
-    const rows=Object.entries(purchases||{}).filter(([,p])=>p&&p.status==="active");
+    const rows=Object.entries(purchases||{}).filter(([,p])=>p&&p.status==="active"&&(storeMode==="unknown"||purchaseMode(p)===storeMode));
     purchaseBox.hidden=false;
-    if(!rows.length){purchaseList.innerHTML='<div class="worldPurchasePending">No paid worlds are attached to this account yet. After a completed purchase, use “Refresh purchases” if the checkout tab is still open.</div>';return}
-    purchaseList.innerHTML=rows.map(([id,p])=>{const w=all.find(x=>x.id===id),mode=purchaseMode(p),matches=storeMode==="unknown"||mode===storeMode;return `<div class="worldPurchaseItem"><strong>${esc(w?w.title:"Purchased world")}</strong><span class="worldTag">${mode==="live"?"Live purchase":"Test purchase"}</span>${matches?`<button class="btn ghost" type="button" data-paid-download="${esc(id)}">Download</button>`:`<span class="worldPurchasePending">Does not unlock the ${esc(storeMode)} store</span>`}</div>`}).join("");
+    if(!rows.length){purchaseList.innerHTML='<div class="worldPurchasePending">Worlds you purchase will appear here for easy redownloads.</div>';return}
+    purchaseList.innerHTML=rows.map(([id])=>{const w=all.find(x=>x.id===id);return `<div class="worldPurchaseItem"><strong>${esc(w?w.title:"Purchased world")}</strong><button class="btn ghost" type="button" data-paid-download="${esc(id)}">Download</button></div>`}).join("");
   }
   function refreshWorldUI(){
     if(activeDetail){const w=all.find(x=>x.id===activeDetail.id);if(w)detail(w)}else draw();
   }
-  if(purchaseRefresh)purchaseRefresh.addEventListener("click",async()=>{purchaseRefresh.disabled=true;purchaseRefresh.textContent="Refreshing…";await loadPurchases();purchaseRefresh.disabled=false;purchaseRefresh.textContent="Refresh purchases"});
   function waitAuth(){
     if(!window.MFAuth){setTimeout(waitAuth,100);return}
     MFAuth.onChange(async u=>{authUser=u||null;checkoutNotice();await loadStoreMode();await loadPurchases();if(authUser)pollCheckoutPurchase()});

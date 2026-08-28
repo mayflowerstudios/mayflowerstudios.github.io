@@ -10,3 +10,14 @@
 .worldFeaturedSection[hidden]{display:none!important}.worldFeaturedHead{position:relative;z-index:1;display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:15px}.worldFeaturedHead h2{font-size:27px;margin:2px 0 3px}.worldFeaturedHead p{font-size:12.5px;color:var(--text-3);margin:0}.worldFeaturedKicker{text-transform:uppercase;letter-spacing:.09em;color:#fde68a;font-size:10px;font-weight:800}.worldFeaturedGrid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.worldCard{position:relative}.worldCardFeatured{border-color:rgba(251,191,36,.25);box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 8px 28px rgba(251,191,36,.035)}.worldCardFeatured:hover{border-color:rgba(251,191,36,.55);box-shadow:0 14px 38px rgba(251,191,36,.075)}.worldSpotlightCard{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.025));isolation:isolate}.worldSpotlightCard .worldCoverBtn{height:250px}.worldSpotlightCard .worldCardBody{padding:18px 18px 19px}.worldSpotlightCard h2{font-size:21px}.worldSpotlightCard .worldSummary{-webkit-line-clamp:2;min-height:41px}.worldSpotlightGlow{position:absolute;z-index:-1;inset:-45% -15% auto;height:220px;background:radial-gradient(circle at 50% 0,rgba(251,191,36,.12),transparent 62%);pointer-events:none}.worldFeatured{font-weight:750;box-shadow:0 0 18px rgba(251,191,36,.055)}.worldDetailFeatured{display:inline-flex;margin-left:9px;vertical-align:1px;font-size:9px;letter-spacing:.04em;text-transform:none;border:1px solid rgba(251,191,36,.3);background:rgba(251,191,36,.09);color:#fde68a;border-radius:999px;padding:3px 7px}
 @media(max-width:900px){.worldFeaturedGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.worldFeaturedGrid .worldSpotlightCard:first-child:last-child{grid-column:1/-1}.worldFeaturedHead{align-items:flex-start}}
 @media(max-width:620px){.worldFeaturedSection{padding:17px 14px}.worldFeaturedHead{flex-direction:column;align-items:flex-start}.worldFeaturedGrid{grid-template-columns:1fr}.worldSpotlightCard .worldCoverBtn{height:230px}}
+
+
+/* Public storefront cleanup */
+.worldHero .muted{max-width:760px}
+.worldHeroNote{background:linear-gradient(135deg,rgba(249,168,212,.045),rgba(196,181,253,.035));}
+.worldPurchases{background:linear-gradient(135deg,rgba(249,168,212,.035),rgba(255,255,255,.02));}
+.worldPurchasesHead{align-items:center}
+.worldPurchaseItem{min-height:48px}
+.worldPurchaseItem .btn{margin-left:auto}
+.worldCommerceBanner{font-size:12px;line-height:1.55;padding:11px 12px}
+.worldDisclaimer a{color:var(--rose);text-decoration:none}.worldDisclaimer a:hover{text-decoration:underline}
