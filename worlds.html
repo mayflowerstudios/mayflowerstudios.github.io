@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>3DX World Library • Mayflower Studios</title>
   <link rel="stylesheet" href="/style.css?v=61" />
-  <link rel="stylesheet" href="/worlds.css?v=2" />
+  <link rel="stylesheet" href="/worlds.css?v=3" />
   <meta name="description" content="Browse free and paid 3DXChat world files shared by Mayflower Studios, with screenshots, descriptions, secure purchases, and protected downloads." />
   <meta property="og:title" content="3DX World Library • Mayflower Studios" />
   <meta property="og:description" content="Browse free and paid downloadable 3DXChat worlds from Mayflower Studios." />
@@ -29,6 +29,18 @@
           <span class="worldHeroIcon">📦</span>
           <div><strong>One library, no separate pages</strong><span>Every new world is added from the admin manager and appears here automatically.</span></div>
         </div>
+      </section>
+
+      <section id="worldFeaturedSection" class="worldFeaturedSection" hidden aria-labelledby="worldFeaturedTitle">
+        <div class="worldFeaturedHead">
+          <div>
+            <div class="worldFeaturedKicker">★ Mayflower picks</div>
+            <h2 id="worldFeaturedTitle">Featured worlds</h2>
+            <p>Builds I especially want to put in the spotlight right now.</p>
+          </div>
+          <a class="btn ghost" href="#worldGrid">Browse all worlds ↓</a>
+        </div>
+        <div id="worldFeaturedGrid" class="worldFeaturedGrid"></div>
       </section>
 
       <section class="worldToolbar card" aria-label="World library controls">
@@ -66,6 +78,6 @@
   </div>
 
   <script src="/shared.js?v=65"></script>
-  <script src="/worlds.js?v=5"></script>
+  <script src="/worlds.js?v=6"></script>
 </body>
 </html>
