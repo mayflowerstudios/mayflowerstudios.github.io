@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b1120" />
+  <title>Mayflower WorldMark • Mayflower Studios</title>
+  <meta name="description" content="Add a persistent Mayflower WorldMark and portable proof of ownership to a 3DXChat world." />
+  <meta property="og:title" content="Mayflower WorldMark • Mayflower Studios" />
+  <meta property="og:description" content="Mark your 3DXChat world as yours and receive portable proof of ownership." />
+  <meta property="og:url" content="https://mayflowerstudios.net/worldmark.html" />
+  <link rel="canonical" href="https://mayflowerstudios.net/worldmark.html" />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png?v=4" />
+  <link rel="apple-touch-icon" href="/assets/icons/favicon-180.png?v=4" />
+  <link rel="stylesheet" href="/style.css?v=61" />
+  <style>
+    .wm-wrap { max-width: 900px; margin: 0 auto; }
+    .wm-card { padding: clamp(24px, 5vw, 42px); position: relative; overflow: hidden; }
+    .wm-card::before {
+      content: ""; position: absolute; width: 360px; height: 360px; right: -150px; top: -170px;
+      background: radial-gradient(circle, rgba(249,168,212,.16), transparent 68%); pointer-events: none;
+    }
+    .wm-seal {
+      width: 70px; height: 70px; display: grid; place-items: center; border-radius: 22px;
+      font-size: 34px; background: linear-gradient(145deg, rgba(249,168,212,.18), rgba(196,181,253,.1));
+      border: 1px solid rgba(249,168,212,.25); box-shadow: 0 14px 40px rgba(0,0,0,.24);
+      margin-bottom: 22px;
+    }
+    .wm-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 18px; align-items: start; }
+    .wm-form { display: grid; gap: 16px; }
+    .wm-field { display: grid; gap: 7px; }
+    .wm-field label { color: var(--text-2); font-size: 13px; font-weight: 700; }
+    .wm-field label span { color: var(--text-3); font-weight: 400; }
+    .wm-file, .wm-field textarea {
+      width: 100%; color: var(--text); background: rgba(0,0,0,.25); border: 1px solid var(--border-2);
+      border-radius: var(--r-sm); font: inherit;
+    }
+    .wm-file { padding: 13px; }
+    .wm-file::file-selector-button {
+      color: var(--text); background: rgba(249,168,212,.12); border: 1px solid rgba(249,168,212,.22);
+      border-radius: 9px; padding: 8px 11px; margin-right: 12px; cursor: pointer;
+    }
+    .wm-field textarea { padding: 13px; min-height: 105px; resize: vertical; line-height: 1.55; }
+    .wm-account, .wm-info {
+      padding: 16px 17px; border-radius: var(--r-sm); border: 1px solid var(--border);
+      background: rgba(255,255,255,.025); color: var(--text-2); font-size: 13.5px; line-height: 1.65;
+    }
+    .wm-account strong { color: var(--text); }
+    .wm-account a { color: var(--rose); }
+    .wm-submit { width: 100%; justify-content: center; min-height: 48px; }
+    .wm-submit:disabled { opacity: .48; cursor: not-allowed; transform: none; }
+    .wm-status { min-height: 24px; margin: 0; color: var(--text-2); font-size: 13.5px; line-height: 1.55; }
+    .wm-status.ok { color: var(--emerald); }
+    .wm-status.bad { color: var(--rose); }
+    .wm-side { display: grid; gap: 12px; }
+    .wm-step { padding: 18px; }
+    .wm-step b { display: block; color: var(--rose); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 7px; }
+    .wm-step h3 { font-size: 16px; margin-bottom: 6px; }
+    .wm-step p { color: var(--text-2); font-size: 13px; line-height: 1.6; }
+    .wm-fine { color: var(--text-3); font-size: 12px; line-height: 1.65; margin-top: 14px; }
+    @media (max-width: 760px) { .wm-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body data-nav="projects">
+  <div class="site-page">
+    <div id="site-nav"></div>
+    <main class="content">
+      <section class="page-hero reveal">
+        <p class="page-kicker">✦ Persistent creator identity</p>
+        <h1 class="page-title">Mayflower WorldMark</h1>
+        <p class="page-sub">Mark a 3DXChat world as yours. The signed world carries its creator, timestamp, and cryptographic proof inside the file—even after ordinary game saves.</p>
+      </section>
+
+      <section class="sec wm-wrap reveal">
+        <div class="card wm-card">
+          <div class="wm-seal" aria-hidden="true">❀</div>
+          <div class="wm-grid">
+            <div>
+              <form class="wm-form" id="worldmarkForm">
+                <div class="wm-account" id="worldmarkAccount">Checking your Mayflower account…</div>
+                <div class="wm-field">
+                  <label for="worldmarkFile">World file <span>up to 24 MB</span></label>
+                  <input class="wm-file" id="worldmarkFile" type="file" accept=".world,application/json" />
+                </div>
+                <div class="wm-field">
+                  <label for="worldmarkNote">Ownership note <span>optional · stored in the proof</span></label>
+                  <textarea id="worldmarkNote" maxlength="500" placeholder="A short note about this world or build"></textarea>
+                </div>
+                <button class="btn-pri wm-submit" id="worldmarkSubmit" type="submit" disabled>Create my WorldMark</button>
+                <p class="wm-status" id="worldmarkStatus" role="status" aria-live="polite"></p>
+              </form>
+              <p class="wm-fine">Your world is processed in memory and returned immediately. Mayflower Studios does not retain the uploaded world. Already-marked worlds cannot be marked again.</p>
+            </div>
+            <aside class="wm-side" aria-label="How WorldMark works">
+              <div class="card wm-step"><b>1 · Choose</b><h3>Open your world</h3><p>Select an unsigned 3DXChat <code>.world</code> file.</p></div>
+              <div class="card wm-step"><b>2 · Mark</b><h3>Prove who created it</h3><p>Your Mayflower account identity and the current timestamp are signed into the world.</p></div>
+              <div class="card wm-step"><b>3 · Keep</b><h3>Download both proofs</h3><p>You receive a ZIP containing the marked world and a portable ownership record.</p></div>
+            </aside>
+          </div>
+        </div>
+      </section>
+    </main>
+    <div id="site-footer"></div>
+  </div>
+  <script src="/shared.js?v=65"></script>
+  <script src="/auth.js?v=65" data-mf-src="/auth.js"></script>
+  <script src="/worldmark.js?v=1"></script>
+</body>
+</html>
