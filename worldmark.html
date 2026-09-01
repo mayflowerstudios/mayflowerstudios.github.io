@@ -28,6 +28,16 @@
       margin-bottom: 22px;
     }
     .wm-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 18px; align-items: start; }
+    .wm-modes {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 6px; margin-bottom: 22px;
+      border: 1px solid var(--border); border-radius: var(--r-sm); background: rgba(0,0,0,.2);
+    }
+    .wm-mode {
+      border: 0; border-radius: 10px; padding: 12px; color: var(--text-2); background: transparent;
+      font: inherit; font-weight: 800; cursor: pointer; transition: .18s ease;
+    }
+    .wm-mode:hover { color: var(--text); background: rgba(255,255,255,.04); }
+    .wm-mode.active { color: #1a1220; background: linear-gradient(135deg, var(--rose), #f4b8d9); box-shadow: 0 8px 24px rgba(249,168,212,.16); }
     .wm-form { display: grid; gap: 16px; }
     .wm-field { display: grid; gap: 7px; }
     .wm-field label { color: var(--text-2); font-size: 13px; font-weight: 700; }
@@ -59,6 +69,18 @@
     .wm-step h3 { font-size: 16px; margin-bottom: 6px; }
     .wm-step p { color: var(--text-2); font-size: 13px; line-height: 1.6; }
     .wm-fine { color: var(--text-3); font-size: 12px; line-height: 1.65; margin-top: 14px; }
+    .wm-report { margin-top: 18px; padding: 20px; border: 1px solid var(--border-2); border-radius: var(--r-sm); background: rgba(0,0,0,.2); }
+    .wm-report[hidden], [hidden] { display: none !important; }
+    .wm-verdict { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px; font-size: 11px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; }
+    .wm-verdict::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+    .wm-verdict.good { color: var(--emerald); background: rgba(52,211,153,.1); }
+    .wm-verdict.warn { color: #f7c66b; background: rgba(247,198,107,.1); }
+    .wm-verdict.bad { color: var(--rose); background: rgba(249,168,212,.1); }
+    .wm-report h2 { margin: 13px 0 7px; font-size: 21px; }
+    .wm-report > p { color: var(--text-2); font-size: 13.5px; line-height: 1.6; }
+    .wm-details { display: grid; grid-template-columns: minmax(120px,.55fr) 1fr; gap: 9px 14px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 12.5px; }
+    .wm-details dt { color: var(--text-3); }
+    .wm-details dd { margin: 0; color: var(--text); overflow-wrap: anywhere; }
     @media (max-width: 760px) { .wm-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -69,33 +91,48 @@
       <section class="page-hero reveal">
         <p class="page-kicker">✦ Persistent creator identity</p>
         <h1 class="page-title">Mayflower WorldMark</h1>
-        <p class="page-sub">Mark a 3DXChat world as yours. The signed world carries its creator, timestamp, and cryptographic proof inside the file—even after ordinary game saves.</p>
+        <p class="page-sub">Mark a 3DXChat world as yours, or verify who signed one. The creator, timestamp, and cryptographic proof stay inside the world file—even after ordinary game saves.</p>
       </section>
 
       <section class="sec wm-wrap reveal">
         <div class="card wm-card">
           <div class="wm-seal" aria-hidden="true">❀</div>
+          <div class="wm-modes" role="tablist" aria-label="WorldMark action">
+            <button class="wm-mode active" id="worldmarkModeSign" type="button" role="tab" aria-selected="true">Mark a world</button>
+            <button class="wm-mode" id="worldmarkModeVerify" type="button" role="tab" aria-selected="false">Verify a WorldMark</button>
+          </div>
           <div class="wm-grid">
             <div>
               <form class="wm-form" id="worldmarkForm">
                 <div class="wm-account" id="worldmarkAccount">Checking your Mayflower account…</div>
                 <div class="wm-field">
-                  <label for="worldmarkFile">World file <span>up to 24 MB</span></label>
+                  <label for="worldmarkFile"><span id="worldmarkFileLabel">Unsigned world file</span> <span>· up to 24 MB</span></label>
                   <input class="wm-file" id="worldmarkFile" type="file" accept=".world,application/json" />
                 </div>
-                <div class="wm-field">
+                <div class="wm-field" id="worldmarkNoteField">
                   <label for="worldmarkNote">Ownership note <span>optional · stored in the proof</span></label>
                   <textarea id="worldmarkNote" maxlength="500" placeholder="A short note about this world or build"></textarea>
                 </div>
                 <button class="btn-pri wm-submit" id="worldmarkSubmit" type="submit" disabled>Create my WorldMark</button>
                 <p class="wm-status" id="worldmarkStatus" role="status" aria-live="polite"></p>
               </form>
-              <p class="wm-fine">Your world is processed in memory and returned immediately. Mayflower Studios does not retain the uploaded world. Already-marked worlds cannot be marked again.</p>
+              <div class="wm-report" id="worldmarkReport" hidden aria-live="polite">
+                <span class="wm-verdict" id="worldmarkVerdict"></span>
+                <h2 id="worldmarkReportTitle"></h2>
+                <p id="worldmarkReportMessage"></p>
+                <dl class="wm-details" id="worldmarkDetails"></dl>
+              </div>
+              <p class="wm-fine">Your world is processed in memory and returned immediately. Mayflower Studios does not retain the uploaded world. An existing WorldMark is always checked before a new one is created.</p>
             </div>
-            <aside class="wm-side" aria-label="How WorldMark works">
+            <aside class="wm-side" id="worldmarkSignHelp" aria-label="How WorldMark works">
               <div class="card wm-step"><b>1 · Choose</b><h3>Open your world</h3><p>Select an unsigned 3DXChat <code>.world</code> file.</p></div>
               <div class="card wm-step"><b>2 · Mark</b><h3>Prove who created it</h3><p>Your Mayflower account identity and the current timestamp are signed into the world.</p></div>
               <div class="card wm-step"><b>3 · Keep</b><h3>Download both proofs</h3><p>You receive a ZIP containing the marked world and a portable ownership record.</p></div>
+            </aside>
+            <aside class="wm-side" id="worldmarkVerifyHelp" aria-label="How verification works" hidden>
+              <div class="card wm-step"><b>1 · Open</b><h3>Choose any world</h3><p>Select a 3DXChat <code>.world</code> file that may contain a WorldMark.</p></div>
+              <div class="card wm-step"><b>2 · Verify</b><h3>Check the proof</h3><p>WorldMark reads the embedded records and independently checks their cryptographic proof.</p></div>
+              <div class="card wm-step"><b>3 · Understand</b><h3>See its current state</h3><p>Learn who signed it, when it was signed, and whether its content changed afterward.</p></div>
             </aside>
           </div>
         </div>
@@ -105,6 +142,6 @@
   </div>
   <script src="/shared.js?v=65"></script>
   <script src="/auth.js?v=65" data-mf-src="/auth.js"></script>
-  <script src="/worldmark.js?v=1"></script>
+  <script src="/worldmark.js?v=2"></script>
 </body>
 </html>
