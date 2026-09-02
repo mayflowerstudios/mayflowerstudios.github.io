@@ -6,14 +6,14 @@
   <title>Settings • Mayflower Studios</title>
   <meta name="description" content="Your Mayflower Studios privacy, notifications, appearance, and account settings." />
   <meta name="robots" content="noindex, nofollow" />
-  <link rel="stylesheet" href="/style.css?v=64" />
+  <link rel="stylesheet" href="/style.css?v=65" />
   <style>
     .settingsWrap{max-width:980px;margin:0 auto}.settingsShell{display:grid;grid-template-columns:210px minmax(0,1fr);gap:18px;align-items:start}
     .settingsNav{position:sticky;top:86px;display:grid;gap:6px;padding:10px;border:1px solid var(--border-2);border-radius:18px;background:rgba(10,16,29,.82);backdrop-filter:blur(16px)}
     .settingsNav button{border:0;text-align:left;font:inherit;font-size:13px;color:var(--text-2);background:transparent;border-radius:11px;padding:10px 12px;cursor:pointer}.settingsNav button:hover,.settingsNav button.active{color:var(--text);background:rgba(255,255,255,.065)}
     .settingsPanel{display:none}.settingsPanel.active{display:block}.settingsCard{padding:22px;border:1px solid var(--border-2);border-radius:20px;background:rgba(255,255,255,.035);margin-bottom:14px}
     .settingsCard h2{font-family:var(--font-d);font-size:25px;margin:0 0 6px}.settingsCard>p{color:var(--text-3);font-size:12.5px;line-height:1.55;margin:0 0 18px}
-    .settingRow{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,210px);gap:18px;align-items:center;padding:13px 0;border-top:1px solid var(--border)}.settingRow:first-of-type{border-top:0}.settingCopy b,.settingCopy span{display:block}.settingCopy b{font-size:13px}.settingCopy span{font-size:11.5px;color:var(--text-3);margin-top:3px;line-height:1.45}
+    .settingRow{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,210px);gap:18px;align-items:center;padding:13px 0;border-top:1px solid var(--border)}.settingRow:first-of-type{border-top:0}.settingCopy b,.settingCopy span{display:block}.settingCopy b{font-size:13px}.settingCopy span{font-size:11.5px;color:var(--text-3);margin-top:3px;line-height:1.45}.settingCopy a{color:var(--violet);text-decoration:underline;text-underline-offset:2px}
     .settingRow select,.settingRow input[type="text"]{width:100%;padding:9px 11px;border:1px solid var(--border-2);border-radius:10px;background:rgba(0,0,0,.25);color:var(--text);font:inherit;font-size:12px}
     .settingsToggle{justify-self:end;display:inline-flex;align-items:center;gap:8px;color:var(--text-2);font-size:12px}.settingsToggle input{width:17px;height:17px;accent-color:var(--rose)}
     .settingsStatus{min-height:18px;color:var(--text-3);font-size:11.5px;margin-top:10px}.settingsStatus.ok{color:var(--emerald)}.settingsStatus.bad{color:#fecaca}
@@ -33,24 +33,24 @@
         <div class="page-actions"><a href="/account.html" class="btn-ghost">← Back to your profile</a></div>
       </section>
 
-      <section id="settingsSignedOut" class="card" style="padding:24px;display:none;"><h2 style="margin-top:0;">Sign in first</h2><p class="muted">Your settings are tied to your Mayflower Studios account.</p><a class="btn primary" href="/account.html">Sign in</a></section>
+      <section id="settingsSignedOut" class="card" style="padding:24px;display:none;"><h2 style="margin-top:0;">Device settings are ready</h2><p class="muted">Translation, chat sound, and appearance can be changed below. Sign in for account privacy, notifications, presence, and security.</p><a class="btn primary" href="/account.html">Sign in for account settings</a></section>
 
       <section id="settingsApp" class="settingsShell" hidden>
         <nav class="settingsNav" aria-label="Settings sections" data-no-translate>
-          <button type="button" class="active" data-settings-tab="account">👤 Account</button>
-          <button type="button" data-settings-tab="privacy">🔒 Privacy</button>
-          <button type="button" data-settings-tab="notifications">🔔 Notifications</button>
+          <button type="button" class="active" data-settings-tab="account" data-auth-setting>👤 Account</button>
+          <button type="button" data-settings-tab="privacy" data-auth-setting>🔒 Privacy</button>
+          <button type="button" data-settings-tab="notifications" data-auth-setting>🔔 Notifications</button>
           <button type="button" data-settings-tab="presence">💬 Chat & presence</button>
           <button type="button" data-settings-tab="appearance">✨ Appearance</button>
-          <button type="button" data-settings-tab="security">🛡️ Security</button>
+          <button type="button" data-settings-tab="security" data-auth-setting>🛡️ Security</button>
         </nav>
 
         <div>
-          <section class="settingsPanel active" data-settings-panel="account">
+          <section class="settingsPanel active" data-settings-panel="account" data-auth-setting>
             <div class="settingsCard"><h2>Account</h2><p>Your profile identity lives here; the full profile editor remains on your profile page.</p><div class="settingsIdentity"><div class="settingsAvatar" id="settingsAvatar">🌸</div><div><b id="settingsName">—</b><span id="settingsHandle"></span><span id="settingsEmail"></span></div></div><div class="settingsActions" style="margin-top:16px;"><a class="settingsBtn primary" href="/account.html">Edit public profile</a><a class="settingsBtn" href="/notifications.html">Open notifications</a></div></div>
           </section>
 
-          <section class="settingsPanel" data-settings-panel="privacy">
+          <section class="settingsPanel" data-settings-panel="privacy" data-auth-setting>
             <div class="settingsCard"><h2>Profile privacy</h2><p>Choose who can see each part of your public profile. “Friends” means only people on your friends list.</p>
               <div class="settingRow"><div class="settingCopy"><b>💕 Relationship</b><span>Your relationship status and anniversary.</span></div><select data-privacy="relationship"></select></div>
               <div class="settingRow"><div class="settingCopy"><b>🎁 Gifts</b><span>Your gift collection and recent gifts.</span></div><select data-privacy="gifts"></select></div>
@@ -64,7 +64,7 @@
             </div>
           </section>
 
-          <section class="settingsPanel" data-settings-panel="notifications">
+          <section class="settingsPanel" data-settings-panel="notifications" data-auth-setting>
             <div class="settingsCard"><h2>Notification preferences</h2><p>Turn off categories you do not want in the notification bell. Changes apply to new notifications.</p>
               <div class="settingRow"><div class="settingCopy"><b>🌸 Friends</b><span>Friend requests and accepted requests.</span></div><label class="settingsToggle"><input type="checkbox" data-notify="friends" /> Enabled</label></div>
               <div class="settingRow"><div class="settingCopy"><b>🎁 Gifts</b><span>When somebody sends you a gift.</span></div><label class="settingsToggle"><input type="checkbox" data-notify="gifts" /> Enabled</label></div>
@@ -78,11 +78,12 @@
           </section>
 
           <section class="settingsPanel" data-settings-panel="presence">
-            <div class="settingsCard"><h2>Chat & presence</h2><p>Presence is device-specific so you can appear offline on one device without changing another.</p>
-              <div class="settingRow"><div class="settingCopy"><b>👻 Appear offline</b><span>Friends will see you as offline and your typing indicators will be hidden. You can still use the site normally.</span></div><label class="settingsToggle"><input type="checkbox" id="settingsAppearOffline" /> Appear offline</label></div>
+            <div class="settingsCard"><h2>Chat & presence</h2><p>Chat preferences are saved on this device. Sign in to control how your presence appears to friends.</p>
+              <div class="settingRow" data-auth-setting><div class="settingCopy"><b>👻 Appear offline</b><span>Friends will see you as offline and your typing indicators will be hidden. You can still use the site normally.</span></div><label class="settingsToggle"><input type="checkbox" id="settingsAppearOffline" /> Appear offline</label></div>
               <div class="settingRow"><div class="settingCopy"><b>🔔 Message sound</b><span>A soft chime when a message arrives while the chat is open. Saved on this device.</span></div><label class="settingsToggle"><input type="checkbox" id="settingsChatSound" /> Play a sound</label></div>
               <div class="settingRow"><div class="settingCopy"><b>🌐 Translate messages</b><span>Translates chat into your language as it arrives. The site's own language picker in the header changes this too.</span></div><label class="settingsToggle"><input type="checkbox" id="settingsTranslate" /> Translate chat</label></div>
               <div class="settingRow"><div class="settingCopy"><b>🗣️ Translate into</b><span>Which language chat and the site are translated into.</span></div><select id="settingsTranslateLang"></select></div>
+              <div class="settingRow"><div class="settingCopy"><b>🧹 Translation data</b><span>Remove saved site and per-message translations from this device. New translations will be fetched again when needed. <a href="/privacy.html#translation">How translation handles text</a>.</span></div><button class="settingsBtn" id="settingsClearTranslations" type="button">Clear saved translations</button></div>
               <div class="settingsStatus" id="presenceStatus"></div>
             </div>
           </section>
@@ -95,7 +96,7 @@
             </div>
           </section>
 
-          <section class="settingsPanel" data-settings-panel="security">
+          <section class="settingsPanel" data-settings-panel="security" data-auth-setting>
             <div class="settingsCard"><h2>Security</h2><p>Password resets are sent to the email address on your account.</p><div class="settingsActions"><button class="settingsBtn" id="settingsResetPassword" type="button">Send password-reset email</button><button class="settingsBtn" id="settingsSignOut" type="button">Sign out</button></div><div class="settingsStatus" id="securityStatus"></div></div>
           </section>
         </div>
@@ -103,7 +104,7 @@
     </main>
     <div id="site-footer"></div>
   </div>
-  <script src="/shared.js?v=72"></script>
-  <script src="/settings.js?v=51"></script>
+  <script src="/shared.js?v=73"></script>
+  <script src="/settings.js?v=52"></script>
 </body>
 </html>

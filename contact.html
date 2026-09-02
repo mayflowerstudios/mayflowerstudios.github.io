@@ -14,7 +14,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png?v=4" />
   <link rel="apple-touch-icon" href="/assets/icons/favicon-180.png?v=4" />
-  <link rel="stylesheet" href="/style.css?v=64" />
+  <link rel="stylesheet" href="/style.css?v=65" />
 
   <style>
     /* ───────────── Contact-only flourishes (structure comes from style.css) ───────────── */
@@ -67,6 +67,13 @@
     .cMsg { font-size:13.5px; color:var(--text-2); }
     .cMsg.ok { color:var(--emerald); }
     .cMsg.bad { color:var(--rose-deep); }
+    .cContext {
+      display:flex; align-items:flex-start; gap:10px; padding:12px 14px;
+      border:1px solid var(--border); border-radius:var(--r-sm);
+      background:rgba(255,255,255,.025); color:var(--text-2);
+      font-size:13px; line-height:1.55; cursor:pointer;
+    }
+    .cContext input { width:18px; height:18px; margin:2px 0 0; accent-color:var(--rose-deep); flex:0 0 auto; }
   </style>
 </head>
 <body data-nav="contact">
@@ -109,6 +116,11 @@
               <select id="cAbout"></select>
             </div>
           </div>
+
+          <label class="cContext" for="cContext">
+            <input id="cContext" type="checkbox" />
+            <span>Include this page, browser name, language, and screen size. This contains no message history or account password and makes mobile bugs much easier to reproduce.</span>
+          </label>
 
           <div class="cField">
             <label for="cSubject">Subject <span class="hint">optional</span></label>
@@ -190,8 +202,8 @@
     <div id="site-footer"></div>
   </div><!-- /site-page -->
 
-  <script src="/shared.js?v=72"></script>
+  <script src="/shared.js?v=73"></script>
   <script src="/auth.js?v=72" data-mf-src="/auth.js"></script>
-  <script src="/contact.js?v=2"></script>
+  <script src="/contact.js?v=3"></script>
 </body>
 </html>

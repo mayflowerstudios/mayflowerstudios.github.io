@@ -18,7 +18,7 @@
   <meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/radio.png?v=3" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png?v=4" />
   <link rel="apple-touch-icon" href="/assets/icons/favicon-180.png?v=4" />
-  <link rel="stylesheet" href="/style.css?v=64" />
+  <link rel="stylesheet" href="/style.css?v=65" />
 
   <script type="application/ld+json">
   {
@@ -77,6 +77,9 @@
       border: 1px solid var(--border); background: rgba(255,255,255,.03);
     }
     .dl-meta .pill strong { color: var(--text-2); font-weight: 600; }
+    .file-check { margin-top: 12px; color: var(--text-3); font-size: 11.5px; }
+    .file-check summary { cursor: pointer; color: var(--text-2); width: fit-content; }
+    .file-check code { display:block; margin-top:7px; padding:8px 10px; border-radius:9px; background:rgba(0,0,0,.28); color:var(--text-2); overflow-wrap:anywhere; user-select:all; }
 
     /* What's new strip */
     .whatsnew {
@@ -206,6 +209,10 @@
               <span class="pill">~75 MB · no installer</span>
               <span class="pill">Free — tips welcome 💚</span>
             </div>
+            <details class="file-check">
+              <summary>Verify the download (SHA-256)</summary>
+              <code>F83418059E1616D54F1E3E3D462F8C8A0F7942C81A3426A3830B36355AB3F7A2</code>
+            </details>
           </div>
           <div class="hero-art">
             <img class="hero-logo" src="/radio/logo.png" alt="Mayflower Radio logo" />
@@ -423,8 +430,9 @@
               <p>No. SmartScreen warns about any program it hasn't seen many people run yet, and a
                  certificate that would silence it costs hundreds a year — not something a one-person
                  studio giving software away can justify.</p>
-              <p>Click <em>More info → Run anyway</em>. If you'd rather check first, the file is served
-                 straight from this site over HTTPS and you're welcome to run it past your antivirus.</p>
+              <p>Only continue if you intended to download Mayflower Radio. You can compare the file's
+                 SHA-256 value with the checksum shown beside the download and scan it with the security
+                 software you already trust before running it.</p>
             </div>
           </details>
 
@@ -545,7 +553,7 @@
   </div><!-- /site-page -->
 
   <script type="module" src="/download-counts.js?v=1"></script>
-  <script src="/shared.js?v=72"></script>
+  <script src="/shared.js?v=73"></script>
   <script>
     // Live version badge
     fetch('/radio/version.json?t=' + Date.now())

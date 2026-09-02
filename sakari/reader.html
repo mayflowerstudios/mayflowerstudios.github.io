@@ -3,7 +3,15 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Sakari Reader</title>
+<title>Sakari Reader — Interactive Stories • Mayflower Studios</title>
+<meta name="description" content="Read Mayflower Studios interactive fiction in the Sakari story reader, with accessible themes and saved progress on your device." />
+<link rel="canonical" href="https://mayflowerstudios.net/sakari/reader.html" />
+<meta property="og:title" content="Sakari Reader — Interactive Stories" />
+<meta property="og:description" content="Read thoughtful choose-your-path stories in your browser." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://mayflowerstudios.net/sakari/reader.html" />
+<meta property="og:image" content="https://mayflowerstudios.net/assets/og/sakari.png?v=3" />
+<meta name="twitter:card" content="summary_large_image" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@0,300;0,400;0,500;0,600&family=Lora:ital,wght@0,400;0,500;1,400&family=Caveat:wght@400&display=swap" rel="stylesheet" />
@@ -214,7 +222,7 @@
 </head>
 <body>
 
-<div id="library">
+<main id="library">
   <div class="lib-head">
     <div class="lib-kicker">Mayflower Studios</div>
     <h1 class="lib-title">stories</h1>
@@ -222,9 +230,9 @@
   </div>
   <div class="lib-grid" id="lib-grid"></div>
   <div class="lib-empty" id="lib-empty" style="display:none">No stories yet — check back soon.</div>
-</div>
+</main>
 
-<div id="player">
+<main id="player">
   <div class="pl-header">
     <button class="pl-back" onclick="SK.toLibrary()">← library</button>
     <span class="pl-title" id="pl-title"></span>
@@ -243,7 +251,7 @@
   </div>
   <div id="chapterbreak"></div>
   <div id="epilogue"></div>
-</div>
+</main>
 
 <div id="tooltip"></div>
 <div id="menu-overlay" onclick="if(event.target===this)SK.closeMenu()"></div>

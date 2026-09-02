@@ -152,7 +152,8 @@
         </div>
       </div>
       <div class="mf-chat-subbar" id="mfChatSubbar" hidden>
-        <span id="mfTrStatus" role="status" aria-live="polite">🌐 Translating to</span>
+        <span id="mfTrStatus" role="status" aria-live="polite">🌐 Translate messages into</span>
+        <button type="button" class="mf-tr-retry" id="mfTrRetry" hidden>Retry</button>
         <select class="mf-tr-lang" id="mfTrLang"></select>
       </div>
       <div class="mf-chat-body" id="mfChatBody"></div>
@@ -178,14 +179,16 @@
     trLang.innerHTML = Object.entries(LANG_NAMES).map(([k, v]) => `<option value="${k}">${v}</option>`).join("");
     const trBar = panel.querySelector("#mfChatSubbar");
     const trStatus = panel.querySelector("#mfTrStatus");
+    const trRetry = panel.querySelector("#mfTrRetry");
     function updateTrUI() {
       if (!TR_OK) { trBtn.textContent = "🌐"; trBtn.title = "Translation isn't available in this browser"; trBtn.disabled = true; trBar.hidden = true; return; }
       trBtn.classList.toggle("on", translateOn);
-      trBtn.title = translateOn ? ("Translating to " + (LANG_NAMES[targetLang] || targetLang)) : "Translate messages";
+      trBtn.title = translateOn ? ("Translate messages into " + (LANG_NAMES[targetLang] || targetLang) + " · on") : "Translate messages";
       trBtn.setAttribute("aria-label", trBtn.title);
       trBar.hidden = !translateOn;
       trLang.value = targetLang;
-      if (translateOn) trStatus.textContent = "🌐 Translating to";
+      trRetry.hidden = true;
+      if (translateOn) trStatus.textContent = "🌐 Translate messages into";
     }
     trBtn.addEventListener("click", () => {
       if (!TR_OK) return;
@@ -203,6 +206,12 @@
       if (translateOn) applyTranslations();
     });
     trLang.setAttribute("aria-label", "Translate chat messages to");
+    trRetry.addEventListener("click", () => {
+      translationFailures = 0;
+      translationErrorKeys.clear();
+      setTranslationStatus("busy");
+      applyTranslations();
+    });
     updateTrUI();
 
     // Keep the chat translator in sync with the site-wide language picker and
@@ -232,7 +241,13 @@
     // A phone may open the chat while its radio is still reconnecting. Failed
     // bubbles deliberately remain unmarked, so coming back online can retry
     // them without making the user toggle translation off and on.
-    window.addEventListener("online", () => { if (translateOn) applyTranslations(); });
+    window.addEventListener("online", () => {
+      if (!translateOn) return;
+      translationFailures = 0;
+      translationErrorKeys.clear();
+      setTranslationStatus("busy");
+      applyTranslations();
+    });
     const muteBtn = panel.querySelector("#mfMuteBtn");
     function updateMuteUI() {
       muteBtn.textContent = muted ? "🔕" : "🔔";
@@ -1105,6 +1120,12 @@
     persistentSaveTimer = setTimeout(flushPersistentTranslations, 500);
   }
   window.addEventListener("pagehide", () => { if (persistentSaveTimer) flushPersistentTranslations(); });
+  window.addEventListener("mf-translation-cache-cleared", () => {
+    translationCache.clear();
+    translationErrorKeys.clear();
+    persistentTranslations.clear();
+    try { localStorage.removeItem(CHAT_TR_CACHE_KEY); } catch (_) {}
+  });
   async function persistentTranslationKey(tgt, text) {
     const value = tgt + "\n" + text;
     try {
@@ -1171,9 +1192,13 @@
   function setTranslationStatus(kind) {
     const el = document.getElementById("mfTrStatus");
     if (!el || !translateOn) return;
+    const retry = document.getElementById("mfTrRetry");
+    const offline = navigator.onLine === false;
     el.textContent = kind === "busy" ? "🌐 Translating…" :
-      kind === "error" ? "⚠️ Translation failed" : "🌐 Translating to";
-    el.title = kind === "error" ? "The connection failed. Messages will retry when the device is back online." : "";
+      kind === "error" ? (offline ? "📵 Offline — waiting to retry" : "⚠️ Translation unavailable") :
+      "🌐 Translate messages into";
+    el.title = kind === "error" ? "No message text was changed. Retry now, or leave translation on and it will retry when the connection returns." : "";
+    if (retry) retry.hidden = kind !== "error" || offline;
   }
   async function serverTranslate(text, tgt) {
     if (IS_OPERA_MOBILE && window.MFTranslate && typeof window.MFTranslate.fallbackTranslate === "function") {

@@ -12,7 +12,8 @@
   ];
   const ABOUT = [
     "Craft Planner", "Mayflower Radio", "Mayflower Idle RPG", "Farm Challenge",
-    "Minecraft mods", "BloomBot", "The website", "Something else"
+    "Chat & translation", "Together rooms", "Stories & Sakari", "Account & profile",
+    "3DX World Library", "Minecraft mods", "BloomBot", "The website", "Something else"
   ];
 
   const el = id => document.getElementById(id);
@@ -58,6 +59,14 @@
     if (reply) body.reply = reply.slice(0, 120);
     if (name) body.name = name.slice(0, 40);
     if (window.MFAuth && MFAuth.user) body.uid = MFAuth.user.uid;
+    if (el("cContext").checked) {
+      body.context = {
+        page: location.pathname,
+        browser: navigator.userAgent.slice(0, 300),
+        language: navigator.language || "",
+        viewport: Math.round(window.innerWidth) + "x" + Math.round(window.innerHeight)
+      };
+    }
 
     btn.disabled = true;
     say(msgEl, "Sending…", "");
@@ -86,6 +95,10 @@
                 : from.includes("radio") ? "Mayflower Radio"
                 : from.includes("idle-rpg") ? "Mayflower Idle RPG"
                 : from.includes("farm-challenge") ? "Farm Challenge"
+                : from.includes("together") ? "Together rooms"
+                : from.includes("sakari") ? "Stories & Sakari"
+                : from.includes("account") || from.includes("settings") ? "Account & profile"
+                : from.includes("worlds") ? "3DX World Library"
                 : "";
     if (guess) el("cAbout").value = guess;
   }

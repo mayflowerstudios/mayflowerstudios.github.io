@@ -5,6 +5,8 @@
   function applyLocalAppearance() {
     const reduce = localPref('mf_reduce_motion', '0') === '1';
     document.documentElement.classList.toggle('mf-reduce-motion', reduce);
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    document.documentElement.classList.toggle('mf-save-data', !!(connection && connection.saveData));
   }
   applyLocalAppearance();
 
@@ -26,13 +28,13 @@
   }
 
   function injectFireflies() {
-    if (document.getElementById('fireflies') || localPref('mf_hide_fireflies','0') === '1') return;
+    if (document.getElementById('fireflies') || localPref('mf_hide_fireflies','0') === '1' || document.documentElement.classList.contains('mf-save-data')) return;
     const c = document.createElement('canvas'); c.id = 'fireflies';
     document.body.prepend(c);
   }
 
   function injectPetals() {
-    if (document.getElementById('petals')) return;
+    if (document.getElementById('petals') || document.documentElement.classList.contains('mf-save-data')) return;
     const c = document.createElement('canvas'); c.id = 'petals';
     document.body.prepend(c);
     startPetals(c);
@@ -616,15 +618,16 @@
       { href: '/radio/',        label: 'Radio',    key: 'radio'    },
       { href: '/contact.html',  label: 'Contact',  key: 'contact'  },
     ];
-    const linksHtml = links.map(l =>
-      `<a href="${l.href}"${l.key === key ? ' class="nav-active"' : ''}>${l.label}</a>`
-    ).join('');
+    const linksHtml = links.map(l => {
+      const active = l.key === key;
+      return `<a href="${l.href}"${active ? ' class="nav-active" aria-current="page"' : ''}>${l.label}</a>`;
+    }).join('');
     return `<nav class="site-nav">
         <div class="nav-inner">
           <a href="/" class="nav-brand" data-no-translate>
             <strong>Mayflower Studios</strong>
           </a>
-          <button class="nav-mob-btn" id="navToggle" aria-label="Menu">☰</button>
+          <button type="button" class="nav-mob-btn" id="navToggle" aria-label="Menu" aria-controls="navLinks" aria-expanded="false">☰</button>
           <div class="nav-links" id="navLinks">
             ${linksHtml}
             ${buildLangPicker()}
@@ -665,8 +668,19 @@
     });
     const toggle = document.getElementById('navToggle');
     if (toggle) {
+      const links = document.getElementById('navLinks');
+      const setOpen = open => {
+        links.classList.toggle('open', open);
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        toggle.setAttribute('aria-label', open ? 'Close menu' : 'Menu');
+        toggle.textContent = open ? '✕' : '☰';
+      };
       toggle.addEventListener('click', () => {
-        document.getElementById('navLinks').classList.toggle('open');
+        setOpen(!links.classList.contains('open'));
+      });
+      links.addEventListener('click', e => { if (e.target.closest('a')) setOpen(false); });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && links.classList.contains('open')) { setOpen(false); toggle.focus(); }
       });
     }
     injectSkipLink();
@@ -690,6 +704,7 @@
     }
     if (!target) return;
     if (!target.id) target.id = 'mf-main';
+    if (target.tagName !== 'MAIN' && !target.hasAttribute('role')) target.setAttribute('role', 'main');
     if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
     const a = document.createElement('a');
     a.className = 'mf-skip';
@@ -840,7 +855,7 @@
 
   // Bump this whenever auth.js / chat.js / profile-view.js change, so browsers
   // and the GitHub Pages CDN fetch the new version instead of a cached copy.
-  var MF_ASSET_VER = '72';
+  var MF_ASSET_VER = '73';
 
   // ─────────────────────────────────────────────────────────────
   //  Chat + moderation config, shared by chat.js and admin-moderation.js.

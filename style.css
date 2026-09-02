@@ -16,11 +16,11 @@
   --gold:         #fde68a;
   --emerald:      #6ee7b7;
   --text:         #faf5ff;
-  --text-2:       rgba(250,245,255,.65);
-  --text-3:       rgba(250,245,255,.38);
+  --text-2:       rgba(250,245,255,.78);
+  --text-3:       rgba(250,245,255,.60);
   --border:       rgba(249,168,212,.10);
   --border-2:     rgba(249,168,212,.20);
-  --glass:        rgba(11,17,32,.55);
+  --glass:        rgba(11,17,32,.68);
   --glass-2:      rgba(255,255,255,.04);
   --r-sm: 10px;
   --r-md: 16px;
@@ -40,6 +40,7 @@
 /* ── Reset ── */
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
+[hidden] { display: none !important; }
 body {
   margin: 0; font-family: var(--font-b);
   font-size: 15px; color: var(--text); line-height: 1.65;
@@ -51,6 +52,13 @@ h1,h2,h3,h4 { margin: 0; font-family: var(--font-d); font-weight: 400; }
 p { margin: 0; }
 img { display: block; max-width: 100%; }
 code { font-family: var(--font-m); font-size: .9em; }
+
+/* A clear, consistent keyboard focus ring across both shared and page-specific
+   controls. Mouse users do not see it; keyboard and switch users always do. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid rgba(253,230,138,.92);
+  outline-offset: 3px;
+}
 
 /* ── Background ── */
 .bg-scene {
@@ -677,6 +685,12 @@ html[data-mf-translating] .wrap { transition: opacity 200ms var(--ease); }
 }
 .mf-chat-subbar[hidden] { display: none; }
 .mf-chat-subbar .mf-tr-lang { margin-left: auto; }
+.mf-tr-retry {
+  border: 1px solid rgba(249,168,212,.28); border-radius: 999px;
+  padding: 4px 9px; color: var(--rose); background: rgba(249,168,212,.08);
+  font: 600 11px var(--font-b); cursor: pointer;
+}
+.mf-tr-retry:hover { background: rgba(249,168,212,.15); }
 
 .mf-chat-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; min-height: 0; }
 .mf-chat-log { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
@@ -809,7 +823,11 @@ html[data-mf-translating] .wrap { transition: opacity 200ms var(--ease); }
   .mf-tr-btn, .mf-chat-x { width: 32px; min-width: 32px; height: 32px; }
   .mf-chat-subbar { padding: 8px 10px; }
   .mf-chat-subbar .mf-tr-lang { max-width: 132px; min-height: 34px; font-size: 16px; }
-  .mf-chat-fab { right: 16px; bottom: 16px; }
+  .mf-chat-fab {
+    right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    width: 50px; height: 50px; font-size: 21px;
+    box-shadow: 0 6px 22px rgba(249,168,212,.34);
+  }
   body.mf-chat-open .mf-chat-fab { display: none; }
   /* Under 16px, iOS Safari zooms the page in on focus — which reads as the
      whole page lurching and rescaling every time you tap the message box.
@@ -819,6 +837,11 @@ html[data-mf-translating] .wrap { transition: opacity 200ms var(--ease); }
   .mf-chat-panel .mf-msg-editfield { font-size: 16px; }
   .mf-pickerPop { max-height: 46vh; }
 }
+
+/* Data-saving mobile connections keep the garden styling but skip continuously
+   animated canvases. The reduced-motion preference is handled below too. */
+html.mf-save-data #fireflies,
+html.mf-save-data #petals { display: none !important; }
 
 @media (max-width: 360px) {
   .mf-ct { max-width: 91px; overflow: hidden; text-overflow: ellipsis; }
@@ -1288,7 +1311,9 @@ html.mf-reduce-motion *::after {
 }
 html.mf-reduce-motion .petal,
 html.mf-reduce-motion .firefly,
-html.mf-reduce-motion .mf-firefly { display: none !important; }
+html.mf-reduce-motion .mf-firefly,
+html.mf-reduce-motion #petals,
+html.mf-reduce-motion #fireflies { display: none !important; }
 
 /* Off-screen until focused, then it lands over the nav. */
 .mf-skip {

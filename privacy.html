@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Privacy • Mayflower Studios</title>
   <link rel="canonical" href="https://mayflowerstudios.net/privacy.html" />
-  <meta name="description" content="How Mayflower Studios handles your data across Watch Together, Together rooms, and Sakari stories." />
+  <meta name="description" content="How Mayflower Studios handles accounts, chat, rooms, translations, payments, and local browser data." />
   <meta property="og:title" content="Privacy • Mayflower Studios" />
   <meta property="og:image" content="https://mayflowerstudios.net/assets/og/privacy.png?v=3" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png?v=4" />
-  <link rel="stylesheet" href="/style.css?v=64" />
+  <link rel="stylesheet" href="/style.css?v=65" />
   <style>
     .legal .card { padding: 26px 28px; }
     .legal h2 { font-size: 22px; margin-bottom: 10px; }
@@ -28,7 +28,7 @@
       <div class="page-hero">
         <p class="page-kicker">Legal</p>
         <h1 class="page-title">Privacy</h1>
-        <p class="page-sub">Last updated: August 6, 2026</p>
+        <p class="page-sub">Last updated: September 2, 2026</p>
         <div class="page-actions">
           <a href="/" class="btn-pri">🏡 Home</a>
           <a href="/tos.html" class="btn-ghost">📜 Terms</a>
@@ -83,6 +83,31 @@
         </div>
       </section>
 
+      <section class="sec reveal" id="translation">
+        <div class="card">
+          <h2>Translation</h2>
+          <p>
+            Translation is optional. When you choose another site language or turn on chat translation,
+            the text that needs translating may be sent to a translation provider. Mayflower currently
+            tries Google's translation service first and uses MyMemory as a compatibility fallback,
+            including on browsers where the Google request is blocked. A browser's on-device translator
+            may be used when it is available.
+          </p>
+          <p>
+            For chat, this can include the text of the individual message being translated. Links, email
+            addresses, usernames, and Mayflower product names are protected from translation where possible.
+            Do not use translation for a message you would not be comfortable sending to the translation
+            provider. Turning translation off leaves the original message in place.
+          </p>
+          <p>
+            Successful translations are cached in your browser so the same message does not need to be sent
+            again every time chat opens. The cache uses a one-way hash of the language and original text as
+            its key; the translated result is stored locally on that device. Failed requests are not cached.
+            You can clear translation data from <a href="/settings.html"><strong>Settings</strong></a>.
+          </p>
+        </div>
+      </section>
+
       <section class="sec reveal">
         <div class="card">
           <h2>Sakari stories</h2>
@@ -116,8 +141,9 @@
             <li>No tracking of you across other websites.</li>
           </ul>
           <p>
-            Third-party services we rely on (such as Google Firebase for realtime rooms and Google Fonts for type)
-            have their own privacy practices. If you embed an external video, that provider may set its own cookies.
+            Third-party services we rely on (including Google Firebase for realtime rooms, Google Fonts for type,
+            and Google or MyMemory when you request translation) have their own privacy practices. If you embed an
+            external video, that provider may set its own cookies.
           </p>
         </div>
       </section>
@@ -139,6 +165,6 @@
     <div id="site-footer"></div>
   </div>
 
-  <script src="/shared.js?v=72"></script>
+  <script src="/shared.js?v=73"></script>
 </body>
 </html>

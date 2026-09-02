@@ -8,7 +8,7 @@
   <meta name="description" content="Sign in to your Mayflower Studios account." />
   <meta name="robots" content="noindex, follow" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png?v=4" />
-  <link rel="stylesheet" href="/style.css?v=64" />
+  <link rel="stylesheet" href="/style.css?v=65" />
   <style>
     .acctWrap { max-width: 460px; margin: 0 auto; }
     /* when the profile is showing, allow a wider two-column canvas */
@@ -805,7 +805,7 @@
     <div id="site-footer"></div>
   </div>
 
-  <script src="/shared.js?v=72"></script>
+  <script src="/shared.js?v=73"></script>
   <script>
   (function () {
     const $ = (id) => document.getElementById(id);
@@ -1257,7 +1257,7 @@
             const name = u.displayName || "someone";
             const a = MFAuth.avatarFor(u, name);
             const avEl = $("acctFriendAv_" + uid);
-            if (avEl) avEl.innerHTML = (a.kind === "photo" ? `<img src="${escapeForHtml(a.value)}" loading="lazy" decoding="async">` : escapeForHtml(a.value)) + `<i class="acctFriendDot" id="acctFriendDot_${escapeForHtml(uid)}"></i>`;
+            if (avEl) avEl.innerHTML = (a.kind === "photo" ? `<img src="${escapeForHtml(a.value)}" alt="" loading="lazy" decoding="async">` : escapeForHtml(a.value)) + `<i class="acctFriendDot" id="acctFriendDot_${escapeForHtml(uid)}"></i>`;
             const nameEl = $("acctFriendName_" + uid); if (nameEl) nameEl.textContent = name;
             const handleEl = $("acctFriendHandle_" + uid); if (handleEl) handleEl.textContent = u.username ? "@" + u.username : "";
           });
