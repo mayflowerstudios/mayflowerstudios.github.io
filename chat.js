@@ -1148,6 +1148,7 @@
   }
   const HAS_DEVICE = (typeof self !== "undefined") && ("Translator" in self) && ("LanguageDetector" in self);
   const HAS_SERVER = /^https?:$/.test(location.protocol);
+  const IS_OPERA_MOBILE = /Opera Mini|Opera Mobi|OPR\/|OPiOS\/|OPX\//i.test(navigator.userAgent || "") && /Mobile|Android|iPhone|iPad/i.test(navigator.userAgent || "");
   const TR_MODE = HAS_SERVER ? "server" : (HAS_DEVICE ? "device" : "none");
   const TR_OK = TR_MODE !== "none";
   async function getTranslator(src, tgt) {
@@ -1175,18 +1176,21 @@
     el.title = kind === "error" ? "The connection failed. Messages will retry when the device is back online." : "";
   }
   async function serverTranslate(text, tgt) {
+    if (IS_OPERA_MOBILE && window.MFTranslate && typeof window.MFTranslate.fallbackTranslate === "function") {
+      return window.MFTranslate.fallbackTranslate(text, tgt);
+    }
     const safe = protectTranslationText(text);
     const url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" + encodeURIComponent(onlineTargetLang(tgt)) + "&dt=t&ie=UTF-8&oe=UTF-8&q=" + encodeURIComponent(safe.text);
     // Mobile radios frequently change state while a request is in flight, and
     // this endpoint may briefly rate-limit a newly opened history. Retry with
     // a real backoff, but never cache a network failure as a translation.
-    for (let attempt = 0; attempt < 3; attempt++) {
+    for (let attempt = 0; attempt < 2; attempt++) {
       const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 10000);
+      const timer = setTimeout(() => ctrl.abort(), 6000);
       try {
         const r = await fetch(url, { signal: ctrl.signal, cache: "no-store" });
         if (!r.ok) {
-          if (r.status !== 429 && r.status < 500) return null;
+          if (r.status !== 429 && r.status < 500) break;
           const retryAfter = Number(r.headers.get("Retry-After"));
           const err = new Error("translate " + r.status);
           err.retryAfter = Number.isFinite(retryAfter) ? retryAfter * 1000 : 0;
@@ -1197,11 +1201,14 @@
         const src = String(data[2] || "").toLowerCase().slice(0,2);
         if (out) return { text: safe.restore(out), src };
       } catch (err) {
-        if (attempt < 2) {
+        if (attempt < 1) {
           const wait = Math.max(Number(err && err.retryAfter) || 0, attempt ? 1400 : 600) + Math.floor(Math.random() * 250);
           await new Promise(resolve => setTimeout(resolve, wait));
         }
       } finally { clearTimeout(timer); }
+    }
+    if (window.MFTranslate && typeof window.MFTranslate.fallbackTranslate === "function") {
+      return window.MFTranslate.fallbackTranslate(text, tgt);
     }
     return null;
   }

@@ -110,6 +110,7 @@
 
     const HAS_DEVICE = (typeof self !== "undefined") && ("Translator" in self) && ("LanguageDetector" in self);
     const HAS_SERVER = /^https?:$/.test(location.protocol);
+    const IS_OPERA_MOBILE = /Opera Mini|Opera Mobi|OPR\/|OPiOS\/|OPX\//i.test(navigator.userAgent || "") && /Mobile|Android|iPhone|iPad/i.test(navigator.userAgent || "");
     const TR_MODE = HAS_SERVER ? "server" : (HAS_DEVICE ? "device" : "none");
     const TR_OK = TR_MODE !== "none";
 
@@ -215,17 +216,63 @@
       };
     }
 
-    async function serverTranslate(text, tgt) {
+    function utf8Length(value) {
+      try { return new TextEncoder().encode(value).length; }
+      catch (_) { return unescape(encodeURIComponent(value)).length; }
+    }
+    function fallbackChunks(value, maxBytes) {
+      const chunks = []; let current = "";
+      for (const char of String(value || "")) {
+        if (current && utf8Length(current + char) > maxBytes) {
+          // Prefer a nearby word boundary, carrying the tail into the next
+          // request. This keeps MyMemory's documented 500-byte limit intact.
+          const split = Math.max(current.lastIndexOf(" "), current.lastIndexOf("\n"));
+          if (split > current.length * 0.55) {
+            chunks.push(current.slice(0, split + 1)); current = current.slice(split + 1) + char;
+          } else { chunks.push(current); current = char; }
+        } else current += char;
+      }
+      if (current) chunks.push(current);
+      return chunks;
+    }
+    async function fallbackTranslate(text, tgt) {
+      const safe = protectText(text);
+      const parts = fallbackChunks(safe.text, 450);
+      if (!parts.length) return null;
+      const translated = []; let src = "";
+      for (const part of parts) {
+        const target = tgt === "pt" ? "pt-BR" : tgt === "zh" ? "zh-CN" : tgt;
+        const url = "https://api.mymemory.translated.net/get?q=" + encodeURIComponent(part) +
+          "&langpair=" + encodeURIComponent("Autodetect|" + target) + "&mt=1";
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 12000);
+        try {
+          const r = await fetch(url, { signal: ctrl.signal, cache: "no-store" });
+          if (!r.ok) return null;
+          const data = await r.json();
+          if (Number(data.responseStatus) !== 200 || !data.responseData || !data.responseData.translatedText) return null;
+          translated.push(String(data.responseData.translatedText));
+          if (!src) src = String(data.responseData.detectedLanguage || "").toLowerCase().slice(0, 2);
+        } catch (_) { return null; }
+        finally { clearTimeout(timer); }
+      }
+      return { text: safe.restore(translated.join("")), src };
+    }
+
+    async function serverTranslate(text, tgt, allowFallback = true) {
+      // Opera Mobile commonly filters the Google browser endpoint. Use an
+      // independent CORS-enabled provider there instead of reporting failure.
+      if (IS_OPERA_MOBILE) return allowFallback ? fallbackTranslate(text, tgt) : null;
       const safe = protectText(text);
       const url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" +
         encodeURIComponent(onlineTargetLang(tgt)) + "&dt=t&ie=UTF-8&oe=UTF-8&q=" + encodeURIComponent(safe.text);
-      for (let attempt = 0; attempt < 3; attempt++) {
+      for (let attempt = 0; attempt < 2; attempt++) {
         const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), 10000);
+        const timer = setTimeout(() => ctrl.abort(), 6000);
         try {
           const r = await fetch(url, { signal: ctrl.signal, cache: "no-store" });
           if (!r.ok) {
-            if (r.status !== 429 && r.status < 500) return null;
+            if (r.status !== 429 && r.status < 500) return allowFallback ? fallbackTranslate(text, tgt) : null;
             const retryAfter = Number(r.headers.get("Retry-After"));
             const err = new Error("translate " + r.status);
             err.retryAfter = Number.isFinite(retryAfter) ? retryAfter * 1000 : 0;
@@ -236,13 +283,13 @@
           const src = String(data[2] || "").toLowerCase().slice(0, 2);
           if (out) return { text: safe.restore(out), src };
         } catch (err) {
-          if (attempt < 2) {
+          if (attempt < 1) {
             const wait = Math.max(Number(err && err.retryAfter) || 0, attempt ? 1400 : 600) + Math.floor(Math.random() * 250);
             await new Promise(resolve => setTimeout(resolve, wait));
           }
         } finally { clearTimeout(timer); }
       }
-      return null;
+      return allowFallback ? fallbackTranslate(text, tgt) : null;
     }
 
     async function translateOne(text, tgt) {
@@ -274,7 +321,7 @@
     async function translateBatchServer(texts, tgt) {
       const joined = texts.join(SEP);
       // Google endpoint handles long q reasonably; keep batches modest (caller chunks).
-      const r = await serverTranslate(joined, tgt);
+      const r = await serverTranslate(joined, tgt, false);
       if (!r) return null;
       const parts = r.text.split(/\s*\u241F\s*/);
       if (parts.length === texts.length) return parts;
@@ -523,7 +570,7 @@
       try { localStorage.removeItem(CACHE_KEY); } catch (_) {}
     }
 
-    return { init, setLang, current, names, available, mode, translatePage, revertAll, clearCache, protectText };
+    return { init, setLang, current, names, available, mode, translatePage, revertAll, clearCache, protectText, fallbackTranslate };
   })();
   window.MFTranslate = MFTranslate;
 
@@ -793,7 +840,7 @@
 
   // Bump this whenever auth.js / chat.js / profile-view.js change, so browsers
   // and the GitHub Pages CDN fetch the new version instead of a cached copy.
-  var MF_ASSET_VER = '70';
+  var MF_ASSET_VER = '72';
 
   // ─────────────────────────────────────────────────────────────
   //  Chat + moderation config, shared by chat.js and admin-moderation.js.
