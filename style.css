@@ -798,6 +798,13 @@ html[data-mf-translating] .wrap { transition: opacity 200ms var(--ease); }
     border-radius: 0; border-left: 0; border-right: 0; border-top: 0;
   }
   .mf-chat-grip { display: none; }
+  .mf-chat-head { padding-left: 10px; gap: 4px; }
+  .mf-chat-tabs { gap: 2px; }
+  .mf-ct { padding: 7px 9px; font-size: 12px; }
+  .mf-chat-headtools { gap: 3px; flex-shrink: 0; }
+  .mf-tr-btn, .mf-chat-x { width: 32px; min-width: 32px; height: 32px; }
+  .mf-chat-subbar { padding: 8px 10px; }
+  .mf-chat-subbar .mf-tr-lang { max-width: 132px; min-height: 34px; font-size: 16px; }
   .mf-chat-fab { right: 16px; bottom: 16px; }
   body.mf-chat-open .mf-chat-fab { display: none; }
   /* Under 16px, iOS Safari zooms the page in on focus — which reads as the
@@ -807,6 +814,11 @@ html[data-mf-translating] .wrap { transition: opacity 200ms var(--ease); }
   .mf-chat-panel .mf-gifSearch input,
   .mf-chat-panel .mf-msg-editfield { font-size: 16px; }
   .mf-pickerPop { max-height: 46vh; }
+}
+
+@media (max-width: 360px) {
+  .mf-ct { max-width: 91px; overflow: hidden; text-overflow: ellipsis; }
+  .mf-chat-head { padding-right: 6px; }
 }
 
 /* ── chat: clickable names + DM presence dots ── */
@@ -899,6 +911,14 @@ html[data-mf-translating] .wrap { transition: opacity 200ms var(--ease); }
 .mf-tr-btn.on { color: var(--rose); background: rgba(249,168,212,.12); }
 .mf-tr-btn:disabled { opacity: .4; cursor: default; }
 .mf-tr-lang { font-family: var(--font-b); font-size: 12px; padding: 5px 6px; border-radius: 8px; border: 1px solid var(--border-2); background: rgba(0,0,0,.3); color: var(--text); max-width: 96px; }
+
+/* These controls are declared after the main phone sheet rules, so keep the
+   narrow-layout overrides here as well to win the cascade on real devices. */
+@media (max-width: 520px) {
+  .mf-chat-headtools { gap: 3px; flex-shrink: 0; }
+  .mf-tr-btn, .mf-chat-x { width: 32px; min-width: 32px; height: 32px; }
+  .mf-chat-subbar .mf-tr-lang { max-width: 132px; min-height: 34px; font-size: 16px; }
+}
 
 .mf-chat-tools { display: flex; gap: 4px; padding: 8px 10px 0; }
 .mf-tool { border: 0; cursor: pointer; background: rgba(255,255,255,.05); color: var(--text-2); border-radius: 9px; padding: 6px 9px; font-size: 14px; font-weight: 600; line-height: 1; transition: all 130ms var(--ease); }

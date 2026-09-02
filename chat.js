@@ -152,7 +152,7 @@
         </div>
       </div>
       <div class="mf-chat-subbar" id="mfChatSubbar" hidden>
-        <span>🌐 Translating to</span>
+        <span id="mfTrStatus" role="status" aria-live="polite">🌐 Translating to</span>
         <select class="mf-tr-lang" id="mfTrLang"></select>
       </div>
       <div class="mf-chat-body" id="mfChatBody"></div>
@@ -177,12 +177,14 @@
     const trLang = panel.querySelector("#mfTrLang");
     trLang.innerHTML = Object.entries(LANG_NAMES).map(([k, v]) => `<option value="${k}">${v}</option>`).join("");
     const trBar = panel.querySelector("#mfChatSubbar");
+    const trStatus = panel.querySelector("#mfTrStatus");
     function updateTrUI() {
       if (!TR_OK) { trBtn.textContent = "🌐"; trBtn.title = "Translation isn't available in this browser"; trBtn.disabled = true; trBar.hidden = true; return; }
       trBtn.classList.toggle("on", translateOn);
       trBtn.title = translateOn ? ("Translating to " + (LANG_NAMES[targetLang] || targetLang)) : "Translate messages";
       trBar.hidden = !translateOn;
       trLang.value = targetLang;
+      if (translateOn) trStatus.textContent = "🌐 Translating to";
     }
     trBtn.addEventListener("click", () => {
       if (!TR_OK) return;
@@ -1070,7 +1072,8 @@
   // ---- Translation engine (two-tier: on-device, then free server fallback) ----
   const LANG_NAMES = { en:"English", es:"Spanish", de:"German", fr:"French", pt:"Português (Brasil)", it:"Italian", nl:"Dutch", ja:"Japanese", ko:"Korean", zh:"Chinese", ru:"Russian" };
   let translateOn = false, targetLang = "en";
-  const translationCache = new Map(), translatorPool = new Map();
+  const translationCache = new Map(), translationPending = new Map(), translatorPool = new Map();
+  let translationBusy = 0, translationFailures = 0;
   function guessLang() { const l = (navigator.language || "en").slice(0,2).toLowerCase(); return LANG_NAMES[l] ? l : "en"; }
   try {
     const savedOn = localStorage.getItem("mf_tr_on");
@@ -1100,43 +1103,81 @@
     return null;
   }
   function onlineTargetLang(tgt) { return tgt === "pt" ? "pt-BR" : tgt; }
+  function setTranslationStatus(kind) {
+    const el = document.getElementById("mfTrStatus");
+    if (!el || !translateOn) return;
+    el.textContent = kind === "busy" ? "🌐 Translating…" :
+      kind === "error" ? "⚠️ Some messages could not translate" : "🌐 Translating to";
+  }
   async function serverTranslate(text, tgt) {
     const url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" + encodeURIComponent(onlineTargetLang(tgt)) + "&dt=t&ie=UTF-8&oe=UTF-8&q=" + encodeURIComponent(text);
-    try { const ctrl = new AbortController(); const timer = setTimeout(() => ctrl.abort(), 8000); const r = await fetch(url, { signal: ctrl.signal }); clearTimeout(timer); if (!r.ok) return null; const data = await r.json(); const out = (data[0] || []).map(s => s[0]).join(""); const src = String(data[2] || "").toLowerCase().slice(0,2); if (!out) return null; return { text: out, src }; } catch (_) { return null; }
+    // Mobile radios frequently change state while a request is in flight. Retry
+    // once, but never cache a network failure as if it were a real result.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 10000);
+      try {
+        const r = await fetch(url, { signal: ctrl.signal, cache: "no-store" });
+        if (!r.ok) throw new Error("translate " + r.status);
+        const data = await r.json();
+        const out = (data[0] || []).map(s => s && s[0] || "").join("");
+        const src = String(data[2] || "").toLowerCase().slice(0,2);
+        if (out) return { text: out, src };
+      } catch (_) {
+        if (attempt === 0) await new Promise(resolve => setTimeout(resolve, 250));
+      } finally { clearTimeout(timer); }
+    }
+    return null;
   }
   async function translateText(text, tgt) {
     const ck = tgt + "||" + text;
     if (translationCache.has(ck)) return translationCache.get(ck);
-    let out = null;
-
-    // Quality first: use Google's online translation whenever we're online.
-    // The browser's on-device model remains an offline/failure fallback.
-    if (HAS_SERVER) {
-      const r = await serverTranslate(text, tgt);
-      if (r) {
-        if (r.src && r.src === tgt) { translationCache.set(ck, null); return null; }
-        out = r.text;
+    if (translationPending.has(ck)) return translationPending.get(ck);
+    const job = (async () => {
+      let out = null, sameLanguage = false;
+      translationBusy++; setTranslationStatus("busy");
+      // Quality first: use Google's online translation whenever we're online.
+      // The browser's on-device model remains an offline/failure fallback.
+      if (HAS_SERVER) {
+        const r = await serverTranslate(text, tgt);
+        if (r) {
+          sameLanguage = !!(r.src && r.src === tgt);
+          if (!sameLanguage) out = r.text;
+        }
       }
-    }
-    if (!out && HAS_DEVICE) {
-      const src = await detectLang(text);
-      if (src && src === tgt) { translationCache.set(ck, null); return null; }
-      if (src) {
-        const t = await getTranslator(src, tgt);
-        if (t) { try { out = await t.translate(text); } catch (_) { out = null; } }
+      if (!out && !sameLanguage && HAS_DEVICE) {
+        const src = await detectLang(text);
+        sameLanguage = !!(src && src === tgt);
+        if (src && !sameLanguage) {
+          const t = await getTranslator(src, tgt);
+          if (t) { try { out = await t.translate(text); } catch (_) { out = null; } }
+        }
       }
-    }
-    translationCache.set(ck, out || null);
-    return out || null;
+      // Cache successful translations and confirmed same-language messages.
+      // A network error must remain retryable, especially after a phone wakes.
+      if (out || sameLanguage) translationCache.set(ck, out || null);
+      if (!out && !sameLanguage) translationFailures++;
+      return out || null;
+    })().finally(() => {
+      translationPending.delete(ck);
+      translationBusy--;
+      if (!translationBusy) setTranslationStatus(translationFailures ? "error" : "idle");
+    });
+    translationPending.set(ck, job);
+    return job;
   }
   // Translate ONE bubble in place. Cheap and idempotent (the trFor guard means
   // calling it again for the same language is a no-op).
   async function translateBubble(b) {
     if (!translateOn || !TR_OK || !b) return;
-    if (b.dataset.trFor === targetLang) return;
+    const requestedLang = targetLang;
+    if (b.dataset.trFor === requestedLang) return;
     const original = b.dataset.text;
-    const translated = await translateText(original, targetLang);
-    b.dataset.trFor = targetLang;
+    const translated = await translateText(original, requestedLang);
+    // Ignore a slow response if the user switched languages/off, the bubble
+    // was reused, or the message was edited while translation was in flight.
+    if (!translateOn || targetLang !== requestedLang || !b.isConnected || b.dataset.text !== original) return;
+    b.dataset.trFor = requestedLang;
     if (translated && translated !== original) {
       b.innerHTML = linkify(translated);
       const row = b.closest(".mf-msg");
@@ -1155,7 +1196,14 @@
     if (!translateOn || !TR_OK) return;
     const log = document.getElementById("mfChatLog"); if (!log) return;
     const bubbles = log.querySelectorAll(".mf-msg-text[data-text]");
-    for (const b of bubbles) await translateBubble(b);
+    translationFailures = 0;
+    // A small pool is much faster than serial requests without flooding the
+    // free endpoint on a long chat history.
+    const queue = Array.from(bubbles);
+    const workers = Array.from({ length: Math.min(4, queue.length) }, async () => {
+      while (queue.length) await translateBubble(queue.shift());
+    });
+    await Promise.all(workers);
   }
 
   function cleanHandle(value) {
