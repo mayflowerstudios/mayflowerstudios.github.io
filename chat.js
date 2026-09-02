@@ -182,6 +182,7 @@
       if (!TR_OK) { trBtn.textContent = "🌐"; trBtn.title = "Translation isn't available in this browser"; trBtn.disabled = true; trBar.hidden = true; return; }
       trBtn.classList.toggle("on", translateOn);
       trBtn.title = translateOn ? ("Translating to " + (LANG_NAMES[targetLang] || targetLang)) : "Translate messages";
+      trBtn.setAttribute("aria-label", trBtn.title);
       trBar.hidden = !translateOn;
       trLang.value = targetLang;
       if (translateOn) trStatus.textContent = "🌐 Translating to";
@@ -201,6 +202,7 @@
       updateTrUI();
       if (translateOn) applyTranslations();
     });
+    trLang.setAttribute("aria-label", "Translate chat messages to");
     updateTrUI();
 
     // Keep the chat translator in sync with the site-wide language picker and
@@ -227,6 +229,10 @@
       if (translateOn) applyTranslations();
       else { document.querySelectorAll(".mf-msg-text[data-text]").forEach(b => { b.innerHTML = linkify(b.dataset.text); delete b.dataset.trFor; }); document.querySelectorAll(".mf-msg-orig").forEach(o => o.remove()); }
     });
+    // A phone may open the chat while its radio is still reconnecting. Failed
+    // bubbles deliberately remain unmarked, so coming back online can retry
+    // them without making the user toggle translation off and on.
+    window.addEventListener("online", () => { if (translateOn) applyTranslations(); });
     const muteBtn = panel.querySelector("#mfMuteBtn");
     function updateMuteUI() {
       muteBtn.textContent = muted ? "🔕" : "🔔";
@@ -1072,8 +1078,60 @@
   // ---- Translation engine (two-tier: on-device, then free server fallback) ----
   const LANG_NAMES = { en:"English", es:"Spanish", de:"German", fr:"French", pt:"Português (Brasil)", it:"Italian", nl:"Dutch", ja:"Japanese", ko:"Korean", zh:"Chinese", ru:"Russian" };
   let translateOn = false, targetLang = "en";
-  const translationCache = new Map(), translationPending = new Map(), translatorPool = new Map();
+  const translationCache = new Map(), translationPending = new Map(), translationErrorKeys = new Set(), translatorPool = new Map();
   let translationBusy = 0, translationFailures = 0;
+  // Successful per-message translations survive reloads on this device. Keys
+  // are hashes of language + source text, so raw chat messages are not written
+  // into localStorage as cache keys. The translated value necessarily remains
+  // local on the device; failures are never persisted.
+  const CHAT_TR_CACHE_KEY = "mf_chat_tr_cache_v1", CHAT_TR_CACHE_MAX = 1000;
+  const persistentTranslations = new Map();
+  try {
+    const saved = JSON.parse(localStorage.getItem(CHAT_TR_CACHE_KEY) || "[]");
+    if (Array.isArray(saved)) saved.slice(-CHAT_TR_CACHE_MAX).forEach(entry => {
+      if (Array.isArray(entry) && typeof entry[0] === "string" && entry[1]) persistentTranslations.set(entry[0], entry[1]);
+    });
+  } catch (_) {}
+  let persistentSaveTimer = null;
+  function flushPersistentTranslations() {
+    if (persistentSaveTimer) { clearTimeout(persistentSaveTimer); persistentSaveTimer = null; }
+    try {
+      const entries = Array.from(persistentTranslations.entries()).slice(-CHAT_TR_CACHE_MAX);
+      localStorage.setItem(CHAT_TR_CACHE_KEY, JSON.stringify(entries));
+    } catch (_) {}
+  }
+  function savePersistentTranslations() {
+    if (persistentSaveTimer) return;
+    persistentSaveTimer = setTimeout(flushPersistentTranslations, 500);
+  }
+  window.addEventListener("pagehide", () => { if (persistentSaveTimer) flushPersistentTranslations(); });
+  async function persistentTranslationKey(tgt, text) {
+    const value = tgt + "\n" + text;
+    try {
+      if (typeof crypto !== "undefined" && crypto.subtle && typeof TextEncoder !== "undefined") {
+        const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+        return Array.from(new Uint8Array(bytes), b => b.toString(16).padStart(2, "0")).join("");
+      }
+    } catch (_) {}
+    // Non-cryptographic fallback for older webviews; include length to reduce
+    // accidental collisions without retaining the original message.
+    let hash = 2166136261;
+    for (let i = 0; i < value.length; i++) { hash ^= value.charCodeAt(i); hash = Math.imul(hash, 16777619); }
+    return "f" + value.length + "-" + (hash >>> 0).toString(16);
+  }
+  async function readPersistentTranslation(tgt, text) {
+    const key = await persistentTranslationKey(tgt, text);
+    const entry = persistentTranslations.get(key);
+    if (!entry) return { key, hit: false, text: null };
+    persistentTranslations.delete(key); persistentTranslations.set(key, entry);
+    return { key, hit: true, text: entry.same ? null : String(entry.text || "") };
+  }
+  function writePersistentTranslation(key, text, sameLanguage) {
+    persistentTranslations.delete(key); // refresh insertion order (simple LRU)
+    persistentTranslations.set(key, sameLanguage ? { same: 1 } : { text: String(text) });
+    while (persistentTranslations.size > CHAT_TR_CACHE_MAX) persistentTranslations.delete(persistentTranslations.keys().next().value);
+    savePersistentTranslations();
+  }
   function guessLang() { const l = (navigator.language || "en").slice(0,2).toLowerCase(); return LANG_NAMES[l] ? l : "en"; }
   try {
     const savedOn = localStorage.getItem("mf_tr_on");
@@ -1103,28 +1161,46 @@
     return null;
   }
   function onlineTargetLang(tgt) { return tgt === "pt" ? "pt-BR" : tgt; }
+  function protectTranslationText(text) {
+    if (window.MFTranslate && typeof window.MFTranslate.protectText === "function") {
+      return window.MFTranslate.protectText(text);
+    }
+    return { text: String(text || ""), restore: value => String(value || "") };
+  }
   function setTranslationStatus(kind) {
     const el = document.getElementById("mfTrStatus");
     if (!el || !translateOn) return;
     el.textContent = kind === "busy" ? "🌐 Translating…" :
-      kind === "error" ? "⚠️ Some messages could not translate" : "🌐 Translating to";
+      kind === "error" ? "⚠️ Translation failed" : "🌐 Translating to";
+    el.title = kind === "error" ? "The connection failed. Messages will retry when the device is back online." : "";
   }
   async function serverTranslate(text, tgt) {
-    const url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" + encodeURIComponent(onlineTargetLang(tgt)) + "&dt=t&ie=UTF-8&oe=UTF-8&q=" + encodeURIComponent(text);
-    // Mobile radios frequently change state while a request is in flight. Retry
-    // once, but never cache a network failure as if it were a real result.
-    for (let attempt = 0; attempt < 2; attempt++) {
+    const safe = protectTranslationText(text);
+    const url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" + encodeURIComponent(onlineTargetLang(tgt)) + "&dt=t&ie=UTF-8&oe=UTF-8&q=" + encodeURIComponent(safe.text);
+    // Mobile radios frequently change state while a request is in flight, and
+    // this endpoint may briefly rate-limit a newly opened history. Retry with
+    // a real backoff, but never cache a network failure as a translation.
+    for (let attempt = 0; attempt < 3; attempt++) {
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 10000);
       try {
         const r = await fetch(url, { signal: ctrl.signal, cache: "no-store" });
-        if (!r.ok) throw new Error("translate " + r.status);
+        if (!r.ok) {
+          if (r.status !== 429 && r.status < 500) return null;
+          const retryAfter = Number(r.headers.get("Retry-After"));
+          const err = new Error("translate " + r.status);
+          err.retryAfter = Number.isFinite(retryAfter) ? retryAfter * 1000 : 0;
+          throw err;
+        }
         const data = await r.json();
         const out = (data[0] || []).map(s => s && s[0] || "").join("");
         const src = String(data[2] || "").toLowerCase().slice(0,2);
-        if (out) return { text: out, src };
-      } catch (_) {
-        if (attempt === 0) await new Promise(resolve => setTimeout(resolve, 250));
+        if (out) return { text: safe.restore(out), src };
+      } catch (err) {
+        if (attempt < 2) {
+          const wait = Math.max(Number(err && err.retryAfter) || 0, attempt ? 1400 : 600) + Math.floor(Math.random() * 250);
+          await new Promise(resolve => setTimeout(resolve, wait));
+        }
       } finally { clearTimeout(timer); }
     }
     return null;
@@ -1133,12 +1209,20 @@
     const ck = tgt + "||" + text;
     if (translationCache.has(ck)) return translationCache.get(ck);
     if (translationPending.has(ck)) return translationPending.get(ck);
+    let countedBusy = false;
     const job = (async () => {
+      const stored = await readPersistentTranslation(tgt, text);
+      if (stored.hit) {
+        translationCache.set(ck, stored.text);
+        translationErrorKeys.delete(ck);
+        return stored.text;
+      }
       let out = null, sameLanguage = false;
-      translationBusy++; setTranslationStatus("busy");
+      if (!translationBusy) translationFailures = 0;
+      translationBusy++; countedBusy = true; setTranslationStatus("busy");
       // Quality first: use Google's online translation whenever we're online.
       // The browser's on-device model remains an offline/failure fallback.
-      if (HAS_SERVER) {
+      if (HAS_SERVER && navigator.onLine !== false) {
         const r = await serverTranslate(text, tgt);
         if (r) {
           sameLanguage = !!(r.src && r.src === tgt);
@@ -1149,43 +1233,56 @@
         const src = await detectLang(text);
         sameLanguage = !!(src && src === tgt);
         if (src && !sameLanguage) {
+          const safe = protectTranslationText(text);
           const t = await getTranslator(src, tgt);
-          if (t) { try { out = await t.translate(text); } catch (_) { out = null; } }
+          if (t) { try { out = safe.restore(await t.translate(safe.text)); } catch (_) { out = null; } }
         }
       }
       // Cache successful translations and confirmed same-language messages.
       // A network error must remain retryable, especially after a phone wakes.
-      if (out || sameLanguage) translationCache.set(ck, out || null);
-      if (!out && !sameLanguage) translationFailures++;
+      if (out || sameLanguage) {
+        translationCache.set(ck, out || null);
+        translationErrorKeys.delete(ck);
+        writePersistentTranslation(stored.key, out, sameLanguage);
+      } else {
+        translationFailures++;
+        translationErrorKeys.add(ck);
+      }
       return out || null;
     })().finally(() => {
       translationPending.delete(ck);
-      translationBusy--;
-      if (!translationBusy) setTranslationStatus(translationFailures ? "error" : "idle");
+      if (countedBusy) translationBusy--;
+      if (countedBusy && !translationBusy) setTranslationStatus(translationFailures ? "error" : "idle");
     });
     translationPending.set(ck, job);
     return job;
   }
   // Translate ONE bubble in place. Cheap and idempotent (the trFor guard means
   // calling it again for the same language is a no-op).
-  async function translateBubble(b) {
-    if (!translateOn || !TR_OK || !b) return;
+  async function translateBubble(b, force) {
+    if ((!translateOn && !force) || !TR_OK || !b) return "skipped";
     const requestedLang = targetLang;
-    if (b.dataset.trFor === requestedLang) return;
+    if (b.dataset.trFor === requestedLang) return "ready";
     const original = b.dataset.text;
     const translated = await translateText(original, requestedLang);
     // Ignore a slow response if the user switched languages/off, the bubble
     // was reused, or the message was edited while translation was in flight.
-    if (!translateOn || targetLang !== requestedLang || !b.isConnected || b.dataset.text !== original) return;
+    if ((!translateOn && !force) || targetLang !== requestedLang || !b.isConnected || b.dataset.text !== original) return "skipped";
+    // Null can mean either "already in this language" or "the network failed".
+    // Only mark the former complete; failed messages must stay retryable.
+    const ck = requestedLang + "||" + original;
+    if (translationErrorKeys.has(ck)) { delete b.dataset.trFor; return "failed"; }
     b.dataset.trFor = requestedLang;
     if (translated && translated !== original) {
       b.innerHTML = linkify(translated);
       const row = b.closest(".mf-msg");
       if (row && !row.querySelector(".mf-msg-orig")) {
-        const o = document.createElement("span"); o.className = "mf-msg-orig"; o.textContent = "original: " + original;
+        const o = document.createElement("span"); o.className = "mf-msg-orig"; o.setAttribute("data-no-translate", ""); o.textContent = "original: " + original;
         b.after(o);
       }
+      return "translated";
     }
+    return "same";
   }
 
   // Full-log pass — used only when translation is toggled on or the language
@@ -1196,11 +1293,11 @@
     if (!translateOn || !TR_OK) return;
     const log = document.getElementById("mfChatLog"); if (!log) return;
     const bubbles = log.querySelectorAll(".mf-msg-text[data-text]");
-    translationFailures = 0;
-    // A small pool is much faster than serial requests without flooding the
-    // free endpoint on a long chat history.
-    const queue = Array.from(bubbles);
-    const workers = Array.from({ length: Math.min(4, queue.length) }, async () => {
+    // Start at the newest messages—the part of the conversation the user can
+    // see first. Two workers are quick without provoking mobile/rate-limit
+    // failures when a 100-message history opens all at once.
+    const queue = Array.from(bubbles).reverse();
+    const workers = Array.from({ length: Math.min(2, queue.length) }, async () => {
       while (queue.length) await translateBubble(queue.shift());
     });
     await Promise.all(workers);
@@ -1411,7 +1508,7 @@
       }
     } else {
       row.innerHTML = nameHTML
-        + `<span class="mf-msg-text" data-text="${esc(m.text)}">${linkify(m.text)}</span>${editedTag}`
+        + `<span class="mf-msg-text" data-no-translate data-text="${esc(m.text)}">${linkify(m.text)}</span>${editedTag}`
         + `<span class="mf-msg-time">${timeShort(m.t)}</span>`;
     }
 
@@ -1467,13 +1564,18 @@
     removeMsgActions(row);
     if (!row || !m) return;
     if (m.uid === me) {
-      addMsgActions(row, key, m, canEditOwnText, true);
+      addMsgActions(row, key, m, canEditOwnText, true, canEditOwnText);
       return;
     }
+    // Translation is available on every text message, including messages from
+    // people the current user cannot moderate. Add it immediately so the
+    // action is not held up by the asynchronous role lookup.
+    if (canEditOwnText) addMsgActions(row, key, m, false, false, true);
     if (!(await canModerateMessage(m))) return;
     // The row may have been replaced while the role lookup was in flight.
     if (!row.isConnected || msgRows.get(key) !== row || row.dataset.key !== key) return;
-    addMsgActions(row, key, m, false, true);
+    removeMsgActions(row);
+    addMsgActions(row, key, m, false, true, canEditOwnText);
   }
 
   function refreshVisibleActions() {
@@ -1487,18 +1589,18 @@
 
   // Attach the small ⋯ menu. Editing is always limited to the author; delete
   // permission is additionally enforced by Firebase rules.
-  function addMsgActions(row, key, m, canEdit, canDelete) {
-    if (!canEdit && !canDelete) return;
+  function addMsgActions(row, key, m, canEdit, canDelete, canTranslate) {
+    if (!canEdit && !canDelete && !canTranslate) return;
     if (row.querySelector(".mf-msg-actions")) return;
     const btn = document.createElement("button");
     btn.className = "mf-msg-actions";
     btn.type = "button";
-    btn.title = canEdit ? "Edit or delete" : "Remove message";
+    btn.title = "Message options";
     btn.setAttribute("aria-label", "Message options");
     btn.textContent = "⋯";
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      openMsgMenu(row, key, m, canEdit, canDelete);
+      openMsgMenu(row, key, m, canEdit, canDelete, canTranslate);
     });
     row.appendChild(btn);
     if (!row.classList.contains("me")) row.style.paddingRight = "24px";
@@ -1510,14 +1612,34 @@
     document.removeEventListener("click", closeMsgMenu);
   }
 
-  function openMsgMenu(row, key, m, canEdit, canDelete) {
+  function openMsgMenu(row, key, m, canEdit, canDelete, canTranslate) {
     closeMsgMenu();
     const menu = document.createElement("div");
     menu.className = "mf-msg-menu";
+    const bubble = row.querySelector(".mf-msg-text[data-text]");
+    const showingTranslation = !!(bubble && bubble.dataset.trFor === targetLang);
     menu.innerHTML =
+      (canTranslate ? `<button type="button" data-act="translate">${showingTranslation ? "↩️ Show original" : "🌐 Translate message"}</button>` : "") +
       (canEdit ? `<button type="button" data-act="edit">✏️ Edit</button>` : "") +
       (canDelete ? `<button type="button" data-act="delete">🗑️ Remove</button>` : "");
     row.appendChild(menu);
+    const translateBtn = menu.querySelector('[data-act="translate"]');
+    if (translateBtn) translateBtn.addEventListener("click", async (e) => {
+      e.stopPropagation(); closeMsgMenu();
+      if (!bubble) return;
+      if (bubble.dataset.trFor === targetLang) {
+        bubble.innerHTML = linkify(bubble.dataset.text);
+        delete bubble.dataset.trFor;
+        const original = row.querySelector(".mf-msg-orig"); if (original) original.remove();
+        toast("Showing the original message");
+        return;
+      }
+      toast("Translating to " + (LANG_NAMES[targetLang] || targetLang) + "…");
+      const result = await translateBubble(bubble, true);
+      if (result === "failed") toast("Couldn't translate that message. Check the connection and try again.");
+      else if (result === "same") toast("That message is already in " + (LANG_NAMES[targetLang] || targetLang) + ".");
+      else if (result === "translated" || result === "ready") toast("Message translated");
+    });
     const editBtn = menu.querySelector('[data-act="edit"]');
     if (editBtn) editBtn.addEventListener("click", (e) => {
       e.stopPropagation(); closeMsgMenu(); startEdit(row, key, m);

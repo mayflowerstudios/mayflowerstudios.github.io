@@ -125,7 +125,9 @@
     // Translations are deterministic for a given (text -> language), so we keep
     // them in localStorage. Repeat visits then translate from cache instantly
     // and only fetch strings we've never seen before.
-    const CACHE_KEY = "mf_tr_cache_v2";  // bump the v# to invalidate all cached translations
+    // v4 drops old null entries that could represent a transient network
+    // failure and predates the protected-name glossary below.
+    const CACHE_KEY = "mf_tr_cache_v4";
     const CACHE_MAX = 4000;              // entry ceiling so we never blow the ~5MB quota
     const cache = new Map();             // key `${tgt}||${text}` -> translated string (or null)
     let cacheDirty = false;
@@ -194,21 +196,53 @@
       return tgt === "pt" ? "pt-BR" : tgt;
     }
 
+    // Translation engines should translate prose, not brand/product names or
+    // identifiers. Stable placeholders prevent "Mayflower Studios" becoming
+    // a literal flower translation and keep links, emails and @names intact.
+    const PROTECTED_TEXT = /https?:\/\/[^\s<]+|[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}|@[A-Z0-9_]{1,32}\b|Mayflower Studios|Mayflower Radio|3DXChat|Farming Simulator|Minecraft/gi;
+    function protectText(value) {
+      const kept = [];
+      const text = String(value || "").replace(PROTECTED_TEXT, match => {
+        const token = "__MFKEEP" + kept.length + "__";
+        kept.push(match); return token;
+      });
+      return {
+        text,
+        restore(output) {
+          return String(output || "").replace(/__\s*MFKEEP\s*(\d+)\s*__/gi, (token, index) =>
+            kept[Number(index)] !== undefined ? kept[Number(index)] : token);
+        }
+      };
+    }
+
     async function serverTranslate(text, tgt) {
+      const safe = protectText(text);
       const url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" +
-        encodeURIComponent(onlineTargetLang(tgt)) + "&dt=t&ie=UTF-8&oe=UTF-8&q=" + encodeURIComponent(text);
-      try {
+        encodeURIComponent(onlineTargetLang(tgt)) + "&dt=t&ie=UTF-8&oe=UTF-8&q=" + encodeURIComponent(safe.text);
+      for (let attempt = 0; attempt < 3; attempt++) {
         const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), 9000);
-        const r = await fetch(url, { signal: ctrl.signal });
-        clearTimeout(timer);
-        if (!r.ok) return null;
-        const data = await r.json();
-        const out = (data[0] || []).map(s => s[0]).join("");
-        const src = String(data[2] || "").toLowerCase().slice(0, 2);
-        if (!out) return null;
-        return { text: out, src };
-      } catch (_) { return null; }
+        const timer = setTimeout(() => ctrl.abort(), 10000);
+        try {
+          const r = await fetch(url, { signal: ctrl.signal, cache: "no-store" });
+          if (!r.ok) {
+            if (r.status !== 429 && r.status < 500) return null;
+            const retryAfter = Number(r.headers.get("Retry-After"));
+            const err = new Error("translate " + r.status);
+            err.retryAfter = Number.isFinite(retryAfter) ? retryAfter * 1000 : 0;
+            throw err;
+          }
+          const data = await r.json();
+          const out = (data[0] || []).map(s => s && s[0] || "").join("");
+          const src = String(data[2] || "").toLowerCase().slice(0, 2);
+          if (out) return { text: safe.restore(out), src };
+        } catch (err) {
+          if (attempt < 2) {
+            const wait = Math.max(Number(err && err.retryAfter) || 0, attempt ? 1400 : 600) + Math.floor(Math.random() * 250);
+            await new Promise(resolve => setTimeout(resolve, wait));
+          }
+        } finally { clearTimeout(timer); }
+      }
+      return null;
     }
 
     async function translateOne(text, tgt) {
@@ -218,16 +252,20 @@
 
       // Prefer Google's online engine for quality and use the smaller local
       // browser model only as an offline/failure fallback.
-      if (HAS_SERVER) {
+      if (HAS_SERVER && navigator.onLine !== false) {
         const r = await serverTranslate(text, tgt);
         if (r) out = r.text;
       }
       if (!out && HAS_DEVICE) {
+        const safe = protectText(text);
         const t = await getTranslator(pageSrcLang, tgt);
-        if (t) { try { out = await t.translate(text); } catch (_) { out = null; } }
+        if (t) { try { out = safe.restore(await t.translate(safe.text)); } catch (_) { out = null; } }
       }
 
-      cacheSet(ck, out || null);
+      // A failed network request is not a translation result. Leaving it out
+      // of the cache lets a reconnect/reload try again instead of making the
+      // site look permanently untranslated on that device.
+      if (out) cacheSet(ck, out);
       return out || null;
     }
 
@@ -279,11 +317,15 @@
 
     async function translateNodes(nodes) {
       if (!nodes.length || targetLang === "en" || !TR_OK) return;
+      // Everything in one pass must use one immutable language. Without this,
+      // a slow response can arrive after the picker changes and be cached or
+      // painted under the new language.
+      const runLang = targetLang;
       // Build a unique list of trimmed strings to translate.
       const jobs = [];      // { node, lead, trail, core }
       const need = new Map(); // core -> array of jobs
       for (const node of nodes) {
-        if (alreadyDone(node)) continue;              // node already shows the target language
+        if (trDone.get(node) === runLang) continue;   // node already shows this pass's language
         // Source text = the recorded original if we've touched this node, else its current value.
         const raw = originals.has(node) ? originals.get(node) : node.nodeValue;
         const core = raw.trim();
@@ -298,37 +340,48 @@
       const uniques = [...need.keys()];
 
       // Resolve translations for each unique string (cache-aware).
-      const uncached = uniques.filter(u => !cache.has(targetLang + "||" + u));
+      const uncached = uniques.filter(u => !cache.has(runLang + "||" + u));
       if (uncached.length) {
         if (TR_MODE === "server") {
-          // chunk into batches to keep URLs sane
-          const CHUNK = 40;
-          for (let i = 0; i < uncached.length; i += CHUNK) {
-            const slice = uncached.slice(i, i + CHUNK);
-            let res = await translateBatchServer(slice, targetLang);
+          // Keep both item count and encoded URL size modest. A fixed 40-item
+          // chunk could become an 8–15 KB GET and fail on mobile proxies.
+          const batches = [];
+          let batch = [], chars = 0;
+          for (const value of uncached) {
+            if (batch.length && (batch.length >= 20 || chars + value.length > 3500)) {
+              batches.push(batch); batch = []; chars = 0;
+            }
+            batch.push(value); chars += value.length + SEP.length;
+          }
+          if (batch.length) batches.push(batch);
+          for (const slice of batches) {
+            let res = await translateBatchServer(slice, runLang);
             if (!res) { // fallback: per-string
               res = [];
-              for (const s of slice) res.push(await translateOne(s, targetLang));
+              for (const s of slice) res.push(await translateOne(s, runLang));
             }
-            slice.forEach((s, idx) => cacheSet(targetLang + "||" + s, res[idx] || null));
+            slice.forEach((s, idx) => { if (res[idx]) cacheSet(runLang + "||" + s, res[idx]); });
           }
         } else {
           // device mode: translate individually (API is local & fast, runs concurrently-ish)
           await Promise.all(uncached.map(async (s) => {
-            const out = await translateOne(s, targetLang);
-            cacheSet(targetLang + "||" + s, out || null);
+            const out = await translateOne(s, runLang);
+            if (out) cacheSet(runLang + "||" + s, out);
           }));
         }
       }
 
       // Apply.
+      if (targetLang !== runLang) return;
       for (const job of jobs) {
-        const tr = cache.get(targetLang + "||" + job.core);
-        if (tr && tr !== job.core) {
-          snapshotOriginal(job.node);
-          job.node.nodeValue = job.lead + tr + job.trail;
+        const tr = cache.get(runLang + "||" + job.core);
+        if (tr) {
+          if (tr !== job.core) {
+            snapshotOriginal(job.node);
+            job.node.nodeValue = job.lead + tr + job.trail;
+          }
+          markDone(job.node, runLang);
         }
-        markDone(job.node, targetLang);
       }
     }
 
@@ -453,6 +506,9 @@
     function init() {
       if (!TR_OK) return;
       startObserver();
+      window.addEventListener("online", () => {
+        if (targetLang !== "en") translatePage().catch(() => {});
+      });
       if (targetLang !== "en") {
         document.documentElement.lang = targetLang;
         // Instant: paint anything we already have cached, synchronously.
@@ -467,7 +523,7 @@
       try { localStorage.removeItem(CACHE_KEY); } catch (_) {}
     }
 
-    return { init, setLang, current, names, available, mode, translatePage, revertAll, clearCache };
+    return { init, setLang, current, names, available, mode, translatePage, revertAll, clearCache, protectText };
   })();
   window.MFTranslate = MFTranslate;
 
@@ -737,7 +793,7 @@
 
   // Bump this whenever auth.js / chat.js / profile-view.js change, so browsers
   // and the GitHub Pages CDN fetch the new version instead of a cached copy.
-  var MF_ASSET_VER = '66';
+  var MF_ASSET_VER = '70';
 
   // ─────────────────────────────────────────────────────────────
   //  Chat + moderation config, shared by chat.js and admin-moderation.js.

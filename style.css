@@ -712,6 +712,9 @@ html[data-mf-translating] .wrap { transition: opacity 200ms var(--ease); }
 }
 .mf-msg:hover .mf-msg-actions { opacity: .5; }
 .mf-msg-actions:hover { opacity: 1 !important; background: rgba(0,0,0,.25); }
+@media (hover: none), (pointer: coarse) {
+  .mf-msg-actions { opacity: .55; }
+}
 .mf-msg.me { padding-right: 24px; }
 
 .mf-msg-menu {
@@ -800,7 +803,8 @@ html[data-mf-translating] .wrap { transition: opacity 200ms var(--ease); }
   .mf-chat-grip { display: none; }
   .mf-chat-head { padding-left: 10px; gap: 4px; }
   .mf-chat-tabs { gap: 2px; }
-  .mf-ct { padding: 7px 9px; font-size: 12px; }
+  /* Leave room for the moderation button when an admin/owner is signed in. */
+  .mf-ct { padding: 7px; font-size: 12px; }
   .mf-chat-headtools { gap: 3px; flex-shrink: 0; }
   .mf-tr-btn, .mf-chat-x { width: 32px; min-width: 32px; height: 32px; }
   .mf-chat-subbar { padding: 8px 10px; }
