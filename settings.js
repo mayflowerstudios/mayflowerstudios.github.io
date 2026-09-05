@@ -7,7 +7,7 @@
   function setTab(name){document.querySelectorAll('[data-settings-tab]').forEach(b=>b.classList.toggle('active',b.dataset.settingsTab===name));document.querySelectorAll('[data-settings-panel]').forEach(p=>p.classList.toggle('active',p.dataset.settingsPanel===name));try{history.replaceState(null,'','#'+name);}catch(_){}}
   function localGet(k,def){try{const v=localStorage.getItem(k);return v===null?def:v;}catch(_){return def;}}
   function localSet(k,v){try{localStorage.setItem(k,v);}catch(_){}}
-  function applyAppearance(){const reduce=localGet('mf_reduce_motion','0')==='1';document.documentElement.classList.toggle('mf-reduce-motion',reduce);const canvas=$('fireflies');if(canvas)canvas.style.display=localGet('mf_hide_fireflies','0')==='1'?'none':'';}
+  function applyAppearance(){const reduce=localGet('mf_reduce_motion','0')==='1';document.documentElement.classList.toggle('mf-reduce-motion',reduce);const canvas=$('fireflies');if(canvas)canvas.style.display=localGet('mf_hide_fireflies','0')==='1'?'none':'';window.dispatchEvent(new CustomEvent('mf-appearance-changed'));}
   // Chat's own language list, kept here so the picker offers the same set.
   const TR_LANGS={en:'English',es:'Espanol',de:'Deutsch',fr:'Francais',pt:'Portugues',it:'Italiano',nl:'Nederlands',ja:'Japanese',ko:'Korean',zh:'Chinese',ru:'Russian'};
   function fillLangs(){const sel=$('settingsTranslateLang');if(!sel||sel.options.length)return;sel.innerHTML=Object.keys(TR_LANGS).map(k=>'<option value="'+k+'">'+TR_LANGS[k]+'</option>').join('');}

@@ -41,12 +41,14 @@
   }
 
   function startPetals(canvas) {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.classList.contains('mf-reduce-motion')) return;
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     const ctx = canvas.getContext('2d');
-    let W, H, petals = [], DPR = 1;
+    if (!ctx) return;
+    let W = 0, H = 0, petals = [], DPR = 1;
     const COLORS = ['rgba(249,168,212,', 'rgba(251,207,232,', 'rgba(196,181,253,', 'rgba(253,242,248,'];
     function resize() {
-      DPR = window.devicePixelRatio || 1; W = window.innerWidth; H = window.innerHeight;
+      const coarse = window.matchMedia('(pointer: coarse)').matches;
+      DPR = Math.min(window.devicePixelRatio || 1, coarse ? 1.5 : 2); W = window.innerWidth; H = window.innerHeight;
       canvas.width = Math.floor(W * DPR); canvas.height = Math.floor(H * DPR);
       canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
       ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -65,10 +67,10 @@
       this.a = .15 + Math.random() * .45;
       this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
     }
-    Petal.prototype.update = function () {
-      this.swing += this.ss;
-      this.x += this.vx + Math.sin(this.swing) * this.sa;
-      this.y += this.vy; this.rot += this.rs;
+    Petal.prototype.update = function (step) {
+      this.swing += this.ss * step;
+      this.x += (this.vx + Math.sin(this.swing) * this.sa) * step;
+      this.y += this.vy * step; this.rot += this.rs * step;
       if (this.y > H + 30) { this.x = Math.random() * W; this.y = -20; }
     };
     Petal.prototype.draw = function () {
@@ -82,18 +84,44 @@
       const n = Math.min(55, Math.floor(W / 30));
       for (let i = 0; i < n; i++) petals.push(new Petal(true));
     }
-    let raf;
-    function animate() {
-      ctx.clearRect(0, 0, W, H);
-      petals.forEach(p => { p.update(); p.draw(); });
+    const FRAME_MS = 1000 / 30;
+    let raf = null, lastDraw = 0, last = 0;
+    let externallyPaused = false;
+    function animate(now) {
       raf = requestAnimationFrame(animate);
+      if (now - lastDraw < FRAME_MS) return;
+      lastDraw = now - ((now - lastDraw) % FRAME_MS);
+      // Preserve the original 60Hz drift speed on every refresh rate.
+      const step = Math.min(3, (now - last) / (1000 / 60));
+      last = now;
+      ctx.clearRect(0, 0, W, H);
+      petals.forEach(p => { p.update(step); p.draw(); });
     }
-    resize(); init(); animate();
-    window.addEventListener('resize', () => { resize(); init(); });
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) { cancelAnimationFrame(raf); raf = null; }
-      else if (!raf) animate();
+    function syncMotion() {
+      const paused = document.hidden || externallyPaused || motionQuery.matches ||
+        document.documentElement.classList.contains('mf-reduce-motion') ||
+        document.documentElement.classList.contains('mf-save-data');
+      if (paused) {
+        if (raf !== null) cancelAnimationFrame(raf);
+        raf = null;
+        ctx.clearRect(0, 0, W, H);
+      } else if (raf === null) {
+        if (!petals.length || W !== window.innerWidth || H !== window.innerHeight) { resize(); init(); }
+        last = lastDraw = performance.now();
+        raf = requestAnimationFrame(animate);
+      }
+    }
+    window.mfPetals = {
+      pause() { externallyPaused = true; syncMotion(); },
+      resume() { externallyPaused = false; syncMotion(); },
+    };
+    syncMotion();
+    window.addEventListener('resize', () => {
+      if (raf !== null) { resize(); init(); }
     });
+    document.addEventListener('visibilitychange', syncMotion);
+    window.addEventListener('mf-appearance-changed', syncMotion);
+    if (motionQuery.addEventListener) motionQuery.addEventListener('change', syncMotion);
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -484,7 +512,7 @@
     }
 
     function startObserver() {
-      if (observer) return;
+      if (observer || targetLang === 'en' || !TR_OK) return;
       observer = new MutationObserver((muts) => {
         if (targetLang === "en" || !TR_OK) return;
         const fresh = [];
@@ -537,9 +565,11 @@
       } catch (_) {}
       // keep chat translator in sync even when it loaded after the picker
       if (lang === "en") {
+        if (observer) { observer.disconnect(); observer = null; }
         revertAll();
         document.documentElement.lang = pageSrcLang;
       } else {
+        startObserver();
         document.documentElement.lang = lang;
         await translatePage();
       }
@@ -846,10 +876,11 @@
     // which is why the fireflies never appeared while the petals did. Track
     // the request separately and leave that flag to fireflies.js.
     if (window._firefliesRequested || window._firefliesLoaded) return;
+    if (!document.getElementById('fireflies')) return;
     if (localPref('mf_hide_fireflies', '0') === '1') return;
     window._firefliesRequested = true;
     const s = document.createElement('script');
-    s.src = '/fireflies.js?v=' + MF_ASSET_VER;
+    s.src = '/fireflies.js?v=74';
     document.body.appendChild(s);
   }
 

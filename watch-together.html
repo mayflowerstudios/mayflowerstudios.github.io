@@ -523,8 +523,8 @@
                   </div>
                 </div>
                 <div class="cfgRow">
-                  <label>Max bitrate <span class="val" id="cfgBrVal">5.0 Mbps</span></label>
-                  <input type="range" id="cfgBitrate" min="1" max="12" step="0.5" value="5" />
+                  <label>Max bitrate <span class="val" id="cfgBrVal">10.0 Mbps</span></label>
+                  <input type="range" id="cfgBitrate" min="2" max="20" step="0.5" value="10" />
                 </div>
                 <div class="cfgRow">
                   <label>Priority</label>
@@ -534,7 +534,7 @@
                     <button data-prio="balanced">Balanced</button>
                   </div>
                 </div>
-                <div class="cfgHint">Higher settings need more upload bandwidth. For fast games, prefer 720p + 60fps + Smooth.</div>
+                <div class="cfgHint">Game streaming now defaults to Discord-style 1080p + 60fps + Smooth at a 10 Mbps ceiling. WebRTC keeps latency low and adapts underneath that ceiling; resolution only steps down after sustained real congestion or encoder pressure.</div>
                 <div class="cfgLive" id="cfgLive">Bitrate &amp; priority apply live. Resolution &amp; fps take effect next time you start streaming.</div>
               </div>
             </div>
@@ -661,7 +661,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/shared.js?v=73"></script>
+  <script src="/shared.js?v=74"></script>
 
   <script src="fireflies.js"></script>
 
@@ -707,9 +707,9 @@
     // capture time (getDisplayMedia); bitrate/priority are applied to the
     // RTP sender and can be changed live mid-stream.
     const streamCfg = {
-      res: 720,                            // 720 | 1080 | 0 (source)
+      res: 1080,                           // 720 | 1080 | 0 (source)
       fps: 60,
-      bitrate: 5_000_000,                  // bits/sec
+      bitrate: 10_000_000,                 // bits/sec — high-motion 1080p60 game ceiling
       priority: "maintain-framerate",      // maintain-framerate | maintain-resolution | balanced
       source: "screen",                    // "screen" (getDisplayMedia) | "camera" (getUserMedia — OBS Virtual Camera etc.)
       videoDeviceId: "",                   // camera mode: chosen video input
@@ -717,7 +717,9 @@
     };
     // OBS users shouldn't have to re-pick their devices every visit.
     const STREAM_SRC_KEY = "wt_stream_source";
-    const STREAM_QUALITY_KEY = "wt_stream_quality";
+    // v2 intentionally resets the old 720p/5 Mbps default once, so existing
+    // users actually receive the new game-streaming profile after deployment.
+    const STREAM_QUALITY_KEY = "wt_stream_quality_v2";
     try {
       const saved = JSON.parse(localStorage.getItem(STREAM_SRC_KEY) || "null");
       if (saved && typeof saved === "object") {
@@ -732,7 +734,7 @@
         if ([0, 720, 1080].includes(Number(saved.res))) streamCfg.res = Number(saved.res);
         if ([24, 30, 60].includes(Number(saved.fps))) streamCfg.fps = Number(saved.fps);
         const bitrate = Number(saved.bitrate);
-        if (Number.isFinite(bitrate)) streamCfg.bitrate = Math.min(12_000_000, Math.max(1_000_000, bitrate));
+        if (Number.isFinite(bitrate)) streamCfg.bitrate = Math.min(20_000_000, Math.max(2_000_000, bitrate));
         if (["maintain-framerate", "maintain-resolution", "balanced"].includes(saved.priority)) {
           streamCfg.priority = saved.priority;
         }
@@ -1294,9 +1296,16 @@
       // Quiet the ambient firefly canvas while a video is actually playing —
       // no need to spend GPU/battery animating particles behind the player.
       try {
+        const playingVisible = isPlayingNow() && document.visibilityState === "visible";
         if (window.fireflies) {
-          if (isPlayingNow() && document.visibilityState === "visible") window.fireflies.pause();
+          if (playingVisible) window.fireflies.pause();
           else window.fireflies.resume();
+        }
+        // Petals are another 30fps canvas. Pausing them while video/game share
+        // is playing frees a little more GPU time for capture + hardware encode.
+        if (window.mfPetals) {
+          if (playingVisible) window.mfPetals.pause();
+          else window.mfPetals.resume();
         }
       } catch (_) {}
     }
@@ -1704,7 +1713,9 @@
           credential: "openrelayproject",
         },
       ],
-      iceCandidatePoolSize: 4,
+      iceCandidatePoolSize: 6,
+      bundlePolicy: "max-bundle",
+      rtcpMuxPolicy: "require",
     };
     let rtcRoot = null;            // ref watch/${ROOM}/rtc
     let shareLockRef = null;       // ref .../rtc/share
@@ -1729,7 +1740,12 @@
       onValue(shareLockRef, (snap) => {
         const s = snap.val();
         const wasActive = !!activeShare;
-        activeShare = (s && s.by) ? { by: s.by, byName: s.byName || "Someone" } : null;
+        activeShare = (s && s.by) ? {
+          by: s.by,
+          byName: s.byName || "Someone",
+          fps: Number(s.fps) || 0,
+          res: Number(s.res) || 0,
+        } : null;
 
         // The broadcaster left without cleanup, or stopped — tear our viewer side down.
         if (wasActive && !activeShare && !isBroadcasting) {
@@ -1891,7 +1907,10 @@
         const at = stream.getAudioTracks()[0];
         if (at) at.contentHint = "music";
       } catch (_) {}
-      set(shareLockRef, { by: clientId, byName: myName, t: Date.now() });
+      set(shareLockRef, {
+        by: clientId, byName: myName, t: Date.now(),
+        fps: streamCfg.fps, res: streamCfg.res,
+      });
       onDisconnect(shareLockRef).remove();
 
       // Show our own capture locally (muted to avoid hearing ourselves).
@@ -1923,24 +1942,38 @@
       toast("You're live 🎮 — others in the room can see your screen");
     }
 
-    // Reorder the video codec list so hardware-friendly codecs come first.
-    // Browsers frequently negotiate VP8, which is encoded in SOFTWARE — doing
-    // that at 60fps while a game is also hammering the CPU/GPU is one of the
-    // biggest sources of choppy streams. H.264 has hardware encoders on
-    // virtually every GPU (NVENC/AMF/QuickSync), so it goes first; VP9 next
-    // (hw on many recent GPUs); VP8 last as the universal fallback.
-    function preferHardwareCodecs(pc) {
+    // Prefer codecs that are efficient for 1080p60 gameplay. H.264 remains
+    // the safe hardware-accelerated baseline on desktop GPUs. If the browser
+    // explicitly reports AV1 WebRTC encoding as smooth AND power-efficient,
+    // we move AV1 ahead of H.264 for much better quality at the same bitrate.
+    async function preferGameCodecs(pc) {
       try {
         if (!("getCapabilities" in RTCRtpSender) || !RTCRtpSender.getCapabilities) return;
         const caps = RTCRtpSender.getCapabilities("video");
         if (!caps || !caps.codecs) return;
+
+        let efficientAv1 = false;
+        try {
+          if (navigator.mediaCapabilities && navigator.mediaCapabilities.encodingInfo) {
+            const av1 = await navigator.mediaCapabilities.encodingInfo({
+              type: "webrtc",
+              video: {
+                contentType: "video/webm;codecs=av01.0.08M.08",
+                width: 1920, height: 1080, bitrate: Math.min(streamCfg.bitrate, 12_000_000), framerate: streamCfg.fps,
+              },
+            });
+            efficientAv1 = !!(av1 && av1.supported && av1.smooth && av1.powerEfficient);
+          }
+        } catch (_) { /* H.264 stays first */ }
+
         const rank = (c) => {
-          const mt = c.mimeType.toLowerCase();
-          if (mt === "video/h264") return 0;
-          if (mt === "video/vp9")  return 1;
-          if (mt === "video/av1")  return 2;
+          const mt = (c.mimeType || "").toLowerCase();
+          if (efficientAv1 && mt === "video/av1") return 0;
+          if (mt === "video/h264") return efficientAv1 ? 1 : 0;
+          if (mt === "video/vp9")  return efficientAv1 ? 2 : 1;
+          if (mt === "video/av1")  return efficientAv1 ? 0 : 2;
           if (mt === "video/vp8")  return 3;
-          return 4; // rtx/red/ulpfec etc. keep relative order at the back
+          return 4;
         };
         const sorted = [...caps.codecs].sort((a, b) => rank(a) - rank(b));
         pc.getTransceivers().forEach(tr => {
@@ -1948,7 +1981,20 @@
             tr.setCodecPreferences(sorted);
           }
         });
-      } catch (_) { /* non-fatal: negotiation falls back to browser default */ }
+      } catch (_) { /* negotiation safely falls back to browser defaults */ }
+    }
+
+    function applyAudioCfg(sender) {
+      try {
+        const params = sender.getParameters();
+        if (!params.encodings || !params.encodings.length) params.encodings = [{}];
+        const enc = params.encodings[0];
+        // Give game/music audio enough room to stay clean instead of sounding
+        // like a voice call while the video stream is busy.
+        enc.maxBitrate = 192_000;
+        enc.priority = "high";
+        sender.setParameters(params).catch(() => {});
+      } catch (_) {}
     }
 
     function openBroadcastPeer(peerId) {
@@ -1963,16 +2009,19 @@
         // buffers waiting for data.
         if (t.kind === "video") {
           applyEncoderCfg(sender);
+        } else if (t.kind === "audio") {
+          applyAudioCfg(sender);
         }
       });
-      // Must happen before createOffer to influence the negotiated codec.
-      preferHardwareCodecs(pc);
       pc.onicecandidate = (e) => { if (e.candidate) sendSignal(peerId, "ice", e.candidate.toJSON()); };
       pc.onconnectionstatechange = () => handlePeerStateChange(peerId, pc, /*isBroadcaster=*/true);
-      // Broadcaster initiates the offer.
-      pc.createOffer()
-        .then(offer => pc.setLocalDescription(offer).then(() => sendSignal(peerId, "offer", offer)))
-        .catch(err => console.error("[share] offer failed", err));
+      // Codec preferences have to be installed before createOffer. The
+      // capability check is quick and falls back harmlessly if unsupported.
+      preferGameCodecs(pc)
+        .catch(() => {})
+        .finally(() => pc.createOffer()
+          .then(offer => pc.setLocalDescription(offer).then(() => sendSignal(peerId, "offer", offer)))
+          .catch(err => console.error("[share] offer failed", err)));
     }
 
     // ---- Connection resilience ----
@@ -2048,9 +2097,9 @@
     // 5 Mbps stream could be forced down near 1.25 Mbps and stay there. That is
     // especially destructive for high-motion games.
     //
-    // We now leave network adaptation to WebRTC and only intervene after the
-    // encoder reports sustained CPU pressure. In that case we reduce pixels,
-    // not bitrate, so motion remains smooth.
+    // We now leave ordinary bandwidth adaptation to WebRTC. JavaScript only
+    // intervenes for sustained encoder pressure or severe network failure, and
+    // then reduces pixels rather than repeatedly crushing the bitrate ceiling.
     const adaptState = new WeakMap();   // RTCRtpSender -> encoder/stats state
     let adaptTimer = null;
 
@@ -2058,32 +2107,48 @@
       let s = adaptState.get(sender);
       if (!s) {
         s = {
-          scaleDown: 1,
+          cpuScale: 1,
+          netScale: 1,
           cpuTicks: 0,
-          goodSince: Date.now(),
+          congestionTicks: 0,
+          cleanTicks: 0,
           lastBytes: null,
           lastStatsAt: null,
+          lastPacketsLost: null,
+          lastPacketsReceived: null,
         };
         adaptState.set(sender, s);
       }
       return s;
     }
 
-    // Apply the user's bitrate as a ceiling. WebRTC remains free to send below
-    // it as network conditions change; we do not stack a second bitrate
-    // controller on top of the browser anymore.
+    function nextScaleUp(v) {
+      return v < 1.25 ? 1.25 : v < 1.5 ? 1.5 : v < 2 ? 2 : 2;
+    }
+    function nextScaleDown(v) {
+      return v > 1.5 ? 1.5 : v > 1.25 ? 1.25 : 1;
+    }
+
+    // Apply a per-viewer encoder profile. The user's bitrate slider is a true
+    // quality ceiling; our emergency controller only changes encoded pixel
+    // count when CPU/network health proves the full resolution is unsustainable.
     function applyEncoderCfg(sender) {
       try {
         const a = getAdapt(sender);
         const params = sender.getParameters();
         if (!params.encodings || !params.encodings.length) params.encodings = [{}];
         const enc = params.encodings[0];
-        enc.maxBitrate = Math.max(400_000, Math.round(streamCfg.bitrate));
+        const scale = Math.max(a.cpuScale || 1, a.netScale || 1);
+        // maxBitrate is a ceiling, not a forced send rate. Chrome/WebRTC's own
+        // congestion controller is faster and better-informed than a JS loop,
+        // so keep the ceiling high and only reduce pixels in an emergency.
+        enc.maxBitrate = Math.max(2_000_000, Math.round(streamCfg.bitrate));
         enc.maxFramerate = streamCfg.fps;
-        enc.scaleResolutionDownBy = a.scaleDown > 1 ? a.scaleDown : 1;
-        // Ask the network stack to prioritise this traffic where supported.
+        enc.scaleResolutionDownBy = Math.max(1, scale);
+        // Ask the browser to give gameplay video priority over lower-priority
+        // RTP traffic. Unsupported fields are simply ignored by browsers that
+        // do not implement them.
         enc.priority = "high";
-        enc.networkPriority = "high";
         params.degradationPreference = streamCfg.priority;
         sender.setParameters(params).catch(() => {});
       } catch (_) {}
@@ -2098,18 +2163,24 @@
         const a = getAdapt(sender);
         let limited = "none";
         let outbound = null;
+        let remoteInbound = null;
         let route = "";
+        let pair = null;
+        let stats;
         try {
-          const stats = await sender.getStats();
+          // PeerConnection stats include the selected candidate pair as well as
+          // outbound and remote-inbound reports, which lets us react to actual
+          // packet loss/RTT instead of guessing from bitrate alone.
+          stats = await pc.getStats();
           stats.forEach(r => {
-            if (r.type === "outbound-rtp" && r.kind === "video") {
+            if (r.type === "outbound-rtp" && !r.isRemote && (r.kind === "video" || r.mediaType === "video")) {
               outbound = r;
               if (r.qualityLimitationReason) limited = r.qualityLimitationReason;
+            } else if (r.type === "remote-inbound-rtp" && (r.kind === "video" || r.mediaType === "video")) {
+              remoteInbound = r;
             }
           });
 
-          // Identify whether this viewer is reached directly or through TURN.
-          let pair = null;
           stats.forEach(r => {
             if (!pair && r.type === "transport" && r.selectedCandidatePairId) {
               pair = stats.get(r.selectedCandidatePairId) || null;
@@ -2128,31 +2199,80 @@
           }
         } catch (_) { continue; }
 
+        // ---- CPU adaptation ----
         let changed = false;
         if (limited === "cpu") {
           a.cpuTicks += 1;
-          a.goodSince = Date.now();
-          // Require three consecutive CPU-limited samples (about six seconds)
-          // before changing resolution, avoiding reactions to brief spikes.
-          if (a.cpuTicks >= 3) {
-            const next = a.scaleDown < 1.25 ? 1.25 : a.scaleDown < 1.5 ? 1.5 : a.scaleDown < 2 ? 2 : 2;
-            if (next !== a.scaleDown) { a.scaleDown = next; changed = true; }
+          if (a.cpuTicks >= 2) {
+            const next = nextScaleUp(a.cpuScale);
+            if (next !== a.cpuScale) { a.cpuScale = next; changed = true; }
             a.cpuTicks = 0;
           }
         } else {
           a.cpuTicks = 0;
-          // Recover one resolution step after a sustained clean period.
-          if (a.scaleDown > 1 && Date.now() - a.goodSince > 12000) {
-            a.scaleDown = a.scaleDown > 1.5 ? 1.5 : a.scaleDown > 1.25 ? 1.25 : 1;
-            a.goodSince = Date.now();
-            changed = true;
+        }
+
+        // ---- Network adaptation ----
+        // The built-in WebRTC bandwidth estimator continuously changes the
+        // actual send bitrate beneath our ceiling. For Discord-like quality we
+        // do NOT fight it by repeatedly lowering maxBitrate. We only reduce
+        // encoded resolution after sustained evidence that the route is truly
+        // failing to deliver 60fps. That preserves sharp 1080p for normal
+        // bandwidth fluctuations and avoids quality pumping.
+        const fps = outbound ? Number(outbound.framesPerSecond) : NaN;
+        const rtt = remoteInbound ? Number(remoteInbound.roundTripTime) : NaN;
+        const jitter = remoteInbound ? Number(remoteInbound.jitter) : NaN;
+        const avail = pair ? Number(pair.availableOutgoingBitrate) : NaN;
+        let lossRate = NaN;
+        if (remoteInbound) {
+          const lost = Number(remoteInbound.packetsLost);
+          const received = Number(remoteInbound.packetsReceived);
+          if (Number.isFinite(lost) && Number.isFinite(received) &&
+              a.lastPacketsLost !== null && a.lastPacketsReceived !== null) {
+            const dl = Math.max(0, lost - a.lastPacketsLost);
+            const dr = Math.max(0, received - a.lastPacketsReceived);
+            if (dl + dr > 0) lossRate = dl / (dl + dr);
+          } else if (Number.isFinite(Number(remoteInbound.fractionLost))) {
+            lossRate = Math.max(0, Number(remoteInbound.fractionLost));
+          }
+          if (Number.isFinite(lost)) a.lastPacketsLost = lost;
+          if (Number.isFinite(received)) a.lastPacketsReceived = received;
+        }
+
+        const lowFps = Number.isFinite(fps) && streamCfg.fps >= 30 && fps < streamCfg.fps * 0.76;
+        const highLoss = Number.isFinite(lossRate) && lossRate > 0.06;
+        const severeLoss = Number.isFinite(lossRate) && lossRate > 0.10;
+        const highRtt = Number.isFinite(rtt) && rtt > 0.65;
+        const highJitter = Number.isFinite(jitter) && jitter > 0.07;
+        const tightPipe = Number.isFinite(avail) && avail > 0 && avail < streamCfg.bitrate * 0.55;
+        const networkBad = severeLoss || (lowFps && (highLoss || highRtt || highJitter || tightPipe));
+
+        if (networkBad) {
+          a.congestionTicks += 1;
+          a.cleanTicks = 0;
+          // Three consecutive one-second samples before reducing pixels.
+          if (a.congestionTicks >= 3) {
+            const next = nextScaleUp(a.netScale);
+            if (next !== a.netScale) { a.netScale = next; changed = true; }
+            a.congestionTicks = 0;
+          }
+        } else {
+          a.congestionTicks = 0;
+          a.cleanTicks += 1;
+          // Restore quality deliberately, but much faster than the old profile.
+          if (a.cleanTicks >= 8) {
+            const next = nextScaleDown(a.netScale);
+            if (next !== a.netScale) { a.netScale = next; changed = true; }
+            const cpuNext = nextScaleDown(a.cpuScale);
+            if (cpuNext !== a.cpuScale) { a.cpuScale = cpuNext; changed = true; }
+            a.cleanTicks = 0;
           }
         }
 
         if (changed) applyEncoderCfg(sender);
 
-        // Show measured send health to the broadcaster. This makes an
-        // overloaded free TURN relay immediately visible instead of mysterious.
+        // Show measured send health to the broadcaster. The extra loss/RTT
+        // fields make a bad TURN route or upload bottleneck visible immediately.
         if (outbound) {
           const now = Number(outbound.timestamp) || performance.now();
           const bytes = Number(outbound.bytesSent);
@@ -2162,12 +2282,14 @@
           }
           a.lastBytes = Number.isFinite(bytes) ? bytes : a.lastBytes;
           a.lastStatsAt = now;
-          const fps = Number(outbound.framesPerSecond);
           const bits = [];
           if (mbps !== null && Number.isFinite(mbps)) bits.push(`${Math.max(0, mbps).toFixed(1)} Mbps`);
           if (Number.isFinite(fps) && fps > 0) bits.push(`${Math.round(fps)} fps`);
+          if (Number.isFinite(lossRate) && lossRate > 0.005) bits.push(`${Math.round(lossRate * 100)}% loss`);
+          if (Number.isFinite(rtt) && rtt > 0) bits.push(`${Math.round(rtt * 1000)}ms RTT`);
           if (route) bits.push(route);
-          if (a.scaleDown > 1) bits.push(`CPU scale ${a.scaleDown}×`);
+          const scale = Math.max(a.cpuScale || 1, a.netScale || 1);
+          if (scale > 1) bits.push(`adaptive ${scale}×`);
           if (bits.length) displayInfo = bits.join(" • ");
         }
       }
@@ -2179,7 +2301,7 @@
 
     function startAdaptLoop() {
       if (adaptTimer) return;
-      adaptTimer = setInterval(adaptTick, 2000);
+      adaptTimer = setInterval(adaptTick, 1000);
     }
     function stopAdaptLoop() {
       if (adaptTimer) { clearInterval(adaptTimer); adaptTimer = null; }
@@ -2216,6 +2338,106 @@
     }
 
     // ---- Viewer side ----
+    // Keep latency low on a healthy route, but grow the jitter buffer when the
+    // connection actually becomes bursty. A fixed 350ms buffer made every
+    // stream feel delayed even when the network was excellent; a tiny fixed
+    // buffer, on the other hand, makes long-distance gameplay visibly hitch.
+    const viewerHealth = new WeakMap();
+    let viewerAdaptTimer = null;
+
+    function getViewerHealth(pc) {
+      let h = viewerHealth.get(pc);
+      if (!h) {
+        h = {
+          targetMs: 120,
+          cleanTicks: 0,
+          lastLost: null,
+          lastReceived: null,
+          lastFreezeCount: null,
+        };
+        viewerHealth.set(pc, h);
+      }
+      return h;
+    }
+
+    function setPeerPlayoutTarget(pc, ms) {
+      const target = Math.max(90, Math.min(450, Math.round(ms)));
+      try {
+        pc.getReceivers().forEach(receiver => {
+          if (!receiver || !receiver.track || !["video", "audio"].includes(receiver.track.kind)) return;
+          try {
+            if ("jitterBufferTarget" in receiver) receiver.jitterBufferTarget = target;
+            if ("playoutDelayHint" in receiver) receiver.playoutDelayHint = target / 1000;
+          } catch (_) {}
+        });
+      } catch (_) {}
+    }
+
+    async function viewerAdaptTick() {
+      if (isBroadcasting) return;
+      for (const pc of peers.values()) {
+        if (!pc || pc.connectionState === "closed") continue;
+        const h = getViewerHealth(pc);
+        let inbound = null;
+        try {
+          const stats = await pc.getStats();
+          stats.forEach(r => {
+            if (!inbound && r.type === "inbound-rtp" && !r.isRemote &&
+                (r.kind === "video" || r.mediaType === "video")) inbound = r;
+          });
+        } catch (_) { continue; }
+        if (!inbound) continue;
+
+        const lost = Number(inbound.packetsLost);
+        const received = Number(inbound.packetsReceived);
+        let lossRate = NaN;
+        if (Number.isFinite(lost) && Number.isFinite(received) &&
+            h.lastLost !== null && h.lastReceived !== null) {
+          const dl = Math.max(0, lost - h.lastLost);
+          const dr = Math.max(0, received - h.lastReceived);
+          if (dl + dr > 0) lossRate = dl / (dl + dr);
+        }
+        if (Number.isFinite(lost)) h.lastLost = lost;
+        if (Number.isFinite(received)) h.lastReceived = received;
+
+        const jitter = Number(inbound.jitter);
+        const freezeCount = Number(inbound.freezeCount);
+        const froze = Number.isFinite(freezeCount) && h.lastFreezeCount !== null && freezeCount > h.lastFreezeCount;
+        if (Number.isFinite(freezeCount)) h.lastFreezeCount = freezeCount;
+
+        const inboundFps = Number(inbound.framesPerSecond);
+        const expectedFps = activeShare && Number(activeShare.fps) > 0 ? Number(activeShare.fps) : 0;
+        const lowViewerFps = expectedFps >= 30 && Number.isFinite(inboundFps) && inboundFps > 0 && inboundFps < expectedFps * 0.70;
+        const bad = froze || lowViewerFps ||
+          (Number.isFinite(lossRate) && lossRate > 0.05) ||
+          (Number.isFinite(jitter) && jitter > 0.05);
+
+        let changed = false;
+        if (bad) {
+          h.cleanTicks = 0;
+          const bump = froze || lowViewerFps || (Number.isFinite(jitter) && jitter > 0.08) ? 80 : 45;
+          const next = Math.min(420, h.targetMs + bump);
+          if (next !== h.targetMs) { h.targetMs = next; changed = true; }
+        } else {
+          h.cleanTicks += 1;
+          if (h.cleanTicks >= 5 && h.targetMs > 100) {
+            h.targetMs = Math.max(100, h.targetMs - 15);
+            h.cleanTicks = 0;
+            changed = true;
+          }
+        }
+        if (changed) setPeerPlayoutTarget(pc, h.targetMs);
+      }
+    }
+
+    function startViewerAdaptLoop() {
+      if (viewerAdaptTimer) return;
+      viewerAdaptTimer = setInterval(viewerAdaptTick, 1000);
+    }
+    function stopViewerAdaptLoop() {
+      if (viewerAdaptTimer) { clearInterval(viewerAdaptTimer); viewerAdaptTimer = null; }
+    }
+
     async function handleSignal(fromId, msg) {
       try {
         if (msg.type === "bye") { closePeer(fromId); maybeEndViewing(); return; }
@@ -2228,22 +2450,11 @@
             peers.set(fromId, pc);
             pc.onicecandidate = (e) => { if (e.candidate) sendSignal(fromId, "ice", e.candidate.toJSON()); };
             pc.ontrack = (e) => {
-              // Give realtime gameplay enough playout cushion to absorb normal
-              // internet jitter. The old 100–150ms target was aggressively low
-              // for long-distance connections and could make motion visibly
-              // jump even when the average bandwidth was sufficient.
-              try {
-                const ms = e.track.kind === "video" ? 350 : 250;
-                // Modern API (Chrome 110+): milliseconds.
-                if ("jitterBufferTarget" in e.receiver) {
-                  e.receiver.jitterBufferTarget = ms;
-                }
-                // Legacy fallback: seconds. Deprecated but still honoured on
-                // older builds; harmless where jitterBufferTarget won.
-                if ("playoutDelayHint" in e.receiver) {
-                  e.receiver.playoutDelayHint = ms / 1000;
-                }
-              } catch (_) {}
+              // Start low-latency and let the viewer-side health loop add
+              // buffering only if packet loss/jitter/freezes prove it is needed.
+              const vh = getViewerHealth(pc);
+              setPeerPlayoutTarget(pc, vh.targetMs);
+              startViewerAdaptLoop();
               // First media from the broadcaster — show it.
               showPlayer("screen");
               placeholder.style.display = "none";
@@ -2301,6 +2512,7 @@
       if (pc) { try { pc.ontrack = null; pc.onicecandidate = null; pc.onconnectionstatechange = null; pc.close(); } catch (_) {} peers.delete(peerId); }
       pendingIce.delete(peerId);
       teardownSignalChannel(peerId);
+      if (!isBroadcasting && peers.size === 0) stopViewerAdaptLoop();
     }
 
     // Viewer: if no peers remain and we're not broadcasting, drop back to idle.
@@ -2310,6 +2522,7 @@
     }
 
     function stopWatchingShare() {
+      stopViewerAdaptLoop();
       for (const id of Array.from(peers.keys())) closePeer(id);
       try { fileVid.srcObject = null; } catch (_) {}
       if (currentKind === "screen") {

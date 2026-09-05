@@ -24,6 +24,7 @@ if (window._firefliesLoaded) {
 const canvas = document.getElementById("fireflies");
 {
   const ctx = canvas.getContext("2d", { alpha: true });
+  if (!ctx) return;
 
   let fireflies = [];
   let anchors = [];
@@ -31,7 +32,15 @@ const canvas = document.getElementById("fireflies");
   let width = 0, height = 0;
   let rafId = null;
 
-  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let externallyPaused = false;
+  function motionDisabled() {
+    let hiddenByPreference = false;
+    try { hiddenByPreference = localStorage.getItem('mf_hide_fireflies') === '1'; } catch (_) {}
+    return motionQuery.matches || hiddenByPreference ||
+      document.documentElement.classList.contains('mf-reduce-motion') ||
+      document.documentElement.classList.contains('mf-save-data');
+  }
 
   // Mouse “magic” (soft attraction)
   const mouse = { x: 0, y: 0, active: false };
@@ -67,6 +76,25 @@ const canvas = document.getElementById("fireflies");
     [253, 224, 71], // soft yellow
     [252, 211, 77], // dim amber
   ];
+
+  // Render each halo once. Opacity and size change at draw time, so the
+  // animation no longer allocates and rasterizes a gradient per particle.
+  const halos = new Map();
+  function haloFor(rgb) {
+    if (halos.has(rgb)) return halos.get(rgb);
+    const sprite = document.createElement('canvas');
+    sprite.width = sprite.height = 160;
+    const sc = sprite.getContext('2d');
+    const [r, g, b] = rgb;
+    const gradient = sc.createRadialGradient(80, 80, 0, 80, 80, 80);
+    gradient.addColorStop(0, `rgba(${r},${g},${b},1)`);
+    gradient.addColorStop(0.22, `rgba(${r},${g},${b},0.30)`);
+    gradient.addColorStop(1, 'rgba(0,0,0,0)');
+    sc.fillStyle = gradient;
+    sc.fillRect(0, 0, 160, 160);
+    halos.set(rgb, sprite);
+    return sprite;
+  }
 
   const rand = (a, b) => a + Math.random() * (b - a);
   const clamp01 = (x) => Math.max(0, Math.min(1, x));
@@ -152,6 +180,7 @@ const canvas = document.getElementById("fireflies");
 
       // Color
       this.rgb = colors[Math.floor(Math.random() * colors.length)];
+      this.haloSprite = haloFor(this.rgb);
 
       // Spawn fade in
       this.spawn = initial ? Math.random() : 0;
@@ -273,15 +302,9 @@ const canvas = document.getElementById("fireflies");
       const [r, g, b] = this.rgb;
 
       // halo
-      const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.halo);
-      grad.addColorStop(0, `rgba(${r},${g},${b},${this.a})`);
-      grad.addColorStop(0.22, `rgba(${r},${g},${b},${this.a * 0.30})`);
-      grad.addColorStop(1, "rgba(0,0,0,0)");
-
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.halo, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.globalAlpha = Math.min(1, this.a);
+      ctx.drawImage(this.haloSprite, this.x - this.halo, this.y - this.halo, this.halo * 2, this.halo * 2);
+      ctx.globalAlpha = 1;
 
       // core
       ctx.fillStyle = `rgba(${r},${g},${b},${Math.min(1, this.a * 1.6)})`;
@@ -293,7 +316,7 @@ const canvas = document.getElementById("fireflies");
 
   function init() {
     fireflies = [];
-    if (prefersReducedMotion) return;
+    if (motionDisabled()) return;
 
     makeAnchors();
     const count = getMaxFireflies();
@@ -321,7 +344,7 @@ const canvas = document.getElementById("fireflies");
   function animate(now) {
     rafId = requestAnimationFrame(animate);
     if (now - lastDraw < FRAME_MS) return;   // skip this frame
-    lastDraw = now;
+    lastDraw = now - ((now - lastDraw) % FRAME_MS);
 
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
@@ -340,39 +363,44 @@ const canvas = document.getElementById("fireflies");
   }
 
   function start() {
-    if (rafId) return;
-    last = performance.now();
+    if (rafId !== null || document.hidden || externallyPaused || motionDisabled()) return;
+    if (!fireflies.length || width !== window.innerWidth || height !== window.innerHeight) { resize(); init(); }
+    last = lastDraw = performance.now();
     rafId = requestAnimationFrame(animate);
   }
 
   function stop() {
-    if (!rafId) return;
+    if (rafId === null) return;
     cancelAnimationFrame(rafId);
     rafId = null;
   }
 
-  resize();
-  init();
   start();
 
   // External pause control. Other pages (e.g. Watch Together) can call
   // window.fireflies.pause() while a video is playing so the ambient canvas
   // isn't burning battery behind the player, then .resume() afterward.
-  let externallyPaused = false;
   window.fireflies = {
     pause() { externallyPaused = true; stop(); },
     resume() { externallyPaused = false; if (!document.hidden) start(); },
   };
 
   window.addEventListener("resize", () => {
-    resize();
-    init();
+    if (rafId !== null) { resize(); init(); }
   });
 
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) stop();
     else if (!externallyPaused) start();
   });
+  function syncMotion() {
+    if (motionDisabled()) {
+      stop();
+      ctx.clearRect(0, 0, width, height);
+    } else start();
+  }
+  window.addEventListener('mf-appearance-changed', syncMotion);
+  if (motionQuery.addEventListener) motionQuery.addEventListener('change', syncMotion);
 }
 })();
 }
