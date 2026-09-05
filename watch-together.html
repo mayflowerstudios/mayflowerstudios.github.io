@@ -152,6 +152,42 @@
       color:#fecaca; cursor:pointer;
     }
     .shareBanner .stopShare:hover{ filter:brightness(1.12); }
+    .shareBanner .previewToggle{
+      margin-left:auto; padding:4px 10px; font-size:12px; border-radius:9px;
+      background:rgba(196,181,253,.14); border:1px solid rgba(196,181,253,.28);
+      color:#e9e3ff; cursor:pointer;
+    }
+    .shareBanner .previewToggle:hover{ filter:brightness(1.12); }
+    .shareBanner .previewToggle + .stopShare{ margin-left:0; }
+
+    /* Broadcaster-only local confidence monitor. Keep this deliberately much
+       lighter than the 1080p60 track sent to viewers. */
+    .videoBox.localPreviewMode{
+      min-height:300px; height:min(46vh, 480px); aspect-ratio:auto;
+      background:radial-gradient(circle at 50% 42%, rgba(196,181,253,.08), rgba(0,0,0,.94) 68%);
+    }
+    .videoBox.localPreviewMode > #filevid{
+      width:min(100%, 854px); height:auto; max-height:100%;
+      inset:50% auto auto 50%; transform:translate(-50%,-50%);
+      aspect-ratio:16/9; object-fit:contain; border-radius:10px;
+      box-shadow:0 12px 44px rgba(0,0,0,.42);
+      contain:layout paint size;
+    }
+    .localPreviewBadge{
+      position:absolute; z-index:12; left:12px; top:12px;
+      display:none; padding:6px 9px; border-radius:9px;
+      border:1px solid rgba(196,181,253,.28);
+      background:rgba(10,8,16,.76); backdrop-filter:blur(5px);
+      color:#ddd6fe; font-size:11px; font-weight:700; letter-spacing:.035em;
+      pointer-events:none;
+    }
+    .videoBox.localPreviewMode .localPreviewBadge{ display:block; }
+    .videoBox.localPreviewMode.previewHidden > #filevid{ display:none !important; }
+    .videoBox.localPreviewMode.previewHidden::after{
+      content:'LOCAL PREVIEW HIDDEN • STREAM STILL LIVE';
+      position:absolute; inset:0; display:grid; place-items:center;
+      color:#a8a0be; font-size:13px; font-weight:700; letter-spacing:.04em;
+    }
 
     /* stream settings popover */
     .streamCfgWrap{ position:relative; display:inline-flex; }
@@ -549,6 +585,7 @@
           <div class="shareBanner" id="shareBanner">
             <span class="liveDot"></span>
             <span id="shareBannerText">Live screen share</span>
+            <button class="previewToggle" id="previewToggleBtn" type="button" style="display:none">Hide preview</button>
             <button class="stopShare" id="stopShareBtn">Stop sharing</button>
           </div>
 
@@ -556,6 +593,7 @@
             <div class="videoBox" id="videoBox">
               <div id="ytplayer"></div>
               <video id="filevid" playsinline controls preload="auto" style="display:none"></video>
+              <div class="localPreviewBadge" id="localPreviewBadge">LOCAL PREVIEW</div>
               <iframe id="ttplayer" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen scrolling="no" style="display:none"></iframe>
               <div class="placeholder" id="placeholder">
                 <div class="big">🌸</div>
@@ -702,6 +740,9 @@
     const shareBanner = $("shareBanner");
     const shareBannerText = $("shareBannerText");
     const stopShareBtn = $("stopShareBtn");
+    const previewToggleBtn = $("previewToggleBtn");
+    const videoBox = $("videoBox");
+    const localPreviewBadge = $("localPreviewBadge");
 
     // Broadcaster-adjustable stream quality. Resolution/fps are applied at
     // capture time (getDisplayMedia); bitrate/priority are applied to the
@@ -1721,6 +1762,8 @@
     let shareLockRef = null;       // ref .../rtc/share
     let mySignalsRef = null;       // ref .../rtc/signals/${clientId}
     let localShareStream = null;   // MediaStream we're broadcasting (broadcaster only)
+    let localPreviewStream = null; // lightweight broadcaster-only confidence preview
+    let localPreviewHidden = false;
     let isBroadcasting = false;    // are WE the one sharing?
     let activeShare = null;        // { by, byName } of whoever is sharing (anyone)
     let liveCaptureInfo = "";      // actual capture size/fps reported by the browser
@@ -1796,6 +1839,74 @@
     }
 
     // ---- Broadcaster side ----
+    function stopLocalPreview() {
+      if (localPreviewStream) {
+        try { localPreviewStream.getTracks().forEach(t => t.stop()); } catch (_) {}
+        localPreviewStream = null;
+      }
+      try { if (fileVid.srcObject && isBroadcasting) fileVid.srcObject = null; } catch (_) {}
+    }
+
+    async function attachLocalPreview(sourceStream) {
+      stopLocalPreview();
+      if (!sourceStream || localPreviewHidden) return;
+      const srcTrack = sourceStream.getVideoTracks()[0];
+      if (!srcTrack) return;
+
+      // The viewer gets the untouched 1080p60 source track. The broadcaster's
+      // on-page confidence monitor is a separate clone capped to 720p30. This
+      // avoids making the browser paint a full-resolution 60fps copy of a game
+      // that is already visible on the broadcaster's real monitor.
+      let previewTrack;
+      try {
+        previewTrack = srcTrack.clone();
+      } catch (err) {
+        console.warn("[share] browser could not clone the local preview track; outbound stream is unaffected", err);
+        if (videoBox) videoBox.classList.add("previewHidden");
+        if (localPreviewBadge) localPreviewBadge.textContent = "LOCAL PREVIEW UNAVAILABLE • stream still live";
+        return;
+      }
+      try {
+        previewTrack.contentHint = "motion";
+        await previewTrack.applyConstraints({
+          width: { ideal: 1280, max: 1280 },
+          height: { ideal: 720, max: 720 },
+          frameRate: { ideal: 30, max: 30 },
+        });
+      } catch (err) {
+        console.info("[share] lightweight local preview constraints unavailable; using cloned track", err);
+      }
+
+      localPreviewStream = new MediaStream([previewTrack]);
+      fileVid.srcObject = localPreviewStream;
+      fileVid.muted = true;
+      fileVid.controls = false;
+      try { fileVid.disablePictureInPicture = true; } catch (_) {}
+      fileVid.play().catch(()=>{});
+
+      let label = "LOCAL PREVIEW";
+      try {
+        const st = previewTrack.getSettings();
+        const h = Number(st.height) || 0;
+        const fps = Number(st.frameRate) || 0;
+        if (h) label += ` • ${h}p`;
+        if (fps) label += ` • ${Math.round(fps)} FPS`;
+      } catch (_) {}
+      if (localPreviewBadge) localPreviewBadge.textContent = label + " • viewers stay full quality";
+    }
+
+    async function setLocalPreviewHidden(hidden) {
+      localPreviewHidden = !!hidden;
+      if (videoBox) videoBox.classList.toggle("previewHidden", localPreviewHidden);
+      if (previewToggleBtn) previewToggleBtn.textContent = localPreviewHidden ? "Show preview" : "Hide preview";
+      if (!isBroadcasting) return;
+      if (localPreviewHidden) {
+        stopLocalPreview();
+      } else {
+        await attachLocalPreview(localShareStream);
+      }
+    }
+
     async function startBroadcast() {
       if (!FIREBASE_READY) { toast("Sharing needs the room connection to be live"); return; }
       if (activeShare && activeShare.by !== clientId) {
@@ -1913,14 +2024,17 @@
       });
       onDisconnect(shareLockRef).remove();
 
-      // Show our own capture locally (muted to avoid hearing ourselves).
+      // Show a lightweight LOCAL confidence preview. The actual outbound
+      // stream remains the original full-quality track above.
       showPlayer("screen");
       placeholder.style.display = "none";
       currentKind = "screen";
       currentSrc = null;            // keeps broadcast()/sync loop inert
-      fileVid.srcObject = stream;
-      fileVid.muted = true;
-      fileVid.play().catch(()=>{});
+      if (videoBox) {
+        videoBox.classList.add("localPreviewMode");
+        videoBox.classList.toggle("previewHidden", localPreviewHidden);
+      }
+      await attachLocalPreview(stream);
       // A live capture is never "buffering". Clear any stale flag left over
       // from a previously-loaded YouTube/file clip, otherwise the overlay
       // spinner gets stuck on over the live stream. (A srcObject stream never
@@ -2323,11 +2437,15 @@
       // tell viewers we're done, then tear down
       for (const id of peers.keys()) sendSignal(id, "bye", null);
       for (const id of Array.from(peers.keys())) closePeer(id);
+      stopLocalPreview();
       if (localShareStream) { localShareStream.getTracks().forEach(t => t.stop()); localShareStream = null; }
       liveCaptureInfo = "";
       liveStreamInfo = "";
       try { fileVid.srcObject = null; } catch (_) {}
       fileVid.muted = false;
+      fileVid.controls = true;
+      try { fileVid.disablePictureInPicture = false; } catch (_) {}
+      if (videoBox) videoBox.classList.remove("localPreviewMode", "previewHidden");
       if (shareLockRef) { try { onDisconnect(shareLockRef).cancel(); } catch (_) {} remove(shareLockRef); }
       currentKind = null; currentSrc = null;
       showPlayer("yt");
@@ -2459,6 +2577,12 @@
               showPlayer("screen");
               placeholder.style.display = "none";
               currentKind = "screen"; currentSrc = null;
+              // Viewer mode uses the real inbound stream, not the broadcaster's
+              // lightweight local confidence-monitor presentation.
+              stopLocalPreview();
+              if (videoBox) videoBox.classList.remove("localPreviewMode", "previewHidden");
+              fileVid.controls = true;
+              try { fileVid.disablePictureInPicture = false; } catch (_) {}
               fileVid.srcObject = e.streams[0];
               fileVid.muted = false;
               fileVid.play().catch(()=>{});
@@ -2559,12 +2683,18 @@
           const details = [liveCaptureInfo, liveStreamInfo].filter(Boolean).join(" • ");
           shareBannerText.textContent = "You're live — streaming your screen to the room" + (details ? ` • ${details}` : "");
           stopShareBtn.style.display = "";
+          if (previewToggleBtn) {
+            previewToggleBtn.style.display = "";
+            previewToggleBtn.textContent = localPreviewHidden ? "Show preview" : "Hide preview";
+          }
         } else if (someoneElseSharing) {
           shareBanner.classList.add("show");
           shareBannerText.textContent = `${activeShare.byName} is streaming live`;
           stopShareBtn.style.display = "none";
+          if (previewToggleBtn) previewToggleBtn.style.display = "none";
         } else {
           shareBanner.classList.remove("show");
+          if (previewToggleBtn) previewToggleBtn.style.display = "none";
         }
       }
     }
@@ -2576,6 +2706,9 @@
       });
     }
     if (stopShareBtn) stopShareBtn.addEventListener("click", () => stopBroadcast());
+    if (previewToggleBtn) previewToggleBtn.addEventListener("click", () => {
+      setLocalPreviewHidden(!localPreviewHidden);
+    });
 
     // ---- Stream settings popover ----
     (function initStreamCfg() {
