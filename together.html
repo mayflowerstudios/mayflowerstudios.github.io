@@ -143,7 +143,7 @@
     .toast{ position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px); padding:11px 16px; border-radius:var(--r-md); background:var(--bg-mid); border:1px solid var(--border-2); box-shadow:0 12px 40px rgba(0,0,0,.5); opacity:0; pointer-events:none; transition:all .25s var(--ease); z-index:90; font-size:14px; }
     .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
   </style>
-  <link rel="stylesheet" href="/together.css?v=1" />
+  <link rel="stylesheet" href="/together.css?v=2" />
 </head>
 <body class="together-lobby" data-nav="together" data-rooms="1">
 
@@ -154,9 +154,9 @@
 
       <!-- HERO -->
       <section class="page-hero tg-hero reveal">
-        <div class="page-kicker">MAYFLOWER / TOGETHER</div>
-        <h1 class="page-title">Good company.<br><em>Great things to watch.</em></h1>
-        <p class="page-sub">Your own space for movie nights, favorite videos, and everything in between. Create a room, bring your people, and press play.</p><div class="tg-features"><span>Synced playback</span><span>Shared queues</span><span>Your choice of company</span></div>
+        <div class="page-kicker">Together</div>
+        <h1 class="page-title">Open a room, <em>together</em></h1>
+        <p class="page-sub">Watch videos in sync with your friends. Create a room, choose who can join, and start watching.</p>
       </section>
 
       <!-- INVITES INBOX (only shows when you have pending invites) -->
@@ -172,8 +172,8 @@
 
           <!-- CREATE -->
           <div class="tg-panel">
-            <div class="panel-eyebrow">MAKE IT YOURS</div><h2>Create a watch room</h2>
-            <p class="lead">A name, a little privacy, and a place to watch.</p>
+            <h2>Create a watch room</h2>
+            <p class="lead">Give your room a name and choose who can join.</p>
 
             <div class="signedOut" id="signedOut" hidden>
               <span>🔑</span>
@@ -221,7 +221,7 @@
           <!-- BROWSE -->
           <div class="tg-panel">
             <div class="browseHead">
-              <h2>Find your company</h2>
+              <h2>Rooms you can join</h2>
               <span class="chip" id="liveBadge" hidden></span>
             </div>
             <p class="lead">Public rooms, your friends' rooms, and ones you've been invited to.</p>
@@ -229,7 +229,7 @@
             <div class="filterRow" id="filterRow" aria-label="Filter rooms"><button type="button" class="chip active" data-filter="all" aria-pressed="true">All rooms</button><button type="button" class="chip" data-filter="mine" aria-pressed="false">My rooms</button></div>
 
             <div class="roomList" id="roomList">
-              <p class="roomEmpty" id="roomEmpty">The next watch night starts with you. Create a room to get started.</p>
+              <p class="roomEmpty" id="roomEmpty">No watch rooms yet — create one to get started.</p>
             </div>
           </div>
 
