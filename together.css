@@ -1,0 +1,95 @@
+/* Together: a focused lobby and cinema workspace. */
+.together-lobby, .together-watch { --tg-surface:#151923; --tg-line:rgba(199,209,232,.13); --tg-accent:#c4b5fd; }
+.together-lobby [hidden], .together-watch [hidden] { display:none !important; }
+.together-lobby .content { max-width:1240px; margin:auto; width:100%; gap:28px; padding:48px 32px 72px; }
+.together-lobby .tg-hero { padding:12px 0 22px; text-align:left; }
+.together-lobby .page-kicker, .panel-eyebrow, .together-watch .kicker { color:#b9b1d3; font:600 11px/1.5 var(--font-b); letter-spacing:.16em; background:none; border:0; padding:0; }
+.together-lobby .page-title { font-family:var(--font-b); font-size:clamp(36px,5vw,62px); font-weight:600; letter-spacing:-.055em; line-height:1.1; margin:18px 0; }
+.together-lobby .page-title em { font-family:inherit; font-style:normal; color:var(--tg-accent); }
+.together-lobby .page-sub { max-width:600px; margin:0; font-size:16px; line-height:1.75; color:var(--text-2); }
+.tg-features { display:flex; flex-wrap:wrap; gap:24px; margin-top:25px; color:var(--text-2); font-size:12px; }
+.tg-features span::before { content:'✓'; margin-right:8px; color:var(--tg-accent); }
+.together-lobby .sec { margin:0; }
+.together-lobby .tg-cols { grid-template-columns:minmax(0,380px) minmax(0,1fr); gap:24px; }
+.together-lobby .tg-panel { padding:28px; border:1px solid var(--tg-line); background:var(--tg-surface); border-radius:18px; }
+.together-lobby .tg-panel:last-child { background:rgba(21,25,35,.55); min-height:460px; }
+.panel-eyebrow { margin-bottom:10px; }
+.together-lobby .tg-panel h2 { font:600 22px/1.3 var(--font-b); letter-spacing:-.025em; }
+.together-lobby .tg-panel .lead { margin:10px 0 24px; line-height:1.7; }
+.together-lobby .optGrid.three { grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+.together-lobby .opt { padding:12px 6px; border-radius:9px; align-items:center; text-align:center; color:var(--text-2); font-family:inherit; }
+.together-lobby .opt .oName { font-size:12px; }
+.together-lobby .opt .oDesc { display:none; }
+.together-lobby .opt.active { color:#ece6ff; background:rgba(196,181,253,.11); border-color:rgba(196,181,253,.5); }
+.together-lobby .field { margin-bottom:23px; }
+.together-lobby .input, .together-watch .input { border-radius:9px; background:#0e121b; border-color:var(--tg-line); font-size:14px; }
+.together-lobby .createBtn { background:#c4b5fd; color:#191329; border-radius:9px; font-weight:650; box-shadow:none; }
+.together-lobby .createBtn:disabled { opacity:.65; cursor:wait; }
+.together-lobby .roomList { gap:12px; }
+.together-lobby .roomCard { padding:18px; border-radius:12px; background:var(--tg-surface); min-width:0; }
+.together-lobby .rIcon { width:42px; height:42px; display:grid; place-items:center; background:rgba(196,181,253,.08); border-radius:10px; }
+.together-lobby .rName { display:block; }
+.together-lobby .rTag.watch { display:none; }
+.together-lobby .rGo { color:var(--tg-accent); }
+.together-lobby .roomEmpty { border:1px dashed var(--tg-line); border-radius:12px; padding:66px 28px; margin:8px 0 0; text-wrap:balance; }
+.together-lobby .chip { font:500 12px var(--font-b); padding:8px 14px; }
+.together-lobby .filterRow { margin-bottom:18px; }
+.together-lobby .signedOut { background:#1c1e30; border-color:var(--tg-line); }
+.together-lobby .modal { background:var(--tg-surface); }
+.together-lobby .friendRow { width:100%; border:0; background:none; color:inherit; font:inherit; text-align:left; }
+.together-lobby .rGo { text-decoration:none; white-space:nowrap; padding:8px 0 8px 8px; }
+.together-lobby .inviteBanner { background:var(--tg-surface); border-color:var(--tg-line); }
+.together-watch .wtWrap { max-width:1440px; padding:32px; }
+.together-watch .glass { background:none; border:0; box-shadow:none; border-radius:0; overflow:visible; }
+.together-watch .glass::before { display:none; }
+.together-watch .wtWrap .content { padding:0; display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:20px; align-items:start; }
+.together-watch .topRow, .together-watch .controls, .together-watch .uploadRow, .together-watch .shareBanner, .together-watch .watch-help { grid-column:1/-1; }
+.together-watch .title { font:600 clamp(26px,3vw,38px)/1.2 var(--font-b); letter-spacing:-.04em; margin:10px 0; overflow-wrap:anywhere; }
+.together-watch .sub { font-size:14px; }
+.together-watch .roomBar { gap:8px; }
+.together-watch .pillStat { border-radius:8px; background:var(--tg-surface); border-color:var(--tg-line); font-size:12px; }
+.together-watch .divider { display:none; }
+.together-watch .controls { margin:8px 0 0; padding:14px; background:var(--tg-surface); border:1px solid var(--tg-line); border-radius:12px; gap:8px; }
+.together-watch .btn { border-radius:8px; font:500 13px var(--font-b); padding:10px 13px; box-shadow:none; }
+.together-watch .btn.primary { background:#c4b5fd; color:#191329; border-color:#c4b5fd; }
+.together-watch .watch-workspace { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:20px; align-items:start; }
+.together-watch .stage { grid-column:1; grid-row:1; margin:0; border-radius:12px; border-color:var(--tg-line); box-shadow:none; overflow:hidden; }
+.together-watch .placeholder { background:radial-gradient(ellipse at 50% 20%,#222238 0%,#0b0d14 70%); }
+.together-watch .placeholder .big { color:var(--tg-accent); font-size:54px; line-height:1; margin-bottom:16px; }
+.together-watch .placeholder p { max-width:350px; font-size:13px; }
+.together-watch .syncBar { padding:12px; background:var(--tg-surface); gap:10px; }
+.together-watch .syncBar .btn { font-size:11px; padding:7px 9px; }
+.together-watch .panel { background:var(--tg-surface); border:1px solid var(--tg-line); border-radius:12px; padding:20px; margin-top:0 !important; min-width:0; }
+.together-watch .panel h2 { font:600 16px/1.4 var(--font-b); letter-spacing:-.015em; }
+.together-watch .queuePanel { grid-column:2; grid-row:1 / span 2; min-height:370px; }
+.together-watch .queuePanel h2 { align-items:flex-start; flex-direction:column; gap:14px; }
+.together-watch .qTools { margin:0; gap:5px; flex-wrap:wrap; }
+.together-watch .miniGhost { font-size:11px; border-radius:6px; }
+.together-watch .queueAdd { flex-wrap:wrap; gap:8px; }
+.together-watch .queueAdd .input { flex:1 1 180px; width:0; }
+.together-watch .watchingPanel { grid-column:1; }
+.together-watch .historyPanel { grid-column:1; }
+.together-watch .playlistPanel { grid-column:2; }
+.together-watch .watch-help { color:var(--text-3); font-size:12px; line-height:1.7; padding:8px 0; }
+.together-watch .watch-help a { color:var(--tg-accent); }
+.together-lobby :is(button,a,input):focus-visible, .together-watch :is(button,a,input,summary):focus-visible { outline:2px solid var(--tg-accent); outline-offset:4px; }
+@media(max-width:1000px) {
+  .together-watch .wtWrap .content { grid-template-columns:minmax(0,1fr); }
+  .together-watch .wtWrap .content > * { grid-column:1; grid-row:auto; }
+  .together-watch .watch-workspace { display:flex; flex-direction:column; }
+  .together-watch .watch-workspace > * { width:100%; }
+  .together-watch .queuePanel { min-height:0; }
+  .together-lobby .tg-cols { grid-template-columns:1fr; }
+}
+@media(max-width:600px) {
+  .together-lobby .content { padding:24px 18px 48px; gap:20px; }
+  .together-lobby .tg-panel { padding:20px; }
+  .together-lobby .tg-panel:last-child { min-height:0; }
+  .tg-features { gap:10px 16px; font-size:11px; }
+  .together-lobby .rGo { font-size:11px; }
+  .together-lobby .inviteItem { flex-wrap:wrap; }
+  .together-watch .wtWrap { padding:22px 14px; }
+  .together-watch .roomBar { justify-content:flex-start; }
+  .together-watch .controls .input { flex-basis:100%; }
+  .together-watch .panel { padding:16px; }
+}

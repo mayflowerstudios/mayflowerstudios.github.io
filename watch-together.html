@@ -75,7 +75,7 @@
     }
     .lobbyLink:hover{ filter:brightness(1.1); transform:translateY(-1px); background:rgba(196,181,253,.20); }
     /* the last left-aligned pill pushes the status/room/name cluster to the right */
-    #copyRoomBtn{ margin-right:auto; }
+
     .nameInput{
       width:96px; background:transparent; border:0; color:inherit;
       font-size:13px; padding:2px 0; border-bottom:1px solid rgba(255,255,255,.18);
@@ -484,9 +484,10 @@
 <meta name="twitter:description" content="A cozy private space to watch YouTube and videos together, perfectly in sync." />
 <meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/watch-together.png?v=3" />
 <!-- OG:END -->
+  <link rel="stylesheet" href="/together.css?v=1" />
 </head>
 
-<body data-nav="watch" data-rooms="1">
+<body class="together-watch" data-nav="together" data-rooms="1">
   <div class="wrap">
     <div id="site-nav"></div>
 
@@ -496,20 +497,18 @@
 
           <div class="topRow">
             <div>
-              <div class="kicker">🌙 Cozy together • 📺 Watch Together</div>
+              <div class="kicker">TOGETHER / WATCH ROOM</div>
               <h1 class="title">Watch Together</h1>
               <p class="sub">
-                Paste a YouTube link, a TikTok, or a direct video URL, hit play, and everyone stays perfectly in sync —
-                play, pause, and skip carry across to the whole room automatically.
+                Settle in. Pick something to watch and enjoy it together, in sync.
               </p>
             </div>
 
             <div class="roomBar">
-              <a class="pillStat lobbyLink" href="together.html" title="Back to Together">🏠 Together</a>
-              <button class="pillStat lobbyLink" id="copyRoomBtn" title="Copy room link">🔗 Copy link</button>
+              <a class="pillStat lobbyLink" href="together.html" title="Back to Together">← All rooms</a>
               <span class="pillStat"><span class="dot" id="connDot"></span><span id="connText">Connecting…</span></span>
               <span class="pillStat namePill">You:
-                <input id="nameInput" class="nameInput" type="text" maxlength="24"
+                <input id="nameInput" aria-label="Your display name" class="nameInput" type="text" maxlength="24"
                        placeholder="your name" autocomplete="off" spellcheck="false" />
               </span>
             </div>
@@ -518,12 +517,12 @@
           <div class="divider"></div>
 
           <div class="controls">
-            <input class="input" id="urlInput" type="text"
+            <input class="input" id="urlInput" type="text" aria-label="Video URL"
                    placeholder="Paste a YouTube, TikTok, or video URL…"
                    autocomplete="off" spellcheck="false" />
-            <button class="btn primary" id="loadBtn">▶ Load &amp; Sync</button>
-            <button class="btn" id="uploadBtn" title="Upload a video file to watch together">📁 Upload</button>
-            <button class="btn rose" id="shareBtn" title="Stream a game or your screen live to the room">🎮 Stream Game</button>
+            <button class="btn primary" id="loadBtn">Play together</button>
+            <button class="btn" id="uploadBtn" title="Upload a video file to watch together">Upload video</button>
+            <button class="btn rose" id="shareBtn" title="Stream a game or your screen live to the room">Share screen</button>
             <div class="streamCfgWrap">
               <button class="streamCfgBtn" id="streamCfgBtn" title="Streaming quality settings" aria-label="Streaming settings">⚙️</button>
               <div class="streamCfgMenu" id="streamCfgMenu">
@@ -589,6 +588,7 @@
             <button class="stopShare" id="stopShareBtn">Stop sharing</button>
           </div>
 
+          <div class="watch-workspace">
           <div class="stage">
             <div class="videoBox" id="videoBox">
               <div id="ytplayer"></div>
@@ -596,9 +596,9 @@
               <div class="localPreviewBadge" id="localPreviewBadge">LOCAL PREVIEW</div>
               <iframe id="ttplayer" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen scrolling="no" style="display:none"></iframe>
               <div class="placeholder" id="placeholder">
-                <div class="big">🌸</div>
-                <strong>Nothing playing yet</strong>
-                <p>Paste a YouTube link, a TikTok, or a direct video URL above and hit <strong>Load &amp; Sync</strong>. Whatever anyone starts, the whole room sees too.</p>
+                <div class="big" aria-hidden="true">▷</div>
+                <strong>Your screen is ready</strong>
+                <p>Add a video above to start watching. Play, pause, and seek together.</p>
               </div>
             </div>
 
@@ -614,12 +614,12 @@
           </div>
 
           <div class="panel watchingPanel" style="margin-top:16px">
-            <h2>👥 Watching now <span class="whoCount" id="presenceCount">…</span></h2>
+            <h2>In the room <span class="whoCount" id="presenceCount">…</span></h2>
             <div class="whoList" id="presenceList"></div>
           </div>
 
           <div class="panel queuePanel" style="margin-top:16px">
-            <h2>🎞️ Up Next
+            <h2>Up next
               <span class="qTools">
                 <button class="miniGhost" id="shuffleBtn" title="Shuffle the queue">🔀 Shuffle</button>
                 <button class="miniGhost" id="repeatBtn" title="Repeat mode">🔁 Repeat: Off</button>
@@ -638,8 +638,10 @@
             </div>
           </div>
 
+          </div><!-- /watch-workspace -->
+
           <div class="panel historyPanel" style="margin-top:16px">
-            <h2>🕘 Watch History
+            <h2>Watch history
               <span class="qTools">
                 <button class="miniGhost" id="historySaveBtn" title="Save history as a playlist">💾 Save</button>
                 <button class="miniGhost" id="historyClearBtn" title="Clear watch history">🗑 Clear</button>
@@ -651,7 +653,7 @@
           </div>
 
           <div class="panel playlistPanel" style="margin-top:16px">
-            <h2>📚 Playlists</h2>
+            <h2>Playlists</h2>
             <div class="queueAdd">
               <input class="input" id="playlistName" type="text"
                      placeholder="New playlist name…" autocomplete="off" maxlength="60" />
@@ -667,28 +669,7 @@
             </div>
           </div>
 
-          <div class="grid2">
-            <div class="panel">
-              <h2>How it works</h2>
-              <div class="steps">
-                <div class="step"><div class="num">1</div><div>Set your name (top right), then send everyone the room link so you're all in the same room.</div></div>
-                <div class="step"><div class="num">2</div><div>Either of you pastes a link and hits <strong>Load &amp; Sync</strong>.</div></div>
-                <div class="step"><div class="num">3</div><div>Anyone can play / pause / seek — it mirrors to everyone else, and shows who's hosting.</div></div>
-                <div class="step"><div class="num">4</div><div>Drifted apart? Anyone can tap <strong>Resync</strong> to snap back together.</div></div>
-              </div>
-              <p class="tiny">Hop on a Discord call too if you want to chat while you watch 💬</p>
-            </div>
-
-            <div class="panel">
-              <h2>Sharing this room</h2>
-              <p class="sub" style="font-size:14px">
-                Rooms are made over in the <a href="together.html">Together hub</a> — give it a name, pick who can join, and you're in.
-              </p>
-              <p class="tiny">
-                Tip: the <strong>Copy room link</strong> button copies this room's link so you can send it to everyone you want to watch with.
-              </p>
-            </div>
-          </div>
+<p class="watch-help">Friends can join from <a href="/together.html">Together</a>. Manage room access and private invitations from your room in the lobby.</p>
 
         </div>
       </section>
@@ -805,7 +786,6 @@
     const uploadFill = $("uploadFill");
     const uploadMsg = $("uploadMsg");
     const uploadCancel = $("uploadCancel");
-    const copyRoomBtn = $("copyRoomBtn");
     const resyncBtn = $("resyncBtn");
     const awakeBtn = $("awakeBtn");
     const hostTag = $("hostTag");
@@ -3182,6 +3162,7 @@
             }
             MFRooms.canEnter(room).then((access) => {
               if (!access.ok) { bounce(access.reason); return; }
+              document.querySelector(".title").textContent = room.name || "Watch Together";
               MFRooms.touch(ROOM);   // no-op for guests; records members for accounts
               connectToRoom();
             });
@@ -3639,11 +3620,7 @@
       toast("Snapped to the latest 🔄");
     });
 
-    copyRoomBtn.addEventListener("click", async () => {
-      const link = location.origin + location.pathname + "?room=" + encodeURIComponent(ROOM);
-      try { await navigator.clipboard.writeText(link); toast("Room link copied 🔗"); }
-      catch { toast(link); }
-    });
+
 
     // ---- Keyboard shortcuts ----
     // Space / K: play-pause · ← →: seek 5s · J / L: seek 10s · M: mute.
