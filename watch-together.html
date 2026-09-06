@@ -2569,6 +2569,12 @@
               try { fileVid.disablePictureInPicture = false; } catch (_) {}
               fileVid.srcObject = e.streams[0];
               fileVid.muted = false;
+              // Live screen-share playback is not part of the VOD buffering
+              // protocol. Clear any stale local wait state before displaying it
+              // so an earlier file/YouTube stall cannot leave a spinner on top.
+              setBuffering(false);
+              clearTimeout(stallTimer);
+              updateWaitingOverlay();
               fileVid.play().catch(()=>{});
               setNowPlayingShare(activeShare ? activeShare.byName : "Someone", false);
               updateShareUI();
@@ -2872,10 +2878,13 @@
     }
 
     function updateWaitingOverlay() {
-      // While we're the one broadcasting, our local capture is the source —
-      // it can't be buffering, so never show the spinner over our own stream
-      // regardless of stale flags or a partner's waiting state.
-      const show = !isBroadcasting && (localBuffering || partnerWaiting);
+      // The shared waiting overlay belongs to synchronized VOD playback only.
+      // A WebRTC live screen can keep rendering frames even if an old
+      // file/YouTube waiting flag is still present in Firebase, and unlike VOD
+      // it does not fire the same canplay/playing events that clear that state.
+      // Never cover a live game stream with the VOD buffering overlay.
+      const isLiveScreen = isBroadcasting || currentKind === "screen";
+      const show = !isLiveScreen && (localBuffering || partnerWaiting);
       let el = $("waitOverlay");
       if (!el) {
         el = document.createElement("div");
