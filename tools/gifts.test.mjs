@@ -324,6 +324,81 @@ test('account changes after an upload prevent catalogue publication',async()=>{
   await assert.rejects(h.helpers.publishImage(h.item,'Forest',h.services),/account changed/);
   assert.equal(h.writes.length,0);
 });
+
+// Exercise the real queue controls and submit handler with local service adapters.
+function bulkUploadHarness() {
+  const control=()=>({value:'',innerHTML:'',textContent:'',disabled:false,hidden:false,dataset:{},classList:{toggle(){},add(){},remove(){}},addEventListener(){},querySelectorAll(){return[];}});
+  const elements=new Map([...read('admin.html').matchAll(/\bid="([^"]+)"/g)].map(([,id])=>[id,control()]));
+  const $=id=>elements.get(id);
+  $('agCategory').value='Friendship';
+  const fields=new Map();
+  Object.defineProperty($('agQueue'),'innerHTML',{set(html){
+    for(const [attribute,key] of [['data-gift-name','giftName'],['data-gift-category','giftCategory'],['data-remove-image','removeImage']]) {
+      fields.set(`[${attribute}]`,[...html.matchAll(new RegExp(`<[^>]+${attribute}="([^"]+)"[^>]*>`,'g'))].map(([tag,id])=>Object.assign(control(),{dataset:{[key]:id},value:tag.match(/\bvalue="([^"]*)"/)?.[1] || ''})));
+    }
+  }});
+  $('agQueue').querySelectorAll=selector=>fields.get(selector) || [];
+  $('gift-admin').querySelectorAll=()=>[...elements.values(),...[...fields.values()].flat()];
+  const remote={},auth=authHarness(undefined,remote),uploads=[],writes=[];
+  auth.MFAuth.user={uid:'admin'};
+  let sequence=0,failNext=false;
+  const services={
+    databaseModule:{ref:(_,p)=>p,set:async(p,data)=>{if(failNext){failNext=false;throw Error('Connection interrupted');}writes.push({path:p,data});remote[p.split('/').pop()]=data;}},
+    storageModule:{ref:(_,p)=>p,uploadBytes:async(p,file)=>uploads.push({path:p,file}),getDownloadURL:async p=>'https://firebasestorage.googleapis.com/v0/b/watchtogether-95d7d.firebasestorage.app/o/'+encodeURIComponent(p)+'?alt=media'}
+  };
+  const window={MFAuth:auth.MFAuth,testServices:services,addEventListener(){}};
+  const source=read('admin-gifts.js').replace('  boot();',`  dmod=window.testServices.databaseModule; smod=window.testServices.storageModule; storage={}; allowed=true; catalogReady=true; activeUid='admin'; drawLibrary(); controls();`);
+  vm.runInNewContext(source,{window,MFAuth:auth.MFAuth,document:{getElementById:$},URL:{createObjectURL:file=>'blob:'+file.name,revokeObjectURL(){}},crypto:{randomUUID:()=>`12345678-1234-1234-1234-${String(++sequence).padStart(12,'0')}`}});
+  const inputs=()=>fields.get('[data-gift-category]');
+  return {$,auth,uploads,writes,inputs,
+    add:(...names)=>$('agFiles').onchange({target:{files:names.map(name=>({name,type:'image/png',size:100}))}}),
+    category:(index,value)=>{const input=inputs()[index];input.value=value;input.oninput();},
+    submit:()=>$('agForm').onsubmit({preventDefault(){}}),
+    failNext:()=>{failNext=true;}
+  };
+}
+
+test('bulk uploads save each image category and suggest newly typed categories',async()=>{
+  const h=bulkUploadHarness();h.add('fox.png','lantern.png');
+  h.category(0,'Forest friends');h.category(1,'Moonlight');
+  assert.match(h.$('agCategories').innerHTML,/value="Forest friends"/);
+  assert.match(h.$('agCategories').innerHTML,/value="Moonlight"/);
+  h.add('bunny.png');
+  assert.deepEqual(h.inputs().map(input=>input.value),['Forest friends','Moonlight','Friendship']);
+  await h.submit();
+  assert.deepEqual(h.writes.map(write=>write.data.category),['Forest friends','Moonlight','Friendship']);
+  const catalog=await h.auth.MFAuth.loadGiftCatalog();
+  for(const write of h.writes)assert.equal(catalog[write.path.split('/').pop()].category,write.data.category);
+  assert.equal(h.inputs().length,0);
+});
+
+test('batch category changes existing selections only when Apply to all is clicked',async()=>{
+  const h=bulkUploadHarness();h.add('fox.png','lantern.png');h.category(0,'Forest friends');
+  h.$('agCategory').value='Autumn';h.$('agCategory').oninput();
+  assert.deepEqual(h.inputs().map(input=>input.value),['Forest friends','Friendship']);
+  h.$('agApplyCategory').onclick();
+  assert.deepEqual(h.inputs().map(input=>input.value),['Autumn','Autumn']);
+  h.category(1,'Moonlight');
+  await h.submit();assert.deepEqual(h.writes.map(write=>write.data.category),['Autumn','Moonlight']);
+});
+
+test('failed bulk publication keeps each category and reuses the uploaded image on retry',async()=>{
+  const h=bulkUploadHarness();h.add('fox.png','lantern.png');h.category(0,'Forest friends');h.category(1,'Moonlight');
+  h.failNext();await h.submit();
+  assert.equal(h.writes.length,0);assert.equal(h.uploads.length,1);
+  assert.deepEqual(h.inputs().map(input=>input.value),['Forest friends','Moonlight']);
+  await h.submit();
+  assert.equal(h.uploads.length,2);assert.equal(h.writes.length,2);
+  assert.deepEqual(h.writes.map(write=>write.data.category),['Forest friends','Moonlight']);
+});
+
+test('an empty individual category stops the entire batch before any upload',async()=>{
+  const h=bulkUploadHarness();h.add('fox.png','lantern.png');h.category(1,'  ');
+  await h.submit();assert.equal(h.uploads.length,0);assert.equal(h.writes.length,0);
+  assert.match(h.$('agMessage').textContent,/every gift/);
+});
+
+
 test('gift rules make catalogue writes admin-only and accept image gifts without emojis',()=>{
   const rules=JSON.parse(read('firebase/gifts/database.rules.json')).rules;
   const catalog=rules.giftCatalog.$giftId;

@@ -16,6 +16,12 @@
       "image": "/assets/gifts/Celebration/star.webp"
     },
     {
+      "id": "bunny-macaron",
+      "name": "Bunny Macaron",
+      "category": "Cozy",
+      "image": "/assets/gifts/Cozy/bunny-macaron.png"
+    },
+    {
       "id": "coffee",
       "name": "Love you a latte",
       "emoji": "☕",
@@ -30,11 +36,23 @@
       "image": "/assets/gifts/Cozy/cookie.webp"
     },
     {
+      "id": "moonlight-lantern",
+      "name": "Moonlight Lantern",
+      "category": "Cozy",
+      "image": "/assets/gifts/Cozy/moonlight-lantern.png"
+    },
+    {
       "id": "plushie",
       "name": "Little lavender cat",
       "emoji": "🐱",
       "category": "Cozy",
       "image": "/assets/gifts/Cozy/plushie.webp"
+    },
+    {
+      "id": "sleepy-sakura-fox",
+      "name": "Sleepy Sakura Fox",
+      "category": "Cozy",
+      "image": "/assets/gifts/Cozy/sleepy-sakura-fox.png"
     },
     {
       "id": "teddy",

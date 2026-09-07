@@ -29,9 +29,9 @@ export async function buildCatalog(root = ROOT) {
       if (['constructor','prototype','__proto__'].includes(id)) throw new Error(`Choose a different gift filename: ${stem}`);
       if (ids.has(id)) throw new Error(`Duplicate gift filename: ${stem}. Each gift needs a unique filename, even in different categories.`);
       ids.add(id);
-      const [name, emoji] = defaults[id] || [title(stem), '🎁'];
+      const [name, emoji] = defaults[id] || [title(stem)];
       if (name.length > 32) throw new Error(`Gift name must be 32 characters or fewer: ${stem}`);
-      gifts.push({ id, name, emoji, category: parts.length ? title(parts[0]) : 'Little extras', image: '/assets/gifts/' + relative.map(encodeURIComponent).join('/') });
+      gifts.push({ id, name, ...(emoji ? { emoji } : {}), category: parts.length ? title(parts[0]) : 'Little extras', image: '/assets/gifts/' + relative.map(encodeURIComponent).join('/') });
     }
   }
   await walk(root);

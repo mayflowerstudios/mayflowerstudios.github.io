@@ -2,9 +2,11 @@
 
 ## Add gifts from the website
 
-Go to **Admin → Gifts**, drop in one or more images, choose a category, and click **Add gifts**. Names come from the filenames and can be edited before uploading. No emoji is needed. New gifts appear in the picker without republishing the website.
+Go to **Admin → Gifts**, drop in one or more images, choose a category for each image, and click **Add gifts**. Names come from the filenames and can be edited before uploading. The batch category sets the starting category for new images; **Apply to all** changes every queued image together. Individual categories stay attached to their images if you add more files or retry a failed upload. No emoji is needed. New gifts appear in the picker without republishing the website.
 
 PNG and WebP transparency and GIF animation are preserved. Each upload can be up to 8 MB. **Hide from picker** retires a gift while keeping its artwork on previously received gifts.
+
+Category fields let you choose an existing category or type a new one. A new name becomes a category when its gift is added, and it is suggested for other images while preparing the batch.
 
 The Firebase rules in `firebase/gifts/` must be published once to enable this. Open `firebase/gifts/SETUP.html` for the two setup steps.
 

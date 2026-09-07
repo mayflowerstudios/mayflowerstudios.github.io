@@ -56,15 +56,23 @@
     queue=[]; $('agFiles').value=''; drawQueue();
   }
   function drawQueue() {
-    $('agQueue').innerHTML = queue.map(item => `<div class="agQueueItem"><div class="agImage"><img src="${esc(item.preview)}" alt=""></div><label>Gift name<input data-gift-name="${item.id}" maxlength="32" value="${esc(item.name)}" required /><small>${(item.file.size/1024).toFixed(0)} KB</small></label><button type="button" data-remove-image="${item.id}" aria-label="Remove ${esc(item.name)}">✕</button></div>`).join('');
+    $('agQueue').innerHTML = queue.map(item => `<div class="agQueueItem"><div class="agImage"><img src="${esc(item.preview)}" alt=""></div><div class="agQueueDetails"><label>Gift name<input data-gift-name="${item.id}" maxlength="32" value="${esc(item.name)}" required /></label><label>Category<input data-gift-category="${item.id}" list="agCategories" maxlength="40" value="${esc(item.category)}" required /></label><small>${(item.file.size/1024).toFixed(0)} KB</small></div><button type="button" data-remove-image="${item.id}" aria-label="Remove ${esc(item.name)}">✕</button></div>`).join('');
     $('agQueue').querySelectorAll('[data-gift-name]').forEach(input => input.oninput=()=>{const item=queue.find(item=>item.id===input.dataset.giftName);if(item)item.name=input.value;});
+    $('agQueue').querySelectorAll('[data-gift-category]').forEach(input => input.oninput=()=>{const item=queue.find(item=>item.id===input.dataset.giftCategory);if(item){item.category=input.value;drawCategories();}});
     $('agQueue').querySelectorAll('[data-remove-image]').forEach(button => button.onclick=()=>{
       if(busy)return;
       const item=queue.find(item=>item.id===button.dataset.removeImage);
       if(item)URL.revokeObjectURL(item.preview);
       queue=queue.filter(row=>row!==item);drawQueue();
     });
-    controls();
+    drawCategories();controls();
+  }
+  function applyCategory() {
+    if (busy || !allowed) return;
+    const category=$('agCategory').value.trim();
+    if (!category || category.length>40) return say('Choose a category of up to 40 characters for the batch.',true);
+    queue.forEach(item=>{item.category=category;});
+    drawQueue();say('Category applied to all queued images. You can still change each one below.');
   }
   function addFiles(files) {
     if (busy || !allowed) return;
@@ -72,7 +80,7 @@
     for (const file of files) {
       try {
         const info=fileInfo(file);
-        queue.push({id:'gift-'+crypto.randomUUID(),name:info.name,file,createdAt:Date.now(),preview:URL.createObjectURL(file)});
+        queue.push({id:'gift-'+crypto.randomUUID(),name:info.name,category:$('agCategory').value.trim() || 'Friendship',file,createdAt:Date.now(),preview:URL.createObjectURL(file)});
       } catch(error) { errors.push(error.message); }
     }
     $('agFiles').value=''; drawQueue();
@@ -88,8 +96,11 @@
       return `<article class="agGift ${gift.enabled===false?'isHidden':''}"><div class="agImage">${definition?.image?`<img src="${esc(definition.image)}" alt="${esc(gift.name)}" loading="lazy">`:''}</div><b>${esc(gift.name)}</b><small>${esc(gift.category)}${gift.enabled===false?' · Hidden':''}</small><button type="button" data-toggle-gift="${esc(id)}"${busy?' disabled':''}>${gift.enabled===false?'Show in picker':'Hide from picker'}</button></article>`;
     }).join(''):`<p>${search?'No gifts match your search.':'No uploads yet. Add your first gift above.'}</p>`;
     $('agLibrary').querySelectorAll('[data-toggle-gift]').forEach(button=>button.onclick=()=>toggleGift(button.dataset.toggleGift));
-    const categories=new Set(['Friendship','Romantic','Cozy','Celebration',...Object.values(MFAuth.giftCatalog || {}).map(gift=>gift.category)]);
-    $('agCategories').innerHTML=[...categories].filter(Boolean).sort().map(category=>`<option value="${esc(category)}"></option>`).join('');
+    drawCategories();
+  }
+  function drawCategories() {
+    const categories=new Set(['Friendship','Romantic','Cozy','Celebration',...Object.values(MFAuth.giftCatalog || {}).map(gift=>gift.category),...queue.map(item=>item.category),$('agCategory').value].map(category=>String(category || '').trim()).filter(category=>category && category.length<=40));
+    $('agCategories').innerHTML=[...categories].sort().map(category=>`<option value="${esc(category)}"></option>`).join('');
   }
   async function refresh() {
     if (!allowed || busy) return;
@@ -122,14 +133,14 @@
   async function publish(event) {
     event.preventDefault();
     if(!allowed || !catalogReady || busy || !queue.length)return;
-    const category=$('agCategory').value.trim(), items=[...queue], stamp=session, uid=activeUid;
-    if(!category || items.some(item=>!item.name.trim()))return say('Give every gift a name and choose a category.',true);
+    const items=[...queue], stamp=session, uid=activeUid;
+    if(items.some(item=>!item.name.trim() || item.name.trim().length>32 || !item.category.trim() || item.category.trim().length>40))return say('Give every gift a name (up to 32 characters) and a category (up to 40 characters).',true);
     busy=true;controls();say('');
     let added=0;
     try {
       for (const item of items) {
         $('agProgress').textContent=`Adding ${added+1} of ${items.length}…`;
-        await publishImage(item,category,{uid,storage,storageModule:smod,database:MFAuth.db,databaseModule:dmod,stillAllowed:()=>allowed && session===stamp && MFAuth.user?.uid===uid});
+        await publishImage(item,item.category,{uid,storage,storageModule:smod,database:MFAuth.db,databaseModule:dmod,stillAllowed:()=>allowed && session===stamp && MFAuth.user?.uid===uid});
         added++;
         if(session!==stamp)return;
         URL.revokeObjectURL(item.preview);queue=queue.filter(row=>row!==item);
@@ -176,6 +187,8 @@
   $('agFiles').onchange=event=>addFiles(event.target.files);
   $('agClear').onclick=()=>{if(!busy){clearQueue();say('');}};
   $('agForm').onsubmit=publish;
+  $('agApplyCategory').onclick=applyCategory;
+  $('agCategory').oninput=drawCategories;
   $('agRefresh').onclick=refresh;
   $('agSearch').oninput=drawLibrary;
   $('agDrop').addEventListener('dragover',event=>{event.preventDefault();if(!busy)$('agDrop').classList.add('isOver');});
