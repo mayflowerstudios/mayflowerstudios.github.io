@@ -9,3 +9,36 @@
 .together-watch .watch-help { color:var(--text-3); font-size:12px; line-height:1.7; margin-top:20px; }
 .together-watch .watch-help a { color:var(--violet); }
 .together-lobby :is(button,a,input):focus-visible, .together-watch :is(button,a,input):focus-visible { outline:2px solid var(--violet); outline-offset:3px; }
+
+/* The shared nav sits outside the legacy content width on desktop only. */
+@media (min-width:721px) {
+  .together-watch > #site-nav { position:relative; z-index:200; }
+}
+
+/* Add side space only when both rails fit beside the existing 968px room.
+   Below this breakpoint the original DOM order and all mobile styles apply. */
+@media (min-width:1600px) {
+  .together-watch > .wrap { width:100%; }
+  .together-watch .wtWrap {
+    max-width:1800px;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 968px minmax(0,1fr);
+    gap:20px;
+    align-items:start;
+  }
+  .together-watch .wtWrap > .glass { grid-column:2; min-width:0; }
+  .together-watch .watch-rail { display:flex; flex-direction:column; gap:16px; min-width:0; }
+  .together-watch .watch-rail-left { grid-column:1; grid-row:1; }
+  .together-watch .watch-rail-right { grid-column:3; grid-row:1; }
+  .together-watch .watch-rail .panel { margin-top:0 !important; min-width:0; }
+  .together-watch .watch-rail h2 { display:flex; flex-wrap:wrap; gap:10px; }
+  .together-watch .watch-rail .qTools { flex-basis:100%; margin-left:0; }
+  .together-watch .watch-rail :is(.queueAdd,.plAdd) { flex-wrap:wrap; }
+  .together-watch .watch-rail .input { width:100%; min-width:0; flex-basis:100%; }
+  .together-watch .watch-rail .qItem { flex-wrap:wrap; }
+  .together-watch .watch-rail .qTitle { flex-basis:calc(100% - 80px); }
+  .together-watch .watch-rail .qBtns { flex-wrap:wrap; }
+  .together-watch .watch-rail .plHead { flex-wrap:wrap; }
+  .together-watch .watch-rail .plBtns { flex-basis:100%; flex-wrap:wrap; }
+  .together-watch > .wrap > #site-footer { width:min(1012px,100%); margin-inline:auto; }
+}
