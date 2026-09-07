@@ -76,6 +76,12 @@
       "image": "/assets/gifts/Friendship/flower.webp"
     },
     {
+      "id": "mayflower-studios",
+      "name": "Mayflower Studios",
+      "category": "Friendship",
+      "image": "/assets/gifts/Friendship/mayflower-studios.png"
+    },
+    {
       "id": "ticket",
       "name": "Movie night",
       "emoji": "🎬",
