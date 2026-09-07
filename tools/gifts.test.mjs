@@ -219,3 +219,32 @@ test('late profile requests cannot replace the newest recipient',async()=>{
   assert.match(h.card.innerHTML,/Second/);assert.doesNotMatch(h.card.innerHTML,/>First</);
   assert.ok(h.watchers.every(w=>w.uid==='second'));
 });
+
+test('account tabs open direct links and keep exactly one section visible',()=>{
+  const html=read('account.html');
+  const ids=['overview','gifts','guestbook','achievements','friends'];
+  const panes=Object.fromEntries(ids.map(id=>[id,{hidden:true}]));
+  const buttons=ids.map(id=>({dataset:{accountTab:id},events:{},getAttribute:()=>id,setAttribute(k,v){this[k]=v;},addEventListener(k,fn){this.events[k]=fn;},focus(){}}));
+  const events={},history={replaceState:(_state,_title,hash)=>history.hash=hash};
+  const source=html.slice(html.indexOf('    // Shareable profile sections;'),html.indexOf('    function show(el, on)'));
+  vm.runInNewContext(source,{
+    document:{querySelectorAll:()=>buttons},$:(id)=>panes[id],
+    window:{addEventListener:(key,fn)=>events[key]=fn},location:{hash:'#gifts'},history,
+  });
+  const visible=()=>ids.filter(id=>!panes[id].hidden);
+  assert.deepEqual(visible(),['gifts']);
+  buttons[3].events.click();assert.deepEqual(visible(),['achievements']);
+  assert.equal(history.hash,'#achievements');
+  buttons[3].events.keydown({key:'ArrowRight',preventDefault(){}});
+  assert.deepEqual(visible(),['friends']);
+  assert.equal(buttons.filter(button=>button.tabIndex===0).length,1);
+});
+test('public profiles give achievements and friends their own tab panels',async()=>{
+  const h=profileHarness({friend:true});await h.api.show('sakura');
+  for(const id of ['about','gifts','guestbook','achievements','friends']){
+    assert.ok(h.card.innerHTML.includes(`aria-controls="mfProfPane-${id}"`));
+    assert.ok(h.card.innerHTML.includes(`id="mfProfPane-${id}" role="tabpanel"`));
+  }
+  assert.match(h.card.innerHTML, /id="mfProfPane-achievements"[^>]+hidden><div class="mf-prof-achievements"/);
+  assert.doesNotMatch(h.card.innerHTML,/mf-prof-side|KEPT CLOSE TO THE HEART|A LITTLE ABOUT ME/);
+});

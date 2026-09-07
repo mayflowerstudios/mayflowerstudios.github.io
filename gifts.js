@@ -124,7 +124,7 @@
     filter('All gifts');
   }
 
-  function renderWall(root, records, { empty = 'Little keepsakes will bloom here when someone sends a gift.' } = {}) {
+  function renderWall(root, records, { empty = 'Gifts and messages you receive will appear here.' } = {}) {
     if (!root) return;
     const previous = wallState.get(root);
     const state = { records, visible:previous?.visible || 8, empty, loaded:previous?.loaded || false };
@@ -132,7 +132,7 @@
     function draw() {
       if (wallState.get(root) !== state) return;
       const gifts = Object.entries(records || {}).map(([id,value]) => ({...value,id})).sort((a,b) => (Number(b.t)||0)-(Number(a.t)||0));
-      root.innerHTML = gifts.length ? `<div class="mf-gift-wall">${gifts.slice(0,state.visible).map(gift => `<article class="mf-gift-keepsake"><div class="mf-gift-sender"><b>${esc(gift.fromName || 'Someone')}</b><time>${esc(date(gift.t))}</time></div>${artwork(gift)}<span class="mf-gift-caption">${esc(giftFor(gift).name || gift.name || 'A little gift')}</span>${gift.note ? `<p class="mf-gift-message">${esc(gift.note)}</p>` : '<p class="mf-gift-message mf-gift-muted">A little something, just for you ♡</p>'}${gift.fromUsername ? `<span class="mf-gift-handle">from @${esc(gift.fromUsername)}</span>` : ''}</article>`).join('')}</div>${gifts.length>state.visible ? `<button class="mf-gift-secondary mf-gift-more" type="button">Show more gifts (${gifts.length-state.visible})</button>` : ''}` : `<div class="mf-gift-empty"><span aria-hidden="true">♡</span><h4>A home for little kindnesses</h4><p>${esc(empty)}</p></div>`;
+      root.innerHTML = gifts.length ? `<div class="mf-gift-wall">${gifts.slice(0,state.visible).map(gift => `<article class="mf-gift-keepsake"><div class="mf-gift-sender"><b>${esc(gift.fromName || 'Someone')}</b><time>${esc(date(gift.t))}</time></div>${artwork(gift)}<span class="mf-gift-caption">${esc(giftFor(gift).name || gift.name || 'A little gift')}</span>${gift.note ? `<p class="mf-gift-message">${esc(gift.note)}</p>` : '<p class="mf-gift-message mf-gift-muted">A little something, just for you ♡</p>'}${gift.fromUsername ? `<span class="mf-gift-handle">from @${esc(gift.fromUsername)}</span>` : ''}</article>`).join('')}</div>${gifts.length>state.visible ? `<button class="mf-gift-secondary mf-gift-more" type="button">Show more gifts (${gifts.length-state.visible})</button>` : ''}` : `<div class="mf-gift-empty"><span aria-hidden="true">♡</span><h4>No gifts yet</h4><p>${esc(empty)}</p></div>`;
       imageFallbacks(root);
       root.querySelector('.mf-gift-more')?.addEventListener('click', () => { state.visible += 8; draw(); });
     }

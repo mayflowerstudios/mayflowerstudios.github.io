@@ -550,7 +550,7 @@
 
   </style>
   <link rel="stylesheet" href="/studio.css?v=4" />
-  <link rel="stylesheet" href="/profiles.css?v=1" />
+  <link rel="stylesheet" href="/profiles.css?v=2" />
 </head>
 <body data-nav="account" data-rooms="1">
   <div class="site-page">
@@ -604,7 +604,7 @@
         <div class="previewCard" id="previewCard">
           <div class="pvBanner" id="pvBanner">
             <div class="pvBannerTools">
-              <button class="pvBannerBtn" id="bannerUpBtn" type="button">✏️ Change banner</button>
+              <button class="pvBannerBtn" id="bannerUpBtn" type="button">Change cover</button>
               <button class="pvBannerBtn" id="bannerRmBtn" type="button" hidden>✕</button>
             </div>
           </div>
@@ -622,72 +622,58 @@
                 <div class="pvBadges" id="pvBadges" hidden></div>
               </div>
               <div class="pvBtns">
-                <a class="acctBtn acctEditToggle" id="adminLink" href="/admin.html" hidden>🛡️ Admin</a>
-                <button class="acctBtn acctEditToggle" id="viewPublicProfileBtn" type="button">View public profile</button>
-                <button class="acctBtn acctEditToggle" id="toggleEditProfileBtn" type="button" aria-expanded="false" aria-controls="profileEditor">✏️ Edit profile</button>
+                <a class="acctBtn acctEditToggle" id="adminLink" href="/admin.html" hidden>Admin</a>
+                <button class="acctBtn acctEditToggle" id="viewPublicProfileBtn" type="button">Preview</button>
+                <button class="acctBtn acctEditToggle" id="toggleEditProfileBtn" type="button" aria-expanded="false" aria-controls="profileEditor">Edit profile</button>
               </div>
             </div>
             <div class="pvStatus" id="pvStatus" hidden></div>
             <div class="pvBio" id="pvBio" hidden></div>
             <div class="pvMeta">
-              <div class="pvStat"><b id="pvFriends">0</b><span>FRIENDS</span></div>
-              <div class="pvStat"><b id="pvRooms">0</b><span>ROOMS</span></div>
-              <div class="pvStat"><b id="pvHeadGifts">0</b><span>GIFTS</span></div>
-              <div class="pvStat"><b id="pvSince">—</b><span>MEMBER SINCE</span></div>
+              <div class="pvStat"><b id="pvFriends">0</b><span>Friends</span></div>
+              <div class="pvStat"><b id="pvRooms">0</b><span>Rooms</span></div>
+              <div class="pvStat"><b id="pvHeadGifts">0</b><span>Gifts</span></div>
+              <div class="pvStat"><b id="pvSince">—</b><span>Joined</span></div>
             </div>
           </div>
         </div>
 
-        <div class="acctBirthdayCard" id="acctBirthdayCard" hidden>
-          <div class="acctBirthdayBurst">🎂</div>
-          <div><b>Birthday profile day!</b><span id="acctBirthdayLine">Your profile gets extra sparkle today.</span></div>
-        </div>
-
-        <nav class="acctProfileNav" aria-label="Your profile sections"><a href="#gifts">Gift wall</a><a href="#guestbook">Guestbook</a><a href="#friends">Friends</a><a href="#badges">Badges</a></nav>
+        <div class="acctBirthdayCard" id="acctBirthdayCard" hidden><span aria-hidden="true">🎂</span><span id="acctBirthdayLine">Celebrating your birthday today</span></div>
         <p class="profEmail" id="profEmail"></p>
-
-        <!-- ── your public profile activity ── -->
-        <div class="secLabel">Your profile activity</div>
-        <div class="acctSocialStack">
-          <section class="acctSocialCard">
-            <div class="acctSocialHead"><h3>Close to your heart</h3></div>
-            <div class="acctRelPreview" id="acctRelPreview">Loading…</div>
+        <nav class="acctProfileNav" role="tablist" aria-label="Your profile sections">
+          <button type="button" role="tab" id="acctTab-overview" data-account-tab="overview" aria-controls="overview" aria-selected="true" tabindex="0">About</button>
+          <button type="button" role="tab" id="acctTab-gifts" data-account-tab="gifts" aria-controls="gifts" aria-selected="false" tabindex="-1">Gifts</button>
+          <button type="button" role="tab" id="acctTab-guestbook" data-account-tab="guestbook" aria-controls="guestbook" aria-selected="false" tabindex="-1">Guestbook</button>
+          <button type="button" role="tab" id="acctTab-achievements" data-account-tab="achievements" aria-controls="achievements" aria-selected="false" tabindex="-1">Achievements</button>
+          <button type="button" role="tab" id="acctTab-friends" data-account-tab="friends" aria-controls="friends" aria-selected="false" tabindex="-1">Friends</button>
+        </nav>
+        <div class="acctProfilePanels">
+          <section id="overview" role="tabpanel" aria-labelledby="acctTab-overview" tabindex="0">
+            <div class="acctProfileDetail"><span>Relationship</span><div class="acctRelPreview" id="acctRelPreview">Loading…</div></div>
+            <section class="acctProfileSection" id="badges">
+              <h3>Badges</h3>
+              <div class="acctBadgeList" id="acctBadgeList"><div class="acctEmpty">Loading badges…</div></div>
+            </section>
+            <details class="acctProfileSection acctCompanions">
+              <summary>Companions</summary>
+              <div class="petsStrip" id="petsStrip"><div class="petsEmpty" id="petsEmpty">Loading…</div></div>
+            </details>
           </section>
-
-          <section class="acctSocialCard" id="gifts">
-            <div class="acctSocialHead"><div><span class="mf-gift-eyebrow">KEPT CLOSE TO THE HEART</span><h3>Your gift wall</h3></div><span id="acctGiftTotal">0 gifts</span></div>
-            <p class="acctGiftLead">Little keepsakes and the lovely words that came with them.</p>
+          <section id="gifts" role="tabpanel" aria-labelledby="acctTab-gifts" tabindex="0" hidden>
+            <div class="acctSectionHeading"><h3>Gifts received</h3><span id="acctGiftTotal">0 gifts</span></div>
             <div class="acctGiftWall" id="acctGiftRecent"><div class="acctEmpty">Loading gifts…</div></div>
           </section>
-
-          <section class="acctSocialCard" id="guestbook">
-            <div class="acctSocialHead"><h3>📝 Guestbook</h3><span id="acctGuestTotal">0 notes</span></div>
+          <section id="guestbook" role="tabpanel" aria-labelledby="acctTab-guestbook" tabindex="0" hidden>
+            <div class="acctSectionHeading"><h3>Guestbook</h3><span id="acctGuestTotal">0 notes</span></div>
             <div class="acctGuestList" id="acctGuestList"><div class="acctEmpty">Loading guestbook…</div></div>
           </section>
-        </div>
-
-        <!-- ── your friends ── -->
-        <div class="secLabel" id="friends">Your friends</div>
-        <div class="acctFriendsCard showcaseInset" id="acctFriendsCard">
-          <div class="acctFriendsList" id="acctFriendsList"><div class="acctEmpty">Loading friends…</div></div>
-        </div>
-
-
-        <!-- ── companions ── -->
-        <div class="secLabel">Your companions</div>
-        <div class="petsStrip showcaseInset" id="petsStrip">
-          <div class="petsEmpty" id="petsEmpty">Loading…</div>
-        </div>
-
-        <!-- ── achievements ── -->
-        <div class="secLabel">Achievements</div>
-        <div class="achCount showcaseInset" id="achCount">—</div>
-        <div class="achGrid showcaseInset" id="achGrid"></div>
-
-        <!-- ── owner-awarded badges ── -->
-        <div class="secLabel" id="badges">Your badges</div>
-        <div class="acctBadgeCard showcaseInset">
-          <div class="acctBadgeList" id="acctBadgeList"><div class="acctEmpty">Loading badges…</div></div>
+          <section id="achievements" role="tabpanel" aria-labelledby="acctTab-achievements" tabindex="0" hidden>
+            <div class="acctSectionHeading"><h3>Achievements</h3><span id="achCount">—</span></div>
+            <div class="achGrid" id="achGrid"></div>
+          </section>
+          <section id="friends" role="tabpanel" aria-labelledby="acctTab-friends" tabindex="0" hidden>
+            <div class="acctFriendsCard" id="acctFriendsCard"><div class="acctFriendsList" id="acctFriendsList"><div class="acctEmpty">Loading friends…</div></div></div>
+          </section>
         </div>
 
         </div><!-- /profShowcase -->
@@ -809,13 +795,45 @@
     <div id="site-footer"></div>
   </div>
 
-  <script src="/gifts.js?v=1"></script>
-  <script src="/profile-view.js?v=74" data-mf-src="/profile-view.js"></script>
-  <script src="/shared.js?v=76"></script>
+  <script src="/gifts.js?v=2"></script>
+  <script src="/profile-view.js?v=75" data-mf-src="/profile-view.js"></script>
+  <script src="/shared.js?v=77"></script>
   <script>
   (function () {
     const $ = (id) => document.getElementById(id);
     let mode = "signin"; // or "signup"
+
+    // Shareable profile sections; notifications can still link to #gifts.
+    const profileTabs = [...document.querySelectorAll('[data-account-tab]')];
+    function selectProfileTab(id, updateHash = false) {
+      const selected = profileTabs.find(button => button.dataset.accountTab === id) || profileTabs[0];
+      if (!selected) return;
+      profileTabs.forEach(button => {
+        const active = button === selected;
+        button.setAttribute('aria-selected', String(active));
+        button.tabIndex = active ? 0 : -1;
+        $(button.getAttribute('aria-controls')).hidden = !active;
+      });
+      if (updateHash) history.replaceState(null, '', '#' + selected.dataset.accountTab);
+    }
+    profileTabs.forEach((button, index) => {
+      button.addEventListener('click', () => selectProfileTab(button.dataset.accountTab, true));
+      button.addEventListener('keydown', event => {
+        let next;
+        if (event.key === 'ArrowRight') next = (index + 1) % profileTabs.length;
+        if (event.key === 'ArrowLeft') next = (index + profileTabs.length - 1) % profileTabs.length;
+        if (event.key === 'Home') next = 0;
+        if (event.key === 'End') next = profileTabs.length - 1;
+        if (next !== undefined) {
+          event.preventDefault();
+          selectProfileTab(profileTabs[next].dataset.accountTab, true);
+          profileTabs[next].focus();
+        }
+      });
+    });
+    const openProfileHash = () => selectProfileTab(location.hash.slice(1));
+    window.addEventListener('hashchange', openProfileHash);
+    openProfileHash();
 
     function show(el, on) { el.style.display = on ? "" : "none"; }
     function msg(el, text, kind) { el.className = "acctMsg " + kind; el.textContent = text; }
@@ -1009,7 +1027,7 @@
       if (bcard) {
         bcard.hidden = !birthdayOn;
         const line = $("acctBirthdayLine");
-        if (line) line.textContent = birthdayOn ? "Your profile is wearing its birthday crown today only." : "";
+        if (line) line.textContent = birthdayOn ? "Celebrating your birthday today" : "";
       }
 
       // share handle
@@ -1164,7 +1182,7 @@
           const partner = rel.partnerUsername ? "@" + rel.partnerUsername : (rel.partnerName || "someone");
           el.innerHTML = `♡ In a relationship with <b>${escapeForHtml(partner)}</b><span>Since ${escapeForHtml(relNiceDate(rel.startedAt))}</span>`;
         } else {
-          el.innerHTML = `No relationship shown yet.<span>Open Edit profile to add one.</span>`;
+          el.innerHTML = `Not shared`;
         }
       }
       function renderAcctGifts(gifts) {
@@ -1526,8 +1544,9 @@
       if (editToggleBtn && editorPanel) {
         editToggleBtn.addEventListener("click", () => {
           const open = editorPanel.classList.toggle("open");
+          $("profileView").classList.toggle("is-editing", open);
           editToggleBtn.setAttribute("aria-expanded", String(open));
-          editToggleBtn.textContent = open ? "✕ Close editor" : "✏️ Edit profile";
+          editToggleBtn.textContent = open ? "Done editing" : "Edit profile";
           if (open) editorPanel.scrollIntoView({ behavior: "smooth", block: "start" });
         });
       }
