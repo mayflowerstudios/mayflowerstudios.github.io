@@ -89,11 +89,65 @@
       "image": "/assets/gifts/Friendship/ticket.webp"
     },
     {
+      "id": "angel-heart",
+      "name": "Angel Heart",
+      "category": "Romantic",
+      "image": "/assets/gifts/Romantic/angel-heart.webp"
+    },
+    {
+      "id": "cat-and-dog-love",
+      "name": "Cat And Dog Love",
+      "category": "Romantic",
+      "image": "/assets/gifts/Romantic/cat-and-dog-love.webp"
+    },
+    {
+      "id": "cat-and-dog-snuggle",
+      "name": "Cat And Dog Snuggle",
+      "category": "Romantic",
+      "image": "/assets/gifts/Romantic/cat-and-dog-snuggle.webp"
+    },
+    {
+      "id": "cat-cuddle",
+      "name": "Cat Cuddle",
+      "category": "Romantic",
+      "image": "/assets/gifts/Romantic/cat-cuddle.webp"
+    },
+    {
+      "id": "cat-kisses",
+      "name": "Cat Kisses",
+      "category": "Romantic",
+      "image": "/assets/gifts/Romantic/cat-kisses.webp"
+    },
+    {
       "id": "chocolates",
       "name": "Something sweet",
       "emoji": "🍫",
       "category": "Romantic",
       "image": "/assets/gifts/Romantic/chocolates.webp"
+    },
+    {
+      "id": "dog-cuddle",
+      "name": "Dog Cuddle",
+      "category": "Romantic",
+      "image": "/assets/gifts/Romantic/dog-cuddle.webp"
+    },
+    {
+      "id": "fox-cuddle",
+      "name": "Fox Cuddle",
+      "category": "Romantic",
+      "image": "/assets/gifts/Romantic/fox-cuddle.webp"
+    },
+    {
+      "id": "fox-kisses",
+      "name": "Fox Kisses",
+      "category": "Romantic",
+      "image": "/assets/gifts/Romantic/fox-kisses.webp"
+    },
+    {
+      "id": "heart-lock-and-key",
+      "name": "Heart Lock And Key",
+      "category": "Romantic",
+      "image": "/assets/gifts/Romantic/heart-lock-and-key.webp"
     },
     {
       "id": "heart",
@@ -103,11 +157,65 @@
       "image": "/assets/gifts/Romantic/heart.webp"
     },
     {
+      "id": "her-and-her",
+      "name": "Her And Her",
+      "category": "Romantic",
+      "image": "/assets/gifts/Romantic/her-and-her.webp"
+    },
+    {
+      "id": "her-and-him",
+      "name": "Her And Him",
+      "category": "Romantic",
+      "image": "/assets/gifts/Romantic/her-and-him.webp"
+    },
+    {
+      "id": "him-and-him",
+      "name": "Him And Him",
+      "category": "Romantic",
+      "image": "/assets/gifts/Romantic/him-and-him.webp"
+    },
+    {
+      "id": "linked-hearts",
+      "name": "Linked Hearts",
+      "category": "Romantic",
+      "image": "/assets/gifts/Romantic/linked-hearts.webp"
+    },
+    {
+      "id": "open-heart-letter",
+      "name": "Open Heart Letter",
+      "category": "Romantic",
+      "image": "/assets/gifts/Romantic/open-heart-letter.webp"
+    },
+    {
+      "id": "puppy-love",
+      "name": "Puppy Love",
+      "category": "Romantic",
+      "image": "/assets/gifts/Romantic/puppy-love.webp"
+    },
+    {
+      "id": "ribbon-heart",
+      "name": "Ribbon Heart",
+      "category": "Romantic",
+      "image": "/assets/gifts/Romantic/ribbon-heart.webp"
+    },
+    {
       "id": "rose",
       "name": "A rose for you",
       "emoji": "🌹",
       "category": "Romantic",
       "image": "/assets/gifts/Romantic/rose.webp"
+    },
+    {
+      "id": "sakura-sweethearts",
+      "name": "Sakura Sweethearts",
+      "category": "Romantic",
+      "image": "/assets/gifts/Romantic/sakura-sweethearts.webp"
+    },
+    {
+      "id": "sealed-love-letter",
+      "name": "Sealed Love Letter",
+      "category": "Romantic",
+      "image": "/assets/gifts/Romantic/sealed-love-letter.webp"
     }
   ]
 }
