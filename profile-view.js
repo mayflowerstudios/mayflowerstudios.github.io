@@ -68,7 +68,7 @@
     card.querySelector('button').onclick = hide;
     overlay.classList.add('open'); card.focus();
     try {
-      if (!window.MFGifts) await import('/gifts.js?v=2');
+      if (!window.MFGifts) await import('/gifts.js?v=3');
       if (!active()) return;
       if (!dbMods) {
         let n = 0;

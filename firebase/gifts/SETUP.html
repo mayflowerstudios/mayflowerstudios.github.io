@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow"><title>Enable gift uploads · Mayflower Studios</title>
+  <link rel="stylesheet" href="/style.css?v=66"><link rel="stylesheet" href="/studio.css?v=4">
+  <style>main{max-width:720px;margin:60px auto;padding:28px}h1{font-size:36px}p,li{font-size:16px;line-height:1.75}li{margin:24px 0}a{color:#ffc0d9}small{color:#b8a9c0}</style>
+</head>
+<body><main>
+  <a href="/admin.html#gift-admin">← Back to Gifts</a>
+  <h1>Enable gift uploads</h1>
+  <p>This is a one-time update. Afterward, add images from Admin → Gifts and they will appear in the gift picker without another website update.</p>
+  <ol>
+    <li>Open <a href="database.rules.json" download>the complete database rules</a>. Copy them into <a href="https://console.firebase.google.com/project/watchtogether-95d7d/database">Firebase → Realtime Database → Rules</a>, then choose <b>Publish</b>.</li>
+    <li>Open <a href="storage.rules" download>the complete Storage rules</a>. Copy them into <a href="https://console.firebase.google.com/project/watchtogether-95d7d/storage">Firebase → Storage → Rules</a>, then choose <b>Publish</b>.</li>
+    <li>Return to <a href="/admin.html#gift-admin">Admin → Gifts</a> and choose <b>Refresh</b>. Add your images, choose a category, then choose <b>Add gifts</b>.</li>
+  </ol>
+  <p><small>These files start from the rules you supplied. Changes add an administrator-managed gift catalogue, image uploads, and image gifts without a required emoji. If your live rules have changed since that copy, merge the gift-related sections into the current rules first. Firestore rules are unaffected.</small></p>
+</main></body>
+</html>

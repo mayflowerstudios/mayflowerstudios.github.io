@@ -1,6 +1,16 @@
 # The gift cupboard
 
-Add your own images to the category folders here, then run this from the website folder:
+## Add gifts from the website
+
+Go to **Admin → Gifts**, drop in one or more images, choose a category, and click **Add gifts**. Names come from the filenames and can be edited before uploading. No emoji is needed. New gifts appear in the picker without republishing the website.
+
+PNG and WebP transparency and GIF animation are preserved. Each upload can be up to 8 MB. **Hide from picker** retires a gift while keeping its artwork on previously received gifts.
+
+The Firebase rules in `firebase/gifts/` must be published once to enable this. Open `firebase/gifts/SETUP.html` for the two setup steps.
+
+## Included starter images (optional developer workflow)
+
+This folder holds the bundled starter set. You can still add images here and rebuild the static catalogue if you prefer:
 
 ```powershell
 node tools/build-gifts.mjs
@@ -18,8 +28,4 @@ Publish the new images and the refreshed `catalog.json` with the website. No pag
 
 Gifts are free, with an optional message of up to 160 characters. The received image, sender, date, and message appear together on the recipient's gift wall, subject to their profile privacy setting.
 
-## Database setup (once)
-
-`FirebaseRules-full.json` contains your supplied Realtime Database rules with two gift-specific changes: the gift ID validator accepts new filenames, and the gift list has a timestamp index. Publish that file in **Firebase Console → Realtime Database → Rules** before sending newly added gifts. Your existing eight gifts continue to work with the old rules.
-
-The artwork is served from this website, so Firebase Storage and Firestore rules do not need changing. This file has not been published automatically.
+The admin uploader uses Firebase Storage and the shared database catalogue. The bundled files here remain available alongside uploaded gifts.

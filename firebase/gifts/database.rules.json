@@ -511,11 +511,10 @@
     },
     "gifts": {
       "$uid": {
-        ".indexOn": ["t"],
         ".read": "auth != null && (auth.uid === $uid || !root.child('profilePrivacy').child($uid).child('gifts').exists() || root.child('profilePrivacy').child($uid).child('gifts').val() === 'everyone' || (root.child('profilePrivacy').child($uid).child('gifts').val() === 'friends' && root.child('friends').child($uid).child(auth.uid).exists()))",
         "$giftId": {
           ".write": "auth != null && !data.exists() && newData.child('fromUid').val() === auth.uid && auth.uid !== $uid",
-          ".validate": "newData.hasChildren(['fromUid','fromName','giftId','emoji','name','t']) && newData.child('fromUid').val() === auth.uid && newData.child('giftId').isString() && newData.child('giftId').val().matches(/^[a-z0-9][a-z0-9_-]{0,63}$/) && newData.child('emoji').isString() && newData.child('emoji').val().length <= 8 && newData.child('name').isString() && newData.child('name').val().length <= 32 && newData.child('t').isNumber()",
+          ".validate": "newData.hasChildren(['fromUid','fromName','giftId','name','t']) && newData.child('fromUid').val() === auth.uid && newData.child('giftId').isString() && newData.child('giftId').val().matches(/^[a-z0-9][a-z0-9_-]{0,63}$/) && newData.child('name').isString() && newData.child('name').val().length <= 32 && newData.child('t').isNumber() && (!newData.child('giftId').val().matches(/^gift-[a-z0-9-]{36}$/) || root.child('giftCatalog').child(newData.child('giftId').val()).child('enabled').val() === true)",
           "fromUid": {
             ".validate": "newData.isString()"
           },
@@ -543,7 +542,10 @@
           "$other": {
             ".validate": false
           }
-        }
+        },
+        ".indexOn": [
+          "t"
+        ]
       }
     },
     "relationships": {
@@ -1564,6 +1566,37 @@
     "worldOrders": {
       ".read": "((auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('owner').exists() && root.child('owner').val().toLowerCase() === root.child('users').child(auth.uid).child('username').val().toLowerCase()) || (auth != null && root.child('users').child(auth.uid).child('username').exists() && root.child('admins').child(root.child('users').child(auth.uid).child('username').val().toLowerCase()).val() === true))",
       ".write": false
+    },
+    "giftCatalog": {
+      ".read": true,
+      "$giftId": {
+        ".write": "auth != null && root.child('users').child(auth.uid).child('username').isString() && root.child('usernames').child(root.child('users').child(auth.uid).child('username').val().toLowerCase()).val() === auth.uid && ((root.child('owner').isString() && root.child('owner').val().toLowerCase() === root.child('users').child(auth.uid).child('username').val().toLowerCase()) || root.child('admins').child(root.child('users').child(auth.uid).child('username').val().toLowerCase()).val() === true) && newData.exists() && $giftId.matches(/^gift-[a-z0-9-]{36}$/)",
+        ".validate": "newData.hasChildren(['name','category','image','storagePath','enabled','createdAt','createdBy']) && ((!data.exists() && newData.child('createdBy').val() === auth.uid) || (data.exists() && newData.child('createdBy').val() === data.child('createdBy').val() && newData.child('createdAt').val() === data.child('createdAt').val() && newData.child('image').val() === data.child('image').val() && newData.child('storagePath').val() === data.child('storagePath').val()))",
+        "name": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 32"
+        },
+        "category": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 40"
+        },
+        "image": {
+          ".validate": "newData.isString() && newData.val().length <= 1500 && newData.val().beginsWith('https://firebasestorage.googleapis.com/v0/b/watchtogether-95d7d.firebasestorage.app/o/gifts%2F' + newData.parent().child('createdBy').val() + '%2F' + $giftId + '.')"
+        },
+        "storagePath": {
+          ".validate": "newData.isString() && newData.val().beginsWith('gifts/' + newData.parent().child('createdBy').val() + '/' + $giftId + '.') && newData.val().matches(/^gifts[/][^/]+[/]gift-[a-z0-9-]+[.](png|webp|gif|jpg|jpeg|avif)$/)"
+        },
+        "enabled": {
+          ".validate": "newData.isBoolean()"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "createdBy": {
+          ".validate": "newData.isString() && newData.val().length <= 128"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
     }
   }
 }

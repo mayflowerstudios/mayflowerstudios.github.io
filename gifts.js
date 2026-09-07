@@ -72,7 +72,8 @@
       return;
     }
     if (dialog !== state) return;
-    const entries = Object.entries(catalog), categories = ['All gifts', ...new Set(entries.map(([,g]) => g.category))];
+    const entries = Object.entries(catalog).filter(([,gift]) => gift.enabled !== false), categories = ['All gifts', ...new Set(entries.map(([,g]) => g.category))];
+    if (!entries.length) { body.innerHTML = '<p class="mf-gift-feedback">No gifts are available yet. Check back soon.</p>'; return; }
     let selected = null;
     body.innerHTML = `<div class="mf-gift-compose"><section class="mf-gift-cupboard" aria-label="Choose a gift"><h3><span>01</span> Pick something lovely</h3><div class="mf-gift-categories" aria-label="Gift categories">${categories.map((category,i) => `<button type="button" data-category="${esc(category)}" aria-pressed="${i===0}">${esc(category)}</button>`).join('')}</div><div class="mf-gift-options"></div></section><form class="mf-gift-dedication"><h3><span>02</span> Make it personal</h3><div class="mf-gift-selected"><span class="mf-gift-empty-icon" aria-hidden="true">♡</span><p>Your little gift goes here</p></div><label for="mfGiftNote">A note for ${esc(name || 'your friend')} <small>(optional)</small></label><textarea id="mfGiftNote" maxlength="160" rows="3" placeholder="A tiny gift to brighten your day…"></textarea><div class="mf-gift-note-meta"><span>Displayed on their gift wall</span><output id="mfGiftCharacters" for="mfGiftNote">0 / 160</output></div><blockquote class="mf-gift-note-preview" hidden></blockquote><p class="mf-gift-feedback" role="status" aria-live="polite"></p><button class="mf-gift-primary" type="submit" disabled>Choose a gift first</button><button class="mf-gift-secondary" type="button" data-gift-cancel>Cancel</button><small class="mf-gift-free">A little kindness is always free.</small></form></div>`;
     const options = body.querySelector('.mf-gift-options'), form = body.querySelector('form'), note = form.querySelector('textarea'), send = form.querySelector('[type=submit]'), feedback = form.querySelector('[role=status]');
@@ -137,7 +138,8 @@
       root.querySelector('.mf-gift-more')?.addEventListener('click', () => { state.visible += 8; draw(); });
     }
     draw();
-    if (!state.loaded && window.MFAuth?.loadGiftCatalog) {
+    const hasUnknownGift = Object.values(records || {}).some(gift => !Object.hasOwn(window.MFAuth?.giftCatalog || {}, gift?.giftId));
+    if ((!state.loaded || hasUnknownGift) && window.MFAuth?.loadGiftCatalog) {
       MFAuth.loadGiftCatalog().then(() => { if (wallState.get(root) === state) { state.loaded = true; draw(); } }).catch(() => {});
     }
   }

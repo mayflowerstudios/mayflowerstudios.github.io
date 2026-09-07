@@ -1,0 +1,42 @@
+.agPanel { margin:0 0 32px; padding:26px; border:1px solid var(--border); border-radius:20px; background:#241e2b; scroll-margin-top:110px; }
+.agPanel [hidden] { display:none !important; }
+.agHeader, .agLibraryHeader { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; margin-bottom:22px; }
+.agHeader h2 { margin:0; font:650 28px var(--font-d,serif); color:var(--text); }
+.agHeader p, .agSetup p { margin:8px 0 0; color:var(--text-2); font-size:15px; line-height:1.6; }
+.agPanel button { min-height:40px; padding:9px 15px; border:1px solid var(--border-2); border-radius:10px; background:transparent; color:var(--text-2); font:650 14px var(--font-b,sans-serif); cursor:pointer; }
+.agPanel button.agPrimary { color:#392634; background:#efb1cc; border-color:transparent; }
+.agPanel button:disabled { opacity:.5; cursor:default; }
+.agPanel :focus-visible { outline:2px solid #efb1cc; outline-offset:3px; }
+.agDrop { display:flex; align-items:center; flex-direction:column; gap:12px; padding:32px 20px; border:1px dashed #bd8eaa; border-radius:14px; background:#ffffff02; text-align:center; }
+.agDrop strong { font-size:18px; font-weight:650; }
+.agDrop > span { color:var(--text-3); font-size:13px; line-height:1.6; }
+.agDrop.isOver { background:#ffc0d910; border-color:#ffc0d9; }
+.agCategory { display:flex; flex-direction:column; align-items:flex-start; gap:8px; margin:22px 0 16px; color:var(--text-2); font-size:14px; }
+.agPanel input:not([type=file]) { width:100%; min-width:0; padding:10px 12px; border:1px solid var(--border-2); border-radius:9px; color:var(--text); background:#1c1723; font:16px var(--font-b,sans-serif); }
+.agCategory input { max-width:320px; }
+.agQueue { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; max-height:500px; overflow:auto; padding:3px; }
+.agQueueItem { display:grid; grid-template-columns:80px minmax(0,1fr) auto; align-items:center; gap:12px; padding:12px; border:1px solid var(--border); border-radius:12px; }
+.agImage { display:grid; place-items:center; aspect-ratio:1; border-radius:10px; overflow:hidden; background-color:#292331; background-image:linear-gradient(45deg,#ffffff08 25%,transparent 25%),linear-gradient(-45deg,#ffffff08 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#ffffff08 75%),linear-gradient(-45deg,transparent 75%,#ffffff08 75%); background-size:16px 16px; background-position:0 0,0 8px,8px -8px,-8px 0; }
+.agImage img { width:100%; height:100%; min-height:0; object-fit:contain; background:transparent; }
+.agQueueItem label { min-width:0; display:grid; gap:6px; font-size:13px; color:var(--text-3); }
+.agQueueItem small { font-size:12px; color:var(--text-3); }
+.agActions { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:18px; }
+#agProgress { font-size:13px; color:var(--text-3); }
+.agMessage { margin:18px 0; color:var(--emerald); font-size:14px; line-height:1.6; white-space:pre-wrap; }
+.agMessage:empty { display:none; }
+.agMessage.bad { color:#ffbfce; }
+.agSetup { padding:16px; margin:18px 0; border:1px solid #ecc78a55; border-radius:12px; color:#edd7b1; font-size:14px; }
+.agSetup a { display:inline-block; margin-top:10px; color:#ffc0d9; }
+.agLibraryHeader { padding-top:26px; margin-top:26px; border-top:1px solid var(--border); }
+.agLibraryHeader h3 { margin:0; font:700 16px var(--font-b,sans-serif); }
+.agLibraryHeader input { max-width:240px; }
+.agLibrary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
+.agLibrary > p { grid-column:1/-1; font-size:14px; color:var(--text-3); }
+.agGift { min-width:0; padding:12px; border:1px solid var(--border); border-radius:12px; }
+.agGift .agImage { margin-bottom:12px; }
+.agGift b { display:block; font-size:14px; overflow-wrap:anywhere; }
+.agGift small { display:block; margin:5px 0 12px; color:var(--text-3); font-size:12px; }
+.agGift button { width:100%; min-height:34px; padding:7px; font-size:13px; }
+.agGift.isHidden .agImage { opacity:.5; }
+@media(max-width:760px) { .agQueue { grid-template-columns:1fr; }.agLibrary { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media(max-width:520px) { .agPanel { padding:18px; }.agLibrary { grid-template-columns:repeat(2,minmax(0,1fr)); }.agQueueItem { grid-template-columns:56px minmax(0,1fr) auto; gap:8px; }.agQueueItem button { padding:8px; } }

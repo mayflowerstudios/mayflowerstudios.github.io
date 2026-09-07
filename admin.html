@@ -223,6 +223,7 @@
 </style>
   <link rel="stylesheet" href="/studio.css?v=4" />
   <link rel="stylesheet" href="/profiles.css?v=2" />
+  <link rel="stylesheet" href="/admin-gifts.css?v=1" />
 </head>
 <body data-nav="account">
 
@@ -246,6 +247,23 @@
         </div>
 
       <div id="adminInbox" hidden>
+        <section class="agPanel" id="gift-admin" hidden aria-labelledby="agTitle">
+          <header class="agHeader"><div><h2 id="agTitle">Gifts</h2><p>Add images for people to send with a personal message.</p></div><button id="agRefresh" type="button">Refresh</button></header>
+          <div class="agDrop" id="agDrop">
+            <strong>Drop gift images here</strong><span>PNG, WebP, GIF, JPG or AVIF · up to 8 MB each · transparency stays intact</span>
+            <button class="agPrimary" id="agChoose" type="button">Choose images</button>
+            <input id="agFiles" type="file" accept="image/png,image/webp,image/gif,image/jpeg,image/avif" multiple hidden />
+          </div>
+          <form id="agForm" hidden>
+            <label class="agCategory">Category <input id="agCategory" list="agCategories" maxlength="40" value="Friendship" required /><datalist id="agCategories"></datalist></label>
+            <div class="agQueue" id="agQueue"></div>
+            <div class="agActions"><button class="agPrimary" id="agPublish" type="submit">Add gifts</button><button id="agClear" type="button">Clear selection</button><span id="agProgress" role="status"></span></div>
+          </form>
+          <p class="agMessage" id="agMessage" role="status" aria-live="polite"></p>
+          <div class="agSetup" id="agSetup" hidden><b>Gift uploads need a one-time Firebase update.</b><p>After that, new images can be added here immediately.</p><a href="/firebase/gifts/SETUP.html" target="_blank" rel="noopener">Open setup instructions</a></div>
+          <div class="agLibraryHeader"><h3>Uploaded gifts</h3><input id="agSearch" type="search" aria-label="Search uploaded gifts" placeholder="Find a gift…" /></div>
+          <div class="agLibrary" id="agLibrary"><p>Loading gifts…</p></div>
+        </section>
         <div class="secLabel">Contact form</div>
         <div class="acctFriendsCard">
           <div class="aiBar">
@@ -437,11 +455,12 @@
     <div id="site-footer"></div>
   </div><!-- /site-page -->
 
-  <script src="/shared.js?v=77"></script>
-  <script src="/auth.js?v=75" data-mf-src="/auth.js"></script>
+  <script src="/shared.js?v=78"></script>
+  <script src="/auth.js?v=76" data-mf-src="/auth.js"></script>
   <script src="/admin-inbox.js?v=6"></script>
   <script src="/admin-moderation.js?v=6"></script>
   <script src="/admin-worlds.js?v=5"></script>
+  <script src="/admin-gifts.js?v=1"></script>
   <script src="/admin-payments.js?v=1"></script>
 </body>
 </html>

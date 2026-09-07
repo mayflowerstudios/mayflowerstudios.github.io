@@ -13,11 +13,11 @@ const read = name => readFileSync(new URL('../' + name, import.meta.url), 'utf8'
 const manifest = JSON.parse(read('assets/gifts/catalog.json'));
 const authSource = read('auth.js');
 const social = authSource.slice(authSource.indexOf('      const GIFT_CATALOG ='), authSource.indexOf('      MFAuth.watchGifts ='));
-function authHarness(fetcher = async () => ({ok:true,json:async()=>manifest})) {
+function authHarness(fetcher = async () => ({ok:true,json:async()=>manifest}), remote = {}) {
   const writes=[],notifications=[];
   const MFAuth={user:{uid:'sender'},profile:{username:'sender'},name:()=> 'A friend',createNotification:async(...args)=>notifications.push(args)};
-  const dbMod={ref:(_,p)=>p,push:()=>({key:'gift-test'}),set:async(p,data)=>writes.push({path:p,data})};
-  vm.runInNewContext(social,{MFAuth,dbMod,db:{},URL,location:{origin:'https://mayflowerstudios.net'},fetch:fetcher});
+  const dbMod={ref:(_,p)=>p,get:async()=>({val:()=>remote}),push:()=>({key:'gift-test'}),set:async(p,data)=>writes.push({path:p,data})};
+  vm.runInNewContext(social,{MFAuth,dbMod,db:{},cfg:{storageBucket:'watchtogether-95d7d.firebasestorage.app'},URL,location:{origin:'https://mayflowerstudios.net'},fetch:fetcher});
   return {MFAuth,writes,notifications,dbMod};
 }
 
@@ -45,7 +45,7 @@ test('new folders become categories; transparency/animation formats stay unchang
 test('catalogue fetch is shared and can retry after a failure', async()=>{
   let calls=0;
   const {MFAuth}=authHarness(async()=>{calls++;if(calls===1)throw Error('offline');return{ok:true,json:async()=>manifest};});
-  await assert.rejects(MFAuth.loadGiftCatalog(),/offline/);
+  await assert.rejects(MFAuth.loadGiftCatalog(),/could not be loaded/);
   await Promise.all([MFAuth.loadGiftCatalog(),MFAuth.loadGiftCatalog()]);
   assert.equal(calls,2);
   assert.equal(MFAuth.giftCatalog.teddy.name,'A little bear hug');
@@ -67,7 +67,7 @@ test('sending a custom image gift retains the database schema and short dedicati
   await MFAuth.sendGift('recipient','teddy','  '+ 'x'.repeat(180)+'  ');
   assert.equal(writes.length,1);assert.equal(writes[0].path,'gifts/recipient/gift-test');
   assert.equal(writes[0].data.giftId,'teddy');assert.equal(writes[0].data.note.length,160);
-  assert.deepEqual(Object.keys(writes[0].data).sort(),['emoji','fromName','fromUid','fromUsername','giftId','name','note','t']);
+  assert.deepEqual(Object.keys(writes[0].data).sort(),['fromName','fromUid','fromUsername','giftId','name','note','t']);
   assert.equal(notifications.length,1);
 });
 test('self gifts, unknown IDs, prototype IDs and signed-out sends never write',async()=>{
@@ -162,7 +162,7 @@ test('account inline scripts parse and their fixed controls exist after the rede
   }
 });
 test('database gift rules accept custom IDs while retaining ownership and message validation',()=>{
-  const gifts=JSON.parse(read('FirebaseRules-full.json')).rules.gifts.$uid;
+  const gifts=JSON.parse(read('firebase/gifts/database.rules.json')).rules.gifts.$uid;
   assert.deepEqual(gifts['.indexOn'],['t']);
   assert.match(gifts['.read'],/profilePrivacy/);
   const record=gifts.$giftId;
@@ -247,4 +247,96 @@ test('public profiles give achievements and friends their own tab panels',async(
   }
   assert.match(h.card.innerHTML, /id="mfProfPane-achievements"[^>]+hidden><div class="mf-prof-achievements"/);
   assert.doesNotMatch(h.card.innerHTML,/mf-prof-side|KEPT CLOSE TO THE HEART|A LITTLE ABOUT ME/);
+});
+
+const uploadId='gift-12345678-1234-1234-1234-123456789abc';
+function uploadedGift(overrides={}) {
+  const storagePath=`gifts/admin/${uploadId}.png`;
+  return {name:'Sleepy fox',category:'Forest',enabled:true,createdBy:'admin',createdAt:1,storagePath,image:'https://firebasestorage.googleapis.com/v0/b/watchtogether-95d7d.firebasestorage.app/o/'+encodeURIComponent(storagePath)+'?alt=media&token=example',...overrides};
+}
+test('admin image gifts merge with starter gifts without an emoji or a website rebuild',async()=>{
+  const remote={};const h=authHarness(undefined,remote);
+  await h.MFAuth.loadGiftCatalog();assert.equal(h.MFAuth.giftCatalog[uploadId],undefined);
+  remote[uploadId]=uploadedGift();
+  await h.MFAuth.loadGiftCatalog();
+  assert.equal(h.MFAuth.giftCatalog[uploadId].name,'Sleepy fox');
+  assert.equal(h.MFAuth.giftCatalog[uploadId].emoji,undefined);
+  assert.ok(h.MFAuth.giftCatalog.flower);
+  await h.MFAuth.sendGift('recipient',uploadId,'Hello');
+  assert.equal(h.writes[0].data.giftId,uploadId);
+  assert.ok(!Object.hasOwn(h.writes[0].data,'emoji'));
+});
+test('hidden uploads retain their art but cannot be sent',async()=>{
+  const remote={[uploadId]:uploadedGift({enabled:false})};const h=authHarness(undefined,remote);
+  await h.MFAuth.loadGiftCatalog();assert.ok(h.MFAuth.giftCatalog[uploadId].image);
+  await assert.rejects(h.MFAuth.sendGift('recipient',uploadId,''),/no longer available/);
+  assert.equal(h.writes.length,0);
+});
+test('uploaded image URLs must match the configured bucket, gift ID and storage path',async()=>{
+  for(const overrides of [
+    {image:uploadedGift().image.replace('watchtogether-95d7d','other-project')},
+    {image:'https://example.org/gift.png'},
+    {storagePath:'gifts/admin/different.png'},
+    {image:uploadedGift().image.replace('/o/','/other/')},
+  ]){
+    const h=authHarness(undefined,{[uploadId]:uploadedGift(overrides)});
+    await h.MFAuth.loadGiftCatalog();assert.equal(h.MFAuth.giftCatalog[uploadId],undefined);
+  }
+});
+function uploadHarness() {
+  const context={window:{}};
+  const source=read('admin-gifts.js');
+  vm.runInNewContext(source.slice(0,source.indexOf('  const panel ='))+'window.helpers={fileInfo,publishImage};})();',context);
+  const uploads=[],writes=[];
+  const item={id:uploadId,name:'Fox',file:{name:'sleepy-fox.png',type:'image/png',size:100},createdAt:1};
+  const services={uid:'admin',storage:{},database:{},stillAllowed:()=>true,
+    storageModule:{ref:(_,p)=>p,uploadBytes:async(...args)=>uploads.push(args),getDownloadURL:async()=>uploadedGift().image},
+    databaseModule:{ref:(_,p)=>p,set:async(...args)=>writes.push(args)}};
+  return {helpers:context.window.helpers,item,services,uploads,writes};
+}
+test('admin uploads derive names and preserve the original image file without conversion',async()=>{
+  const h=uploadHarness();assert.equal(h.helpers.fileInfo(h.item.file).name,'sleepy fox');
+  await h.helpers.publishImage(h.item,'Forest',h.services);
+  assert.equal(h.uploads[0][0],`gifts/admin/${uploadId}.png`);
+  assert.equal(h.uploads[0][1],h.item.file,'transparent image bytes pass through unchanged');
+  assert.equal(h.writes[0][0],`giftCatalog/${uploadId}`);
+  assert.ok(!Object.hasOwn(h.writes[0][1],'emoji'));
+});
+test('invalid uploads never reach Storage',async()=>{
+  for(const file of [{name:'x.svg',type:'image/svg+xml',size:12},{name:'empty.png',type:'image/png',size:0},{name:'big.png',type:'image/png',size:9*1024*1024}]){
+    const h=uploadHarness();h.item.file=file;
+    await assert.rejects(h.helpers.publishImage(h.item,'Forest',h.services));
+    assert.equal(h.uploads.length,0);
+  }
+});
+test('failed catalogue publication retries the same gift without uploading twice',async()=>{
+  const h=uploadHarness();let calls=0;
+  h.services.databaseModule.set=async(...args)=>{calls++;if(calls===1)throw Error('permission');h.writes.push(args);};
+  await assert.rejects(h.helpers.publishImage(h.item,'Forest',h.services),/permission/);
+  await h.helpers.publishImage(h.item,'Forest',h.services);
+  assert.equal(h.uploads.length,1);assert.equal(h.writes.length,1);
+  assert.equal(h.writes[0][0],`giftCatalog/${uploadId}`);
+});
+test('account changes after an upload prevent catalogue publication',async()=>{
+  const h=uploadHarness();let allowed=true;
+  h.services.stillAllowed=()=>allowed;
+  h.services.storageModule.uploadBytes=async()=>{allowed=false;};
+  await assert.rejects(h.helpers.publishImage(h.item,'Forest',h.services),/account changed/);
+  assert.equal(h.writes.length,0);
+});
+test('gift rules make catalogue writes admin-only and accept image gifts without emojis',()=>{
+  const rules=JSON.parse(read('firebase/gifts/database.rules.json')).rules;
+  const catalog=rules.giftCatalog.$giftId;
+  assert.match(catalog['.write'],/child\('usernames'\)/);
+  assert.match(catalog['.write'],/child\('admins'\)/);
+  assert.match(catalog['.write'],/newData.exists\(\)/);
+  assert.equal(catalog.$other['.validate'],false);
+  assert.doesNotMatch(catalog['.validate'],/emoji/);
+  assert.doesNotMatch(rules.gifts.$uid.$giftId['.validate'],/emoji/);
+  assert.match(rules.gifts.$uid.$giftId['.validate'],/giftCatalog.*enabled/);
+  const storage=read('firebase/gifts/storage.rules');
+  assert.match(storage,/match \/gifts\/\{uid\}\/\{file\}/);
+  assert.match(storage,/request.auth.uid == uid/);
+  assert.match(storage,/request.resource.size <= 8 \* 1024 \* 1024/);
+  assert.match(storage,/allow delete: if false/);
 });

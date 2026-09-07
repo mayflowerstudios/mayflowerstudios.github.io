@@ -630,31 +630,43 @@
         star: { emoji: "⭐", name: "Star" },
       };
       MFAuth.giftCatalog = GIFT_CATALOG;
-      let giftCatalogRequest = null;
+      let giftCatalogRequest = null, staticGiftCatalog = null;
       MFAuth.loadGiftCatalog = () => {
         if (giftCatalogRequest) return giftCatalogRequest;
-        giftCatalogRequest = fetch('/assets/gifts/catalog.json', { cache: 'no-cache' })
-          .then(response => { if (!response.ok) throw new Error('The gift cupboard could not be loaded. Please try again.'); return response.json(); })
-          .then(data => {
-            if (!Array.isArray(data.gifts)) throw new Error('The gift catalogue is unavailable.');
-            const catalog = Object.create(null);
-            for (const item of data.gifts) {
-              if (!item || !/^[a-z0-9][a-z0-9_-]{0,63}$/.test(item.id) || ['constructor','prototype','__proto__'].includes(item.id)) continue;
-              if (typeof item.name !== 'string' || !item.name.trim() || item.name.length > 32) continue;
-              // Artwork always comes from our static gift folder, never from a sender's URL.
-              let image;
-              try {
-                const url = new URL(item.image, location.origin);
-                const decoded = decodeURIComponent(url.pathname);
-                if (url.origin !== location.origin || !decoded.startsWith('/assets/gifts/') || /[\\\x00-\x1f]/.test(decoded) || decoded.split('/').some(p => p === '..' || p === '.') || !/\.(png|webp|gif|jpe?g|avif)$/i.test(decoded)) continue;
+        if (!staticGiftCatalog) staticGiftCatalog = fetch('/assets/gifts/catalog.json', { cache: 'no-cache' })
+          .then(response => { if (!response.ok) throw new Error('Gift images could not be loaded.'); return response.json(); })
+          .catch(error => { staticGiftCatalog = null; throw error; });
+        giftCatalogRequest = Promise.allSettled([
+          staticGiftCatalog,
+          dbMod.get(dbMod.ref(db, 'giftCatalog')).then(snapshot => snapshot.val() || {})
+        ]).then(([files, uploaded]) => {
+          const catalog = Object.create(null);
+          function add(item, remote = false) {
+            if (!item || !/^[a-z0-9][a-z0-9_-]{0,63}$/.test(item.id) || ['constructor','prototype','__proto__'].includes(item.id)) return;
+            if (typeof item.name !== 'string' || !item.name.trim() || item.name.length > 32) return;
+            let image;
+            try {
+              const url = new URL(item.image, location.origin);
+              const decoded = decodeURIComponent(url.pathname);
+              if (remote) {
+                const expected = '/v0/b/' + cfg.storageBucket + '/o/' + item.storagePath;
+                if (url.protocol !== 'https:' || url.hostname !== 'firebasestorage.googleapis.com' || url.port || url.username || url.password || decoded !== expected || !/^gifts\/[^/]+\/[a-z0-9_-]+\.(png|webp|gif|jpe?g|avif)$/i.test(item.storagePath || '') || item.id !== String(item.storagePath).split('/').pop().replace(/\.[^.]+$/, '')) return;
+                image = url.href;
+              } else {
+                if (url.origin !== location.origin || !decoded.startsWith('/assets/gifts/') || /[\\\x00-\x1f]/.test(decoded) || decoded.split('/').some(p => p === '..' || p === '.') || !/\.(png|webp|gif|jpe?g|avif)$/i.test(decoded)) return;
                 image = url.pathname;
-              } catch (_) { continue; }
-              catalog[item.id] = { name: item.name, emoji: String(item.emoji || '🎁').slice(0,8), category: String(item.category || 'Little extras').slice(0,40), image };
-            }
-            if (!Object.keys(catalog).length) throw new Error('There are no gifts in the cupboard yet.');
-            MFAuth.giftCatalog = catalog;
-            return catalog;
-          }).catch(error => { giftCatalogRequest = null; throw error; });
+              }
+            } catch (_) { return; }
+            catalog[item.id] = { name: item.name, category: String(item.category || 'Other').slice(0,40), image, enabled: item.enabled !== false };
+            // Earlier emoji gifts still have a fallback if their original image disappears.
+            if (item.emoji) catalog[item.id].emoji = String(item.emoji).slice(0,8);
+          }
+          if (files.status === 'fulfilled' && Array.isArray(files.value.gifts)) files.value.gifts.forEach(item => add(item));
+          if (uploaded.status === 'fulfilled') Object.entries(uploaded.value).forEach(([id,item]) => add({...item,id}, true));
+          if (!Object.keys(catalog).length && (files.status === 'rejected' || uploaded.status === 'rejected')) throw new Error('Gifts could not be loaded. Please try again.');
+          MFAuth.giftCatalog = catalog;
+          return catalog;
+        }).finally(() => { giftCatalogRequest = null; });
         return giftCatalogRequest;
       };
 
@@ -675,19 +687,18 @@
         if (!MFAuth.user || MFAuth.user.uid !== senderUid) throw new Error('Your account changed. Please reopen the gift window.');
         if (toUid === MFAuth.user.uid) throw new Error('Pick someone else to send a gift to');
         const gift = Object.hasOwn(MFAuth.giftCatalog, giftId) ? MFAuth.giftCatalog[giftId] : null;
-        if (!gift) throw new Error("That gift doesn't exist");
+        if (!gift || gift.enabled === false) throw new Error("That gift is no longer available. Please choose another.");
         const id = dbMod.push(dbMod.ref(db, `gifts/${toUid}`)).key;
         await dbMod.set(dbMod.ref(db, `gifts/${toUid}/${id}`), {
           fromUid: MFAuth.user.uid,
           fromName: MFAuth.name() || "someone",
           fromUsername: (MFAuth.profile && MFAuth.profile.username) || "",
           giftId,
-          emoji: gift.emoji,
           name: gift.name,
           note: safeText(note, 160),
           t: Date.now(),
         });
-        await MFAuth.createNotification(toUid, { id:`gift_${id}`, type:"gift", icon:gift.emoji, title:`${MFAuth.name() || "Someone"} sent you ${gift.name}`, body:safeText(note,160) || "A little something is waiting on your profile.", link:"/account.html#gifts", sourceId:id });
+        await MFAuth.createNotification(toUid, { id:`gift_${id}`, type:"gift", icon:"🎁", title:`${MFAuth.name() || "Someone"} sent you ${gift.name}`, body:safeText(note,160) || "A little something is waiting on your profile.", link:"/account.html#gifts", sourceId:id });
         return id;
       };
 

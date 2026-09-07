@@ -4,9 +4,9 @@
     "runtime": "nodejs22"
   },
   "database": {
-    "rules": "FirebaseRules-full.json"
+    "rules": "firebase/gifts/database.rules.json"
   },
   "storage": {
-    "rules": "FirebaseStorageRules-full-updated.rules"
+    "rules": "firebase/gifts/storage.rules"
   }
 }
