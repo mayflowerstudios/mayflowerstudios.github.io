@@ -40,6 +40,12 @@
 .agGift b { display:block; font-size:14px; overflow-wrap:anywhere; }
 .agGift small { display:block; margin:5px 0 12px; color:var(--text-3); font-size:12px; }
 .agGift button { width:100%; min-height:34px; padding:7px; font-size:13px; }
+.agGiftActions, .agDeleteConfirm { display:grid; gap:8px; }
+.agGiftActions small { margin:0; line-height:1.5; }
+.agPanel button.agDanger { color:#ffc0ce; border-color:#c9879a66; }
+.agPanel button.agDanger:hover:not(:disabled) { background:#ffc0ce12; border-color:#c9879a; }
+.agDeleteConfirm { padding-top:10px; border-top:1px solid var(--border); }
+.agDeleteConfirm p { margin:0 0 4px; color:var(--text-2); font-size:13px; line-height:1.6; }
 .agGift.isHidden .agImage { opacity:.5; }
 @media(max-width:760px) { .agQueue { grid-template-columns:1fr; }.agLibrary { grid-template-columns:repeat(3,minmax(0,1fr)); } }
 @media(max-width:520px) { .agPanel { padding:18px; }.agLibrary { grid-template-columns:repeat(2,minmax(0,1fr)); }.agQueueItem { grid-template-columns:56px minmax(0,1fr) auto; gap:8px; }.agQueueItem button { padding:8px; } }

@@ -18,7 +18,7 @@
 
   async function rankOf(username){if(!username)return"";const h=String(username).toLowerCase();try{const[o,a]=await Promise.all([dbMods.get(dbMods.ref(db,"owner")),dbMods.get(dbMods.ref(db,`admins/${h}`))]);if(o.exists()&&String(o.val()).toLowerCase()===h)return"Owner";if(a.val()===true)return"Admin";}catch(_){}return"";}
 
-  function renderGuestbook(uid,posts){const box=document.getElementById("mfProfGuestPosts"),countEl=document.getElementById("mfProfGuestCount");if(!box)return;const list=sortNewest(posts);if(countEl)countEl.textContent=String(list.length);box.innerHTML=list.slice(0,12).map(p=>{const canDelete=MFAuth.uid===uid||MFAuth.uid===p.fromUid,from=p.fromUsername?"@"+p.fromUsername:(p.fromName||"Someone");return`<div class="mf-prof-gbpost" data-post="${esc(p.id)}"><div class="mf-prof-gbmeta"><b>${esc(from)}</b><small>${esc(timeAgo(p.t))}</small></div><p>${esc(p.text||"")}</p>${canDelete?`<button class="mf-prof-mini" data-del="${esc(p.id)}">Delete</button>`:""}</div>`;}).join("")||'<div class="mf-prof-empty">No guestbook notes yet.</div>';box.querySelectorAll("[data-del]").forEach(btn=>btn.addEventListener("click",async()=>{try{await MFAuth.deleteGuestbookPost(uid,btn.getAttribute("data-del"));}catch(_){}}));}
+  function renderGuestbook(uid,posts){const box=document.getElementById("mfProfGuestPosts"),countEl=document.getElementById("mfProfGuestCount");if(!box)return;const list=sortNewest(posts);if(countEl)countEl.textContent=String(list.length);box.innerHTML=list.map(p=>{const canDelete=MFAuth.uid===uid||MFAuth.uid===p.fromUid,from=p.fromUsername?"@"+p.fromUsername:(p.fromName||"Someone");return`<div class="mf-prof-gbpost" data-post="${esc(p.id)}"><div class="mf-prof-gbmeta"><b>${esc(from)}</b><small>${esc(timeAgo(p.t))}</small></div><p>${esc(p.text||"")}</p>${canDelete?window.MFGifts?.removalControls(p.id,'note') || '':""}</div>`;}).join("")||'<div class="mf-prof-empty">No guestbook notes yet.</div>';window.MFGifts?.bindRemovals(box,{profileUid:uid,kind:'note'});}
 
   function renderAchievements(records){const box=document.getElementById("mfProfAchievements");if(!box)return;const defs=(MFAuth.achievementCatalog||[]),earned=defs.filter(a=>records&&records[a.id]).map(a=>({...a,unlockedAt:Number(records[a.id].unlockedAt)||0})).sort((a,b)=>b.unlockedAt-a.unlockedAt);box.innerHTML=earned.length?earned.map(a=>`<div class="mf-prof-ach" title="${a.unlockedAt?`Unlocked ${esc(niceDate(a.unlockedAt))}`:'Unlocked'}"><span>${esc(a.icon)}</span><b>${esc(a.name)}</b><small>${esc(a.desc)}</small></div>`).join(""):'<div class="mf-prof-empty">No achievements unlocked yet.</div>';const n=document.getElementById("mfProfAchievementCount");if(n)n.textContent=String(earned.length);}
   function renderBadges(badges){const strip=document.getElementById("mfProfBadgeStrip"),box=document.getElementById("mfProfBadgeList");const list=Object.entries(badges||{}).map(([id,b])=>({id,...(b||{})})).sort((a,b)=>(Number(b.assignedAt)||0)-(Number(a.assignedAt)||0));const html=list.map(b=>`<span class="mf-prof-userbadge" title="${esc(b.description||"")}"><b>${esc(b.icon||"🏷️")}</b>${esc(b.label||"Badge")}</span>`).join("");if(strip){strip.innerHTML=html;strip.hidden=!list.length;}if(box)box.innerHTML=list.length?html:'<div class="mf-prof-empty">No badges yet.</div>';}
@@ -52,10 +52,10 @@
     if (statusUnsub) { try { statusUnsub(); } catch (_) {} statusUnsub = null; }
     liveUnsubs.forEach(fn => { try { fn(); } catch (_) {} }); liveUnsubs = [];
   }
-  function renderGifts(gifts) {
+  function renderGifts(uid,gifts) {
     const count = document.getElementById('mfProfGiftCount');
     if (count) count.textContent = String(Object.keys(gifts || {}).length);
-    window.MFGifts?.renderWall(document.getElementById('mfProfGiftRecent'), gifts);
+    window.MFGifts?.renderWall(document.getElementById('mfProfGiftRecent'), gifts, {profileUid:uid});
   }
   async function show(uid) {
     if (!window.MFAuth || !MFAuth.isConfigured() || !uid || window.MFGifts?.isOpen) return;
@@ -68,7 +68,7 @@
     card.querySelector('button').onclick = hide;
     overlay.classList.add('open'); card.focus();
     try {
-      if (!window.MFGifts) await import('/gifts.js?v=3');
+      if (!window.MFGifts) await import('/gifts.js?v=4');
       if (!active()) return;
       if (!dbMods) {
         let n = 0;
@@ -153,8 +153,8 @@
         finally{guestSend.disabled=false;}
       };
       const watch=(allowed,method,render,...extra)=>{if(allowed&&method)liveUnsubs.push(method(uid,value=>{if(active())render(value);},...extra));};
-      watch(canGifts,MFAuth.watchGifts,renderGifts,80);
-      watch(canGuest,MFAuth.watchGuestbook,posts=>renderGuestbook(uid,posts));
+      watch(canGifts,MFAuth.watchGifts,gifts=>renderGifts(uid,gifts),80);
+      watch(canGuest,MFAuth.watchGuestbook,posts=>renderGuestbook(uid,posts),80);
       watch(canAchievements,MFAuth.watchAchievements,renderAchievements);
       watch(canBadges,MFAuth.watchUserBadges,renderBadges);
       if(canFriends&&MFAuth.getFriendsForProfile)MFAuth.getFriendsForProfile(uid).then(friends=>{if(active())renderFriends(friends);}).catch(()=>{if(active())card.querySelector('#mfProfFriends').textContent='Friends could not be loaded.';});

@@ -702,6 +702,16 @@
         return id;
       };
 
+      function profileEntryRef(collection, profileUid, entryId) {
+        const validKey = value => typeof value === 'string' && value.length > 0 && value.length <= 128 && !/[.#$\[\]\/\x00-\x1f\x7f]/.test(value);
+        if (!validKey(profileUid) || !validKey(entryId)) throw new Error('This profile entry could not be found.');
+        return dbMod.ref(db, `${collection}/${profileUid}/${entryId}`);
+      }
+      MFAuth.deleteGift = async (profileUid, giftId) => {
+        if (!MFAuth.user) throw new Error('Not signed in');
+        if (MFAuth.user.uid !== profileUid) throw new Error('You can only delete gifts from your own profile.');
+        await dbMod.remove(profileEntryRef('gifts', profileUid, giftId));
+      };
       MFAuth.watchGifts = (uid, cb, limit = 50) => {
         if (!uid) return () => {};
         const q = dbMod.query(dbMod.ref(db, `gifts/${uid}`), dbMod.orderByChild("t"), dbMod.limitToLast(limit));
@@ -726,7 +736,13 @@
       };
       MFAuth.deleteGuestbookPost = async (profileUid, postId) => {
         if (!MFAuth.user) throw new Error("Not signed in");
-        await dbMod.remove(dbMod.ref(db, `guestbooks/${profileUid}/${postId}`));
+        const uid=MFAuth.user.uid, reference=profileEntryRef('guestbooks',profileUid,postId);
+        if (uid !== profileUid) {
+          const snapshot=await dbMod.get(reference);
+          if (snapshot.val()?.fromUid !== uid) throw new Error('You can only delete notes you wrote or notes on your own profile.');
+        }
+        if (MFAuth.user?.uid !== uid) throw new Error('Your account changed. Please reopen the profile.');
+        await dbMod.remove(reference);
       };
       MFAuth.watchGuestbook = (uid, cb, limit = 25) => {
         if (!uid) return () => {};

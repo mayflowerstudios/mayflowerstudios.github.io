@@ -6,6 +6,12 @@ Go to **Admin → Gifts**, drop in one or more images, choose a category for eac
 
 PNG and WebP transparency and GIF animation are preserved. Each upload can be up to 8 MB. **Hide from picker** retires a gift while keeping its artwork on previously received gifts.
 
+**Delete image → Delete permanently** removes your uploaded image file and its catalogue entry. Previously sent gifts keep their names and messages but can no longer display that artwork. Only the original uploader can permanently delete an image; other administrators can hide it. Bundled starter files are managed in this repository.
+
+If you published the earlier rules, publish both updated rule files in `firebase/gifts/` again to enable deletion. Once the gift has been hidden, a failed deletion keeps its catalogue entry available to retry, so its file is not abandoned in Storage.
+
+On profiles, **Delete gift** removes only that received gift and its message. The shared image stays available to everyone else. Owners can also use **Delete note** on guestbook entries; note authors may delete their own notes. Each action asks for confirmation and shows any failure in the same tab.
+
 Category fields let you choose an existing category or type a new one. A new name becomes a category when its gift is added, and it is suggested for other images while preparing the batch.
 
 The Firebase rules in `firebase/gifts/` must be published once to enable this. Open `firebase/gifts/SETUP.html` for the two setup steps.

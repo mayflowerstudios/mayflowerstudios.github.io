@@ -83,6 +83,15 @@
 .mf-gift-message { align-self:stretch; margin:17px 0 0; padding-top:16px; border-top:1px solid #ffc0d920; color:#f6e4f0; text-align:center; white-space:pre-wrap; overflow-wrap:anywhere; font-size:16px; line-height:1.65; }
 .mf-gift-muted { color:#bda8bf; font-size:14px; font-style:italic; }
 .mf-gift-handle { margin-top:auto; padding-top:14px; color:#bda8bf; font-size:12px; overflow-wrap:anywhere; }
+.mf-profile-removal { margin-top:14px; }
+.mf-profile-removal [hidden] { display:none !important; }
+.mf-profile-delete { padding:7px 11px; border:1px solid #c9879a55; border-radius:8px; background:transparent; color:#efb1c5; font:600 13px var(--font-b,sans-serif); cursor:pointer; }
+.mf-profile-delete:hover:not(:disabled) { background:#efb1c510; }
+.mf-profile-delete:disabled { opacity:.6; cursor:default; }
+.mf-profile-delete:focus-visible { outline:2px solid #efb1c5; outline-offset:3px; }
+.mf-profile-confirm { display:flex; flex-wrap:wrap; gap:8px; }
+.mf-profile-confirm p { flex-basis:100%; margin:0 0 4px; color:var(--text-2); font-size:13px; line-height:1.5; }
+.mf-profile-removal-error { color:#ffc0ce; font-size:14px; line-height:1.5; }
 .mf-gift-more { display:flex; margin:20px auto 0; }
 .mf-gift-empty { padding:40px 20px; border:0; text-align:center; background:none; }
 .mf-gift-empty > span { display:block; color:#ffc0d9; font:50px/1 var(--font-d,serif); }
@@ -182,8 +191,10 @@
 #profileView .acctFriendMain b { font-size:14px; }
 #profileView .acctFriendMain span { font-size:13px; }
 #profileView .acctGuestList { display:block; max-height:none; }
-#profileView .acctGuestItem { padding:20px 0; border:0; border-bottom:1px solid #ffffff16; border-radius:0; background:none; }
+#profileView .acctGuestItem { grid-template-columns:auto minmax(0,1fr); padding:20px 0; border:0; border-bottom:1px solid #ffffff16; border-radius:0; background:none; }
+#profileView .acctGuestActions { grid-column:2; }
 #profileView .acctGuestItem p { font-size:16px; line-height:1.65; }
+#profileView .mf-profile-confirm p { font-size:13px; line-height:1.5; }
 #profileView .acctTinyBtn { min-height:32px; border-radius:7px; background:none; border-color:#ffffff20; color:#bcaec3; }
 #profileView .achGrid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
 #profileView .achBadge { display:grid; grid-template-columns:40px minmax(0,1fr); column-gap:14px; row-gap:4px; padding:16px; border:1px solid #ffffff12; border-radius:12px; background:#ffffff02; text-align:left; }

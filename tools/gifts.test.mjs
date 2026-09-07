@@ -12,13 +12,13 @@ import { buildCatalog } from './build-gifts.mjs';
 const read = name => readFileSync(new URL('../' + name, import.meta.url), 'utf8');
 const manifest = JSON.parse(read('assets/gifts/catalog.json'));
 const authSource = read('auth.js');
-const social = authSource.slice(authSource.indexOf('      const GIFT_CATALOG ='), authSource.indexOf('      MFAuth.watchGifts ='));
+const social = authSource.slice(authSource.indexOf('      const GIFT_CATALOG ='), authSource.indexOf('      MFAuth.watchGuestbook ='));
 function authHarness(fetcher = async () => ({ok:true,json:async()=>manifest}), remote = {}) {
-  const writes=[],notifications=[];
+  const writes=[],notifications=[],removals=[];
   const MFAuth={user:{uid:'sender'},profile:{username:'sender'},name:()=> 'A friend',createNotification:async(...args)=>notifications.push(args)};
-  const dbMod={ref:(_,p)=>p,get:async()=>({val:()=>remote}),push:()=>({key:'gift-test'}),set:async(p,data)=>writes.push({path:p,data})};
+  const dbMod={ref:(_,p)=>p,get:async()=>({val:()=>remote}),push:()=>({key:'gift-test'}),set:async(p,data)=>writes.push({path:p,data}),remove:async p=>removals.push(p)};
   vm.runInNewContext(social,{MFAuth,dbMod,db:{},cfg:{storageBucket:'watchtogether-95d7d.firebasestorage.app'},URL,location:{origin:'https://mayflowerstudios.net'},fetch:fetcher});
-  return {MFAuth,writes,notifications,dbMod};
+  return {MFAuth,writes,notifications,dbMod,removals};
 }
 
 test('folder catalogue matches the shipped manifest and all original IDs survive', async()=>{
@@ -97,7 +97,7 @@ function giftWallHarness() {
   const window={MFAuth};vm.runInNewContext(read('gifts.js'),{window,MFAuth});
   const more={addEventListener:(_,fn)=>more.click=fn};
   const root={innerHTML:'',querySelectorAll:()=>[],querySelector:selector=>selector==='.mf-gift-more'?more:null};
-  return{api:window.MFGifts,root,more};
+  return{api:window.MFGifts,root,more,MFAuth};
 }
 test('gift wall renders transparent art and escapes sender names and dedications',()=>{
   const {api,root}=giftWallHarness();
@@ -286,7 +286,7 @@ test('uploaded image URLs must match the configured bucket, gift ID and storage 
 function uploadHarness() {
   const context={window:{}};
   const source=read('admin-gifts.js');
-  vm.runInNewContext(source.slice(0,source.indexOf('  const panel ='))+'window.helpers={fileInfo,publishImage};})();',context);
+  vm.runInNewContext(source.slice(0,source.indexOf('  const panel ='))+'window.helpers={fileInfo,publishImage,deleteImage};})();',context);
   const uploads=[],writes=[];
   const item={id:uploadId,name:'Fox',file:{name:'sleepy-fox.png',type:'image/png',size:100},createdAt:1};
   const services={uid:'admin',storage:{},database:{},stillAllowed:()=>true,
@@ -399,6 +399,117 @@ test('an empty individual category stops the entire batch before any upload',asy
 });
 
 
+
+test('profile owners can delete received gifts without touching the shared catalogue',async()=>{
+  const h=authHarness();
+  await h.MFAuth.deleteGift('sender','received-1');
+  assert.deepEqual(h.removals,['gifts/sender/received-1']);
+  await assert.rejects(h.MFAuth.deleteGift('someone-else','received-2'),/own profile/);
+  for(const id of ['', '../all','x/y'])await assert.rejects(h.MFAuth.deleteGift('sender',id));
+  h.MFAuth.user=null;await assert.rejects(h.MFAuth.deleteGift('sender','received-1'),/signed in/);
+  assert.equal(h.removals.length,1);
+});
+
+test('guestbook deletion permits the profile owner or note author and rejects other visitors',async()=>{
+  const h=authHarness();
+  await h.MFAuth.deleteGuestbookPost('sender','note-1');
+  h.dbMod.get=async()=>({val:()=>({fromUid:'sender'})});
+  await h.MFAuth.deleteGuestbookPost('another-profile','note-2');
+  h.dbMod.get=async()=>({val:()=>({fromUid:'stranger'})});
+  await assert.rejects(h.MFAuth.deleteGuestbookPost('another-profile','note-3'),/only delete notes/);
+  await assert.rejects(h.MFAuth.deleteGuestbookPost('sender','../all'));
+  assert.deepEqual(h.removals,['guestbooks/sender/note-1','guestbooks/another-profile/note-2']);
+  h.dbMod.get=async()=>{h.MFAuth.user={uid:'changed'};return{val:()=>({fromUid:'sender'})};};
+  await assert.rejects(h.MFAuth.deleteGuestbookPost('another-profile','note-4'),/account changed/);
+  assert.equal(h.removals.length,2);
+});
+
+test('gift deletion buttons are shown only on the signed-in owner’s wall',()=>{
+  const h=giftWallHarness();h.MFAuth.user={uid:'owner'};
+  const records={received:{giftId:'flower',note:'Hello',t:1}};
+  h.api.renderWall(h.root,records,{profileUid:'owner'});
+  assert.match(h.root.innerHTML,/data-remove-entry="received"/);
+  h.api.renderWall(h.root,records,{profileUid:'someone-else'});
+  assert.doesNotMatch(h.root.innerHTML,/data-remove-entry/);
+  h.MFAuth.user=null;h.api.renderWall(h.root,records,{profileUid:'owner'});
+  assert.doesNotMatch(h.root.innerHTML,/data-remove-entry/);
+});
+
+test('profile removal confirms, prevents double clicks, and shows errors in the same tab',async()=>{
+  const controls=Object.fromEntries(['start','confirm','yes','cancel'].map(key=>['[data-remove-'+key+']',{hidden:key==='confirm',disabled:false,textContent:'',focus(){}}]));
+  const entry={dataset:{removeEntry:'received'},querySelector:selector=>controls[selector]};
+  let feedback,resolve,reject;const calls=[];
+  const root={isConnected:true,querySelectorAll:()=>[entry],querySelector:()=>feedback,prepend:node=>{feedback=node;}};
+  const MFAuth={user:{uid:'owner'},deleteGift:(...args)=>{calls.push(args);return new Promise((a,b)=>{resolve=a;reject=b;});}};
+  const window={MFAuth};
+  vm.runInNewContext(read('gifts.js'),{window,MFAuth,document:{createElement:()=>({dataset:{},setAttribute(){}})}});
+  window.MFGifts.bindRemovals(root,{profileUid:'owner',kind:'gift'});
+  controls['[data-remove-start]'].onclick();
+  assert.equal(calls.length,0);assert.equal(controls['[data-remove-confirm]'].hidden,false);
+  controls['[data-remove-cancel]'].onclick();assert.equal(calls.length,0);
+  controls['[data-remove-start]'].onclick();
+  const pending=controls['[data-remove-yes]'].onclick();
+  await controls['[data-remove-yes]'].onclick();assert.equal(calls.length,1);
+  reject(Error('Network interrupted'));await pending;
+  assert.match(feedback.textContent,/Network interrupted/);assert.equal(controls['[data-remove-yes]'].disabled,false);
+  const retry=controls['[data-remove-yes]'].onclick();resolve();await retry;
+  assert.deepEqual(calls,[['owner','received'],['owner','received']]);
+});
+
+function deletionHarness() {
+  const h=uploadHarness(),events=[],gift=uploadedGift();
+  h.services.databaseModule.update=async(p,value)=>events.push(['hide',p,value.enabled]);
+  h.services.databaseModule.remove=async p=>events.push(['remove',p]);
+  h.services.storageModule.deleteObject=async p=>events.push(['deleteFile',p]);
+  return {...h,events,gift,remove:()=>h.helpers.deleteImage(uploadId,gift,h.services)};
+}
+
+test('admin deletion hides the gift before deleting its file and catalogue entry',async()=>{
+  const h=deletionHarness();await h.remove();
+  assert.deepEqual(h.events.map(event=>event[0]),['hide','deleteFile','remove']);
+  assert.equal(h.events[1][1],h.gift.storagePath);
+  assert.equal(h.events[2][1],'giftCatalog/'+uploadId);
+});
+
+test('failed image deletion keeps the hidden entry for retry; already missing files finish cleanup',async()=>{
+  const h=deletionHarness();
+  h.services.storageModule.deleteObject=async()=>{throw Object.assign(Error('Blocked'),{code:'storage/unauthorized'});};
+  await assert.rejects(h.remove(),/Blocked/);
+  assert.equal(h.gift.enabled,false);assert.deepEqual(h.events.map(event=>event[0]),['hide']);
+  h.services.storageModule.deleteObject=async()=>{throw Object.assign(Error('Gone'),{code:'storage/object-not-found'});};
+  await h.remove();assert.equal(h.events.at(-1)[0],'remove');
+});
+
+test('admin deletion never touches another uploader’s file or a path outside this gift',async()=>{
+  for(const overrides of [{createdBy:'another-admin'},{storagePath:'avatars/admin/photo.png'},{storagePath:'gifts/admin/another.png'}]){
+    const h=deletionHarness();Object.assign(h.gift,overrides);
+    await assert.rejects(h.remove());assert.equal(h.events.length,0);
+  }
+  const h=deletionHarness();
+  h.services.databaseModule.update=async()=>{throw Error('Permission denied');};
+  await assert.rejects(h.remove(),/Permission/);assert.equal(h.events.length,0);
+});
+
+test('account changes interrupt admin deletion before subsequent writes',async()=>{
+  const h=deletionHarness();let allowed=true;h.services.stillAllowed=()=>allowed;
+  h.services.storageModule.deleteObject=async()=>{allowed=false;};
+  await assert.rejects(h.remove(),/account changed/);
+  assert.deepEqual(h.events.map(event=>event[0]),['hide']);
+});
+
+test('database rules allow only the recipient to delete a received gift',()=>{
+  const rule=JSON.parse(read('firebase/gifts/database.rules.json')).rules.gifts.$uid.$giftId['.write'];
+  const snapshot=value=>({exists:()=>value!=null,child:key=>snapshot(value?.[key]),val:()=>value});
+  function permits(uid,oldValue,newValue){return vm.runInNewContext(rule,{auth:uid?{uid}:null,$uid:'recipient',data:snapshot(oldValue),newData:snapshot(newValue)});}
+  const gift={fromUid:'sender'};
+  assert.equal(permits('recipient',gift,null),true);
+  assert.equal(permits('sender',gift,null),false);
+  assert.equal(permits('stranger',gift,null),false);
+  assert.equal(permits(null,gift,null),false);
+  assert.equal(permits('sender',null,gift),true);
+  assert.equal(permits('recipient',gift,{fromUid:'recipient'}),false);
+});
+
 test('gift rules make catalogue writes admin-only and accept image gifts without emojis',()=>{
   const rules=JSON.parse(read('firebase/gifts/database.rules.json')).rules;
   const catalog=rules.giftCatalog.$giftId;
@@ -413,5 +524,7 @@ test('gift rules make catalogue writes admin-only and accept image gifts without
   assert.match(storage,/match \/gifts\/\{uid\}\/\{file\}/);
   assert.match(storage,/request.auth.uid == uid/);
   assert.match(storage,/request.resource.size <= 8 \* 1024 \* 1024/);
-  assert.match(storage,/allow delete: if false/);
+  const giftStorage=storage.slice(storage.indexOf('    match /gifts/'));
+  assert.match(giftStorage,/allow delete: if request.auth != null\s+&& request.auth.uid == uid/);
+  assert.match(catalog['.write'],/newData.exists\(\) \|\| data.child\('createdBy'\).val\(\) === auth.uid/);
 });

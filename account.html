@@ -550,7 +550,7 @@
 
   </style>
   <link rel="stylesheet" href="/studio.css?v=4" />
-  <link rel="stylesheet" href="/profiles.css?v=2" />
+  <link rel="stylesheet" href="/profiles.css?v=3" />
 </head>
 <body data-nav="account" data-rooms="1">
   <div class="site-page">
@@ -795,9 +795,9 @@
     <div id="site-footer"></div>
   </div>
 
-  <script src="/gifts.js?v=3"></script>
-  <script src="/profile-view.js?v=76" data-mf-src="/profile-view.js"></script>
-  <script src="/shared.js?v=78"></script>
+  <script src="/gifts.js?v=4"></script>
+  <script src="/profile-view.js?v=77" data-mf-src="/profile-view.js"></script>
+  <script src="/shared.js?v=79"></script>
   <script>
   (function () {
     const $ = (id) => document.getElementById(id);
@@ -1191,7 +1191,7 @@
         const total = $("acctGiftTotal"), headGifts = $("pvHeadGifts");
         if (total) total.textContent = `${list.length} recent gift${list.length === 1 ? '' : 's'}`;
         if (headGifts) headGifts.textContent = String(list.length);
-        window.MFGifts?.renderWall($("acctGiftRecent"), gifts);
+        window.MFGifts?.renderWall($("acctGiftRecent"), gifts, {profileUid:MFAuth.uid});
         renderAchievements();
       }
       function renderAcctGuestbook(posts) {
@@ -1201,19 +1201,15 @@
         stats.guestbook = list.length;
         if (total) total.textContent = list.length === 1 ? "1 note" : `${list.length} notes`;
         if (!box) return;
-        box.innerHTML = list.slice(0, 5).map(p => {
+        box.innerHTML = list.map(p => {
           const from = p.fromUsername ? "@" + p.fromUsername : (p.fromName || "Someone");
           return `<div class="acctGuestItem" data-post="${escapeForHtml(p.id)}">
             <div class="acctRecentIcon">💌</div>
             <div class="acctGuestMain"><b>${escapeForHtml(from)}</b><span class="acctGuestTime"> · ${escapeForHtml(acctTimeAgo(p.t))}</span><p>${escapeForHtml(p.text || "")}</p></div>
-            <div class="acctGuestActions"><button class="acctTinyBtn" type="button" data-delgb="${escapeForHtml(p.id)}">Delete</button></div>
+            <div class="acctGuestActions">${window.MFGifts?.removalControls(p.id,'note') || ''}</div>
           </div>`;
         }).join("") || `<div class="acctEmpty">No guestbook notes yet — they’ll show here when people leave one on your profile.</div>`;
-        box.querySelectorAll("[data-delgb]").forEach(btn => btn.addEventListener("click", async () => {
-          btn.disabled = true;
-          try { await MFAuth.deleteGuestbookPost(MFAuth.uid, btn.getAttribute("data-delgb")); }
-          catch (e) { msg($("profMsg"), friendlyError(e), "err"); btn.disabled = false; }
-        }));
+        window.MFGifts?.bindRemovals(box,{profileUid:MFAuth.uid,kind:'note'});
         renderAchievements();
       }
 

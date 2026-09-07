@@ -125,7 +125,40 @@
     filter('All gifts');
   }
 
-  function renderWall(root, records, { empty = 'Gifts and messages you receive will appear here.' } = {}) {
+  function removalControls(id, kind) {
+    const label=kind==='gift'?'gift':'note';
+    return `<div class="mf-profile-removal" data-remove-entry="${esc(id)}"><button class="mf-profile-delete" type="button" data-remove-start>Delete ${label}</button><div class="mf-profile-confirm" data-remove-confirm hidden><p>Delete this ${label} from the profile?</p><button class="mf-profile-delete" type="button" data-remove-yes>Delete permanently</button><button class="mf-profile-delete" type="button" data-remove-cancel>Cancel</button></div></div>`;
+  }
+  function bindRemovals(root, {profileUid, kind}) {
+    const viewerUid=window.MFAuth?.user?.uid;
+    root.querySelectorAll('[data-remove-entry]').forEach(control=>{
+      const start=control.querySelector('[data-remove-start]'), confirmation=control.querySelector('[data-remove-confirm]'), yes=control.querySelector('[data-remove-yes]'), cancel=control.querySelector('[data-remove-cancel]');
+      let pending=false;
+      start.onclick=()=>{start.hidden=true;confirmation.hidden=false;cancel.focus();};
+      cancel.onclick=()=>{if(pending)return;confirmation.hidden=true;start.hidden=false;start.focus();};
+      yes.onclick=async()=>{
+        if(pending)return;
+        pending=true;yes.disabled=true;cancel.disabled=true;yes.textContent='Deleting…';
+        const oldFeedback=root.querySelector('[data-removal-feedback]');
+        if(oldFeedback)oldFeedback.textContent='';
+        try {
+          if(!viewerUid || MFAuth.user?.uid!==viewerUid)throw Error('Your account changed. Reopen the profile and try again.');
+          if(kind==='gift')await MFAuth.deleteGift(profileUid,control.dataset.removeEntry);
+          else await MFAuth.deleteGuestbookPost(profileUid,control.dataset.removeEntry);
+          yes.textContent='Deleted';
+        } catch(error) {
+          if(root.isConnected!==false){
+            let message=root.querySelector('[data-removal-feedback]');
+            if(!message){message=document.createElement('p');message.dataset.removalFeedback='';message.className='mf-profile-removal-error';message.setAttribute('role','alert');root.prepend(message);}
+            message.textContent=/permission|unauthorized/i.test(error.code || error.message || '')?'This entry could not be deleted. Please try again later or contact a site administrator.':error.message || 'Could not delete this entry. Please try again.';
+          }
+          yes.disabled=false;cancel.disabled=false;yes.textContent='Delete permanently';
+        } finally {pending=false;}
+      };
+    });
+  }
+
+  function renderWall(root, records, { empty = 'Gifts and messages you receive will appear here.', profileUid = '' } = {}) {
     if (!root) return;
     const previous = wallState.get(root);
     const state = { records, visible:previous?.visible || 8, empty, loaded:previous?.loaded || false };
@@ -133,8 +166,10 @@
     function draw() {
       if (wallState.get(root) !== state) return;
       const gifts = Object.entries(records || {}).map(([id,value]) => ({...value,id})).sort((a,b) => (Number(b.t)||0)-(Number(a.t)||0));
-      root.innerHTML = gifts.length ? `<div class="mf-gift-wall">${gifts.slice(0,state.visible).map(gift => `<article class="mf-gift-keepsake"><div class="mf-gift-sender"><b>${esc(gift.fromName || 'Someone')}</b><time>${esc(date(gift.t))}</time></div>${artwork(gift)}<span class="mf-gift-caption">${esc(giftFor(gift).name || gift.name || 'A little gift')}</span>${gift.note ? `<p class="mf-gift-message">${esc(gift.note)}</p>` : '<p class="mf-gift-message mf-gift-muted">A little something, just for you ♡</p>'}${gift.fromUsername ? `<span class="mf-gift-handle">from @${esc(gift.fromUsername)}</span>` : ''}</article>`).join('')}</div>${gifts.length>state.visible ? `<button class="mf-gift-secondary mf-gift-more" type="button">Show more gifts (${gifts.length-state.visible})</button>` : ''}` : `<div class="mf-gift-empty"><span aria-hidden="true">♡</span><h4>No gifts yet</h4><p>${esc(empty)}</p></div>`;
+      const canDelete=!!profileUid && window.MFAuth?.user?.uid===profileUid;
+      root.innerHTML = gifts.length ? `<div class="mf-gift-wall">${gifts.slice(0,state.visible).map(gift => `<article class="mf-gift-keepsake"><div class="mf-gift-sender"><b>${esc(gift.fromName || 'Someone')}</b><time>${esc(date(gift.t))}</time></div>${artwork(gift)}<span class="mf-gift-caption">${esc(giftFor(gift).name || gift.name || 'A little gift')}</span>${gift.note ? `<p class="mf-gift-message">${esc(gift.note)}</p>` : '<p class="mf-gift-message mf-gift-muted">A little something, just for you ♡</p>'}${gift.fromUsername ? `<span class="mf-gift-handle">from @${esc(gift.fromUsername)}</span>` : ''}${canDelete?removalControls(gift.id,'gift'):''}</article>`).join('')}</div>${gifts.length>state.visible ? `<button class="mf-gift-secondary mf-gift-more" type="button">Show more gifts (${gifts.length-state.visible})</button>` : ''}` : `<div class="mf-gift-empty"><span aria-hidden="true">♡</span><h4>No gifts yet</h4><p>${esc(empty)}</p></div>`;
       imageFallbacks(root);
+      if(canDelete)bindRemovals(root,{profileUid,kind:'gift'});
       root.querySelector('.mf-gift-more')?.addEventListener('click', () => { state.visible += 8; draw(); });
     }
     draw();
@@ -143,5 +178,5 @@
       MFAuth.loadGiftCatalog().then(() => { if (wallState.get(root) === state) { state.loaded = true; draw(); } }).catch(() => {});
     }
   }
-  window.MFGifts = { compose, close, renderWall, get isOpen() { return !!dialog; } };
+  window.MFGifts = { compose, close, renderWall, removalControls, bindRemovals, get isOpen() { return !!dialog; } };
 })();

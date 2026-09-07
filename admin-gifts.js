@@ -33,10 +33,28 @@
     return record;
   }
 
+  async function deleteImage(id, gift, services) {
+    const {uid, database, databaseModule:dmod, storage, storageModule:smod, stillAllowed} = services;
+    const check = () => { if (!stillAllowed()) throw new Error('Your account changed. Sign in again before deleting gifts.'); };
+    check();
+    if (gift?.createdBy !== uid) throw new Error('Only the administrator who uploaded this image can permanently delete it.');
+    if (!/^gift-[a-z0-9-]{36}$/.test(id) || !['png','webp','gif','jpg','jpeg','avif'].some(extension=>gift.storagePath===`gifts/${uid}/${id}.${extension}`)) throw new Error('This gift does not have a valid uploaded image path.');
+    const reference=dmod.ref(database,`giftCatalog/${id}`);
+    // Stop new sends first. Keep the hidden entry until its file is gone so a
+    // failed Storage request can be retried without orphaning the uploaded file.
+    await dmod.update(reference,{enabled:false});
+    gift.enabled=false;
+    check();
+    try { await smod.deleteObject(smod.ref(storage,gift.storagePath)); }
+    catch(error) { if(error?.code!=='storage/object-not-found')throw error; }
+    check();
+    await dmod.remove(reference);
+  }
+
   const panel = $('gift-admin');
   if (!panel) return;
   let dmod, smod, storage, moduleRequest, unsubscribe, activeUid = '', session = 0;
-  let allowed = false, catalogReady = false, busy = false, queue = [], uploaded = {};
+  let allowed = false, catalogReady = false, busy = false, queue = [], uploaded = {}, deletingId = '';
   const say = (text, bad = false) => { $('agMessage').textContent = text; $('agMessage').classList.toggle('bad',bad); };
   const permissionError = error => /permission|unauthorized/i.test(String(error?.code || '') + String(error?.message || ''));
   async function modules() {
@@ -93,9 +111,24 @@
     $('agLibrary').innerHTML=visible.length?visible.map(([id,gift])=>{
       // Use the same trusted URL validation as the public gift picker.
       const definition=window.MFAuth?.giftCatalog?.[id];
-      return `<article class="agGift ${gift.enabled===false?'isHidden':''}"><div class="agImage">${definition?.image?`<img src="${esc(definition.image)}" alt="${esc(gift.name)}" loading="lazy">`:''}</div><b>${esc(gift.name)}</b><small>${esc(gift.category)}${gift.enabled===false?' · Hidden':''}</small><button type="button" data-toggle-gift="${esc(id)}"${busy?' disabled':''}>${gift.enabled===false?'Show in picker':'Hide from picker'}</button></article>`;
+      const canDelete=gift.createdBy===activeUid;
+      const actions=deletingId===id
+        ? `<div class="agDeleteConfirm" role="group" aria-label="Delete ${esc(gift.name)}"><p>Delete this image permanently? Sent gifts keep their messages, but lose this artwork.</p><button class="agDanger" type="button" data-confirm-delete="${esc(id)}"${busy?' disabled':''}>${busy?'Deleting…':'Delete permanently'}</button><button type="button" data-cancel-delete${busy?' disabled':''}>Cancel</button></div>`
+        : `<div class="agGiftActions"><button type="button" data-toggle-gift="${esc(id)}"${busy?' disabled':''}>${gift.enabled===false?'Show in picker':'Hide from picker'}</button>${canDelete?`<button class="agDanger" type="button" data-delete-gift="${esc(id)}" aria-label="Delete ${esc(gift.name)}"${busy?' disabled':''}>Delete image</button>`:'<small>Only the uploader can delete this image.</small>'}</div>`;
+      return `<article class="agGift ${gift.enabled===false?'isHidden':''}"><div class="agImage">${definition?.image?`<img src="${esc(definition.image)}" alt="${esc(gift.name)}" loading="lazy">`:''}</div><b>${esc(gift.name)}</b><small>${esc(gift.category)}${gift.enabled===false?' · Hidden':''}</small>${actions}</article>`;
     }).join(''):`<p>${search?'No gifts match your search.':'No uploads yet. Add your first gift above.'}</p>`;
     $('agLibrary').querySelectorAll('[data-toggle-gift]').forEach(button=>button.onclick=()=>toggleGift(button.dataset.toggleGift));
+    $('agLibrary').querySelectorAll('[data-delete-gift]').forEach(button=>button.onclick=()=>{
+      if(busy || !allowed)return;
+      deletingId=button.dataset.deleteGift;drawLibrary();
+      $('agLibrary').querySelector('[data-cancel-delete]')?.focus();
+    });
+    $('agLibrary').querySelectorAll('[data-cancel-delete]').forEach(button=>button.onclick=()=>{
+      if(busy)return;
+      const id=deletingId;deletingId='';drawLibrary();
+      [...$('agLibrary').querySelectorAll('[data-delete-gift]')].find(button=>button.dataset.deleteGift===id)?.focus();
+    });
+    $('agLibrary').querySelectorAll('[data-confirm-delete]').forEach(button=>button.onclick=()=>removeGift(button.dataset.confirmDelete));
     drawCategories();
   }
   function drawCategories() {
@@ -130,6 +163,25 @@
     } catch(error) {say('Could not change this gift. Please try again.',true);}
     finally {busy=false;controls();}
   }
+  async function removeGift(id) {
+    if(!allowed || !catalogReady || busy || deletingId!==id || !uploaded[id])return;
+    const gift=uploaded[id], stamp=session, uid=activeUid;
+    busy=true;controls();drawLibrary();say('');
+    try {
+      await deleteImage(id,gift,{uid,storage,storageModule:smod,database:MFAuth.db,databaseModule:dmod,stillAllowed:()=>allowed && session===stamp && MFAuth.user?.uid===uid});
+      if(session!==stamp)return;
+      delete uploaded[id];deletingId='';
+      say(`${gift.name} deleted. Previously sent messages have been kept.`);
+    } catch(error) {
+      if(session!==stamp)return;
+      const setup=permissionError(error);$('agSetup').hidden=!setup;
+      say(setup?'Firebase blocked deletion. Publish the updated gift database and Storage rules, then retry Delete permanently.':`Deletion could not finish: ${error.message || 'Please try again.'} Retry Delete permanently to finish removing this image.`,true);
+    } finally {
+      busy=false;
+      if(session===stamp)await MFAuth.loadGiftCatalog().catch(()=>{});
+      drawLibrary();controls();
+    }
+  }
   async function publish(event) {
     event.preventDefault();
     if(!allowed || !catalogReady || busy || !queue.length)return;
@@ -161,7 +213,7 @@
     allowed=false;catalogReady=false;panel.hidden=true;
     if(unsubscribe){unsubscribe();unsubscribe=null;}
     if(activeUid!==(user?.uid || ''))clearQueue();
-    activeUid=user?.uid || '';uploaded={};controls();
+    activeUid=user?.uid || '';uploaded={};deletingId='';controls();
     if(!user)return;
     try {
       await modules();
