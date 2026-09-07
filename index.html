@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#0b1120" />
-  <title>Mayflower Studios</title>
-  <meta name="description" content="Mayflower Studios creates 3DXChat worlds, small indie software, shared online experiences, interactive stories, mods, and useful little tools." />
+  <meta name="theme-color" content="#191521" />
+  <title>Mayflower Studios — little worlds, lovely things</title>
+  <meta name="description" content="An independent little studio making 3DXChat worlds, useful apps, game mods, radio, and places to spend time together." />
   <meta property="og:title" content="Mayflower Studios" />
-  <meta property="og:description" content="3DXChat worlds, indie software, shared experiences, stories, mods, and small tools made with care." />
+  <meta property="og:description" content="Little worlds, useful tools, and lovely things to share. Explore the projects of Mayflower Studios." />
   <meta property="og:url" content="https://mayflowerstudios.net/" />
   <link rel="canonical" href="https://mayflowerstudios.net/" />
   <meta property="og:type" content="website" />
@@ -15,532 +15,69 @@
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png?v=4" />
   <link rel="apple-touch-icon" href="/assets/icons/favicon-180.png?v=4" />
-  <link rel="stylesheet" href="/style.css?v=65" />
-
-  <style>
-    /* Home page — intentionally simple. The rest of the site does the explaining. */
-    .home-hero {
-      position: relative;
-      padding: clamp(72px, 10vw, 124px) 0 clamp(70px, 8vw, 96px);
-      max-width: 950px;
-      isolation: isolate;
-    }
-    .home-hero::before {
-      content: "";
-      position: absolute;
-      width: min(720px, 90vw);
-      height: 430px;
-      left: -150px;
-      top: -20px;
-      z-index: -1;
-      pointer-events: none;
-      background:
-        radial-gradient(circle at 34% 44%, rgba(249,168,212,.18), transparent 31%),
-        radial-gradient(circle at 58% 38%, rgba(196,181,253,.11), transparent 42%),
-        radial-gradient(ellipse at 48% 88%, rgba(110,231,183,.065), transparent 54%);
-      filter: blur(18px);
-      animation: forestMist 10s ease-in-out infinite alternate;
-    }
-    .home-hero::after {
-      content: "✧   ·   ✦   ·   ❀";
-      position: absolute;
-      left: 2px;
-      bottom: 24px;
-      color: rgba(249,168,212,.42);
-      font-family: var(--font-d);
-      font-size: 15px;
-      letter-spacing: 8px;
-      text-shadow: 0 0 12px rgba(249,168,212,.25);
-      animation: forestBreath 6s ease-in-out infinite;
-    }
-    .home-kicker {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 18px;
-      color: var(--rose);
-      font-size: 12px;
-      letter-spacing: .55px;
-      text-transform: uppercase;
-      font-weight: 700;
-    }
-    .home-kicker::before {
-      content: "";
-      width: 30px;
-      height: 1px;
-      background: linear-gradient(90deg, var(--emerald), var(--rose), transparent);
-      box-shadow: 0 0 8px rgba(110,231,183,.18);
-    }
-    .home-kicker::after {
-      content: "✦";
-      color: rgba(253,230,138,.72);
-      font-size: 9px;
-      text-shadow: 0 0 8px rgba(253,230,138,.45);
-    }
-    .home-title {
-      font-family: var(--font-d);
-      font-size: clamp(58px, 9vw, 108px);
-      line-height: .94;
-      letter-spacing: -2px;
-      margin: 0;
-      max-width: 9ch;
-    }
-    .home-title span {
-      display: block;
-      font-style: italic;
-      background: linear-gradient(110deg, var(--rose) 0%, var(--violet) 42%, var(--gold) 58%, var(--rose) 78%, var(--violet) 100%);
-      background-size: 220% 100%;
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      animation: titleShimmer 9s ease-in-out infinite;
-      filter: drop-shadow(0 0 20px rgba(249,168,212,.08));
-    }
-    .home-lede {
-      max-width: 700px;
-      margin: 26px 0 0;
-      color: var(--text-2);
-      font-size: clamp(16px, 2vw, 19px);
-      line-height: 1.75;
-    }
-    .home-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 30px;
-    }
-    .home-actions .btn-pri {
-      box-shadow: 0 8px 30px rgba(249,168,212,.13), 0 0 18px rgba(196,181,253,.08);
-    }
-    .home-actions a { transition: transform 180ms var(--ease), box-shadow 180ms var(--ease), border-color 180ms var(--ease); }
-    .home-actions a:hover { transform: translateY(-2px); }
-    .home-section {
-      position: relative;
-      padding: clamp(58px, 7vw, 86px) 0;
-      border-top: 0;
-      isolation: isolate;
-    }
-    .home-section::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 50%;
-      width: min(680px, 88%);
-      height: 1px;
-      transform: translateX(-50%);
-      background: linear-gradient(90deg, transparent, rgba(110,231,183,.18) 18%, rgba(249,168,212,.36) 48%, rgba(196,181,253,.28) 70%, transparent);
-      box-shadow: 0 0 18px rgba(249,168,212,.09);
-    }
-    .home-section::after {
-      content: "✦";
-      position: absolute;
-      top: -11px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 0 12px;
-      color: rgba(253,230,138,.78);
-      font-size: 13px;
-      text-shadow: 0 0 9px rgba(253,230,138,.45), 0 0 18px rgba(249,168,212,.2);
-      background: radial-gradient(circle, rgba(11,17,32,.96) 0 42%, transparent 72%);
-      animation: forestTwinkle 4.8s ease-in-out infinite;
-    }
-    .home-section:first-of-type::before,
-    .home-section:first-of-type::after { display: none; }
-    .home-section-head {
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 24px;
-      margin-bottom: 24px;
-    }
-    .home-section-head > div { max-width: 680px; }
-    .home-section-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      color: var(--rose);
-      font-size: 11px;
-      font-weight: 750;
-      letter-spacing: .65px;
-      text-transform: uppercase;
-      margin-bottom: 7px;
-    }
-    .home-section-label::before {
-      content: "❀";
-      color: rgba(110,231,183,.7);
-      font-size: 10px;
-      filter: drop-shadow(0 0 6px rgba(110,231,183,.2));
-    }
-    .home-section-title {
-      font-size: clamp(30px, 4vw, 43px);
-      margin: 0;
-      line-height: 1.08;
-    }
-    .home-section-copy {
-      margin: 8px 0 0;
-      max-width: 62ch;
-      color: var(--text-2);
-      font-size: 14px;
-      line-height: 1.7;
-    }
-
-    /* Featured worlds stay visually special, but without turning the page into a dashboard. */
-    .home-worlds-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 16px;
-    }
-    .home-world-card {
-      position: relative;
-      overflow: hidden;
-      padding: 0;
-      border-color: rgba(251,191,36,.2);
-      background: linear-gradient(180deg,rgba(251,191,36,.035),rgba(255,255,255,.018));
-      transition: transform 180ms var(--ease), border-color 180ms var(--ease), box-shadow 180ms var(--ease);
-    }
-    .home-world-card:hover {
-      transform: translateY(-4px);
-      border-color: rgba(251,191,36,.4);
-      box-shadow: 0 18px 44px rgba(0,0,0,.2);
-    }
-    .home-world-cover {
-      display: block;
-      height: 215px;
-      overflow: hidden;
-      background: rgba(255,255,255,.025);
-    }
-    .home-world-cover img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      transition: transform 260ms var(--ease);
-    }
-    .home-world-card:hover .home-world-cover img { transform: scale(1.025); }
-    .home-world-empty {
-      height: 100%;
-      display: grid;
-      place-items: center;
-      font-size: 46px;
-      background: radial-gradient(circle at 25% 20%,rgba(251,191,36,.11),transparent 38%),radial-gradient(circle at 80% 80%,rgba(249,168,212,.12),transparent 42%);
-    }
-    .home-world-body { padding: 17px 18px 19px; }
-    .home-world-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
-    .home-world-top h3 { font-size: 21px; line-height: 1.2; margin: 0; }
-    .home-world-featured {
-      flex: 0 0 auto;
-      font-size: 10px;
-      font-weight: 750;
-      color: #fde68a;
-      border: 1px solid rgba(251,191,36,.28);
-      background: rgba(251,191,36,.07);
-      border-radius: 999px;
-      padding: 3px 7px;
-    }
-    .home-world-by { font-size: 11px; color: var(--text-3); margin-top: 4px; }
-    .home-world-price {
-      display: inline-flex;
-      margin-top: 9px;
-      font-size: 11px;
-      font-weight: 750;
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(251,191,36,.25);
-      color: #fde68a;
-      background: rgba(251,191,36,.055);
-    }
-    .home-world-price.free { border-color: rgba(134,239,172,.22); color: #bbf7d0; background: rgba(134,239,172,.05); }
-    .home-world-desc {
-      color: var(--text-2);
-      font-size: 13px;
-      line-height: 1.55;
-      margin: 11px 0 15px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      min-height: 40px;
-    }
-    .home-world-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-    .home-world-actions .btn-ghost { font-size: 12px; }
-
-    /* Four clear destinations instead of a wall of project panels. */
-    .home-destinations {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0,1fr));
-      gap: 12px;
-    }
-    .home-destination {
-      position: relative;
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 16px;
-      align-items: center;
-      min-height: 132px;
-      padding: 22px 24px;
-      text-decoration: none;
-      color: inherit;
-      border-radius: var(--r);
-      border: 1px solid var(--border);
-      overflow: hidden;
-      background:
-        radial-gradient(circle at 12% 18%, rgba(110,231,183,.045), transparent 34%),
-        rgba(13,18,35,.42);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.018);
-      transition: transform 200ms var(--ease), border-color 200ms var(--ease), background 200ms var(--ease), box-shadow 200ms var(--ease);
-    }
-    .home-destination::before {
-      content: "";
-      position: absolute;
-      width: 110px;
-      height: 110px;
-      right: -48px;
-      top: -54px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(249,168,212,.10), transparent 66%);
-      opacity: 0;
-      transition: opacity 220ms var(--ease), transform 500ms var(--ease);
-      pointer-events: none;
-    }
-    .home-destination:hover,
-    .home-destination:focus-visible {
-      transform: translateY(-4px);
-      border-color: rgba(249,168,212,.24);
-      background:
-        radial-gradient(circle at 12% 18%, rgba(110,231,183,.07), transparent 34%),
-        rgba(19,25,46,.62);
-      box-shadow: 0 16px 38px rgba(0,0,0,.18), 0 0 24px rgba(196,181,253,.045);
-    }
-    .home-destination:hover::before,
-    .home-destination:focus-visible::before { opacity: 1; transform: scale(1.15); }
-    .home-destination-icon {
-      width: 52px;
-      height: 52px;
-      display: grid;
-      place-items: center;
-      border-radius: 14px;
-      font-size: 26px;
-      background: radial-gradient(circle at 35% 25%, rgba(249,168,212,.09), rgba(255,255,255,.025));
-      border: 1px solid rgba(249,168,212,.12);
-      box-shadow: 0 0 0 1px rgba(255,255,255,.01), 0 8px 22px rgba(0,0,0,.12);
-      transition: transform 220ms var(--ease), box-shadow 220ms var(--ease);
-    }
-    .home-destination:hover .home-destination-icon {
-      transform: translateY(-2px) rotate(-2deg);
-      box-shadow: 0 0 22px rgba(249,168,212,.10), 0 8px 22px rgba(0,0,0,.15);
-    }
-    .home-destination h3 { margin: 0 0 5px; font-size: 22px; }
-    .home-destination p { margin: 0; color: var(--text-2); font-size: 13px; line-height: 1.6; }
-    .home-destination-arrow { color: var(--text-3); font-size: 20px; transition: transform 170ms var(--ease), color 170ms var(--ease); }
-    .home-destination:hover .home-destination-arrow { transform: translateX(3px); color: var(--rose); }
-
-    .home-final {
-      display: grid;
-      grid-template-columns: 1.4fr .8fr;
-      gap: 18px;
-      align-items: stretch;
-    }
-    .home-about {
-      padding: 28px 30px;
-      border-radius: var(--r);
-      border: 1px solid var(--border);
-      background:
-        radial-gradient(circle at 0 0, rgba(110,231,183,.045), transparent 38%),
-        rgba(13,18,35,.36);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.018);
-    }
-    .home-about h2 { font-size: clamp(28px,4vw,38px); margin: 0 0 12px; }
-    .home-about p { color: var(--text-2); font-size: 14px; line-height: 1.8; margin: 0; max-width: 68ch; }
-    .home-about-links { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 20px; }
-    .home-support {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 28px;
-      border-radius: var(--r);
-      border: 1px solid rgba(249,168,212,.15);
-      background:
-        radial-gradient(circle at 85% 10%, rgba(253,230,138,.07), transparent 34%),
-        linear-gradient(145deg,rgba(249,168,212,.065),rgba(196,181,253,.03));
-      box-shadow: 0 14px 38px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.02);
-    }
-    .home-support .emoji { font-size: 28px; margin-bottom: 12px; }
-    .home-support h3 { font-size: 23px; margin: 0 0 8px; }
-    .home-support p { color: var(--text-2); font-size: 13px; line-height: 1.7; margin: 0 0 18px; }
-
-    @keyframes titleShimmer {
-      0%, 20% { background-position: 0% 50%; }
-      50%, 70% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    @keyframes forestMist {
-      from { transform: translate3d(-8px, 3px, 0) scale(.98); opacity: .78; }
-      to   { transform: translate3d(18px, -8px, 0) scale(1.04); opacity: 1; }
-    }
-    @keyframes forestBreath {
-      0%,100% { opacity: .38; transform: translateY(0); }
-      50% { opacity: .72; transform: translateY(-2px); }
-    }
-    @keyframes forestTwinkle {
-      0%,100% { opacity: .45; transform: translateX(-50%) scale(.9) rotate(0deg); }
-      50% { opacity: 1; transform: translateX(-50%) scale(1.08) rotate(8deg); }
-    }
-
-    html.mf-reduce-motion .home-title span,
-    html.mf-reduce-motion .home-hero::before,
-    html.mf-reduce-motion .home-hero::after,
-    html.mf-reduce-motion .home-section::after {
-      animation: none !important;
-    }
-
-    @media (max-width: 900px) {
-      .home-worlds-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
-      .home-final { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 720px) {
-      .home-destinations { grid-template-columns: 1fr; }
-      .home-section-head { align-items: flex-start; flex-direction: column; }
-    }
-    @media (max-width: 620px) {
-      .home-hero { padding-top: 48px; }
-      .home-title { letter-spacing: -1px; }
-      .home-worlds-grid { grid-template-columns: 1fr; }
-      .home-world-cover { height: 230px; }
-      .home-destination { grid-template-columns: auto 1fr; }
-      .home-destination-arrow { display: none; }
-    }
-  </style>
-
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="/style.css?v=66" />
+  <link rel="stylesheet" href="/studio.css?v=3" />
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Organization",
-        "@id": "https://mayflowerstudios.net/#org",
-        "name": "Mayflower Studios",
-        "url": "https://mayflowerstudios.net/",
-        "logo": "https://mayflowerstudios.net/assets/icons/favicon.png",
-        "description": "An independent studio creating 3DXChat worlds, software, shared online experiences, stories, mods, and small tools."
-      },
-      {
-        "@type": "WebSite",
-        "@id": "https://mayflowerstudios.net/#website",
-        "url": "https://mayflowerstudios.net/",
-        "name": "Mayflower Studios",
-        "publisher": { "@id": "https://mayflowerstudios.net/#org" }
-      }
-    ]
-  }
+  {"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://mayflowerstudios.net/#org","name":"Mayflower Studios","url":"https://mayflowerstudios.net/","logo":"https://mayflowerstudios.net/assets/icons/favicon.png","description":"An independent studio creating 3DXChat worlds, software, shared online experiences, mods, and small tools."},{"@type":"WebSite","@id":"https://mayflowerstudios.net/#website","url":"https://mayflowerstudios.net/","name":"Mayflower Studios","publisher":{"@id":"https://mayflowerstudios.net/#org"}}]}
   </script>
 </head>
 <body data-nav="home">
   <div class="site-page">
     <div id="site-nav"></div>
-
-    <main class="content">
-      <section class="home-hero reveal">
-        <div class="home-kicker">Independent studio · made with care</div>
-        <h1 class="home-title" data-no-translate>Mayflower <span>Studios</span></h1>
-        <p class="home-lede">
-          3DXChat worlds, small software, shared online experiences, stories and mods — built to be useful, personal, and pleasant to spend time with.
-        </p>
-        <div class="home-actions">
-          <a href="/worlds.html" class="btn-pri">🏡 Browse Worlds</a>
-          <a href="/projects.html" class="btn-ghost">Explore Projects</a>
+    <main class="content studio-home" id="main">
+      <section class="studio-hero" aria-labelledby="home-title">
+        <div class="studio-hero-copy">
+          <div class="studio-eyebrow"><span class="tiny-flower" aria-hidden="true">✿</span> A small independent studio</div>
+          <h1 id="home-title">Little worlds.<br>Lovely things.<br><em>Made to share.</em></h1>
+          <p>Welcome to my little corner of the forest. A home for worlds to explore, tools to make life easier, and good company along the way.</p>
+          <div class="studio-actions">
+            <a class="btn-pri" href="/projects.html">Explore the projects <span aria-hidden="true">↗</span></a>
+            <a class="btn-ghost" href="/worlds.html">Find your next world</a>
+          </div>
+          <div class="studio-hero-note"><span aria-hidden="true">♡</span> Independently made. A little out of the ordinary.</div>
         </div>
+        <figure class="studio-art">
+          <img src="/assets/sakura-studio.webp" width="1536" height="1024" alt="A warm little cottage at the end of a stone path, surrounded by pink sakura trees and fireflies." fetchpriority="high" decoding="async" />
+          <figcaption><span aria-hidden="true">✿</span> Make yourself at home.</figcaption>
+        </figure>
       </section>
 
-      <section id="featured-worlds" class="home-section reveal" hidden>
-        <div class="home-section-head">
-          <div>
-            <div class="home-section-label">Featured worlds</div>
-            <h2 class="home-section-title">A few builds worth seeing first</h2>
-            <p class="home-section-copy">Selected 3DXChat worlds from the library, with screenshots and free or paid downloads.</p>
-          </div>
-          <a class="btn-ghost sm" href="/worlds.html">View all worlds →</a>
-        </div>
+      <nav class="studio-paths" aria-label="Explore the studio">
+        <a class="studio-path" href="/worlds.html"><span class="studio-path-icon" aria-hidden="true">⌂</span><span class="studio-path-arrow" aria-hidden="true">↗</span><h2>Worlds</h2><p>Find a new place to call home in 3DXChat.</p></a>
+        <a class="studio-path" href="/projects.html"><span class="studio-path-icon" aria-hidden="true">✧</span><span class="studio-path-arrow" aria-hidden="true">↗</span><h2>Projects</h2><p>Useful apps, playful mods, and small experiments.</p></a>
+        <a class="studio-path" href="/together.html"><span class="studio-path-icon" aria-hidden="true">♡</span><span class="studio-path-arrow" aria-hidden="true">↗</span><h2>Together</h2><p>Your people. A watch room. A lovely evening.</p></a>
+        <a class="studio-path" href="/radio/"><span class="studio-path-icon" aria-hidden="true">♫</span><span class="studio-path-arrow" aria-hidden="true">↗</span><h2>Radio</h2><p>A little station with your own soundtrack.</p></a>
+      </nav>
+
+      <section id="featured-worlds" class="studio-section" hidden aria-labelledby="featured-title">
+        <div class="studio-section-head"><div><span class="studio-eyebrow">From the world library</span><h2 id="featured-title">Somewhere a little different.</h2><p>Hand-built spaces for your next 3DXChat adventure.</p></div><a class="studio-text-link" href="/worlds.html">All worlds <span aria-hidden="true">↗</span></a></div>
         <div id="homeFeaturedWorldsGrid" class="home-worlds-grid"></div>
       </section>
 
-      <section class="home-section reveal" id="explore">
-        <div class="home-section-head">
-          <div>
-            <div class="home-section-label">Explore Mayflower</div>
-            <h2 class="home-section-title">What are you here for?</h2>
-            <p class="home-section-copy">Follow whichever little path catches your eye — worlds, shared spaces, stories, or the things being built behind the scenes.</p>
-          </div>
-        </div>
-
-        <div class="home-destinations">
-          <a class="home-destination" href="/worlds.html">
-            <span class="home-destination-icon" aria-hidden="true">🏡</span>
-            <span>
-              <h3>3DXChat Worlds</h3>
-              <p>Browse world builds, screenshots, featured releases, and your purchased downloads.</p>
-            </span>
-            <span class="home-destination-arrow" aria-hidden="true">→</span>
-          </a>
-
-          <a class="home-destination" href="/together.html">
-            <span class="home-destination-icon" aria-hidden="true">💞</span>
-            <span>
-              <h3>Together</h3>
-              <p>Shared rooms, synced watching, games, drawing, questions, and little things to do together.</p>
-            </span>
-            <span class="home-destination-arrow" aria-hidden="true">→</span>
-          </a>
-
-          <a class="home-destination" href="/sakari.html">
-            <span class="home-destination-icon" aria-hidden="true">🌸</span>
-            <span>
-              <h3>Stories</h3>
-              <p>Interactive stories and narrative projects in their own quiet corner of the site.</p>
-            </span>
-            <span class="home-destination-arrow" aria-hidden="true">→</span>
-          </a>
-
-          <a class="home-destination" href="/projects.html">
-            <span class="home-destination-icon" aria-hidden="true">🛠️</span>
-            <span>
-              <h3>Projects</h3>
-              <p>Desktop apps, games, utilities, Minecraft and Farming Simulator mods, and other builds.</p>
-            </span>
-            <span class="home-destination-arrow" aria-hidden="true">→</span>
-          </a>
+      <section class="studio-section" aria-labelledby="picks-title">
+        <div class="studio-section-head"><div><span class="studio-eyebrow">Made at Mayflower</span><h2 id="picks-title">Small projects. Big heart.</h2></div><a class="studio-text-link" href="/projects.html">Everything in the studio <span aria-hidden="true">↗</span></a></div>
+        <div class="studio-picks">
+          <a class="studio-pick" href="/radio/"><div class="studio-pick-art"><img src="/assets/icons/mayflowerradio.png" width="112" height="112" loading="lazy" decoding="async" alt="" /></div><div class="studio-pick-body"><small>Windows app · Free</small><h3>Mayflower Radio</h3><p>Make your own internet radio station, then share the music with everyone.</p><span class="studio-text-link">Meet your new radio <span aria-hidden="true">↗</span></span></div></a>
+          <a class="studio-pick" href="/craft-planner.html"><div class="studio-pick-art mint"><img src="/assets/icons/craftplanner.png" width="112" height="112" loading="lazy" decoding="async" alt="" /></div><div class="studio-pick-body"><small>Endless Online tool</small><h3>Craft Planner</h3><p>Every ingredient, every recipe, and a much simpler path to your next craft.</p><span class="studio-text-link">Plan something good <span aria-hidden="true">↗</span></span></div></a>
+          <a class="studio-pick" href="/projects.html?mod=gentlecreeper"><div class="studio-pick-art peach"><img src="/assets/icons/gentlecreeper.png" width="112" height="112" loading="lazy" decoding="async" alt="" /></div><div class="studio-pick-body"><small>Minecraft mod · Forge</small><h3>The Gentle Creeper</h3><p>A non-exploding creeper who just wanted a friend. Some things are that simple.</p><span class="studio-text-link">Make a little friend <span aria-hidden="true">↗</span></span></div></a>
         </div>
       </section>
 
-      <section class="home-section reveal">
-        <div class="home-final">
-          <div class="home-about">
-            <div class="home-section-label">About</div>
-            <h2>Small studio. Lots of curiosity.</h2>
-            <p>
-              Mayflower Studios is an independent little corner for things that are useful, cozy, curious, or simply fun to make — from hand-built virtual spaces to stories, software, and experiments that grow into something worth sharing.
-            </p>
-            <div class="home-about-links">
-              <a href="/radio/" class="btn-ghost sm">📻 Mayflower Radio</a>
-              <a href="/contact.html" class="btn-ghost sm">Contact</a>
-              <a href="/projects.html" class="btn-ghost sm">All projects</a>
-            </div>
-          </div>
+      <section class="studio-together" aria-labelledby="together-title">
+        <div><span class="studio-eyebrow">Better with company</span><h2 id="together-title">Same movie.<br>Different sofas.</h2><p>Watch in sync, even when you’re miles apart. Together gives you a room to settle into with your friends.</p><div class="studio-actions"><a class="btn-pri" href="/together.html">Spend some time together <span aria-hidden="true">♡</span></a></div></div>
+        <ol class="studio-steps"><li><span>01</span> Sign in and make a room.</li><li><span>02</span> Choose who gets to join.</li><li><span>03</span> Pick a video. Get comfortable.</li></ol>
+      </section>
 
-          <aside class="home-support">
-            <div class="emoji" aria-hidden="true">☕</div>
-            <h3>Support Mayflower</h3>
-            <p>If something here is useful or makes your day a little nicer, you can help support hosting and future projects.</p>
-            <a href="https://ko-fi.com/mayflowerstudiosteam" target="_blank" rel="noopener" class="btn-pri sm">Open Ko-fi ↗</a>
-          </aside>
-        </div>
+      <section class="studio-about" aria-labelledby="about-title">
+        <div><span class="studio-eyebrow">Hello from the other side</span><h2 id="about-title">One person.<br>A forest of ideas.</h2><p>Mayflower Studios is my home for things I love making: cozy virtual spaces, useful software, and little projects that grow into something worth sharing.</p><a class="studio-text-link" href="/contact.html">Come say hello <span aria-hidden="true">↗</span></a></div>
+        <aside class="studio-support"><h3>A little love goes a long way.</h3><p>If something here makes your day nicer, you can help keep the lights on and the next idea growing.</p><a class="studio-text-link" href="https://ko-fi.com/mayflowerstudiosteam" target="_blank" rel="noopener">Support on Ko-fi <span aria-hidden="true">♡</span></a></aside>
       </section>
     </main>
-
     <div id="site-footer"></div>
   </div>
-
   <script src="/home-worlds.js?v=2"></script>
-  <script src="/shared.js?v=74"></script>
+  <script src="/shared.js?v=75"></script>
 </body>
 </html>

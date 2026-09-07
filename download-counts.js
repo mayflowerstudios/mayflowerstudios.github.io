@@ -12,7 +12,6 @@ const firebaseConfig = {
 const ALLOWED_IDS = new Set([
   "craft-planner",
   "farm-challenge",
-  "idle-rpg",
   "mayflower-radio"
 ]);
 

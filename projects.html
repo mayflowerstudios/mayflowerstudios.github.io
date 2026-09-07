@@ -4,16 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Projects • Mayflower Studios</title>
-  <link rel="stylesheet" href="/style.css?v=65" />
-  <meta name="description" content="Projects by Mayflower Studios — Mayflower Idle RPG, Mayflower Radio, Farming Simulator 25 and Minecraft mods, and BloomBot." />
+  <link rel="stylesheet" href="/style.css?v=66" />
+  <meta name="description" content="Explore Mayflower Radio, Craft Planner, Farming Simulator and Minecraft mods, BloomBot, and the useful little projects made at Mayflower Studios." />
   <meta property="og:title" content="Projects • Mayflower Studios" />
-  <meta property="og:description" content="Mayflower Idle RPG, Farming Simulator 25 and Minecraft mods, and BloomBot by Mayflower Studios." />
+  <meta property="og:description" content="Useful apps, playful mods, and little things made with care at Mayflower Studios." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://mayflowerstudios.net/projects.html" />
   <meta property="og:image" content="https://mayflowerstudios.net/assets/og/projects.png?v=3" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Projects • Mayflower Studios" />
-  <meta name="twitter:description" content="Mayflower Idle RPG, Farming Simulator 25 and Minecraft mods, and BloomBot by Mayflower Studios." />
+  <meta name="twitter:description" content="Useful apps, playful mods, and little things made with care at Mayflower Studios." />
   <meta name="twitter:image" content="https://mayflowerstudios.net/assets/og/projects.png?v=3" />
   <link rel="canonical" href="https://mayflowerstudios.net/projects.html" />
   <style>
@@ -47,6 +47,7 @@
     .subTab { padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border-2); background: var(--glass); cursor: pointer; font-size: 13.5px; color: inherit; text-decoration: none; }
     .subTab.on, .subTab:hover { border-color: rgba(249,168,212,.45); background: rgba(249,168,212,.12); }
   </style>
+  <link rel="stylesheet" href="/studio.css?v=3" />
 </head>
 <body data-nav="projects">
   <div id="site-nav"></div>
@@ -58,7 +59,7 @@
     <div id="site-footer"></div>
   </div>
 
-  <script src="/shared.js?v=74"></script>
+  <script src="/shared.js?v=75"></script>
   <script>
   (function () {
     "use strict";
@@ -75,50 +76,54 @@
 
     // ---- INDEX VIEW ----
     function renderIndex() {
-      const mods = (META.modIndex || []).map(m => projCard("?mod=" + m.slug, m.icon, m.emojiName.replace(/^[^ ]+\s*/, m.icon ? "" : ""), m.emojiName, m.kicker, m.tagline)).join("");
-      const bots = (META.bots || []).map(b => projCard(b.href, b.icon, b.emoji, (b.emoji ? b.emoji + " " : "") + b.name, b.kicker, b.tagline)).join("");
+      const summaries = {
+        steelhold: "A safe place for your hard-earned things. Player-owned safes, matching keys, and room to grow.",
+        logichest: "Give every item a home. Route, sort, craft, and smelt with a storage system that grows with you.",
+        gentlecreeper: "A non-exploding creeper who just wanted a friend.",
+        amumucurse: "A quiet curse that changes the world around you, with a midnight ritual to find your way back."
+      };
+      const shots = { logichest: "/assets/shots/logichest-1.png", amumucurse: "/assets/shots/amumu-1.png" };
+      const mods = (META.modIndex || []).map(m => projCard("?mod=" + m.slug, m.icon, "✧", m.emojiName.replace(/^[^ ]+\s*/, ""), m.kicker, summaries[m.slug] || m.tagline, shots[m.slug], m.slug === "gentlecreeper" ? "peach" : "mint")).join("");
+      const bots = (META.bots || []).map(b => projCard(b.href, b.icon, "✿", b.name, b.kicker, b.tagline, null, "peach")).join("");
       root.innerHTML = `
-        <section class="hero">
-          <div>
-            <p class="kicker">Mayflower Studios</p>
-            <h1>🌿 Projects</h1>
-            <p class="muted">Mayflower Idle RPG, Mayflower Radio, Farming Simulator 25 and Minecraft mods, and BloomBot — everything built by Mayflower Studios, in one place.</p>
+        <section class="project-intro">
+          <div><span class="studio-eyebrow">✿ The Mayflower collection</span>
+            <h1>A forest of little ideas.</h1>
+            <p>Useful apps, playful mods, and things made just because. Find something to make your everyday a little lovelier.</p></div>
+        </section>
+        <nav class="project-jumps" aria-label="Project categories"><a href="#apps">Apps &amp; tools</a><a href="#minecraft">Minecraft</a><a href="#farming">Farming Simulator</a><a href="#community">Community</a></nav>
+        <section class="project-section" id="apps" aria-labelledby="apps-title">
+          <div class="sectionTitle"><h2 id="apps-title">A little help for your everyday.</h2><span>Apps &amp; tools</span></div>
+          <div class="projGrid">
+            ${projCard("/radio/", "/assets/icons/mayflowerradio.png", "♫", "Mayflower Radio", "Windows app · Free", "Your music, your station. Build a library, press play, and share one link with your listeners.")}
+            ${projCard("/craft-planner.html", "/assets/icons/craftplanner.png", "✧", "Craft Planner", "Endless Online tool", "Untangle every recipe and ingredient. Plan your next craft with a shared recipe book and inventory tracking.", null, "mint")}
           </div>
         </section>
-
-        <div class="sectionTitle"><h2>🌙 Desktop Apps &amp; Games</h2><span>Windows</span></div>
-        <section class="projGrid">
-          ${projCard("/mayflower-idle-rpg.html", null, "📖", "Mayflower Idle RPG", "Desktop Game", "A fully idle fantasy chronicle with living-world generation, heirs, offline progress, JSON event mods, and a return summary when you reopen it.")}
-          ${projCard("/radio/", "/assets/icons/mayflowerradio.png", "📻", "Mayflower Radio", "Desktop App", "Your own internet radio station — build a library from YouTube, Spotify or Apple Music links, press play, and share one URL anyone can listen to. Comes with its own live now-playing page. Sets itself up, updates itself.")}
-          ${projCard("/craft-planner.html", "/assets/icons/craftplanner.png", "⚒️", "Craft Planner", "Endless Online Tool", "Every raw material behind an Endless Online craft, however deep the chain goes. Keeps all the alternative recipes for an item, takes off what you already have, and shares one recipe book with everyone using it.")}
+        <section class="project-section" id="minecraft" aria-labelledby="minecraft-title">
+          <div class="sectionTitle"><h2 id="minecraft-title">Make your world your own.</h2><span>Minecraft · Forge 1.20.1</span></div>
+          <div class="projGrid project-mods">${mods}</div>
         </section>
-
-        <div class="sectionTitle"><h2>🏠 3DXChat Worlds</h2><span>Downloadable world builds</span></div>
-        <section class="projGrid">
-          ${projCard("/worlds.html", null, "🏡", "3DX World Library", "3DXChat Worlds", "Browse Mayflower Studios world builds with screenshot galleries, descriptions, and one-click .world downloads.")}
+        <section class="project-section" id="farming" aria-labelledby="farming-title">
+          <div class="sectionTitle"><h2 id="farming-title">Something new to grow.</h2><span>Farming Simulator 25</span></div>
+          <div class="projGrid">${projCard("/farm-challenge.html", "/assets/icons/farmchallenge.png", "✧", "Farm Challenge", "Farming Simulator 25 mod", "Give your next farm a fresh beginning. Set your own goals, milestones, deadlines, and rules, then follow your progress.", null, "gold")}</div>
         </section>
-
-        <div class="sectionTitle"><h2>🚜 Farming Simulator 25 Mods</h2><span>Single-player challenges</span></div>
-        <section class="projGrid">
-          ${projCard("/farm-challenge.html", "/assets/icons/farmchallenge.png", "🚜", "Farm Challenge", "Farming Simulator 25 Mod", "Create complete farming challenge runs from the in-game menu with custom goals, milestones, deadlines, starting conditions, restrictions, live progress, and per-save history.")}
+        <section class="project-section" id="community" aria-labelledby="community-title">
+          <div class="sectionTitle"><h2 id="community-title">Good company included.</h2><span>Community</span></div>
+          <div class="projGrid">${bots}</div>
         </section>
-
-        <div class="sectionTitle"><h2>🧱 Minecraft Mods</h2><span>Forge 1.20.1</span></div>
-        <section class="projGrid">${mods}</section>
-
-        <div class="sectionTitle"><h2>🤖 Discord Bots</h2><span>BloomBot</span></div>
-        <section class="projGrid">${bots}</section>
+        <a class="project-collection" href="/worlds.html"><span aria-hidden="true">⌂</span><div><h2>Looking for a place to call home?</h2><p>Explore the 3DXChat world library, with full galleries and downloadable builds.</p></div><span class="studio-text-link">Find your world ↗</span></a>
       `;
       document.title = "Projects • Mayflower Studios";
     }
 
-    function projCard(href, icon, emoji, name, kicker, tagline) {
-      const head = icon
-        ? `<img class="pc-ic" src="${esc(icon)}" alt="" loading="lazy">`
-        : `<span class="pc-emoji">${esc(emoji || "📦")}</span>`;
+    function projCard(href, icon, emoji, name, kicker, tagline, shot, tone = "") {
+      const cover = shot || icon;
+      const head = cover
+        ? `<img src="${esc(cover)}" alt="${shot ? esc(name + ' in Minecraft') : ''}" loading="lazy" decoding="async" width="${shot ? 640 : 110}" height="${shot ? 400 : 110}">`
+        : `<span class="project-glyph" aria-hidden="true">${esc(emoji || "✧")}</span>`;
       return `<a class="projCard" href="${esc(href)}">
-        <div class="pc-head">${head}<div><p class="pc-kicker">${esc(kicker)}</p><h3>${esc(name)}</h3></div></div>
-        <p class="pc-tag">${esc(tagline)}</p>
+        <div class="project-cover ${esc(tone)}${shot ? ' is-shot' : ''}">${head}</div>
+        <div class="project-body"><p class="pc-kicker">${esc(kicker)}</p><h3>${esc(name)}</h3><p class="pc-tag">${esc(tagline)}</p><span class="project-go">Take a look <span aria-hidden="true">↗</span></span></div>
       </a>`;
     }
 

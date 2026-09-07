@@ -633,7 +633,6 @@
       'watch': 'together',
       'watch-together': 'together',
       'server': 'together',
-      'sakari': 'stories',
       'mods': 'projects',
       'bots': 'projects',
     };
@@ -641,10 +640,9 @@
     const key = ALIAS[raw] || raw;
     const links = [
       { href: '/',              label: 'Home',     key: 'home'     },
-      { href: '/together.html', label: 'Together', key: 'together' },
-      { href: '/sakari.html',   label: 'Stories',  key: 'stories'  },
-      { href: '/projects.html', label: 'Projects', key: 'projects' },
       { href: '/worlds.html',   label: 'Worlds',   key: 'worlds'   },
+      { href: '/projects.html', label: 'Projects', key: 'projects' },
+      { href: '/together.html', label: 'Together', key: 'together' },
       { href: '/radio/',        label: 'Radio',    key: 'radio'    },
       { href: '/contact.html',  label: 'Contact',  key: 'contact'  },
     ];
@@ -652,9 +650,10 @@
       const active = l.key === key;
       return `<a href="${l.href}"${active ? ' class="nav-active" aria-current="page"' : ''}>${l.label}</a>`;
     }).join('');
-    return `<nav class="site-nav">
+    return `<nav class="site-nav" aria-label="Main navigation">
         <div class="nav-inner">
           <a href="/" class="nav-brand" data-no-translate>
+            <span class="brand-flower" aria-hidden="true">✿</span>
             <strong>Mayflower Studios</strong>
           </a>
           <button type="button" class="nav-mob-btn" id="navToggle" aria-label="Menu" aria-controls="navLinks" aria-expanded="false">☰</button>
@@ -672,20 +671,26 @@
 
   function buildFooter() {
     return `<footer class="site-footer">
-        <span class="footer-brand" data-no-translate>Mayflower Studios</span>
-        <div class="footer-links">
-          <a href="/together.html">Together</a>
-          <a href="/sakari.html">Stories</a>
-          <a href="/projects.html">Projects</a>
-          <a href="/worlds.html">3DX Worlds</a>
-          <a href="/contact.html">Contact</a>
-          <a href="https://ko-fi.com/mayflowerstudiosteam" target="_blank" rel="noopener">Support ↗</a>
-          <a href="/settings.html">Settings</a>
-          <a href="/privacy.html">Privacy</a>
-          <a href="/tos.html">Terms</a>
-          <a href="/copyright.html">Copyright &amp; IP</a>
+        <div class="footer-top">
+          <div class="footer-about">
+            <a class="footer-brand" href="/" data-no-translate>Mayflower Studios</a>
+            <p>Little worlds, useful things, and a place to feel at home.</p>
+            <span class="footer-edition" data-no-translate>✿ Mayflower 3.0 · Sakura season</span>
+          </div>
+          <div class="footer-group"><strong>Find your little corner</strong><div class="footer-links">
+            <a href="/worlds.html">3DXChat worlds</a><a href="/projects.html">Apps &amp; mods</a>
+            <a href="/together.html">Watch together</a><a href="/radio/">Mayflower Radio</a>
+          </div></div>
+          <div class="footer-group"><strong>Around the studio</strong><div class="footer-links">
+            <a href="/contact.html">Say hello</a><a href="/account.html">Your account</a>
+            <a href="/settings.html">Make yourself comfortable</a>
+            <a href="https://ko-fi.com/mayflowerstudiosteam" target="_blank" rel="noopener">Support on Ko-fi ↗</a>
+          </div></div>
         </div>
-        <p class="footer-copy">© <span class="footer-year"></span> Mayflower Studios. All rights reserved. — made with <span class="footer-flower" role="button" tabindex="-1" aria-label="🌸" title="🌸" data-no-translate style="cursor:default;display:inline-block;user-select:none;">🌸</span> and fireflies</p>
+        <div class="footer-bottom">
+          <p class="footer-copy">© <span class="footer-year"></span> Mayflower Studios. Made with <span class="footer-flower" role="button" tabindex="-1" aria-label="🌸" title="🌸" data-no-translate style="cursor:default;display:inline-block;user-select:none;">🌸</span> and a little curiosity.</p>
+          <div class="footer-legal"><a href="/privacy.html">Privacy</a><a href="/tos.html">Terms</a><a href="/copyright.html">Copyright &amp; IP</a></div>
+        </div>
       </footer>`;
   }
 
