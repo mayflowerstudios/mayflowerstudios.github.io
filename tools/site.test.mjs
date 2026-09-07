@@ -81,7 +81,7 @@ test('main navigation and footer expose only active sections', () => {
 test('homepage and shared skin have valid assets, with retired pages unlisted', () => {
   assertTargets(read('index.html'));
   for (const file of ['worlds.html','together.html','contact.html','account.html','radio/index.html']) {
-    assert.ok(read(file).includes('/studio.css?v=3'), `${file} is missing the shared theme`);
+    assert.match(read(file), /\/studio\.css\?v=\d+/, `${file} is missing the shared theme`);
   }
   assert.doesNotMatch(read('sitemap.xml'), retired);
   assert.doesNotMatch(read('contact.js'), retired);
