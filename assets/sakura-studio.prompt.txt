@@ -1,0 +1,13 @@
+Mayflower Studios 3.0 — original sakura forest artwork
+Generated using built-in ImageGen. Final web asset: sakura-studio.webp.
+
+Use case: illustration-story
+Asset type: original website hero artwork for Mayflower Studios 3.0, also usable as a wide banner.
+Primary request: a charming, peaceful sakura forest clearing at soft lavender twilight, a winding stepping-stone path leading toward a tiny inviting cottage studio with warmly glowing golden windows.
+Scene/backdrop: lush rounded cherry blossom trees form layered pink canopies around the clearing, with distant lilac forest fading gently into twilight.
+Style/medium: high quality cozy storybook illustration, painterly textured gouache, softly rounded cute shapes, polished indie cozy-game key art.
+Composition/framing: wide landscape 3:2 composition. The entire image is an immersive scene. Place the cottage and path within the central area so it can also crop gracefully into a wider banner. Tree canopies frame the edges; foreground moss and delicate ferns add depth.
+Lighting/mood: dreamy soft lavender dusk, warm inviting cottage light, a few warm fireflies, calm and quietly magical.
+Color palette: blush pink, lilac, soft mint greens, deep plum shadows.
+Materials/textures: visible subtle painterly gouache grain, soft moss, gently detailed fern fronds, rounded stones and blossom clusters.
+Constraints: exactly one artwork; no text, lettering, logos, watermark, UI, frames or borders. Keep the scene charming and polished, with breathing room and no childish clutter.
