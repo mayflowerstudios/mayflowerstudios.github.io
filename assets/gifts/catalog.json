@@ -9,6 +9,30 @@
       "image": "/assets/gifts/Celebration/cake.webp"
     },
     {
+      "id": "celebration-toast",
+      "name": "Celebration Toast",
+      "category": "Celebration",
+      "image": "/assets/gifts/Celebration/celebration-toast.webp"
+    },
+    {
+      "id": "party-balloons",
+      "name": "Party Balloons",
+      "category": "Celebration",
+      "image": "/assets/gifts/Celebration/party-balloons.webp"
+    },
+    {
+      "id": "sakura-confetti-popper",
+      "name": "Sakura Confetti Popper",
+      "category": "Celebration",
+      "image": "/assets/gifts/Celebration/sakura-confetti-popper.webp"
+    },
+    {
+      "id": "sakura-party-cupcake",
+      "name": "Sakura Party Cupcake",
+      "category": "Celebration",
+      "image": "/assets/gifts/Celebration/sakura-party-cupcake.webp"
+    },
+    {
       "id": "star",
       "name": "You are a star",
       "emoji": "⭐",
@@ -16,10 +40,22 @@
       "image": "/assets/gifts/Celebration/star.webp"
     },
     {
+      "id": "you-did-it-trophy",
+      "name": "You Did It Trophy",
+      "category": "Celebration",
+      "image": "/assets/gifts/Celebration/you-did-it-trophy.webp"
+    },
+    {
       "id": "bunny-macaron",
       "name": "Bunny Macaron",
       "category": "Cozy",
       "image": "/assets/gifts/Cozy/bunny-macaron.png"
+    },
+    {
+      "id": "bunny-slippers",
+      "name": "Bunny Slippers",
+      "category": "Cozy",
+      "image": "/assets/gifts/Cozy/bunny-slippers.webp"
     },
     {
       "id": "coffee",
@@ -36,6 +72,24 @@
       "image": "/assets/gifts/Cozy/cookie.webp"
     },
     {
+      "id": "cozy-reading-break",
+      "name": "Cozy Reading Break",
+      "category": "Cozy",
+      "image": "/assets/gifts/Cozy/cozy-reading-break.webp"
+    },
+    {
+      "id": "curled-up-cat",
+      "name": "Curled Up Cat",
+      "category": "Cozy",
+      "image": "/assets/gifts/Cozy/curled-up-cat.webp"
+    },
+    {
+      "id": "marshmallow-cocoa",
+      "name": "Marshmallow Cocoa",
+      "category": "Cozy",
+      "image": "/assets/gifts/Cozy/marshmallow-cocoa.webp"
+    },
+    {
       "id": "moonlight-lantern",
       "name": "Moonlight Lantern",
       "category": "Cozy",
@@ -47,6 +101,12 @@
       "emoji": "🐱",
       "category": "Cozy",
       "image": "/assets/gifts/Cozy/plushie.webp"
+    },
+    {
+      "id": "sleepy-corgi",
+      "name": "Sleepy Corgi",
+      "category": "Cozy",
+      "image": "/assets/gifts/Cozy/sleepy-corgi.webp"
     },
     {
       "id": "sleepy-sakura-fox",
@@ -62,11 +122,29 @@
       "image": "/assets/gifts/Cozy/teddy.webp"
     },
     {
+      "id": "best-friend-hug",
+      "name": "Best Friend Hug",
+      "category": "Friendship",
+      "image": "/assets/gifts/Friendship/best-friend-hug.webp"
+    },
+    {
+      "id": "cat-buddies",
+      "name": "Cat Buddies",
+      "category": "Friendship",
+      "image": "/assets/gifts/Friendship/cat-buddies.webp"
+    },
+    {
       "id": "controller",
       "name": "Player two",
       "emoji": "🎮",
       "category": "Friendship",
       "image": "/assets/gifts/Friendship/controller.webp"
+    },
+    {
+      "id": "dog-buddies",
+      "name": "Dog Buddies",
+      "category": "Friendship",
+      "image": "/assets/gifts/Friendship/dog-buddies.webp"
     },
     {
       "id": "flower",
@@ -76,10 +154,46 @@
       "image": "/assets/gifts/Friendship/flower.webp"
     },
     {
+      "id": "friendship-bracelets",
+      "name": "Friendship Bracelets",
+      "category": "Friendship",
+      "image": "/assets/gifts/Friendship/friendship-bracelets.webp"
+    },
+    {
+      "id": "friendship-high-five",
+      "name": "Friendship High Five",
+      "category": "Friendship",
+      "image": "/assets/gifts/Friendship/friendship-high-five.webp"
+    },
+    {
+      "id": "lucky-clover",
+      "name": "Lucky Clover",
+      "category": "Friendship",
+      "image": "/assets/gifts/Friendship/lucky-clover.webp"
+    },
+    {
+      "id": "matching-star-keyrings",
+      "name": "Matching Star Keyrings",
+      "category": "Friendship",
+      "image": "/assets/gifts/Friendship/matching-star-keyrings.webp"
+    },
+    {
       "id": "mayflower-studios",
       "name": "Mayflower Studios",
       "category": "Friendship",
       "image": "/assets/gifts/Friendship/mayflower-studios.png"
+    },
+    {
+      "id": "snack-time",
+      "name": "Snack Time",
+      "category": "Friendship",
+      "image": "/assets/gifts/Friendship/snack-time.webp"
+    },
+    {
+      "id": "tea-for-two",
+      "name": "Tea For Two",
+      "category": "Friendship",
+      "image": "/assets/gifts/Friendship/tea-for-two.webp"
     },
     {
       "id": "ticket",
@@ -87,6 +201,12 @@
       "emoji": "🎬",
       "category": "Friendship",
       "image": "/assets/gifts/Friendship/ticket.webp"
+    },
+    {
+      "id": "woodland-friends",
+      "name": "Woodland Friends",
+      "category": "Friendship",
+      "image": "/assets/gifts/Friendship/woodland-friends.webp"
     },
     {
       "id": "angel-heart",
