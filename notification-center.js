@@ -1,7 +1,6 @@
 /* Mayflower Studios — universal notification center */
 (function () {
   const FB_VERSION = "10.12.2";
-  const MAX_LIVE = 150;
   const esc = value => String(value ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
   const cleanUrl = value => {
     const v = String(value || "").trim();
@@ -75,17 +74,22 @@
       .mf-notify-button{position:relative;display:inline-grid;place-items:center;width:38px;height:36px;padding:0;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--text-2);font:inherit;font-size:16px;cursor:pointer;transition:.18s ease}
       .mf-notify-button:hover,.mf-notify-button[aria-expanded="true"]{color:var(--text);background:rgba(255,255,255,.05);border-color:var(--border-2)}
       .mf-notify-button[hidden],.mf-notify-badge[hidden]{display:none!important}.mf-notify-badge{position:absolute;top:-4px;right:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;display:grid;place-items:center;background:var(--rose-deep,#fb7185);color:#fff;border:2px solid rgba(14,13,28,.95);font:700 9px/1 system-ui}
-      .mf-notify-panel{position:fixed;z-index:10020;top:70px;right:max(16px,calc((100vw - 1120px)/2));width:min(390px,calc(100vw - 24px));max-height:min(660px,calc(100vh - 90px));display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--border-2);border-radius:18px;background:rgba(17,16,35,.98);box-shadow:0 22px 70px rgba(0,0,0,.52);backdrop-filter:blur(20px)}
+      .mf-notify-panel{position:fixed;z-index:10020;top:70px;right:max(16px,calc((100vw - 1120px)/2));width:min(390px,calc(100vw - 24px));max-height:min(520px,calc(100dvh - 90px));margin:0;padding:0;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--border-2);border-radius:18px;background:rgba(17,16,35,.98);box-shadow:0 22px 70px rgba(0,0,0,.52);backdrop-filter:blur(20px)}
       .mf-notify-panel[hidden]{display:none}.mf-notify-head{display:flex;align-items:center;gap:8px;padding:14px 15px 11px;border-bottom:1px solid var(--border)}
       .mf-notify-head b{font-size:14px}.mf-notify-head span{font-size:11px;color:var(--text-3)}.mf-notify-head button{margin-left:auto;border:0;background:transparent;color:var(--rose);font:inherit;font-size:11.5px;cursor:pointer}
-      .mf-notify-list{overflow:auto;padding:7px}.mf-notify-empty{padding:34px 18px;text-align:center;color:var(--text-3);font-size:12.5px;line-height:1.6}
+      .mf-notify-head,.mf-notify-foot{flex:0 0 auto}
+      .mf-notify-list{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;max-height:400px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable;scrollbar-width:thin;scrollbar-color:var(--rose) transparent;padding:7px}
+      .mf-notify-list:focus-visible{outline:2px solid var(--rose);outline-offset:-2px}
+      .mf-notify-list .mf-notify-item{flex:0 0 auto;min-height:96px}
+      .mf-notify-list .mf-notify-title,.mf-notify-list .mf-notify-body{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
+      .mf-notify-empty{padding:34px 18px;text-align:center;color:var(--text-3);font-size:12.5px;line-height:1.6}
       .mf-notify-item{position:relative;display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:10px;align-items:start;padding:11px 10px;border:1px solid transparent;border-radius:12px;text-decoration:none;color:var(--text);cursor:pointer}
       .mf-notify-item:hover{background:rgba(255,255,255,.045);border-color:var(--border)}.mf-notify-item.unread{background:rgba(249,168,212,.075)}
       .mf-notify-icon{width:36px;height:36px;display:grid;place-items:center;border-radius:11px;background:rgba(255,255,255,.055);font-size:18px}.mf-notify-copy{min-width:0}.mf-notify-title{display:block;font-size:12.8px;line-height:1.35}.mf-notify-body{display:block;margin-top:3px;color:var(--text-2);font-size:11.8px;line-height:1.45;word-break:break-word}.mf-notify-time{display:block;margin-top:5px;color:var(--text-3);font-size:10.5px}.mf-notify-dot{width:7px;height:7px;margin-top:7px;border-radius:50%;background:var(--rose)}
       .mf-notify-foot{display:flex;gap:8px;align-items:center;padding:10px 13px;border-top:1px solid var(--border)}.mf-notify-foot a,.mf-notify-foot button{font:inherit;font-size:11.5px;color:var(--text-2);text-decoration:none;background:transparent;border:0;padding:4px;cursor:pointer}.mf-notify-foot a{color:var(--rose)}.mf-notify-foot button:last-child{margin-left:auto}
       .mf-notification-page{display:grid;gap:10px}.mf-notification-page .mf-notify-item{grid-template-columns:44px minmax(0,1fr) auto;padding:14px;border:1px solid var(--border);background:rgba(255,255,255,.025)}.mf-notification-page .mf-notify-item.unread{border-color:rgba(249,168,212,.28);background:rgba(249,168,212,.075)}
       .mf-notification-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}.mf-notification-toolbar button{font:inherit;font-size:12px;color:var(--text-2);background:rgba(0,0,0,.25);border:1px solid var(--border-2);border-radius:999px;padding:7px 12px;cursor:pointer}.mf-notification-toolbar button.active{color:var(--text);border-color:var(--rose);background:rgba(249,168,212,.08)}.mf-notification-toolbar .push{margin-left:auto}
-      @media(max-width:760px){.mf-notify-button{width:100%;display:flex;justify-content:flex-start;gap:8px;padding:8px 12px;height:auto}.mf-notify-badge{position:static;display:inline-grid!important;border:0}.mf-notify-panel{top:62px;right:8px;left:8px;width:auto;max-height:calc(100vh - 76px)}}`;
+      @media(max-width:760px){.mf-notify-button{width:100%;display:flex;justify-content:flex-start;gap:8px;padding:8px 12px;height:auto}.mf-notify-badge{position:static;display:inline-grid!important;border:0}.mf-notify-panel{top:62px;right:8px;left:8px;width:auto;max-height:min(520px,calc(100dvh - 76px))}}`;
     document.head.appendChild(st);
   }
 
@@ -94,7 +98,7 @@
     const panel = document.createElement("section");
     panel.id = "mfNotifyPanel"; panel.className = "mf-notify-panel"; panel.hidden = true;
     panel.setAttribute("aria-label", "Notifications"); panel.setAttribute("data-no-translate", "");
-    panel.innerHTML = `<div class="mf-notify-head"><b>Notifications</b><span id="mfNotifySummary"></span><button type="button" id="mfNotifyMarkAll">Mark all read</button></div><div class="mf-notify-list" id="mfNotifyList"></div><div class="mf-notify-foot"><a href="/notifications.html">View all notifications</a><a href="/settings.html#notifications">Preferences</a></div>`;
+    panel.innerHTML = `<div class="mf-notify-head"><b>Notifications</b><span id="mfNotifySummary"></span><button type="button" id="mfNotifyMarkAll">Mark all read</button></div><div class="mf-notify-list" id="mfNotifyList" tabindex="0" role="region" aria-label="Unread notifications"></div><div class="mf-notify-foot"><a href="/notifications.html">View all notifications</a><a href="/settings.html#notifications">Preferences</a></div>`;
     document.body.appendChild(panel);
     $("mfNotifyMarkAll").addEventListener("click", markAllRead);
   }
@@ -139,9 +143,10 @@
   function drawPanel() {
     const list = $("mfNotifyList"), summary = $("mfNotifySummary");
     if (!list) return;
-    const recent = visibleRows().slice(0, 14), unread = unreadRows().length;
+    const recent = visibleRows(), unread = recent.length, scrollTop = list.scrollTop;
     if (summary) summary.textContent = unread ? `${unread} unread` : "You're caught up";
     list.innerHTML = recent.length ? recent.map(n => itemHtml(n, false)).join("") : '<div class="mf-notify-empty">You’re all caught up.<br>New notifications will appear here.</div>';
+    list.scrollTop = scrollTop;
     if ($("mfNotifyMarkAll")) $("mfNotifyMarkAll").disabled = !uid || !unread;
     wireItems(list);
   }
@@ -194,7 +199,8 @@
     if (unsub) { try { unsub(); } catch (_) {} unsub = null; }
     rows = []; draw();
     if (!uid || !mods) return;
-    const q = mods.query(mods.ref(db, `notifications/${uid}`), mods.orderByChild("createdAt"), mods.limitToLast(MAX_LIVE));
+    // Reading recent history alone can hide older unread items behind read ones.
+    const q = mods.query(mods.ref(db, `notifications/${uid}`), mods.orderByChild("createdAt"));
     const cb = snap => {
       rows = []; snap.forEach(ch => rows.push({ id: ch.key, ...(ch.val() || {}) }));
       rows.sort((a,b) => (Number(b.createdAt)||0) - (Number(a.createdAt)||0)); draw();
