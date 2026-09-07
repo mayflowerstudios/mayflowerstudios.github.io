@@ -4065,50 +4065,56 @@
           try { await set(claimRef, { by: clientId, t: now }); } catch (_) {}
         }
 
-        // Pick the next item to play. When repeat is OFF, skip any leading
-        // entries whose source matches the one that JUST finished — otherwise a
-        // duplicate (or a repeat-all leftover) at the front replays the same
-        // video and, because we removed it, looks like the queue "got wiped."
-        // We remove those skipped duplicates as consumed.
+        // Advance to a different video. Repeat-all keeps the finished source
+        // once at the back, so stale queued copies cannot replay it immediately.
         const finishedSrc = (endedSrc != null) ? endedSrc : currentSrc;
+        const queueUpdates = {};
         let chosen = null;
-        if (repeatMode === "all") {
-          chosen = entries[0];   // repeat-all intentionally cycles, including repeats
-        } else {
-          for (const e of entries) {
-            const eSrc = e[1].src || e[1].videoId;
-            if (finishedSrc != null && eSrc === finishedSrc) {
-              removeQueued(e[0]);   // drop the stale duplicate, keep looking
-              continue;
-            }
+        for (const e of entries) {
+          const eKind = e[1].kind || (e[1].videoId ? "yt" : "file");
+          const eSrc = e[1].src || e[1].videoId;
+          if (finishedSrc != null && eKind === currentKind && eSrc === finishedSrc) {
+            queueUpdates[e[0]] = null;
+          } else if (!chosen) {
             chosen = e;
-            break;
           }
-          // The whole queue was just duplicates of what finished.
+          if (chosen && repeatMode !== "all") break;
+        }
+
+        try {
+          // Only the current video remains: consume its stale queue copies
+          // and replay it when the selected mode calls for continuous playback.
           if (!chosen) {
-            if (claimRef) { try { remove(claimRef); } catch (_) {} }
-            if (neverStop && currentKind && currentSrc) replayCurrent();
+            await update(queueRef, queueUpdates);
+            if ((repeatMode === "all" || neverStop) && currentKind && currentSrc) replayCurrent();
             return;
           }
+
+          const [key, it] = chosen;
+          const kind = it.kind || (it.videoId ? "yt" : "file");
+          const src  = it.src  || it.videoId;
+          queueUpdates[key] = null;
+
+          if (repeatMode === "all" && currentKind && currentSrc) {
+            // Reordering gives queued items future timestamps. The recycled
+            // item must sort after the entire queue, even for very short clips.
+            const tail = entries.reduce((max, [, item]) => Math.max(max, Number(item.t) || 0), Date.now());
+            queueUpdates[push(queueRef).key] = {
+              kind: currentKind, src: currentSrc, title: currentTitle || null,
+              t: tail + 1000, by: myName
+            };
+          }
+
+          // Commit removal and rotation together before the new video starts.
+          await update(queueRef, queueUpdates);
+          startSource({ kind, src });
+        } catch (_) {
+          lastAdvancedFrom = null;
+          toast("Couldn't advance the queue — check your connection and try again");
+        } finally {
+          // Keep the claim through the new-source broadcast (about 800ms).
+          if (claimRef) { setTimeout(() => { remove(claimRef).catch(() => {}); }, 1200); }
         }
-
-        const [key, it] = chosen;
-        const kind = it.kind || (it.videoId ? "yt" : "file");
-        const src  = it.src  || it.videoId;
-
-        // Repeat-all: send the finished item to the back of the queue instead of
-        // dropping it, so the whole list loops.
-        if (repeatMode === "all" && currentKind && currentSrc) {
-          push(queueRef, { kind: currentKind, src: currentSrc, title: currentTitle || null, t: Date.now(), by: myName });
-        }
-
-        // Remove the item we're about to play FIRST so the queue is consistent
-        // before startSource broadcasts the new state, then start it.
-        removeQueued(key);
-        startSource({ kind, src });
-        // Hold the claim a beat past startSource's broadcast (≈800ms) so a late
-        // ENDED on the partner's side still sees it and stands down, then release.
-        if (claimRef) { setTimeout(() => { try { remove(claimRef); } catch (_) {} }, 1200); }
       } finally {
         setTimeout(() => { advancing = false; }, 1500);
       }
