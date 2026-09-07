@@ -37,7 +37,8 @@
     const key = PREF_FOR_TYPE[String(n && n.type || "")];
     return !key || prefs[key] !== false;
   }
-  function visibleRows() { return rows.filter(wanted); }
+  // Keep read timestamps saved so cleared items stay gone across devices.
+  function visibleRows() { return rows.filter(n => wanted(n) && !Number(n.readAt)); }
 
   async function loadPrefs() {
     if (!window.MFAuth || !MFAuth.getNotificationPrefs) return;
@@ -51,7 +52,7 @@
     if (e && e.detail) { prefs = e.detail; draw(); }
     else loadPrefs();
   });
-  let panelOpen = false, pageFilter = "all";
+  let panelOpen = false;
   const $ = id => document.getElementById(id);
 
   function relativeTime(t) {
@@ -93,13 +94,12 @@
     const panel = document.createElement("section");
     panel.id = "mfNotifyPanel"; panel.className = "mf-notify-panel"; panel.hidden = true;
     panel.setAttribute("aria-label", "Notifications"); panel.setAttribute("data-no-translate", "");
-    panel.innerHTML = `<div class="mf-notify-head"><b>Notifications</b><span id="mfNotifySummary"></span><button type="button" id="mfNotifyMarkAll">Mark all read</button></div><div class="mf-notify-list" id="mfNotifyList"></div><div class="mf-notify-foot"><a href="/notifications.html">View all notifications</a><a href="/settings.html#notifications">Preferences</a><button type="button" id="mfNotifyClearRead">Clear read</button></div>`;
+    panel.innerHTML = `<div class="mf-notify-head"><b>Notifications</b><span id="mfNotifySummary"></span><button type="button" id="mfNotifyMarkAll">Mark all read</button></div><div class="mf-notify-list" id="mfNotifyList"></div><div class="mf-notify-foot"><a href="/notifications.html">View all notifications</a><a href="/settings.html#notifications">Preferences</a></div>`;
     document.body.appendChild(panel);
     $("mfNotifyMarkAll").addEventListener("click", markAllRead);
-    $("mfNotifyClearRead").addEventListener("click", clearRead);
   }
 
-  function unreadRows() { return visibleRows().filter(n => !Number(n.readAt)); }
+  function unreadRows() { return visibleRows(); }
   function updateBadge() {
     const button = $("mfNotifyButton"), badge = $("mfNotifyBadge");
     if (!button || !badge) return;
@@ -141,17 +141,18 @@
     if (!list) return;
     const recent = visibleRows().slice(0, 14), unread = unreadRows().length;
     if (summary) summary.textContent = unread ? `${unread} unread` : "You're caught up";
-    list.innerHTML = recent.length ? recent.map(n => itemHtml(n, false)).join("") : '<div class="mf-notify-empty">No notifications yet.<br>Friend requests, gifts, room invites, messages, and moderation notices will appear here.</div>';
+    list.innerHTML = recent.length ? recent.map(n => itemHtml(n, false)).join("") : '<div class="mf-notify-empty">You’re all caught up.<br>New notifications will appear here.</div>';
+    if ($("mfNotifyMarkAll")) $("mfNotifyMarkAll").disabled = !uid || !unread;
     wireItems(list);
   }
 
   function drawPage() {
     const list = $("mfNotificationPageList"), count = $("mfNotificationPageCount");
     if (!list) return;
-    const shown = visibleRows();
-    const visible = pageFilter === "unread" ? unreadRows() : shown;
-    if (count) count.textContent = shown.length ? `${visible.length} shown · ${unreadRows().length} unread` : "";
-    list.innerHTML = visible.length ? visible.map(n => itemHtml(n, true)).join("") : `<div class="mf-notify-empty">${pageFilter === "unread" ? "Nothing unread — nicely done 🌼" : "No notifications yet."}</div>`;
+    const visible = visibleRows();
+    if (count) count.textContent = uid ? `${visible.length} unread` : "";
+    list.innerHTML = visible.length ? visible.map(n => itemHtml(n, true)).join("") : `<div class="mf-notify-empty">${uid ? "You’re all caught up. New notifications will appear here." : "Sign in to see your notifications."}</div>`;
+    if ($("mfNotificationPageMarkAll")) $("mfNotificationPageMarkAll").disabled = !uid || !visible.length;
     wireItems(list);
   }
 
@@ -203,13 +204,8 @@
   }
 
   function wirePage() {
-    document.querySelectorAll("[data-notification-filter]").forEach(btn => btn.addEventListener("click", () => {
-      pageFilter = btn.dataset.notificationFilter || "all";
-      document.querySelectorAll("[data-notification-filter]").forEach(x => x.classList.toggle("active", x === btn)); drawPage();
-    }));
-    const mark = $("mfNotificationPageMarkAll"), clear = $("mfNotificationPageClearRead");
+    const mark = $("mfNotificationPageMarkAll");
     if (mark) mark.addEventListener("click", markAllRead);
-    if (clear) clear.addEventListener("click", clearRead);
   }
 
   async function readyAuth(user) {
