@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "gifts": [
+    {
+      "id": "cake",
+      "name": "Make a wish",
+      "emoji": "🎂",
+      "category": "Celebration",
+      "image": "/assets/gifts/Celebration/cake.webp"
+    },
+    {
+      "id": "star",
+      "name": "You are a star",
+      "emoji": "⭐",
+      "category": "Celebration",
+      "image": "/assets/gifts/Celebration/star.webp"
+    },
+    {
+      "id": "coffee",
+      "name": "Love you a latte",
+      "emoji": "☕",
+      "category": "Cozy",
+      "image": "/assets/gifts/Cozy/coffee.webp"
+    },
+    {
+      "id": "cookie",
+      "name": "Cookie break",
+      "emoji": "🍪",
+      "category": "Cozy",
+      "image": "/assets/gifts/Cozy/cookie.webp"
+    },
+    {
+      "id": "plushie",
+      "name": "Little lavender cat",
+      "emoji": "🐱",
+      "category": "Cozy",
+      "image": "/assets/gifts/Cozy/plushie.webp"
+    },
+    {
+      "id": "teddy",
+      "name": "A little bear hug",
+      "emoji": "🧸",
+      "category": "Cozy",
+      "image": "/assets/gifts/Cozy/teddy.webp"
+    },
+    {
+      "id": "controller",
+      "name": "Player two",
+      "emoji": "🎮",
+      "category": "Friendship",
+      "image": "/assets/gifts/Friendship/controller.webp"
+    },
+    {
+      "id": "flower",
+      "name": "Sakura bouquet",
+      "emoji": "🌸",
+      "category": "Friendship",
+      "image": "/assets/gifts/Friendship/flower.webp"
+    },
+    {
+      "id": "ticket",
+      "name": "Movie night",
+      "emoji": "🎬",
+      "category": "Friendship",
+      "image": "/assets/gifts/Friendship/ticket.webp"
+    },
+    {
+      "id": "chocolates",
+      "name": "Something sweet",
+      "emoji": "🍫",
+      "category": "Romantic",
+      "image": "/assets/gifts/Romantic/chocolates.webp"
+    },
+    {
+      "id": "heart",
+      "name": "Heart gem",
+      "emoji": "❤️",
+      "category": "Romantic",
+      "image": "/assets/gifts/Romantic/heart.webp"
+    },
+    {
+      "id": "rose",
+      "name": "A rose for you",
+      "emoji": "🌹",
+      "category": "Romantic",
+      "image": "/assets/gifts/Romantic/rose.webp"
+    }
+  ]
+}

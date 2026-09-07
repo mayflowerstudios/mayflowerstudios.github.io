@@ -630,6 +630,33 @@
         star: { emoji: "⭐", name: "Star" },
       };
       MFAuth.giftCatalog = GIFT_CATALOG;
+      let giftCatalogRequest = null;
+      MFAuth.loadGiftCatalog = () => {
+        if (giftCatalogRequest) return giftCatalogRequest;
+        giftCatalogRequest = fetch('/assets/gifts/catalog.json', { cache: 'no-cache' })
+          .then(response => { if (!response.ok) throw new Error('The gift cupboard could not be loaded. Please try again.'); return response.json(); })
+          .then(data => {
+            if (!Array.isArray(data.gifts)) throw new Error('The gift catalogue is unavailable.');
+            const catalog = Object.create(null);
+            for (const item of data.gifts) {
+              if (!item || !/^[a-z0-9][a-z0-9_-]{0,63}$/.test(item.id) || ['constructor','prototype','__proto__'].includes(item.id)) continue;
+              if (typeof item.name !== 'string' || !item.name.trim() || item.name.length > 32) continue;
+              // Artwork always comes from our static gift folder, never from a sender's URL.
+              let image;
+              try {
+                const url = new URL(item.image, location.origin);
+                const decoded = decodeURIComponent(url.pathname);
+                if (url.origin !== location.origin || !decoded.startsWith('/assets/gifts/') || /[\\\x00-\x1f]/.test(decoded) || decoded.split('/').some(p => p === '..' || p === '.') || !/\.(png|webp|gif|jpe?g|avif)$/i.test(decoded)) continue;
+                image = url.pathname;
+              } catch (_) { continue; }
+              catalog[item.id] = { name: item.name, emoji: String(item.emoji || '🎁').slice(0,8), category: String(item.category || 'Little extras').slice(0,40), image };
+            }
+            if (!Object.keys(catalog).length) throw new Error('There are no gifts in the cupboard yet.');
+            MFAuth.giftCatalog = catalog;
+            return catalog;
+          }).catch(error => { giftCatalogRequest = null; throw error; });
+        return giftCatalogRequest;
+      };
 
       function safeText(v, max) { return String(v || "").trim().slice(0, max); }
       async function publicName(uid) {
@@ -643,7 +670,11 @@
       MFAuth.sendGift = async (toUid, giftId, note) => {
         if (!MFAuth.user) throw new Error("Not signed in");
         if (!toUid || toUid === MFAuth.user.uid) throw new Error("Pick someone else to send a gift to");
-        const gift = GIFT_CATALOG[giftId];
+        const senderUid = MFAuth.user.uid;
+        await MFAuth.loadGiftCatalog();
+        if (!MFAuth.user || MFAuth.user.uid !== senderUid) throw new Error('Your account changed. Please reopen the gift window.');
+        if (toUid === MFAuth.user.uid) throw new Error('Pick someone else to send a gift to');
+        const gift = Object.hasOwn(MFAuth.giftCatalog, giftId) ? MFAuth.giftCatalog[giftId] : null;
         if (!gift) throw new Error("That gift doesn't exist");
         const id = dbMod.push(dbMod.ref(db, `gifts/${toUid}`)).key;
         await dbMod.set(dbMod.ref(db, `gifts/${toUid}/${id}`), {
