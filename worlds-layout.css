@@ -1,0 +1,224 @@
+/* Shared world layouts. Load after the studio skin so global card styles
+   cannot expand descriptions or override the image frames. */
+.card.home-world-card,
+.card.worldCard {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.home-world-body,
+.worldCardBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  padding: 24px;
+}
+
+.home-world-top > div,
+.worldCardTop > div { min-width: 0; }
+.home-world-top,
+.worldCardTop { gap: 12px; flex-wrap: wrap; }
+.home-world-top > div:first-child,
+.worldCardTop > div:first-child { flex: 1 1 160px; }
+
+.home-world-top h3,
+.worldCard h2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  font-size: 24px;
+  line-height: 1.25;
+}
+
+.home-world-by,
+.worldBy,
+.worldTag { overflow-wrap: anywhere; }
+.home-world-price { align-self: flex-start; }
+.home-world-actions,
+.worldCardActions { margin-top: auto; padding-top: 8px; }
+
+.home-world-cover,
+.worldCoverBtn,
+.worldSpotlightCard .worldCoverBtn {
+  flex: none;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 16 / 10;
+}
+.home-world-cover img,
+.worldCoverBtn img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+/* Library descriptions can be read in place without making taller cards. */
+.worldCard .worldSummary {
+  display: block;
+  flex: none;
+  min-height: 0;
+  height: 7em;
+  margin: 16px 0;
+  padding-right: 10px;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+  -webkit-line-clamp: unset;
+  font-size: 16px;
+  line-height: 1.75;
+  scrollbar-gutter: stable;
+}
+
+/* Both featured sections are concise previews with a clear route to details. */
+.home-world-card .home-world-desc,
+.worldSpotlightCard .worldSummary {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  height: auto;
+  min-height: 0;
+  max-height: 5.25em;
+  padding: 0;
+  margin: 16px 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  font-size: 16px;
+  line-height: 1.75;
+  scrollbar-gutter: auto;
+}
+
+.home-world-card:only-child,
+.worldFeaturedGrid .worldSpotlightCard:only-child {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  align-items: stretch;
+}
+.home-world-card:only-child .home-world-cover,
+.worldFeaturedGrid .worldSpotlightCard:only-child .worldCoverBtn {
+  position: relative;
+  min-height: 300px;
+  height: 100%;
+  aspect-ratio: auto;
+}
+.home-world-card:only-child .home-world-cover img,
+.worldFeaturedGrid .worldSpotlightCard:only-child .worldCoverBtn img {
+  position: absolute;
+  inset: 0;
+}
+.home-world-card:only-child .home-world-body,
+.worldSpotlightCard .worldCardBody { align-self: stretch; padding: 28px; }
+
+/* The screenshot has its own dimensions, independent of the purchase panel. */
+.worldDetailHero {
+  grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr);
+  align-items: start;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.worldDetailCover {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  padding: 0;
+  background: var(--surface-raised, #241f2b);
+}
+button.worldDetailCover { cursor: zoom-in; }
+.worldDetailCover img,
+.worldDetailCover .worldCoverEmpty {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+}
+.worldDetailView {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  left: 14px;
+  width: fit-content;
+  max-width: calc(100% - 28px);
+  padding: 9px 13px;
+  border: 1px solid #ffffff30;
+  border-radius: 999px;
+  background: #191521e8;
+  color: #fff;
+  font: 500 13px/1.4 var(--font-b, sans-serif);
+}
+.worldDetailInfo { min-width: 0; }
+.worldDetailMedia { min-width: 0; }
+.worldDetailMedia .sectionTitle { margin: 18px 0 10px; }
+.worldDetailMedia .sectionTitle h2 { font-size: 20px; }
+.worldDetailMedia .worldGallery { gap: 10px; margin-bottom: 0; }
+.worldDetailInfo h1 { font-size: clamp(28px, 3vw, 40px); line-height: 1.15; overflow-wrap: anywhere; }
+.worldDetailPrice { margin: 18px 0; }
+.worldDetailPrice .worldPrice { padding: 7px 12px; font-size: 15px; }
+.worldDetailInfo .worldMeta { margin: 20px 0; }
+.worldDetailActions > .btn { justify-content: center; white-space: normal; text-align: center; }
+.worldDetailActions > .primary { width: 100%; }
+
+/* Full-width, readable description with a bounded, keyboard-scrollable area. */
+.card.worldDescription { padding: 28px; margin-bottom: 28px; }
+.worldDescription h2 { margin: 0 0 18px; font-size: 26px; line-height: 1.25; }
+.worldDescription .worldDetailDesc {
+  max-height: 24rem;
+  max-height: min(24rem, 60svh);
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  padding-right: 18px;
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 16px;
+  line-height: 1.8;
+  scrollbar-gutter: stable;
+}
+.worldDescriptionText { max-width: 85ch; }
+.worldSummary,
+.worldDescription .worldDetailDesc { scrollbar-width: thin; scrollbar-color: var(--rose, #ffc0d9) transparent; }
+.worldSummary::-webkit-scrollbar,
+.worldDetailDesc::-webkit-scrollbar { width: 6px; }
+.worldSummary::-webkit-scrollbar-thumb,
+.worldDetailDesc::-webkit-scrollbar-thumb { border-radius: 8px; background: var(--rose, #ffc0d9); }
+.worldSummary:focus-visible,
+.worldDetailDesc:focus-visible,
+.worldDetailCover:focus-visible { outline: 2px solid var(--rose, #ffc0d9); outline-offset: 4px; }
+
+.worldGallery { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.worldShot { height: auto; aspect-ratio: 16 / 10; }
+.worldShot img { object-fit: contain; }
+
+@media (max-width: 1000px) {
+  .worldDetailHero { grid-template-columns: minmax(0, 1fr); }
+  .worldDetailCover { aspect-ratio: 16 / 9; }
+}
+@media (max-width: 900px) {
+  .home-world-card:only-child,
+  .worldFeaturedGrid .worldSpotlightCard:only-child { grid-template-columns: minmax(0, 1fr); }
+  .home-world-card:only-child .home-world-cover,
+  .worldFeaturedGrid .worldSpotlightCard:only-child .worldCoverBtn {
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 16 / 10;
+  }
+}
+@media (max-width: 680px) {
+  /* The surrounding wrap already supplies the page's mobile gutters. */
+  .worldPage { padding: 8px 0 32px; }
+  .home-world-body,
+  .home-world-card:only-child .home-world-body,
+  .worldCardBody,
+  .worldSpotlightCard .worldCardBody { padding: 20px; }
+  .card.worldDetailInfo,
+  .card.worldDescription { padding: 22px !important; }
+  .worldDetailHero { gap: 18px; }
+  .worldDetailInfo h1 { font-size: 32px; }
+  .worldGallery { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .worldDetailView { font-size: 12px; }
+}

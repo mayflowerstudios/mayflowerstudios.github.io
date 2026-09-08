@@ -52,7 +52,10 @@
   function card(w,spotlight=false){
     const tags=(w.tags||[]).slice(0,spotlight?4:5).map(t=>`<span class="worldTag">${esc(t)}</span>`).join("");
     const classes=["card","worldCard",w.featured?"worldCardFeatured":"",spotlight?"worldSpotlightCard":""].filter(Boolean).join(" ");
-    return `<article class="${classes}">${spotlight?'<div class="worldSpotlightGlow" aria-hidden="true"></div>':''}<button class="worldCoverBtn" type="button" data-open="${esc(w.id)}" aria-label="Open ${esc(w.title)}">${cover(w)}</button><div class="worldCardBody"><div class="worldCardTop"><div><h2>${esc(w.title)}</h2><div class="worldBy">${esc(w.creator||"Mayflower Studios")}${w.updatedAt?` · ${esc(date(w.updatedAt))}`:""}</div></div><div>${w.featured?'<span class="worldFeatured">★ Featured</span>':''}</div></div><div style="margin-top:8px"><span class="worldPrice${paid(w)?"":" free"}">${esc(price(w))}${owned(w)?" · Owned":""}</span></div><p class="worldSummary">${esc(w.description||"No description yet.")}</p>${tags?`<div class="worldTags">${tags}</div>`:""}<div class="worldCardActions"><a class="btn ghost" href="?world=${encodeURIComponent(w.id)}">View details</a>${actionButtons(w)}</div></div></article>`;
+    const description=String(w.description||"No description yet.");
+    const preview=description.replace(/\s+/g," ").trim();
+    const summary=spotlight?`<p class="worldSummary">${esc(preview.length>220?preview.slice(0,217).replace(/\s+\S*$/,"")+"…":preview)}</p>`:`<div class="worldSummary" tabindex="0" role="region" aria-label="Description of ${esc(w.title)}">${esc(description)}</div>`;
+    return `<article class="${classes}">${spotlight?'<div class="worldSpotlightGlow" aria-hidden="true"></div>':''}<button class="worldCoverBtn" type="button" data-open="${esc(w.id)}" aria-label="Open ${esc(w.title)}">${cover(w)}</button><div class="worldCardBody"><div class="worldCardTop"><div><h2>${esc(w.title)}</h2><div class="worldBy">${esc(w.creator||"Mayflower Studios")}${w.updatedAt?` · ${esc(date(w.updatedAt))}`:""}</div></div><div>${w.featured?'<span class="worldFeatured">★ Featured</span>':''}</div></div><div style="margin-top:8px"><span class="worldPrice${paid(w)?"":" free"}">${esc(price(w))}${owned(w)?" · Owned":""}</span></div>${summary}${tags?`<div class="worldTags">${tags}</div>`:""}<div class="worldCardActions"><a class="btn ghost" href="?world=${encodeURIComponent(w.id)}">View details</a>${actionButtons(w)}</div></div></article>`;
   }
   function renderFeatured(){
     if(!featuredSection||!featuredGrid)return;
@@ -78,7 +81,24 @@
     const gallery=imgs.length?`<div class="sectionTitle"><h2>🖼️ Screenshots</h2><span>${imgs.length} image${imgs.length===1?"":"s"}</span></div><section class="worldGallery">${imgs.map((im,i)=>`<button class="worldShot" type="button" data-shot="${i}" aria-label="Open screenshot ${i+1}"><img src="${esc(safeUrl(im.url))}" alt="${esc(im.caption||w.title+' screenshot '+(i+1))}" loading="lazy" onerror="this.closest('.worldShot').remove()"></button>`).join("")}</section>`:"";
     const tags=(w.tags||[]).map(t=>`<span class="worldTag">${esc(t)}</span>`).join("");
     const commerce=paid(w)?`<div class="worldCommerceBanner"><strong>${owned(w)?"Owned":"Buy once, keep it"} · ${esc(price(w))}</strong><br>${owned(w)?"Available to download again anytime from this Mayflower Studios account.":"Secure checkout by Stripe. Your purchase stays linked to your Mayflower Studios account for future downloads."}</div>`:"";
-    page.innerHTML=`<a class="worldDetailBack" href="/worlds.html">← All worlds</a><section class="worldDetailHero"><div class="worldDetailCover">${cover(w)}</div><div class="card worldDetailInfo"><div class="worldDetailKicker">3DXChat World${w.featured?'<span class="worldDetailFeatured">★ Featured</span>':''}</div><h1>${esc(w.title)}</h1><div class="worldBy">By ${esc(w.creator||"Mayflower Studios")}</div><div style="margin-top:10px"><span class="worldPrice${paid(w)?"":" free"}">${esc(price(w))}${owned(w)?" · Owned":""}</span></div>${tags?`<div class="worldTags" style="margin-top:12px">${tags}</div>`:""}<p class="worldDetailDesc">${esc(w.description||"")}</p><div class="worldMeta">${w.version?`<div><span>Version</span><strong>${esc(w.version)}</strong></div>`:""}<div><span>Format</span><strong>3DXChat .world</strong></div>${w.world&&w.world.size?`<div><span>Size</span><strong>${esc(fileSize(w.world.size))}</strong></div>`:""}${w.updatedAt?`<div><span>Updated</span><strong>${esc(date(w.updatedAt))}</strong></div>`:""}</div><div class="worldDetailActions">${actionButtons(w,true)}<button class="btn ghost" id="worldShare" type="button">🔗 Copy link</button></div>${commerce}</div></section>${gallery}<section class="card worldDisclaimer"><strong>Using this world</strong><p>${paid(w)?"Your purchase gives you a personal, non-transferable license to use this world in 3DXChat and download it again from your Mayflower Studios account. ":"Download the <code>.world</code> file and import it through 3DXChat's world editor. "}Please do not re-upload, redistribute, resell, or claim original Mayflower Studios work as your own.</p></section>`;
+    const heroImage=imgs.length?`<button class="worldDetailCover" type="button" data-shot="0" aria-label="View screenshots of ${esc(w.title)}">${cover(w)}<span class="worldDetailView">View screenshots · ${imgs.length} ↗</span></button>`:`<div class="worldDetailCover">${cover(w)}</div>`;
+    page.innerHTML=`<a class="worldDetailBack" href="/worlds.html">← All worlds</a>
+      <section class="worldDetailHero">
+        <div class="worldDetailMedia">${heroImage}${gallery}</div>
+        <div class="card worldDetailInfo">
+          <div class="worldDetailKicker">3DXChat World${w.featured?'<span class="worldDetailFeatured">★ Featured</span>':''}</div>
+          <h1>${esc(w.title)}</h1><div class="worldBy">By ${esc(w.creator||"Mayflower Studios")}</div>
+          <div class="worldDetailPrice"><span class="worldPrice${paid(w)?"":" free"}">${esc(price(w))}${owned(w)?" · Owned":""}</span></div>
+          ${tags?`<div class="worldTags">${tags}</div>`:""}
+          <div class="worldMeta">${w.version?`<div><span>Version</span><strong>${esc(w.version)}</strong></div>`:""}<div><span>Format</span><strong>3DXChat .world</strong></div>${w.world&&w.world.size?`<div><span>Size</span><strong>${esc(fileSize(w.world.size))}</strong></div>`:""}${w.updatedAt?`<div><span>Updated</span><strong>${esc(date(w.updatedAt))}</strong></div>`:""}</div>
+          <div class="worldDetailActions">${actionButtons(w,true)}<button class="btn ghost" id="worldShare" type="button">🔗 Copy link</button></div>${commerce}
+        </div>
+      </section>
+      <section class="card worldDescription" aria-labelledby="worldDescriptionTitle">
+        <h2 id="worldDescriptionTitle">About this world</h2>
+        <div class="worldDetailDesc" tabindex="0" role="region" aria-labelledby="worldDescriptionTitle"><div class="worldDescriptionText">${esc(w.description||"No description yet.")}</div></div>
+      </section>
+      <section class="card worldDisclaimer"><strong>Using this world</strong><p>${paid(w)?"Your purchase gives you a personal, non-transferable license to use this world in 3DXChat and download it again from your Mayflower Studios account. ":"Download the <code>.world</code> file and import it through 3DXChat's world editor. "}Please do not re-upload, redistribute, resell, or claim original Mayflower Studios work as your own.</p></section>`;
     shots=imgs;wireDetail();
   }
   function wireDetail(){

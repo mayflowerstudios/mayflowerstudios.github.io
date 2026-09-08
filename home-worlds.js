@@ -6,6 +6,7 @@
   if(!section||!grid)return;
   const esc=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
   const safeUrl=v=>{try{const u=new URL(String(v||""),location.origin);return (u.protocol==="https:"||u.protocol==="http:")?u.href:""}catch(_){return ""}};
+  const excerpt=v=>{const text=String(v||"Explore this featured 3DXChat world.").replace(/\s+/g," ").trim();return text.length>220?text.slice(0,217).replace(/\s+\S*$/,"")+"…":text};
   const price=w=>{
     const c=w&&w.commerce||{};
     if(c.type!=="paid")return "Free";
@@ -18,7 +19,7 @@
   };
   function card(w){
     const paid=w.commerce&&w.commerce.type==="paid";
-    return `<article class="card home-world-card"><a class="home-world-cover" href="/worlds.html?world=${encodeURIComponent(w.id)}">${image(w)}</a><div class="home-world-body"><div class="home-world-top"><div><h3>${esc(w.title)}</h3><div class="home-world-by">${esc(w.creator||"Mayflower Studios")}</div></div><span class="home-world-featured">★ Featured</span></div><span class="home-world-price${paid?"":" free"}">${paid?"🔐 ":""}${esc(price(w))}</span><p class="home-world-desc">${esc(w.description||"Explore this featured 3DXChat world.")}</p><div class="home-world-actions"><a class="btn-ghost sm" href="/worlds.html?world=${encodeURIComponent(w.id)}">Explore world →</a></div></div></article>`;
+    return `<article class="card home-world-card"><a class="home-world-cover" href="/worlds.html?world=${encodeURIComponent(w.id)}">${image(w)}</a><div class="home-world-body"><div class="home-world-top"><div><h3>${esc(w.title)}</h3><div class="home-world-by">${esc(w.creator||"Mayflower Studios")}</div></div><span class="home-world-featured">★ Featured</span></div><span class="home-world-price${paid?"":" free"}">${paid?"🔐 ":""}${esc(price(w))}</span><p class="home-world-desc">${esc(excerpt(w.description))}</p><div class="home-world-actions"><a class="btn-ghost sm" href="/worlds.html?world=${encodeURIComponent(w.id)}">Explore world →</a></div></div></article>`;
   }
   fetch(`${DB}/worldLibrary.json?orderBy=%22published%22&equalTo=true`,{cache:"no-store"})
     .then(r=>r.ok?r.json():Promise.reject(new Error(`HTTP ${r.status}`)))
