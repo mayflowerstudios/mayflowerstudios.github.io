@@ -9,7 +9,10 @@
     return "";
   };
 
+  const PANEL_SIZE = 30, PAGE_SIZE = 50;
   let db = null, mods = null, uid = null, rows = [], unsub = null;
+  const records = new Map();
+  let dirty = true, drawTimer = null, pageIndex = 0, authEpoch = 0, authTimer = null, modulePromise = null;
 
   // ---- notification preferences ----
   // The six switches on the settings page used to do nothing at all: nothing
@@ -37,18 +40,28 @@
     return !key || prefs[key] !== false;
   }
   // Keep read timestamps saved so cleared items stay gone across devices.
-  function visibleRows() { return rows.filter(n => wanted(n) && !Number(n.readAt)); }
+  function visibleRows() {
+    if (dirty) {
+      rows = [...records.values()].filter(n => wanted(n) && !Number(n.readAt))
+        .sort((a,b) => (Number(b.createdAt)||0) - (Number(a.createdAt)||0) || a.id.localeCompare(b.id));
+      dirty = false;
+    }
+    return rows;
+  }
 
   async function loadPrefs() {
     if (!window.MFAuth || !MFAuth.getNotificationPrefs) return;
-    try { prefs = await MFAuth.getNotificationPrefs(); }
-    catch (_) { prefs = null; }
+    const epoch = authEpoch;
+    let next = null;
+    try { next = await MFAuth.getNotificationPrefs(); } catch (_) {}
+    if (epoch !== authEpoch) return;
+    prefs = next; dirty = true;
     draw();
   }
   // Changing a switch on the settings page should take effect on any tab that
   // is already open, not only after a reload.
   window.addEventListener("mf-notification-prefs-changed", e => {
-    if (e && e.detail) { prefs = e.detail; draw(); }
+    if (e && e.detail) { prefs = e.detail; dirty = true; draw(); }
     else loadPrefs();
   });
   let panelOpen = false;
@@ -89,6 +102,7 @@
       .mf-notify-foot{display:flex;gap:8px;align-items:center;padding:10px 13px;border-top:1px solid var(--border)}.mf-notify-foot a,.mf-notify-foot button{font:inherit;font-size:11.5px;color:var(--text-2);text-decoration:none;background:transparent;border:0;padding:4px;cursor:pointer}.mf-notify-foot a{color:var(--rose)}.mf-notify-foot button:last-child{margin-left:auto}
       .mf-notification-page{display:grid;gap:10px}.mf-notification-page .mf-notify-item{grid-template-columns:44px minmax(0,1fr) auto;padding:14px;border:1px solid var(--border);background:rgba(255,255,255,.025)}.mf-notification-page .mf-notify-item.unread{border-color:rgba(249,168,212,.28);background:rgba(249,168,212,.075)}
       .mf-notification-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}.mf-notification-toolbar button{font:inherit;font-size:12px;color:var(--text-2);background:rgba(0,0,0,.25);border:1px solid var(--border-2);border-radius:999px;padding:7px 12px;cursor:pointer}.mf-notification-toolbar button.active{color:var(--text);border-color:var(--rose);background:rgba(249,168,212,.08)}.mf-notification-toolbar .push{margin-left:auto}
+      .mf-notification-toolbar[hidden]{display:none}
       @media(max-width:760px){.mf-notify-button{width:100%;display:flex;justify-content:flex-start;gap:8px;padding:8px 12px;height:auto}.mf-notify-badge{position:static;display:inline-grid!important;border:0}.mf-notify-panel{top:62px;right:8px;left:8px;width:auto;max-height:min(520px,calc(100dvh - 76px))}}`;
     document.head.appendChild(st);
   }
@@ -142,9 +156,9 @@
 
   function drawPanel() {
     const list = $("mfNotifyList"), summary = $("mfNotifySummary");
-    if (!list) return;
-    const recent = visibleRows(), unread = recent.length, scrollTop = list.scrollTop;
-    if (summary) summary.textContent = unread ? `${unread} unread` : "You're caught up";
+    if (!list || !panelOpen) return;
+    const all = visibleRows(), recent = all.slice(0, PANEL_SIZE), unread = all.length, scrollTop = list.scrollTop;
+    if (summary) summary.textContent = unread ? `${unread} unread${unread > PANEL_SIZE ? ` · latest ${PANEL_SIZE}` : ''}` : "You're caught up";
     list.innerHTML = recent.length ? recent.map(n => itemHtml(n, false)).join("") : '<div class="mf-notify-empty">You’re all caught up.<br>New notifications will appear here.</div>';
     list.scrollTop = scrollTop;
     if ($("mfNotifyMarkAll")) $("mfNotifyMarkAll").disabled = !uid || !unread;
@@ -155,30 +169,53 @@
     const list = $("mfNotificationPageList"), count = $("mfNotificationPageCount");
     if (!list) return;
     const visible = visibleRows();
-    if (count) count.textContent = uid ? `${visible.length} unread` : "";
-    list.innerHTML = visible.length ? visible.map(n => itemHtml(n, true)).join("") : `<div class="mf-notify-empty">${uid ? "You’re all caught up. New notifications will appear here." : "Sign in to see your notifications."}</div>`;
+    pageIndex = Math.min(pageIndex, Math.max(0, Math.ceil(visible.length / PAGE_SIZE) - 1));
+    const start = pageIndex * PAGE_SIZE, page = visible.slice(start, start + PAGE_SIZE);
+    if (count) count.textContent = uid ? `${visible.length} unread${visible.length > PAGE_SIZE ? ` · ${start + 1}–${start + page.length} shown` : ''}` : "";
+    list.innerHTML = page.length ? page.map(n => itemHtml(n, true)).join("") : `<div class="mf-notify-empty">${uid ? "You’re all caught up. New notifications will appear here." : "Sign in to see your notifications."}</div>`;
+    if ($("mfNotificationPager")) $("mfNotificationPager").hidden = visible.length <= PAGE_SIZE;
+    if ($("mfNotificationPrev")) $("mfNotificationPrev").disabled = pageIndex === 0;
+    if ($("mfNotificationNext")) $("mfNotificationNext").disabled = start + PAGE_SIZE >= visible.length;
     if ($("mfNotificationPageMarkAll")) $("mfNotificationPageMarkAll").disabled = !uid || !visible.length;
     wireItems(list);
   }
 
-  function draw() { updateBadge(); drawPanel(); drawPage(); }
+  function draw() {
+    if (document.hidden) return;
+    updateBadge(); drawPanel(); drawPage();
+  }
+  // Firebase delivers the initial children (and bulk reads) in bursts. Paint
+  // once for the burst, and defer hidden-tab rendering until it is visible.
+  function scheduleDraw() {
+    if (drawTimer !== null || document.hidden) return;
+    drawTimer = setTimeout(() => { drawTimer = null; draw(); }, 50);
+  }
 
   async function markRead(id) {
     if (!uid || !id || !mods) return;
-    const row = rows.find(n => n.id === id); if (!row || Number(row.readAt)) return;
-    row.readAt = Date.now(); draw();
-    try { await mods.set(mods.ref(db, `notifications/${uid}/${id}/readAt`), row.readAt); } catch (_) { row.readAt = 0; draw(); }
+    const row = records.get(id); if (!row || Number(row.readAt)) return;
+    const epoch = authEpoch;
+    row.readAt = Date.now(); dirty = true; draw();
+    try { await mods.set(mods.ref(db, `notifications/${uid}/${id}/readAt`), row.readAt); }
+    catch (_) { if (epoch === authEpoch) { row.readAt = 0; records.set(id, row); dirty = true; draw(); } }
   }
   async function markAllRead() {
     if (!uid || !mods) return;
     const unread = unreadRows(); if (!unread.length) return;
-    const now = Date.now(), updates = {};
-    unread.forEach(n => { n.readAt = now; updates[`notifications/${uid}/${n.id}/readAt`] = now; }); draw();
-    try { await mods.update(mods.ref(db), updates); } catch (_) { subscribe(); }
+    const now = Date.now(), updates = {}, epoch = authEpoch;
+    unread.forEach(n => { n.readAt = now; updates[`notifications/${uid}/${n.id}/readAt`] = now; }); dirty = true; draw();
+    try { await mods.update(mods.ref(db), updates); }
+    catch (_) { if (epoch === authEpoch) { unread.forEach(n => { n.readAt = 0; records.set(n.id, n); }); dirty = true; draw(); } }
   }
   async function clearRead() {
     if (!uid || !mods) return;
-    const read = rows.filter(n => Number(n.readAt)); if (!read.length) return;
+    // Legacy explicit cleanup only: read history is not retained in the UI.
+    const epoch = authEpoch, read = [];
+    let snapshot;
+    try { snapshot = await mods.get(mods.ref(db, `notifications/${uid}`)); } catch (_) { return; }
+    if (epoch !== authEpoch) return;
+    snapshot.forEach(ch => { const row = ch.val(); if (row && Number(row.readAt)) read.push({ ...row, id: ch.key }); });
+    if (!read.length) return;
     if (!confirm(`Remove ${read.length} read notification${read.length === 1 ? "" : "s"}?`)) return;
     const updates = {}; read.forEach(n => updates[`notifications/${uid}/${n.id}`] = null);
     try { await mods.update(mods.ref(db), updates); } catch (_) {}
@@ -189,37 +226,68 @@
     panelOpen = typeof force === "boolean" ? force : !panelOpen;
     if (!uid) panelOpen = false;
     panel.hidden = !panelOpen; btn.setAttribute("aria-expanded", panelOpen ? "true" : "false");
-    if (panelOpen && unreadRows().length) {
+    if (panelOpen) {
       // Opening is intentionally not the same as reading; individual items keep their unread state.
       drawPanel();
+    } else if ($("mfNotifyList")) {
+      $("mfNotifyList").innerHTML = "";
     }
   }
 
   function subscribe() {
     if (unsub) { try { unsub(); } catch (_) {} unsub = null; }
-    rows = []; draw();
+    records.clear(); rows = []; dirty = true; pageIndex = 0; draw();
     if (!uid || !mods) return;
     // Reading recent history alone can hide older unread items behind read ones.
     const q = mods.query(mods.ref(db, `notifications/${uid}`), mods.orderByChild("createdAt"));
-    const cb = snap => {
-      rows = []; snap.forEach(ch => rows.push({ id: ch.key, ...(ch.val() || {}) }));
-      rows.sort((a,b) => (Number(b.createdAt)||0) - (Number(a.createdAt)||0)); draw();
+    const epoch = authEpoch;
+    const changed = snap => {
+      if (epoch !== authEpoch) return;
+      const row = snap.val();
+      if (row && typeof row === 'object' && !Number(row.readAt)) records.set(snap.key, { ...row, id: snap.key });
+      else records.delete(snap.key);
+      dirty = true; scheduleDraw();
     };
-    mods.onValue(q, cb, () => { rows = []; draw(); });
-    unsub = () => mods.off(q, "value", cb);
+    const removed = snap => { if (epoch === authEpoch) { records.delete(snap.key); dirty = true; scheduleDraw(); } };
+    const failed = () => { if (epoch === authEpoch) { records.clear(); dirty = true; scheduleDraw(); } };
+    // Child events avoid copying and sorting the entire history for each read
+    // or new item. Keep all unread items, including older legacy records.
+    const stops = [mods.onChildAdded(q, changed, failed), mods.onChildChanged(q, changed, failed), mods.onChildRemoved(q, removed, failed)];
+    unsub = () => stops.forEach(stop => stop());
   }
 
   function wirePage() {
     const mark = $("mfNotificationPageMarkAll");
     if (mark) mark.addEventListener("click", markAllRead);
+    const list = $("mfNotificationPageList");
+    if (list && !$("mfNotificationPager")) {
+      const pager = document.createElement('div');
+      pager.id = 'mfNotificationPager'; pager.className = 'mf-notification-toolbar'; pager.hidden = true;
+      pager.innerHTML = '<button type="button" id="mfNotificationPrev">Newer notifications</button><button type="button" id="mfNotificationNext">Older notifications</button>';
+      list.after(pager);
+      $("mfNotificationPrev").addEventListener('click', () => { pageIndex = Math.max(0, pageIndex - 1); drawPage(); });
+      $("mfNotificationNext").addEventListener('click', () => { pageIndex++; drawPage(); });
+    }
   }
 
   async function readyAuth(user) {
-    uid = user ? user.uid : null;
+    const nextUid = user ? user.uid : null;
+    if (nextUid === uid && (unsub || (!mods && modulePromise) || authTimer)) return;
+    const epoch = ++authEpoch;
+    uid = nextUid; prefs = null; dirty = true;
+    if (unsub) { unsub(); unsub = null; }
+    if (authTimer) { clearTimeout(authTimer); authTimer = null; }
+    records.clear(); rows = []; pageIndex = 0; draw();
     if (!uid) { prefs = null; togglePanel(false); subscribe(); return; }
     db = MFAuth.db;
-    if (!db) { setTimeout(() => readyAuth(MFAuth.user), 100); return; }
-    if (!mods) mods = await import(`https://www.gstatic.com/firebasejs/${FB_VERSION}/firebase-database.js`);
+    if (!db) { authTimer = setTimeout(() => { authTimer = null; readyAuth(MFAuth.user); }, 100); return; }
+    try {
+      if (!mods) {
+        if (!modulePromise) modulePromise = import(`https://www.gstatic.com/firebasejs/${FB_VERSION}/firebase-database.js`);
+        mods = await modulePromise;
+      }
+    } catch (_) { modulePromise = null; return; }
+    if (epoch !== authEpoch) return;
     subscribe();
     loadPrefs();   // which types this account wants to be told about
   }
@@ -229,6 +297,7 @@
     const button = $("mfNotifyButton"); if (button) button.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); togglePanel(); });
     document.addEventListener("click", e => { if (panelOpen && !e.target.closest("#mfNotifyPanel") && !e.target.closest("#mfNotifyButton")) togglePanel(false); });
     document.addEventListener("keydown", e => { if (e.key === "Escape") togglePanel(false); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) draw(); });
     const wait = () => {
       if (window.MFAuth && MFAuth.onChange) MFAuth.onChange(readyAuth);
       else setTimeout(wait, 100);

@@ -873,7 +873,7 @@
       // Appear-offline is a per-device privacy choice stored locally. When on,
       // we publish "offline" even while connected, so friends don't see us as
       // online and our typing indicators are suppressed. We can still see them.
-      let _presenceUid = null;
+      let _presenceUid = null, presenceUnsub = null;
       function readAppearOffline() {
         try { return localStorage.getItem("mf_appear_offline") === "1"; } catch (_) { return false; }
       }
@@ -886,9 +886,10 @@
         dbMod.set(stRef, { state: invisible ? "offline" : "online", last: dbMod.serverTimestamp() });
       }
       function startPresence(uid) {
+        if (presenceUnsub) presenceUnsub();
         _presenceUid = uid;
         const connRef = dbMod.ref(db, ".info/connected");
-        dbMod.onValue(connRef, (snap) => { if (snap.val() === true) publishPresence(); });
+        presenceUnsub = dbMod.onValue(connRef, (snap) => { if (_presenceUid === uid && snap.val() === true) publishPresence(); });
       }
 
       MFAuth.getAppearOffline = readAppearOffline;
@@ -938,8 +939,14 @@
       };
 
       // ---- auth state ----
+      let authEpoch = 0, profileUnsub = null;
       authMod.onAuthStateChanged(auth, async (user) => {
+        const epoch = ++authEpoch;
+        if (profileUnsub) { profileUnsub(); profileUnsub = null; }
+        if (presenceUnsub) { presenceUnsub(); presenceUnsub = null; }
+        _presenceUid = null;
         MFAuth.user = user || null;
+        MFAuth.profile = null;
         if (user) {
           // Mark ready and emit right away using whatever we know, so pages
           // recognise the restored session instantly on load (no re-login
@@ -947,10 +954,17 @@
           // again when they arrive.
           ready = true;
           MFAuth._emit();
-          try { MFAuth.profile = await ensureProfile(user); } catch (_) {}
+          try {
+            const profile = await ensureProfile(user);
+            if (epoch !== authEpoch) return;
+            MFAuth.profile = profile;
+          } catch (_) {}
+          if (epoch !== authEpoch) return;
           try { await MFAuth.refreshBasicAchievements(); } catch (_) {}
+          if (epoch !== authEpoch) return;
           startPresence(user.uid);
-          dbMod.onValue(dbMod.ref(db, `users/${user.uid}`), (snap) => {
+          profileUnsub = dbMod.onValue(dbMod.ref(db, `users/${user.uid}`), (snap) => {
+            if (epoch !== authEpoch) return;
             MFAuth.profile = snap.exists() ? snap.val() : MFAuth.profile;
             MFAuth._emit();
           });

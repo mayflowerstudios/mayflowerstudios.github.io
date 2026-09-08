@@ -131,6 +131,47 @@ test('translation only observes DOM changes while another language is selected',
   await tr.setLang('es'); assert.equal(active, 1);
 });
 // Opt-in diagnostic: MF_PERF_BASELINE=1 compares against the current git HEAD.
+test('video quiets both canvases even when the browser has no screen wake-lock API', async () => {
+  const html = source('watch-together.html');
+  const start = html.indexOf('    async function syncWakeLock()');
+  const end = html.indexOf('    if (awakeBtn)', start);
+  let playing = true;
+  const calls = [];
+  const sandbox = {
+    wakeLockSupported: false, keepAwake: false, neverStopActive: false, wakeLock: null, awakeTag: {hidden:true},
+    isPlayingNow: () => playing, document: {visibilityState:'visible'}, navigator: {},
+    window: Object.fromEntries(['fireflies','mfPetals'].map(name => [name, {pause:()=>calls.push(`${name}:pause`),resume:()=>calls.push(`${name}:resume`)}])),
+  };
+  vm.runInNewContext(html.slice(start,end), sandbox);
+  await sandbox.syncWakeLock();
+  assert.deepEqual(calls, ['fireflies:pause','mfPetals:pause']);
+  playing = false; calls.length = 0; await sandbox.syncWakeLock();
+  assert.deepEqual(calls, ['fireflies:resume','mfPetals:resume']);
+});
+
+test('translation drops removed text, bounds its memory cache, and still reverts live text', () => {
+  const js = source('shared.js');
+  const start = js.indexOf('  var MFTranslate ='), end = js.indexOf('  function buildLangPicker()');
+  const code = js.slice(start,end).replace('    // ---- engine ----',
+    '    window.trTest = { cache, cacheSet, tracked, snapshotOriginal, pruneDetachedText, revertAll };\n    // ---- engine ----');
+  const sandbox = {
+    navigator:{language:'en'}, location:{protocol:'http:'}, setTimeout:()=>1,
+    localStorage:{getItem:()=>null}, window:{addEventListener(){}},
+    document:{documentElement:{lang:'en'}},
+  };
+  vm.runInNewContext(code,sandbox); const t = sandbox.window.trTest;
+  const live = {nodeValue:'Hello',isConnected:true}, removed = {nodeValue:'Old panel',isConnected:true};
+  t.snapshotOriginal(live); t.snapshotOriginal(removed);
+  live.nodeValue='Hola'; removed.isConnected=false;
+  t.pruneDetachedText(); assert.equal(t.tracked.size,1); assert.equal(t.tracked.has(removed),false);
+  // A detached panel may later be reinserted: it must be tracked again.
+  removed.isConnected=true; t.snapshotOriginal(removed); removed.nodeValue='Viejo';
+  t.revertAll(); assert.equal(live.nodeValue,'Hello'); assert.equal(removed.nodeValue,'Old panel');
+  assert.equal(t.tracked.size,0, 'English mode releases tracking while its observer is disconnected');
+  for(let i=0;i<10000;i++) t.cacheSet(`es||${i}`,String(i));
+  assert.equal(t.cache.size,4000); assert.equal(t.cache.has('es||0'),false); assert.equal(t.cache.get('es||9999'),'9999');
+});
+
 test('compare drawing work with the committed baseline', { skip: !process.env.MF_PERF_BASELINE }, () => {
   for (const kind of ['petals', 'fireflies']) {
     const before = harness(kind, { baseline: true }), after = harness(kind);

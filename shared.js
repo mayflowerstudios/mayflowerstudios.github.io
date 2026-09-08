@@ -168,7 +168,7 @@
         const raw = localStorage.getItem(CACHE_KEY);
         if (!raw) return;
         const obj = JSON.parse(raw);
-        if (obj && obj.e) for (const k in obj.e) cache.set(k, obj.e[k]);
+        if (obj && obj.e) for (const k of Object.keys(obj.e).slice(-CACHE_MAX)) cache.set(k, obj.e[k]);
       } catch (_) { /* corrupt cache — ignore, it'll be rebuilt */ }
     })();
 
@@ -197,7 +197,11 @@
         }
       }, 1200);
     }
-    function cacheSet(key, val) { cache.set(key, val); cacheDirty = true; persistCache(); }
+    function cacheSet(key, val) {
+      cache.delete(key); cache.set(key, val);
+      while (cache.size > CACHE_MAX) cache.delete(cache.keys().next().value);
+      cacheDirty = true; persistCache();
+    }
 
     const translatorPool = new Map();
     const originals = new WeakMap(); // textNode -> original nodeValue
@@ -385,7 +389,11 @@
     }
 
     function snapshotOriginal(node) {
-      if (!originals.has(node)) { originals.set(node, node.nodeValue); tracked.add(node); }
+      if (!originals.has(node)) originals.set(node, node.nodeValue);
+      tracked.add(node);
+    }
+    function pruneDetachedText() {
+      for (const node of tracked) if (!node.isConnected) tracked.delete(node);
     }
     // Mark which language a node currently displays, so we never translate
     // already-translated text a second time (which would stack "[es][es]…").
@@ -432,10 +440,14 @@
           }
           if (batch.length) batches.push(batch);
           for (const slice of batches) {
+            if (targetLang !== runLang || jobs.every(job => !job.node.isConnected)) return;
             let res = await translateBatchServer(slice, runLang);
             if (!res) { // fallback: per-string
               res = [];
-              for (const s of slice) res.push(await translateOne(s, runLang));
+              for (const s of slice) {
+                if (targetLang !== runLang || jobs.every(job => !job.node.isConnected)) return;
+                res.push(await translateOne(s, runLang));
+              }
             }
             slice.forEach((s, idx) => { if (res[idx]) cacheSet(runLang + "||" + s, res[idx]); });
           }
@@ -451,6 +463,7 @@
       // Apply.
       if (targetLang !== runLang) return;
       for (const job of jobs) {
+        if (!job.node.isConnected) continue;
         const tr = cache.get(runLang + "||" + job.core);
         if (tr) {
           if (tr !== job.core) {
@@ -463,11 +476,13 @@
     }
 
     function revertAll() {
+      pruneDetachedText();
       for (const node of tracked) {
         const orig = originals.get(node);
-        if (orig != null && node.parentNode) node.nodeValue = orig;
+        if (orig != null && node.isConnected) node.nodeValue = orig;
         trDone.delete(node);
       }
+      tracked.clear();
     }
 
     // Instant pass: swap in only translations we ALREADY have cached, with no
@@ -515,6 +530,7 @@
       if (observer || targetLang === 'en' || !TR_OK) return;
       observer = new MutationObserver((muts) => {
         if (targetLang === "en" || !TR_OK) return;
+        if (muts.some(m => m.removedNodes && m.removedNodes.length)) pruneDetachedText();
         const fresh = [];
         for (const m of muts) {
           m.addedNodes && m.addedNodes.forEach((node) => {
@@ -527,7 +543,7 @@
         }
         if (fresh.length) {
           // Skip nodes already showing the target language.
-          const todo = fresh.filter(n => !alreadyDone(n));
+          const todo = fresh.filter(n => n.isConnected && !alreadyDone(n));
           if (todo.length) {
             // Instantly swap any cached strings, then async-fetch the rest.
             for (const n of todo) {
@@ -891,7 +907,7 @@
 
   // Bump this whenever auth.js / chat.js / profile-view.js change, so browsers
   // and the GitHub Pages CDN fetch the new version instead of a cached copy.
-  var MF_ASSET_VER = '79';
+  var MF_ASSET_VER = '80';
 
   // ─────────────────────────────────────────────────────────────
   //  Chat + moderation config, shared by chat.js and admin-moderation.js.
