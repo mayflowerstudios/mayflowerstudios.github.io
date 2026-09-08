@@ -518,6 +518,82 @@ body .mf-prof-empty,body .acctEmpty,body .mf-chat-empty,body .mf-notify-empty,bo
 .mf-state[aria-busy="true"] { min-height:170px; }
 .mf-state[aria-busy="true"] strong { color:var(--text-2); }
 .worldGrid > .mf-state { grid-column:1/-1; }
+
+/* A shared motion rhythm: brief entrances and feedback, with no idle loops. */
+:root {
+  --motion-fast: 160ms;
+  --motion-panel: 200ms;
+  --motion-enter: 420ms;
+  --motion-ease: cubic-bezier(.2,.7,.2,1);
+}
+@keyframes mf-arrive {
+  from { opacity:0; translate:0 10px; }
+  to { opacity:1; translate:0 0; }
+}
+@keyframes mf-image-in { from { opacity:.35; } to { opacity:1; } }
+@keyframes mf-loading { 50% { opacity:.45; } }
+@keyframes mf-check-in {
+  from { opacity:0; scale:.7; }
+  to { opacity:1; scale:1; }
+}
+.home-world-cover,.worldCoverBtn,.worldDetailCover { background:var(--surface-raised); }
+:is(.cMsg,.settingsStatus).ok:not(:empty)::before {
+  content:'✓'; display:inline-grid; place-items:center; width:1.35em; height:1.35em;
+  margin-inline-end:.5em; border-radius:50%; background:#b8ddc818; color:var(--emerald);
+}
+@media (prefers-reduced-motion: no-preference) {
+  html:not(.mf-reduce-motion):not(.mf-save-data) {
+    .studio-hero-copy > *,.studio-art { animation:mf-arrive var(--motion-enter) var(--motion-ease) backwards; }
+    .studio-hero-copy > h1 { animation-delay:40ms; }
+    .studio-hero-copy > p { animation-delay:60ms; }
+    .studio-hero-copy > .studio-actions { animation-delay:80ms; }
+    .studio-hero-copy > .studio-hero-note { animation-delay:80ms; }
+    .studio-art { animation-delay:80ms; }
+    .mf-arrive { animation:mf-arrive var(--motion-enter) var(--motion-ease) backwards; }
+    .mf-image-ready { animation:mf-image-in 280ms var(--motion-ease); }
+    .mf-skeleton { animation:mf-loading 900ms ease-in-out 2; }
+    :is(.cMsg,.settingsStatus).ok:not(:empty)::before { animation:mf-check-in 220ms var(--motion-ease); }
+    :is(.btn-pri,.btn-violet,.btn-ghost,.btn,.button,.nav-cta,.settingsBtn,.mf-prof-btn,.nav-mob-btn,.mf-tool) {
+      transition:translate var(--motion-fast) var(--motion-ease),scale var(--motion-fast) var(--motion-ease),background-color var(--motion-fast),border-color var(--motion-fast),color var(--motion-fast);
+    }
+    :is(.studio-path,.studio-pick,.projCard,.worldCard,.home-world-card) {
+      transition:translate var(--motion-panel) var(--motion-ease),border-color var(--motion-panel);
+    }
+    :is(.studio-path-arrow,.studio-text-link > span,.studio-actions a > span) {
+      display:inline-block; transition:translate var(--motion-fast) var(--motion-ease);
+    }
+    :is(.btn-pri,.btn-violet,.btn-ghost,.btn,.button,.nav-cta,.settingsBtn,.mf-prof-btn,.nav-mob-btn,.mf-tool):active:not(:disabled):not([aria-disabled="true"]) { scale:.98; translate:0 1px; }
+    .tiny-flower { display:inline-block; transition:rotate 350ms var(--motion-ease); }
+    .studio-hero-copy:focus-within .tiny-flower { rotate:35deg; }
+    @media (hover:hover) and (pointer:fine) {
+      :is(.btn-pri,.btn-violet,.btn-ghost,.btn,.button,.nav-cta):hover:not(:disabled):not([aria-disabled="true"]) { translate:0 -1px; }
+      :is(.studio-path,.studio-pick,.projCard,.worldCard,.home-world-card):hover { transform:none; translate:0 -3px; border-color:var(--border-2); }
+      :is(.studio-path:hover .studio-path-arrow,.studio-text-link:hover > span,.studio-actions a:hover > span) { translate:2px -2px; }
+      .studio-eyebrow:hover .tiny-flower { rotate:35deg; }
+    }
+    /* Discrete display transitions let closed panels immediately lose input
+       while finishing their exit. Older browsers retain instant toggles. */
+    @supports (transition-behavior:allow-discrete) {
+      body :is(.mf-chat-panel,.mf-prof-overlay,.mf-notify-panel) {
+        animation:none; opacity:0; translate:0 6px; pointer-events:none;
+        transition:opacity var(--motion-panel) var(--motion-ease),translate var(--motion-panel) var(--motion-ease),display var(--motion-panel) allow-discrete;
+      }
+      body :is(.mf-chat-panel.open,.mf-prof-overlay.open,.mf-notify-panel:not([hidden])) { opacity:1; translate:0 0; pointer-events:auto; }
+      body .mf-prof-card { animation:none; }
+      @starting-style {
+        body :is(.mf-chat-panel.open,.mf-prof-overlay.open,.mf-notify-panel:not([hidden])) { opacity:0; translate:0 6px; }
+      }
+      @media (max-width:1120px) {
+        .nav-links { opacity:0; translate:0 -6px; pointer-events:none; transition:opacity var(--motion-panel),translate var(--motion-panel),display var(--motion-panel) allow-discrete; }
+        .nav-links.open { opacity:1; translate:0 0; pointer-events:auto; }
+        @starting-style { .nav-links.open { opacity:0; translate:0 -6px; } }
+      }
+    }
+  }
+}
+html:is(.mf-reduce-motion,.mf-save-data) .reveal { opacity:1; transform:none; }
+html:is(.mf-reduce-motion,.mf-save-data) :is(.mf-arrive,.mf-image-ready,.studio-art,.studio-hero-copy > *) { animation:none !important; }
+@media (prefers-reduced-motion:reduce) { .reveal { opacity:1; transform:none; } }
 @media(max-width:640px) {
   body[data-surface="workspace"] .content { padding-top:1.5rem; gap:1.5rem; }
   .settingsCard,.tg-panel,.acctCard,.cForm { padding:1.25rem; }

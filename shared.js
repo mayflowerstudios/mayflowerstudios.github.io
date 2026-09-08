@@ -776,12 +776,39 @@
   }
 
   function initReveal() {
+    const targets = document.querySelectorAll('.reveal, .studio-section, .studio-together, .studio-about, .project-collection, .project-section');
+    const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+      document.documentElement.matches('.mf-reduce-motion, .mf-save-data');
+    // Content stays visible if observers are unavailable or motion is disabled.
+    if (!('IntersectionObserver' in window) || reduced()) {
+      targets.forEach(el => el.classList.add('visible'));
+      return;
+    }
     const obs = new IntersectionObserver(entries => {
       entries.forEach(e => {
-        if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          if (!reduced()) e.target.classList.add('mf-arrive');
+          obs.unobserve(e.target);
+        }
       });
     }, { threshold: 0.07 });
-    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+    targets.forEach(el => obs.observe(el));
+    // Keyboard navigation never lands in an invisible legacy reveal section.
+    document.addEventListener('focusin', e => {
+      const section = e.target.closest('.reveal');
+      if (section) { section.classList.add('visible'); obs.unobserve(section); }
+    });
+  }
+
+  function initImageMotion() {
+    // One delegated listener also covers dynamically rendered world cards.
+    // Never hide an image while waiting: failed loads keep their alternative text.
+    document.addEventListener('load', e => {
+      if (e.target instanceof HTMLImageElement && e.target.matches('.home-world-cover img, .worldCover img, .worldCoverBtn img, .worldShot img, .worldDetailCover img')) {
+        e.target.classList.add('mf-image-ready');
+      }
+    }, true);
   }
 
   // ───────────────────────────────────────────────────────────────
@@ -1006,6 +1033,7 @@
     injectNav();
     injectFooter();
     initReveal();
+    initImageMotion();
     loadFireflies();
     loadAuthAndChat();
     initAccountNav();
