@@ -5,10 +5,10 @@
   const DB = "https://watchtogether-95d7d-default-rtdb.firebaseio.com";
 
   const KINDS = [
-    ["bug", "🐞 Something is broken"],
-    ["idea", "💡 An idea or a request"],
-    ["question", "❓ A question"],
-    ["other", "🌸 Something else"]
+    ["bug", "Something is broken"],
+    ["idea", "An idea or a request"],
+    ["question", "A question"],
+    ["other", "Something else"]
   ];
   const ABOUT = [
     "Craft Planner", "Mayflower Radio", "Farm Challenge",
@@ -35,6 +35,7 @@
   function say(node, text, kind) {
     node.textContent = text;
     node.className = "cMsg " + (kind || "");
+    node.setAttribute("role", kind === "bad" ? "alert" : "status");
   }
 
   async function send(e) {
@@ -68,7 +69,11 @@
       };
     }
 
+    if (btn.disabled) return;
     btn.disabled = true;
+    btn.setAttribute("aria-busy", "true");
+    const originalLabel = btn.textContent;
+    btn.textContent = "Sending…";
     say(msgEl, "Sending…", "");
     try {
       const res = await fetch(`${DB}/feedback/${newKey()}.json`, {
@@ -79,10 +84,12 @@
       fillDefaults();
       say(msgEl, "Sent — thank you. Every one of these gets read. 🌸", "ok");
     } catch (err) {
-      say(msgEl, "That did not send. Try again in a moment, or use Ko-fi.", "bad");
+      say(msgEl, "Your message wasn’t sent. Your text is still here—check your connection and select Send again.", "bad");
       console.warn("contact send failed:", err);
     } finally {
       btn.disabled = false;
+      btn.removeAttribute("aria-busy");
+      btn.textContent = originalLabel;
     }
   }
 

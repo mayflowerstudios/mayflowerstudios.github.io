@@ -21,13 +21,14 @@ function harness({ page = false } = {}) {
   for (const id of ['mfNotifyButton','mfNotifyBadge','mfNotifyPanel','mfNotifyList','mfNotifySummary','mfNotifyMarkAll']) element(id);
   if (page) for (const id of ['mfNotificationPageList','mfNotificationPageCount','mfNotificationPageMarkAll','mfNotificationPrev','mfNotificationNext']) element(id);
   const document = { hidden: false, getElementById: id => elements.get(id), createElement: () => element(), addEventListener(type, fn) { events.set(type, fn); } };
-  const listen = kind => (q, fn) => {
-    const sub = { kind, q, fn, active: true }; listeners.push(sub);
+  const listen = kind => (q, fn, error) => {
+    const sub = { kind, q, fn, error, active: true }; listeners.push(sub);
     return () => { sub.active = false; };
   };
   const firebase = {
     ref: (_, path = '') => path, orderByChild: key => key, query: (path, order) => ({path,order}),
     onChildAdded: listen('add'), onChildChanged: listen('change'), onChildRemoved: listen('remove'),
+    onValue(q,fn,error,options) { assert.equal(options.onlyOnce,true); fn(); return ()=>{}; },
     set: async (path, value) => { writes.push({path,value}); }, update: async (path, value) => { writes.push({path,value}); },
   };
   const MFAuth = { db: {}, user: {uid:'alice'}, getNotificationPrefs: async () => null };
@@ -121,4 +122,25 @@ test('a delayed preference response cannot filter another account', async () => 
   await h.api.readyAuth({uid:'bob'});
   resolve({gifts:false}); await new Promise(setImmediate);
   h.emit('add','b',row(1),'bob'); h.flush(); assert.equal(h.api.visibleRows().length,1);
+});
+
+test('an unavailable inbox offers a retry instead of claiming there are no notifications', async () => {
+  const h=harness({page:true}); await h.api.readyAuth(h.MFAuth.user);
+  h.listeners[0].error(); h.flush();
+  const list=h.elements.get('mfNotificationPageList');
+  assert.match(list.innerHTML,/Notifications could not load/);
+  assert.match(list.innerHTML,/data-notification-retry/);
+  assert.doesNotMatch(list.innerHTML,/caught up/);
+  h.publicApi.refresh(); h.emit('add','retry',row(1)); h.flush();
+  assert.match(list.innerHTML,/Notification 1/);
+});
+
+test('initial loading and signed-out states have useful, distinct instructions', async () => {
+  const h=harness({page:true}); let complete;
+  h.firebase.onValue=(_,fn)=>{complete=fn;return()=>{};};
+  await h.api.readyAuth(h.MFAuth.user);
+  const list=h.elements.get('mfNotificationPageList');
+  assert.match(list.innerHTML,/Loading your updates/); assert.match(list.innerHTML,/aria-busy/);
+  complete();h.flush();assert.match(list.innerHTML,/caught up/);
+  await h.api.readyAuth(null);assert.match(list.innerHTML,/href="\/account.html"/);
 });

@@ -339,10 +339,10 @@
       .drop,.ember,.star,.flame,.wave,.steam,.fireGlow,.candleGlow,.cafeWarm{ animation:none !important; }
     }
   </style>
-  <link rel="stylesheet" href="/studio.css?v=4" />
+  <link rel="stylesheet" href="/studio.css?v=5" />
   <link rel="stylesheet" href="/profiles.css?v=3" />
 </head>
-<body data-nav="together-room" data-rooms="1">
+<body data-surface="workspace" data-nav="together-room" data-rooms="1">
   <div class="sceneStage" id="sceneStage"></div>
   <div class="wrap">
     <div id="site-nav"></div>
@@ -366,7 +366,7 @@
           <div id="roomView" style="display:none;">
             <div class="roomBar">
               <a class="pillStat lobbyLink" href="together.html" title="Back to Together">🏠 Together</a>
-              <button class="pillStat lobbyLink" id="copyRoomBtn" title="Copy room link">🔗 Copy link</button>
+              <button class="pillStat lobbyLink" id="copyRoomBtn" title="Copy room link"><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#link"></use></svg> Copy link</button>
               <span class="pillStat"><span class="dot" id="connDot"></span><span id="connText">Connecting…</span></span>
               <span class="pillStat namePill">You:
                 <input id="nameInput" class="nameInput" type="text" maxlength="24"
@@ -477,7 +477,7 @@
 
   <div class="toast" id="toast"></div>
 
-  <script src="/shared.js?v=82"></script>
+  <script src="/shared.js?v=83"></script>
   <script>window._firefliesLoaded = true;</script>
 
   <script type="module" src="/date-night.js?v=19"></script>

@@ -13,6 +13,7 @@
   let db = null, mods = null, uid = null, rows = [], unsub = null;
   const records = new Map();
   let dirty = true, drawTimer = null, pageIndex = 0, authEpoch = 0, authTimer = null, modulePromise = null;
+  let loadPhase = 'idle', subscriptionEpoch = 0;
 
   // ---- notification preferences ----
   // The six switches on the settings page used to do nothing at all: nothing
@@ -140,11 +141,15 @@
       moderation_unblock:["Your public-chat block was removed","✅"], role_promote:["You are now a site admin","👑"],
       role_demote:["Your admin role was removed","👑"], badge_awarded:["New profile badge","🏷️"]
     }[n.type];
+    const iconName = ({gift:'gift',friend_request:'users',friend_accepted:'users',guestbook:'edit',relationship_request:'heart',relationship_accepted:'heart',room_invite:'play',direct_message:'chat',mention:'chat',badge_awarded:'award'})[n.type] || (String(n.type).startsWith('moderation_') ? 'shield' : 'bell');
     const title = fixed ? fixed[0] : (n.title || "Notification"), body = n.body || "", icon = fixed ? fixed[1] : (n.icon || "🔔");
-    return `<a class="mf-notify-item${unread ? " unread" : ""}" href="${esc(link)}" data-notification-id="${esc(n.id)}"><span class="mf-notify-icon">${esc(icon)}</span><span class="mf-notify-copy"><b class="mf-notify-title">${esc(title)}</b>${body ? `<span class="mf-notify-body">${esc(body)}</span>` : ""}<span class="mf-notify-time" title="${esc(new Date(Number(n.createdAt)||0).toLocaleString())}">${esc(relativeTime(n.createdAt))}</span></span>${unread ? '<span class="mf-notify-dot" aria-label="Unread"></span>' : (page ? '<span></span>' : '')}</a>`;
+    return `<a class="mf-notify-item${unread ? " unread" : ""}" href="${esc(link)}" data-notification-id="${esc(n.id)}"><span class="mf-notify-icon"><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#${iconName}"></use></svg></span><span class="mf-notify-copy"><b class="mf-notify-title">${esc(title)}</b>${body ? `<span class="mf-notify-body">${esc(body)}</span>` : ""}<span class="mf-notify-time" title="${esc(new Date(Number(n.createdAt)||0).toLocaleString())}">${esc(relativeTime(n.createdAt))}</span></span>${unread ? '<span class="mf-notify-dot" aria-label="Unread"></span>' : (page ? '<span></span>' : '')}</a>`;
   }
 
   function wireItems(scope) {
+    scope.querySelectorAll('[data-notification-retry]').forEach(button => button.addEventListener('click', () => {
+      if (mods) subscribe(); else readyAuth(MFAuth.user);
+    }));
     scope.querySelectorAll("[data-notification-id]").forEach(node => node.addEventListener("click", async e => {
       if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) { markRead(node.dataset.notificationId); return; }
       e.preventDefault();
@@ -154,12 +159,19 @@
     }));
   }
 
+  function emptyHtml() {
+    if (!uid) return '<div class="mf-notify-empty"><strong>Your updates, in one place</strong><p>Sign in to see messages, gifts, and invitations.</p><a class="btn primary" href="/account.html">Sign in</a></div>';
+    if (loadPhase === 'error') return '<div class="mf-notify-empty" role="alert"><strong>Notifications could not load</strong><p>Check your connection and try again.</p><button type="button" class="settingsBtn" data-notification-retry>Try again</button></div>';
+    if (loadPhase === 'loading') return '<div class="mf-notify-empty" role="status" aria-busy="true">Loading your updates…<div class="mf-skeleton" aria-hidden="true"></div><div class="mf-skeleton" aria-hidden="true"></div></div>';
+    return '<div class="mf-notify-empty"><strong>You’re all caught up</strong><p>New notifications will appear here.</p></div>';
+  }
+
   function drawPanel() {
     const list = $("mfNotifyList"), summary = $("mfNotifySummary");
     if (!list || !panelOpen) return;
     const all = visibleRows(), recent = all.slice(0, PANEL_SIZE), unread = all.length, scrollTop = list.scrollTop;
-    if (summary) summary.textContent = unread ? `${unread} unread${unread > PANEL_SIZE ? ` · latest ${PANEL_SIZE}` : ''}` : "You're caught up";
-    list.innerHTML = recent.length ? recent.map(n => itemHtml(n, false)).join("") : '<div class="mf-notify-empty">You’re all caught up.<br>New notifications will appear here.</div>';
+    if (summary) summary.textContent = unread ? `${unread} unread${unread > PANEL_SIZE ? ` · latest ${PANEL_SIZE}` : ''}` : (loadPhase === "ready" ? "You're caught up" : "");
+    list.innerHTML = recent.length ? recent.map(n => itemHtml(n, false)).join("") : emptyHtml();
     list.scrollTop = scrollTop;
     if ($("mfNotifyMarkAll")) $("mfNotifyMarkAll").disabled = !uid || !unread;
     wireItems(list);
@@ -172,7 +184,7 @@
     pageIndex = Math.min(pageIndex, Math.max(0, Math.ceil(visible.length / PAGE_SIZE) - 1));
     const start = pageIndex * PAGE_SIZE, page = visible.slice(start, start + PAGE_SIZE);
     if (count) count.textContent = uid ? `${visible.length} unread${visible.length > PAGE_SIZE ? ` · ${start + 1}–${start + page.length} shown` : ''}` : "";
-    list.innerHTML = page.length ? page.map(n => itemHtml(n, true)).join("") : `<div class="mf-notify-empty">${uid ? "You’re all caught up. New notifications will appear here." : "Sign in to see your notifications."}</div>`;
+    list.innerHTML = page.length ? page.map(n => itemHtml(n, true)).join("") : emptyHtml();
     if ($("mfNotificationPager")) $("mfNotificationPager").hidden = visible.length <= PAGE_SIZE;
     if ($("mfNotificationPrev")) $("mfNotificationPrev").disabled = pageIndex === 0;
     if ($("mfNotificationNext")) $("mfNotificationNext").disabled = start + PAGE_SIZE >= visible.length;
@@ -235,6 +247,8 @@
   }
 
   function subscribe() {
+    const generation = ++subscriptionEpoch;
+    loadPhase = uid ? 'loading' : 'idle';
     if (unsub) { try { unsub(); } catch (_) {} unsub = null; }
     records.clear(); rows = []; dirty = true; pageIndex = 0; draw();
     if (!uid || !mods) return;
@@ -242,17 +256,20 @@
     const q = mods.query(mods.ref(db, `notifications/${uid}`), mods.orderByChild("createdAt"));
     const epoch = authEpoch;
     const changed = snap => {
-      if (epoch !== authEpoch) return;
+      if (epoch !== authEpoch || generation !== subscriptionEpoch) return;
       const row = snap.val();
       if (row && typeof row === 'object' && !Number(row.readAt)) records.set(snap.key, { ...row, id: snap.key });
       else records.delete(snap.key);
       dirty = true; scheduleDraw();
     };
-    const removed = snap => { if (epoch === authEpoch) { records.delete(snap.key); dirty = true; scheduleDraw(); } };
-    const failed = () => { if (epoch === authEpoch) { records.clear(); dirty = true; scheduleDraw(); } };
+    const active = () => epoch === authEpoch && generation === subscriptionEpoch;
+    const removed = snap => { if (active()) { records.delete(snap.key); dirty = true; scheduleDraw(); } };
+    const failed = () => { if (active()) { loadPhase = 'error'; records.clear(); dirty = true; scheduleDraw(); } };
     // Child events avoid copying and sorting the entire history for each read
     // or new item. Keep all unread items, including older legacy records.
     const stops = [mods.onChildAdded(q, changed, failed), mods.onChildChanged(q, changed, failed), mods.onChildRemoved(q, removed, failed)];
+    // Initial completion also handles an empty inbox; never copy this snapshot.
+    stops.push(mods.onValue(q, () => { if (active()) { loadPhase = 'ready'; scheduleDraw(); } }, failed, { onlyOnce: true }));
     unsub = () => stops.forEach(stop => stop());
   }
 
@@ -275,6 +292,7 @@
     if (nextUid === uid && (unsub || (!mods && modulePromise) || authTimer)) return;
     const epoch = ++authEpoch;
     uid = nextUid; prefs = null; dirty = true;
+    loadPhase = uid ? 'loading' : 'idle';
     if (unsub) { unsub(); unsub = null; }
     if (authTimer) { clearTimeout(authTimer); authTimer = null; }
     records.clear(); rows = []; pageIndex = 0; draw();
@@ -286,7 +304,7 @@
         if (!modulePromise) modulePromise = import(`https://www.gstatic.com/firebasejs/${FB_VERSION}/firebase-database.js`);
         mods = await modulePromise;
       }
-    } catch (_) { modulePromise = null; return; }
+    } catch (_) { modulePromise = null; if (epoch === authEpoch) { loadPhase = 'error'; draw(); } return; }
     if (epoch !== authEpoch) return;
     subscribe();
     loadPrefs();   // which types this account wants to be told about

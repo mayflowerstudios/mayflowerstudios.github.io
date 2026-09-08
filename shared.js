@@ -630,7 +630,7 @@
       .map(k => `<option value="${k}"${k === cur ? " selected" : ""}>${names[k]}</option>`)
       .join("");
     return `<label class="nav-lang" data-no-translate title="Translate this site">
-        <span class="nav-lang-ic" aria-hidden="true">🌐</span>
+        <span class="nav-lang-ic" aria-hidden="true"><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#globe"></use></svg></span>
         <select id="navLangSelect" aria-label="Site language">${opts}</select>
       </label>`;
   }
@@ -672,12 +672,12 @@
             <span class="brand-flower" aria-hidden="true">✿</span>
             <strong>Mayflower Studios</strong>
           </a>
-          <button type="button" class="nav-mob-btn" id="navToggle" aria-label="Menu" aria-controls="navLinks" aria-expanded="false">☰</button>
+          <button type="button" class="nav-mob-btn" id="navToggle" aria-label="Menu" aria-controls="navLinks" aria-expanded="false"><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#menu"></use></svg></button>
           <div class="nav-links" id="navLinks">
             ${linksHtml}
             ${buildLangPicker()}
             <button type="button" class="mf-notify-button" id="mfNotifyButton" aria-label="Notifications" aria-expanded="false" hidden data-no-translate>
-              <span aria-hidden="true">🔔</span><span class="mf-notify-badge" id="mfNotifyBadge" hidden></span>
+              <svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#bell"></use></svg><span class="mf-notify-badge" id="mfNotifyBadge" hidden></span>
             </button>
             <a href="/account.html" class="nav-account" id="navAccount" data-nav="account">Sign in</a>
           </div>
@@ -724,7 +724,7 @@
         links.classList.toggle('open', open);
         toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
         toggle.setAttribute('aria-label', open ? 'Close menu' : 'Menu');
-        toggle.textContent = open ? '✕' : '☰';
+        toggle.innerHTML = `<svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#${open ? 'close' : 'menu'}"></use></svg>`;
       };
       toggle.addEventListener('click', () => {
         setOpen(!links.classList.contains('open'));
@@ -907,7 +907,7 @@
 
   // Bump this whenever auth.js / chat.js / profile-view.js change, so browsers
   // and the GitHub Pages CDN fetch the new version instead of a cached copy.
-  var MF_ASSET_VER = '80';
+  var MF_ASSET_VER = '81';
 
   // ─────────────────────────────────────────────────────────────
   //  Chat + moderation config, shared by chat.js and admin-moderation.js.
@@ -986,7 +986,7 @@
         if (!el) return;
         if (user) {
           const name = MFAuth.name() || 'Account';
-          el.textContent = '👤 ' + name;
+          el.textContent = name;
           el.classList.add('nav-signed-in');
         } else {
           el.textContent = 'Sign in';
@@ -999,8 +999,10 @@
   document.addEventListener('DOMContentLoaded', function () {
     injectFavicon();
     injectBg();
-    injectFireflies();
-    injectPetals();
+    if (document.body.dataset.surface !== 'workspace') {
+      injectFireflies();
+      injectPetals();
+    }
     injectNav();
     injectFooter();
     initReveal();

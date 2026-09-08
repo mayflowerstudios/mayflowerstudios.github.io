@@ -21,10 +21,10 @@
     .settingsIdentity{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}.settingsAvatar{width:52px;height:52px;border-radius:15px;display:grid;place-items:center;overflow:hidden;background:rgba(255,255,255,.07);font-size:24px}.settingsAvatar img{width:100%;height:100%;object-fit:cover}.settingsIdentity b,.settingsIdentity span{display:block}.settingsIdentity span{font-size:12px;color:var(--text-3);margin-top:3px}.settingsMandatory{margin-top:12px;padding:10px 12px;border:1px solid rgba(251,191,36,.22);border-radius:12px;background:rgba(251,191,36,.06);color:var(--text-2);font-size:11.5px;line-height:1.5}
     @media(max-width:760px){.settingsShell{grid-template-columns:1fr}.settingsNav{position:static;display:flex;overflow:auto}.settingsNav button{white-space:nowrap}.settingRow{grid-template-columns:1fr}.settingsToggle{justify-self:start}.settingRow select{max-width:none}}
   </style>
-  <link rel="stylesheet" href="/studio.css?v=4" />
+  <link rel="stylesheet" href="/studio.css?v=5" />
   <link rel="stylesheet" href="/profiles.css?v=3" />
 </head>
-<body data-nav="account">
+<body data-surface="workspace" data-nav="account">
   <div class="site-page">
     <div id="site-nav"></div>
     <main class="content settingsWrap">
@@ -32,48 +32,48 @@
         <p class="page-kicker">✦ Your space, your rules</p>
         <h1 class="page-title">Settings</h1>
         <p class="page-sub">Account, privacy, notifications, presence, appearance, and security in one place.</p>
-        <div class="page-actions"><a href="/account.html" class="btn-ghost">← Back to your profile</a></div>
+        <div class="page-actions"><a href="/account.html" class="btn-ghost"><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#arrow-left"></use></svg> Back to profile</a></div>
       </section>
 
       <section id="settingsSignedOut" class="card" style="padding:24px;display:none;"><h2 style="margin-top:0;">Device settings are ready</h2><p class="muted">Translation, chat sound, and appearance can be changed below. Sign in for account privacy, notifications, presence, and security.</p><a class="btn primary" href="/account.html">Sign in for account settings</a></section>
 
       <section id="settingsApp" class="settingsShell" hidden>
         <nav class="settingsNav" aria-label="Settings sections" data-no-translate>
-          <button type="button" class="active" data-settings-tab="account" data-auth-setting>👤 Account</button>
-          <button type="button" data-settings-tab="privacy" data-auth-setting>🔒 Privacy</button>
-          <button type="button" data-settings-tab="notifications" data-auth-setting>🔔 Notifications</button>
-          <button type="button" data-settings-tab="presence">💬 Chat & presence</button>
-          <button type="button" data-settings-tab="appearance">✨ Appearance</button>
-          <button type="button" data-settings-tab="security" data-auth-setting>🛡️ Security</button>
+          <button type="button" class="active" data-settings-tab="account" data-auth-setting><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#user"></use></svg> Account</button>
+          <button type="button" data-settings-tab="privacy" data-auth-setting><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#lock"></use></svg> Privacy</button>
+          <button type="button" data-settings-tab="notifications" data-auth-setting><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#bell"></use></svg> Notifications</button>
+          <button type="button" data-settings-tab="presence"><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#chat"></use></svg> Chat & presence</button>
+          <button type="button" data-settings-tab="appearance"><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#settings"></use></svg> Appearance</button>
+          <button type="button" data-settings-tab="security" data-auth-setting><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#shield"></use></svg> Security</button>
         </nav>
 
         <div>
           <section class="settingsPanel active" data-settings-panel="account" data-auth-setting>
-            <div class="settingsCard"><h2>Account</h2><p>Your profile identity lives here; the full profile editor remains on your profile page.</p><div class="settingsIdentity"><div class="settingsAvatar" id="settingsAvatar">🌸</div><div><b id="settingsName">—</b><span id="settingsHandle"></span><span id="settingsEmail"></span></div></div><div class="settingsActions" style="margin-top:16px;"><a class="settingsBtn primary" href="/account.html">Edit public profile</a><a class="settingsBtn" href="/notifications.html">Open notifications</a></div></div>
+            <div class="settingsCard"><h2>Account</h2><p>Update your public name, photo, and profile details.</p><div class="settingsIdentity"><div class="settingsAvatar" id="settingsAvatar">🌸</div><div><b id="settingsName">—</b><span id="settingsHandle"></span><span id="settingsEmail"></span></div></div><div class="settingsActions" style="margin-top:16px;"><a class="settingsBtn primary" href="/account.html">Edit public profile</a><a class="settingsBtn" href="/notifications.html">Open notifications</a></div></div>
           </section>
 
           <section class="settingsPanel" data-settings-panel="privacy" data-auth-setting>
             <div class="settingsCard"><h2>Profile privacy</h2><p>Choose who can see each part of your public profile. “Friends” means only people on your friends list.</p>
-              <div class="settingRow"><div class="settingCopy"><b>💕 Relationship</b><span>Your relationship status and anniversary.</span></div><select data-privacy="relationship"></select></div>
-              <div class="settingRow"><div class="settingCopy"><b>🎁 Gifts</b><span>Your gift collection and recent gifts.</span></div><select data-privacy="gifts"></select></div>
-              <div class="settingRow"><div class="settingCopy"><b>📝 Guestbook</b><span>Your guestbook posts and posting area.</span></div><select data-privacy="guestbook"></select></div>
-              <div class="settingRow"><div class="settingCopy"><b>🤝 Friends</b><span>The friend list shown on your profile.</span></div><select data-privacy="friends"></select></div>
-              <div class="settingRow"><div class="settingCopy"><b>🟢 Online status</b><span>Whether others can see that you are online right now.</span></div><select data-privacy="onlineStatus"></select></div>
-              <div class="settingRow"><div class="settingCopy"><b>🕒 Last seen</b><span>Whether others can see when you were last online.</span></div><select data-privacy="lastSeen"></select></div>
-              <div class="settingRow"><div class="settingCopy"><b>🏆 Achievements</b><span>Your permanently unlocked achievements.</span></div><select data-privacy="achievements"></select></div>
-              <div class="settingRow"><div class="settingCopy"><b>🏷️ User badges</b><span>Badges the owner has awarded to your account. Owner/Admin role markers stay visible.</span></div><select data-privacy="badges"></select></div>
+              <div class="settingRow"><div class="settingCopy"><b><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#heart"></use></svg> Relationship</b><span>Your relationship status and anniversary.</span></div><select data-privacy="relationship"></select></div>
+              <div class="settingRow"><div class="settingCopy"><b><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#gift"></use></svg> Gifts</b><span>Your gift collection and recent gifts.</span></div><select data-privacy="gifts"></select></div>
+              <div class="settingRow"><div class="settingCopy"><b><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#edit"></use></svg> Guestbook</b><span>Your guestbook posts and posting area.</span></div><select data-privacy="guestbook"></select></div>
+              <div class="settingRow"><div class="settingCopy"><b><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#users"></use></svg> Friends</b><span>The friend list shown on your profile.</span></div><select data-privacy="friends"></select></div>
+              <div class="settingRow"><div class="settingCopy"><b><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#user"></use></svg> Online status</b><span>Whether others can see that you are online right now.</span></div><select data-privacy="onlineStatus"></select></div>
+              <div class="settingRow"><div class="settingCopy"><b><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#clock"></use></svg> Last seen</b><span>Whether others can see when you were last online.</span></div><select data-privacy="lastSeen"></select></div>
+              <div class="settingRow"><div class="settingCopy"><b><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#award"></use></svg> Achievements</b><span>Your permanently unlocked achievements.</span></div><select data-privacy="achievements"></select></div>
+              <div class="settingRow"><div class="settingCopy"><b><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#award"></use></svg> User badges</b><span>Badges the owner has awarded to your account. Owner/Admin role markers stay visible.</span></div><select data-privacy="badges"></select></div>
               <div class="settingsStatus" id="privacyStatus"></div>
             </div>
           </section>
 
           <section class="settingsPanel" data-settings-panel="notifications" data-auth-setting>
-            <div class="settingsCard"><h2>Notification preferences</h2><p>Turn off categories you do not want in the notification bell. Changes apply to new notifications.</p>
-              <div class="settingRow"><div class="settingCopy"><b>🌸 Friends</b><span>Friend requests and accepted requests.</span></div><label class="settingsToggle"><input type="checkbox" data-notify="friends" /> Enabled</label></div>
-              <div class="settingRow"><div class="settingCopy"><b>🎁 Gifts</b><span>When somebody sends you a gift.</span></div><label class="settingsToggle"><input type="checkbox" data-notify="gifts" /> Enabled</label></div>
-              <div class="settingRow"><div class="settingCopy"><b>💌 Guestbook</b><span>New guestbook notes.</span></div><label class="settingsToggle"><input type="checkbox" data-notify="guestbook" /> Enabled</label></div>
-              <div class="settingRow"><div class="settingCopy"><b>💗 Relationship</b><span>Relationship requests and acceptances.</span></div><label class="settingsToggle"><input type="checkbox" data-notify="relationship" /> Enabled</label></div>
-              <div class="settingRow"><div class="settingCopy"><b>🚪 Rooms</b><span>Invitations to shared rooms.</span></div><label class="settingsToggle"><input type="checkbox" data-notify="rooms" /> Enabled</label></div>
-              <div class="settingRow"><div class="settingCopy"><b>💬 Messages & mentions</b><span>Direct messages and public-chat @mentions.</span></div><label class="settingsToggle"><input type="checkbox" data-notify="messages" /> Enabled</label></div>
+            <div class="settingsCard"><h2>Notification preferences</h2><p>Turn off categories you do not want in the notification bell. Your inbox updates when you change a preference.</p>
+              <div class="settingRow"><div class="settingCopy"><b><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#users"></use></svg> Friends</b><span>Friend requests and accepted requests.</span></div><label class="settingsToggle"><input type="checkbox" data-notify="friends" /> Enabled</label></div>
+              <div class="settingRow"><div class="settingCopy"><b><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#gift"></use></svg> Gifts</b><span>When somebody sends you a gift.</span></div><label class="settingsToggle"><input type="checkbox" data-notify="gifts" /> Enabled</label></div>
+              <div class="settingRow"><div class="settingCopy"><b><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#edit"></use></svg> Guestbook</b><span>New guestbook notes.</span></div><label class="settingsToggle"><input type="checkbox" data-notify="guestbook" /> Enabled</label></div>
+              <div class="settingRow"><div class="settingCopy"><b><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#heart"></use></svg> Relationship</b><span>Relationship requests and acceptances.</span></div><label class="settingsToggle"><input type="checkbox" data-notify="relationship" /> Enabled</label></div>
+              <div class="settingRow"><div class="settingCopy"><b><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#play"></use></svg> Rooms</b><span>Invitations to shared rooms.</span></div><label class="settingsToggle"><input type="checkbox" data-notify="rooms" /> Enabled</label></div>
+              <div class="settingRow"><div class="settingCopy"><b><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#chat"></use></svg> Messages & mentions</b><span>Direct messages and public-chat @mentions.</span></div><label class="settingsToggle"><input type="checkbox" data-notify="messages" /> Enabled</label></div>
               <div class="settingsMandatory">⚠️ Moderation notices and account-role changes cannot be disabled, so important account actions always reach you.</div>
               <div class="settingsStatus" id="notificationStatus"></div>
             </div>
@@ -81,19 +81,19 @@
 
           <section class="settingsPanel" data-settings-panel="presence">
             <div class="settingsCard"><h2>Chat & presence</h2><p>Chat preferences are saved on this device. Sign in to control how your presence appears to friends.</p>
-              <div class="settingRow" data-auth-setting><div class="settingCopy"><b>👻 Appear offline</b><span>Friends will see you as offline and your typing indicators will be hidden. You can still use the site normally.</span></div><label class="settingsToggle"><input type="checkbox" id="settingsAppearOffline" /> Appear offline</label></div>
-              <div class="settingRow"><div class="settingCopy"><b>🔔 Message sound</b><span>A soft chime when a message arrives while the chat is open. Saved on this device.</span></div><label class="settingsToggle"><input type="checkbox" id="settingsChatSound" /> Play a sound</label></div>
-              <div class="settingRow"><div class="settingCopy"><b>🌐 Translate messages</b><span>Translates chat into your language as it arrives. The site's own language picker in the header changes this too.</span></div><label class="settingsToggle"><input type="checkbox" id="settingsTranslate" /> Translate chat</label></div>
-              <div class="settingRow"><div class="settingCopy"><b>🗣️ Translate into</b><span>Which language chat and the site are translated into.</span></div><select id="settingsTranslateLang"></select></div>
-              <div class="settingRow"><div class="settingCopy"><b>🧹 Translation data</b><span>Remove saved site and per-message translations from this device. New translations will be fetched again when needed. <a href="/privacy.html#translation">How translation handles text</a>.</span></div><button class="settingsBtn" id="settingsClearTranslations" type="button">Clear saved translations</button></div>
+              <div class="settingRow" data-auth-setting><div class="settingCopy"><b><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#user"></use></svg> Appear offline</b><span>Friends will see you as offline and your typing indicators will be hidden. You can still use the site normally.</span></div><label class="settingsToggle"><input type="checkbox" id="settingsAppearOffline" /> Appear offline</label></div>
+              <div class="settingRow"><div class="settingCopy"><b><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#bell"></use></svg> Message sound</b><span>A soft chime when a message arrives while the chat is open. Saved on this device.</span></div><label class="settingsToggle"><input type="checkbox" id="settingsChatSound" /> Play a sound</label></div>
+              <div class="settingRow"><div class="settingCopy"><b><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#globe"></use></svg> Translate messages</b><span>Translates chat into your language as it arrives. The site's own language picker in the header changes this too.</span></div><label class="settingsToggle"><input type="checkbox" id="settingsTranslate" /> Translate chat</label></div>
+              <div class="settingRow"><div class="settingCopy"><b><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#globe"></use></svg> Translate into</b><span>Which language chat and the site are translated into.</span></div><select id="settingsTranslateLang"></select></div>
+              <div class="settingRow"><div class="settingCopy"><b><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#refresh"></use></svg> Translation data</b><span>Remove saved site and per-message translations from this device. New translations will be fetched again when needed. <a href="/privacy.html#translation">How translation handles text</a>.</span></div><button class="settingsBtn" id="settingsClearTranslations" type="button">Clear saved translations</button></div>
               <div class="settingsStatus" id="presenceStatus"></div>
             </div>
           </section>
 
           <section class="settingsPanel" data-settings-panel="appearance">
             <div class="settingsCard"><h2>Appearance</h2><p>These preferences are saved on this device.</p>
-              <div class="settingRow"><div class="settingCopy"><b>🫧 Reduce motion</b><span>Minimizes transitions and decorative movement throughout the site.</span></div><label class="settingsToggle"><input type="checkbox" id="settingsReduceMotion" /> Reduce motion</label></div>
-              <div class="settingRow"><div class="settingCopy"><b>✨ Decorative fireflies</b><span>Turn the ambient firefly effect on or off.</span></div><label class="settingsToggle"><input type="checkbox" id="settingsFireflies" /> Show fireflies</label></div>
+              <div class="settingRow"><div class="settingCopy"><b><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#settings"></use></svg> Reduce motion</b><span>Minimizes transitions and decorative movement throughout the site.</span></div><label class="settingsToggle"><input type="checkbox" id="settingsReduceMotion" /> Reduce motion</label></div>
+              <div class="settingRow"><div class="settingCopy"><b><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#settings"></use></svg> Decorative fireflies</b><span>Turn the ambient firefly effect on or off.</span></div><label class="settingsToggle"><input type="checkbox" id="settingsFireflies" /> Show fireflies</label></div>
               <div class="settingsStatus" id="appearanceStatus"></div>
             </div>
           </section>
@@ -106,7 +106,7 @@
     </main>
     <div id="site-footer"></div>
   </div>
-  <script src="/shared.js?v=82"></script>
+  <script src="/shared.js?v=83"></script>
   <script src="/settings.js?v=53"></script>
 </body>
 </html>

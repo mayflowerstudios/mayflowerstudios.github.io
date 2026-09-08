@@ -129,7 +129,7 @@
     const fab = document.createElement("button");
     fab.id = "mfChatFab";
     fab.className = "mf-chat-fab";
-    fab.innerHTML = '💬'
+    fab.innerHTML = '<svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#chat"></use></svg>'
       + '<span class="mf-chat-badge mf-badge-dm" id="mfDmBadge"></span>'
       + '<span class="mf-chat-badge mf-badge-req" id="mfReqBadge" title="Friend requests"></span>';
     fab.setAttribute("aria-label", "Chat");
@@ -141,18 +141,18 @@
       <div class="mf-chat-grip" id="mfChatGrip" title="Drag to resize"></div>
       <div class="mf-chat-head">
         <div class="mf-chat-tabs">
-          <button class="mf-ct on" data-ctab="global">🌸 Everyone</button>
-          <button class="mf-ct" data-ctab="dm">💌 Friends</button>
+          <button class="mf-ct on" data-ctab="global">Everyone</button>
+          <button class="mf-ct" data-ctab="dm">Friends</button>
         </div>
         <div class="mf-chat-headtools">
-          <button class="mf-tr-btn" id="mfModBtn" title="Chat moderation" hidden>🛡️</button>
-          <button class="mf-tr-btn" id="mfMuteBtn" title="Mute message sounds">🔔</button>
-          <button class="mf-tr-btn" id="mfTrBtn" title="Translate messages">🌐</button>
-          <button class="mf-chat-x" id="mfChatX" aria-label="Close">✕</button>
+          <button class="mf-tr-btn" id="mfModBtn" title="Chat moderation" hidden><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#shield"></use></svg></button>
+          <button class="mf-tr-btn" id="mfMuteBtn" title="Mute message sounds"><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#bell"></use></svg></button>
+          <button class="mf-tr-btn" id="mfTrBtn" title="Translate messages"><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#globe"></use></svg></button>
+          <button class="mf-chat-x" id="mfChatX" aria-label="Close"><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#close"></use></svg></button>
         </div>
       </div>
       <div class="mf-chat-subbar" id="mfChatSubbar" hidden>
-        <span id="mfTrStatus" role="status" aria-live="polite">🌐 Translate messages into</span>
+        <span id="mfTrStatus" role="status" aria-live="polite">Translate messages into</span>
         <button type="button" class="mf-tr-retry" id="mfTrRetry" hidden>Retry</button>
         <select class="mf-tr-lang" id="mfTrLang"></select>
       </div>
@@ -181,7 +181,7 @@
     const trStatus = panel.querySelector("#mfTrStatus");
     const trRetry = panel.querySelector("#mfTrRetry");
     function updateTrUI() {
-      if (!TR_OK) { trBtn.textContent = "🌐"; trBtn.title = "Translation isn't available in this browser"; trBtn.disabled = true; trBar.hidden = true; return; }
+      if (!TR_OK) {  trBtn.title = "Translation isn't available in this browser"; trBtn.disabled = true; trBar.hidden = true; return; }
       trBtn.classList.toggle("on", translateOn);
       trBtn.title = translateOn ? ("Translate messages into " + (LANG_NAMES[targetLang] || targetLang) + " · on") : "Translate messages";
       trBtn.setAttribute("aria-label", trBtn.title);
@@ -250,7 +250,7 @@
     });
     const muteBtn = panel.querySelector("#mfMuteBtn");
     function updateMuteUI() {
-      muteBtn.textContent = muted ? "🔕" : "🔔";
+      muteBtn.innerHTML = '<svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#bell"></use></svg>'; muteBtn.setAttribute('aria-pressed', String(muted));
       muteBtn.title = muted ? "Message sounds are muted" : "Mute message sounds";
       muteBtn.classList.toggle("on", !muted);
     }
@@ -477,7 +477,7 @@
 
     if (!me) {
       body.innerHTML = `<div class="mf-chat-empty">
-        <div style="font-size:30px">💬</div>
+        <div class="mf-state-icon"><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#chat"></use></svg></div>
         <p>Sign in to chat with everyone and send messages.</p>
         <a class="mf-chat-cta" href="/account.html?next=${encodeURIComponent(location.pathname)}">Sign in</a>
       </div>`;
@@ -524,14 +524,14 @@
         <div class="mf-gifAttr" id="mfGifAttr"></div>
       </div>
       <div class="mf-chat-tools">
-        <button class="mf-tool" id="mfEmojiBtn" title="Emoji" type="button">😊</button>
+        <button class="mf-tool" id="mfEmojiBtn" title="Emoji" type="button"><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#smile"></use></svg></button>
         <button class="mf-tool" id="mfGifBtn" title="GIF" type="button">GIF</button>
-        <button class="mf-tool" id="mfImgBtn" title="Send a picture" type="button">🖼️</button>
+        <button class="mf-tool" id="mfImgBtn" title="Send a picture" type="button"><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#image"></use></svg></button>
         <input type="file" id="mfImgInput" accept="image/*" hidden />
       </div>
       <div class="mf-chat-input">
         <input id="mfChatText" type="text" maxlength="500" placeholder="Type a message…" autocomplete="off" />
-        <button id="mfChatSend" aria-label="Send">➤</button>
+        <button id="mfChatSend" aria-label="Send"><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#send"></use></svg></button>
       </div>`;
   }
 
@@ -1710,7 +1710,7 @@
       `<input type="text" maxlength="500" class="mf-msg-editfield" />` +
       `<div class="mf-msg-editbtns">` +
         `<button type="button" data-act="save" title="Save">✓</button>` +
-        `<button type="button" data-act="cancel" title="Cancel">✕</button>` +
+        `<button type="button" data-act="cancel" title="Cancel"><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#close"></use></svg></button>` +
       `</div>`;
     const field = editor.querySelector(".mf-msg-editfield");
     field.value = current;
@@ -1902,7 +1902,7 @@
   function makeModerationOverlay(title) {
     closeModerationOverlay();
     const ov = document.createElement("div"); ov.id="mfModOverlay"; ov.className="mf-mod-overlay";
-    ov.innerHTML = `<div class="mf-mod-card" role="dialog" aria-modal="true"><button class="mf-mod-close" type="button">✕</button><h3>${esc(title)}</h3><div class="mf-mod-content">Loading…</div></div>`;
+    ov.innerHTML = `<div class="mf-mod-card" role="dialog" aria-modal="true"><button class="mf-mod-close" type="button"><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#close"></use></svg></button><h3>${esc(title)}</h3><div class="mf-mod-content">Loading…</div></div>`;
     document.body.appendChild(ov);
     ov.querySelector(".mf-mod-close").addEventListener("click", closeModerationOverlay);
     ov.addEventListener("click", e => { if(e.target===ov) closeModerationOverlay(); });
@@ -2077,7 +2077,7 @@
           <span class="mf-dm-name">${esc(r.name || "someone")}${r.username ? ` <span class="mf-dim">@${esc(r.username)}</span>` : ""}</span>
           <span class="mf-req-actions">
             <button class="mf-req-yes" title="Accept">✓</button>
-            <button class="mf-req-no" title="Decline">✕</button>
+            <button class="mf-req-no" title="Decline"><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#close"></use></svg></button>
           </span>`;
         row.querySelector(".mf-req-yes").addEventListener("click", async () => { try { await MFAuth.acceptFriendRequest(uid); } catch (_) {} });
         row.querySelector(".mf-req-no").addEventListener("click", async () => { try { await MFAuth.declineFriendRequest(uid); } catch (_) {} });

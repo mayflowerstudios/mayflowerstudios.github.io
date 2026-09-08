@@ -9,6 +9,7 @@
   const grid=document.getElementById("worldGrid"), search=document.getElementById("worldSearch"), sort=document.getElementById("worldSort"), count=document.getElementById("worldCount"), notice=document.getElementById("worldNotice"), page=document.getElementById("worldPage");
   const featuredSection=document.getElementById("worldFeaturedSection"), featuredGrid=document.getElementById("worldFeaturedGrid");
   const purchaseBox=document.getElementById("worldPurchases"), purchaseList=document.getElementById("worldPurchaseList");
+  let libraryPhase="loading", authBound=false;
   let all=[], shots=[], shotIndex=0, authUser=null, purchases={}, activeDetail=null, storeMode="unknown";
   const esc=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
   const safeUrl=v=>{try{const u=new URL(String(v||""),location.origin);return (u.protocol==="https:"||u.protocol==="http:")?u.href:""}catch(_){return ""}};
@@ -60,6 +61,7 @@
     featuredGrid.innerHTML=picks.map(w=>card(w,true)).join("");
   }
   function draw(){
+    if(libraryPhase!=="ready")return;
     if(new URLSearchParams(location.search).get("world"))return;
     const q=(search.value||"").trim().toLowerCase();let arr=all.filter(w=>!q||[w.title,w.description,w.creator,...(w.tags||[])].join(" ").toLowerCase().includes(q));
     if(sort.value==="az")arr.sort((a,b)=>String(a.title).localeCompare(String(b.title)));
@@ -67,7 +69,7 @@
     else arr.sort((a,b)=>(b.updatedAt||b.createdAt||0)-(a.updatedAt||a.createdAt||0));
     renderFeatured();
     count.textContent=`${arr.length} world${arr.length===1?"":"s"}`;
-    grid.innerHTML=arr.length?arr.map(w=>card(w,false)).join(""):`<div class="worldEmpty">${all.length?"No worlds match that search.":"No worlds have been published yet."}</div>`;
+    grid.innerHTML=arr.length?arr.map(w=>card(w,false)).join(""):all.length?'<div class="mf-state"><strong>No matching worlds</strong><p>Try a different title, creator, or tag.</p><button class="btn ghost" type="button" data-clear-world-search>Clear search</button></div>':'<div class="mf-state"><strong>The library is getting ready</strong><p>New worlds will appear here when they are published.</p></div>';
   }
   function detail(w){
     activeDetail=w;
@@ -196,13 +198,17 @@
     if(activeDetail){const w=all.find(x=>x.id===activeDetail.id);if(w)detail(w)}else draw();
   }
   function waitAuth(){
+    if(authBound)return;
     if(!window.MFAuth){setTimeout(waitAuth,100);return}
+    authBound=true;
     MFAuth.onChange(async u=>{authUser=u||null;checkoutNotice();await loadStoreMode();await loadPurchases();if(authUser)pollCheckoutPurchase()});
   }
 
   async function load(){
-    try{const r=await fetch(`${DB}/worldLibrary.json?orderBy=%22published%22&equalTo=true`,{cache:"no-store"});if(!r.ok)throw new Error(`HTTP ${r.status}`);all=normalize(await r.json());const id=new URLSearchParams(location.search).get("world");if(id){const w=all.find(x=>x.id===id);if(w){detail(w);waitAuth();return}notice.hidden=false;notice.textContent="That world could not be found. Showing the library instead.";history.replaceState(null,"","/worlds.html")}draw();waitAuth()}
-    catch(err){console.warn("World library failed",err);grid.innerHTML='<div class="worldEmpty">The World Library could not be loaded right now.</div>';notice.hidden=false;notice.textContent="The world list is temporarily unavailable.";waitAuth()}
+    libraryPhase="loading"; notice.hidden=true; grid.setAttribute("aria-busy","true"); grid.innerHTML='<div class="mf-state" role="status" aria-busy="true"><strong>Loading the world library</strong><div class="mf-skeleton" aria-hidden="true"></div><div class="mf-skeleton" aria-hidden="true"></div></div>';
+    try{const r=await fetch(`${DB}/worldLibrary.json?orderBy=%22published%22&equalTo=true`,{cache:"no-store"});if(!r.ok)throw new Error(`HTTP ${r.status}`);all=normalize(await r.json());libraryPhase="ready";grid.removeAttribute("aria-busy");const id=new URLSearchParams(location.search).get("world");if(id){const w=all.find(x=>x.id===id);if(w){detail(w);waitAuth();return}notice.hidden=false;notice.textContent="That world could not be found. Showing the library instead.";history.replaceState(null,"","/worlds.html")}draw();waitAuth()}
+    catch(err){console.warn("World library failed",err);libraryPhase="error";grid.removeAttribute("aria-busy");grid.innerHTML='<div class="mf-state" role="alert"><strong>The library could not load</strong><p>Check your connection and try again.</p><button class="btn ghost" type="button" data-retry-worlds>Try again</button></div>';notice.hidden=false;notice.textContent="The world list is temporarily unavailable.";waitAuth()}
   }
+  grid.addEventListener("click",e=>{if(e.target.closest("[data-retry-worlds]"))load();if(e.target.closest("[data-clear-world-search]")){search.value="";draw();search.focus();}});
   load();
 })();

@@ -64,7 +64,7 @@
     returnFocus = document.activeElement; previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const overlay = document.getElementById('mfProfOverlay'), card = document.getElementById('mfProfCard');
-    card.innerHTML = '<button class="mf-prof-x" aria-label="Close profile">✕</button><div class="mf-prof-loading" role="status">Loading profile…</div>';
+    card.innerHTML = '<button class="mf-prof-x" aria-label="Close profile"><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#close"></use></svg></button><div class="mf-prof-loading" role="status">Loading profile…<div class="mf-skeleton" aria-hidden="true"></div><div class="mf-skeleton" aria-hidden="true"></div></div>';
     card.querySelector('button').onclick = hide;
     overlay.classList.add('open'); card.focus();
     try {
@@ -99,7 +99,7 @@
       card.setAttribute('aria-label', `${name}’s profile`);
       card.classList.toggle('isBirthday',isBirthdayToday(prof.birthday));
       const tabs = [{id:'about',name:'About'}, ...(canGifts ? [{id:'gifts',name:'Gifts'}] : []), ...(canGuest ? [{id:'guestbook',name:'Guestbook'}] : []), ...(canAchievements ? [{id:'achievements',name:'Achievements'}] : []), ...(canFriends ? [{id:'friends',name:'Friends'}] : [])];
-      card.innerHTML = `<button class="mf-prof-x" id="mfProfX" aria-label="Close profile">✕</button><div class="mf-prof-banner"></div>
+      card.innerHTML = `<button class="mf-prof-x" id="mfProfX" aria-label="Close profile"><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#close"></use></svg></button><div class="mf-prof-banner"></div>
         <header class="mf-prof-header"><div class="mf-prof-head"><div class="mf-prof-avatar">${avatarHTML}</div><div class="mf-prof-intro"><div class="mf-prof-name">${esc(name)}</div><div class="mf-prof-identity">${prof.username ? `<span>@${esc(prof.username)}</span>` : ''}${prof.pronouns ? `<span class="mf-prof-pron">${esc(prof.pronouns)}</span>` : ''}${rank ? `<span class="mf-prof-rank ${rank.toLowerCase()}">${rank}</span>` : ''}</div><div class="mf-prof-presence"><span class="mf-prof-dot"></span><span id="mfProfPresText">${canOnline||canLast ? 'Checking status…' : 'Activity hidden'}</span></div></div><div class="mf-prof-actions" id="mfProfActions">${isMe ? '<a class="mf-prof-btn" href="/account.html">Edit profile</a>' : `${canGifts ? '<button class="mf-prof-btn" data-send-gift type="button">Send gift</button>' : ''}<button class="mf-prof-btn secondary" id="mfProfConnect" type="button">${viewerFriend ? 'Message' : 'Add friend'}</button><span class="mf-prof-dim" id="mfProfActionMsg" role="status"></span>`}</div></div>
         ${prof.status ? `<p class="mf-prof-status">${esc(prof.status)}</p>` : ''}
         ${prof.bio ? `<p class="mf-prof-bio">${esc(prof.bio)}</p>` : ''}
@@ -165,8 +165,9 @@
       });
     } catch(error) {
       if(!active())return;
-      card.innerHTML=`<button class="mf-prof-x" aria-label="Close profile">✕</button><div class="mf-prof-loading" role="alert">${esc(error.message || 'This profile could not be loaded.')}</div>`;
+      card.innerHTML=`<button class="mf-prof-x" aria-label="Close profile"><svg class="mf-icon" aria-hidden="true" focusable="false"><use href="/assets/ui-icons.svg#close"></use></svg></button><div class="mf-prof-loading" role="alert"><strong>Profile unavailable</strong><p>${esc(error.message || 'Check your connection and try again.')}</p><button type="button" class="mf-prof-btn secondary" id="mfProfRetry">Try again</button></div>`;
       card.querySelector('button').onclick=hide;
+      card.querySelector('#mfProfRetry').onclick=()=>show(uid);
     }
   }
   window.MFProfile={show,hide};
